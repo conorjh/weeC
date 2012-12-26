@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="vm">
+      <UniqueIdentifier>{9780bc86-3361-4cc8-88cc-36d0e15ec67d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lexer">
+      <UniqueIdentifier>{aa6e8b79-7ad4-42ca-bf09-3a570865b2a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="parser">
+      <UniqueIdentifier>{7e1aa672-a116-45ad-bef0-a543e78c5150}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="driver">
+      <UniqueIdentifier>{f66c10eb-c6d7-4080-912e-425cbcdbce0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{f9cf4ffa-c108-481c-9465-16a59dc4aa26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="error">
+      <UniqueIdentifier>{1ddcbca5-6e2c-4d74-8e82-a1a947f3d66e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tree">
+      <UniqueIdentifier>{91c6c4bc-cc4d-432f-a892-ae4736478b59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="codegen">
+      <UniqueIdentifier>{ec23ab40-4386-40d2-b661-60c5f348a3d9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bcscript.h" />
+    <ClInclude Include="lexer.h">
+      <Filter>lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="parser.h">
+      <Filter>parser</Filter>
+    </ClInclude>
+    <ClInclude Include="vm.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="types.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="error.h">
+      <Filter>error</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="codegen.h">
+      <Filter>codegen</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="lexer.cpp">
+      <Filter>lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="parser.cpp">
+      <Filter>parser</Filter>
+    </ClCompile>
+    <ClCompile Include="vm.cpp">
+      <Filter>vm</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>driver</Filter>
+    </ClCompile>
+    <ClCompile Include="util.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="codegen.cpp">
+      <Filter>codegen</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="tree.hh">
+      <Filter>tree</Filter>
+    </None>
+  </ItemGroup>
+</Project>

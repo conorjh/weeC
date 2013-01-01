@@ -34,6 +34,7 @@ namespace bc
 			bool IncIndex();
 			bool DecIndex();
 			string GetChar();
+			string PeekChar();
 
 			bool done;
 			bool iserror;

@@ -7,11 +7,101 @@ using namespace lexer;
 
 bool lexer::IsDelim(string _in)
 {
-	//switch(DeriveType(_in))
+	switch(DeriveType(_in))
 	{
-
-	}
+	case tt_ws: 
+		return true; 
+		break;
+	case tt_newline: 
+		return true;
+		break;
+	case tt_tab: 
+		return true; 
+		break;
+	case tt_period: 
+		return true; 
+		break;
+	case tt_comma: 
+		return true; 
+		break;
+	case tt_plus: 
+		return true; 
+		break;
+	case tt_minus: 
+		return true; 
+		break;
+	case tt_div:
+		return true; 
+		break;
+	case tt_mult:
+		return true; 
+		break;
+	case tt_pow: 
+		return true; 
+		break;
+	case tt_mod: 
+		return true; 
+		break;
+	case tt_squote: 
+		return true; 
+		break;
+	case tt_assign:
+		return true; 
+		break;	
+	case tt_pipe: 
+		return true; 
+		break;
+	case tt_dollar: 
+		return true; 
+		break;
+	case tt_amper: 
+		return true; 
+		break;
+	case tt_greater: 
+		return true; 
+		break;
+	case tt_less: 
+		return true; 
+		break;
+	case tt_lognot: 
+		return true;
+		break;
+	case tt_dquote: 
+		return true;
+		break;
+	case tt_bslash: 
+		return true; 
+		break;
+	case tt_scolon: 
+		return true;
+		break;
+	case tt_percent: 
+		return true; 
+		break;
+	case tt_oparen: 
+		return true; 
+		break;
+	case tt_cparen: 
+		return true; 
+		break;
+	case tt_obrace: 
+		return true; 
+		break;
+	case tt_cbrace: 
+		return true; 
+		break;
+	case tt_obracket: 
+		return true; 
+		break;
+	case tt_cbracket: 
+		return true; 
+		break;	
+	case tt_tilde: 
+		return true;
+		break;
+	default:
 	return false;
+	}
 }
 
 bcTokenType lexer::DeriveType(string _in)
@@ -56,6 +146,17 @@ bcTokenType lexer::DeriveType(char _c)
 {
 	switch(_c)
 	{
+	case '0':		
+	case '1':		
+	case '2':		
+	case '3':		
+	case '4':		
+	case '5':		
+	case '6':
+	case '7':		
+	case '8':		
+	case '9':
+		return tt_intlit;		
 	case '\n': 
 		return tt_newline;	
 	case '\t': 
@@ -121,19 +222,29 @@ bcLexer::bcLexer()
 	error=0;
 	iserror=false;
 	in=NULL;
-	out=new vector<bcToken>();
+	out=new vector<bcToken>;
 	yindex=xindex=0;	
 }
 
 bcLexer::bcLexer(vector<string>* _in)
 {
-	bcLexer();
+	done=false;
+	error=0;
+	iserror=false;
+	in=NULL;
+	out=new vector<bcToken>;
+	yindex=xindex=0;
 	Setup(_in);
 }
 
 bcLexer::bcLexer(string _in)
 {
-	bcLexer();
+	done=false;
+	error=0;
+	iserror=false;
+	in=NULL;
+	out=new vector<bcToken>;
+	yindex=xindex=0;
 	Setup(_in);
 }
 
@@ -163,6 +274,7 @@ bcToken* bcLexer::GetToken()
 
 int bcLexer::Lex()
 {
+	yindex=0;
 	xindex=-1;
 	while(!done)
 	{
@@ -185,7 +297,7 @@ bcToken* bcLexer::NextToken()
 	//- - -token analyis state machine- - -
 	switch(tokbuff.type)
 	{
-		//trim whitespace
+		//trim whitespace	DROP
 		case tt_ws:
 		case tt_tab:
 		case tt_newline:			
@@ -194,20 +306,41 @@ bcToken* bcLexer::NextToken()
 				if(!IncIndex())		return NULL;			
 				tokbuff.type=DeriveType(GetChar());
 			}
+			DecIndex();
 			return NextToken();
 			break;
 
-		//possible comment
+		//possible comment	DROP
 		case tt_div:	
-			if(PeekToken()->type==tt_div)
+			if(DeriveType(PeekChar())==tt_div)
 			{
-				IncIndex();
-				while(tokbuff.type!=tt_newline)
+				IncIndex();				
+				while(DeriveType(GetChar())!=tt_newline)
 				{
-					if(!IncIndex())		return NULL;			
+					if(!IncIndex())		break;			
 					tokbuff.type=DeriveType(GetChar());				
 				}
+				DecIndex();
 				return NextToken();
+			}
+			else if(DeriveType(PeekChar())==tt_mult)
+			{
+				//multiline comment /* */
+				IncIndex();					
+				while(IncIndex())
+				{		
+					tokbuff.type=DeriveType(GetChar());	
+					if(tokbuff.type==tt_mult)
+					{
+						if(DeriveType(PeekChar())==tt_div)
+						{
+							IncIndex();
+							return NextToken();
+						}
+					}
+				}				
+				//eof before end of comment error
+				return NULL;
 			}
 			else
 			{
@@ -216,6 +349,33 @@ bcToken* bcLexer::NextToken()
 				return GetToken();
 			}
 		break;
+
+		//int/float lit
+		case tt_intlit:			
+			IncIndex();				
+			while(DeriveType(GetChar())==tt_intlit)
+			{						
+				tokbuff.data+=GetChar();
+				if(!IncIndex())		break;				
+			}					
+			//check for float
+			if(DeriveType(GetChar())==tt_period)
+			{
+				//must be float now
+				tokbuff.data+=".";
+				IncIndex();				
+				while(DeriveType(GetChar())==tt_intlit)
+				{						
+					tokbuff.data+=GetChar();
+					if(!IncIndex())		break;				
+				}			
+				tokbuff.type=tt_fltlit;
+			}
+					
+			DecIndex();
+			out->push_back(tokbuff);
+			return GetToken();
+			break;
 
 		//string literal
 		case tt_dquote:		
@@ -237,14 +397,15 @@ bcToken* bcLexer::NextToken()
 	
 		//build token, check for delims
 		default:		
-			while((!IsDelim(GetChar())&&(!done)))
-			{	
-				//add char to data buffer until we hit a delim
-				tokbuff.data+=GetChar();			
-				IncIndex();
+			if(!IsDelim(tokbuff.data))
+			{			
+				while((!IsDelim(PeekChar())&&(!done)))
+				{	
+					//add char to data buffer until we hit a delim
+					IncIndex();
+					tokbuff.data+=GetChar();															
+				}		
 			}
-			if(!tokbuff.data.size()<2)	DecIndex();
-
 			//check for the first char being a delim		
 			tokbuff.type=DeriveType(tokbuff.data);		
 			out->push_back(tokbuff);			
@@ -279,8 +440,27 @@ string bcLexer::GetChar()
 	return in->at(yindex).substr(xindex,1);
 }
 
+string bcLexer::PeekChar()
+{
+	if(done)	return "";
+	int y,x;
+	if(IncIndex())
+	{		
+		x=xindex;
+		y=yindex;
+		done=false;
+		DecIndex();
+		return in->at(y).substr(x,1);
+	}
+	else
+	{
+		return "";
+	}	
+}
+
 bool bcLexer::IncIndex()
 {
+	
 	if(xindex+1 <= in->at(yindex).size()-1)
 	{		
 		xindex++;		
@@ -295,14 +475,14 @@ bool bcLexer::IncIndex()
 			return false;	//eof
 		}		
 	}
-	return true;
+ 	return true;
 }
 
 bool bcLexer::DecIndex()
 {
 	if(xindex<1)
 	{
-		if(yindex>0)	--yindex;xindex=in->at(0).size()-1;
+		if(yindex>0)	--yindex;xindex=in->at(yindex).size()-1;
 	}
 	else
 	{

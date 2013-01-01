@@ -9,10 +9,6 @@
 
 
 int main()
-{
-	vector<string> source;// = LoadText();
-	bcreadfile("test2.txt",&source);
-	
-	test_lexer_basic();
-	return 1;
+{	
+	return test_lexer_bigger();
 }

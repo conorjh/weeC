@@ -1,8 +1,5 @@
 #pragma once
-#include "lexer.h"
 #include "testcommon.h"
-
-
 
 int test_lexer_basic()
 {

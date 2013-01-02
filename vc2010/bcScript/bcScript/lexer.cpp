@@ -137,8 +137,7 @@ bcTokenType lexer::DeriveType(string _in)
 	if(_in=="while")	return tt_while;
 	if(_in=="break")	return tt_break;
 	if(_in=="return")	return tt_return;
-	if(_in=="continue")	return tt_continue;
-	
+	if(_in=="continue")	return tt_continue;	
 	return tt_ident;	
 }
 
@@ -286,8 +285,7 @@ int bcLexer::Lex()
 bcToken* bcLexer::NextToken()
 {	
 	//init buffers
-	bcToken tokbuff;
-	string databuff;
+	bcToken tokbuff;	
 
 	//get the first char
 	if(!IncIndex() || done)		return NULL;

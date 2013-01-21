@@ -1,24 +1,6 @@
 #pragma once
 #include "testcommon.h"
 
-int test_lexer_console()
-{
-	vector<string> source;	
-	std::string in;
-	bc::lexer::bcLexer lex;	
-
-	while(true)
-	{
-		in="";
-		std::cin>>in;
-		lex.Setup(in);
-		lex.Lex();
-		PrintLex(&lex);						
-	}
-	std::cin>>in;
-	return 1;
-}
-
 int test_lexer_basic()
 {
 	vector<string> source;
@@ -28,7 +10,6 @@ int test_lexer_basic()
 	bc::lexer::bcLexer lex(&source);
 	lex.Lex();
 	PrintLex(&lex);	
-	std::cin>>c;
 	return 1;
 }
 

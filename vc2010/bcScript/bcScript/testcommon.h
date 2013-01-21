@@ -1,4 +1,5 @@
 #pragma once
+#include "util.h"
 #include "lexer.h"
 #include <iostream>
 
@@ -98,6 +99,10 @@ string GetTypeAsString(bcTokenType _t)
 			return "logical or"; 
 		case tt_logand: 
 			return "logical and";
+		case tt_plusassign:
+			return "plus assign +=";
+		case tt_minusassign:
+			return "minus assign -=";
 		case tt_incr: 
 			return "increment ++";
 		case tt_decr: 
@@ -143,6 +148,7 @@ string GetTypeAsString(bcTokenType _t)
 		case tt_eof: 
 			return "end of file";
 	}
+	return "null";
 }
 
 void PrintLex(bc::lexer::bcLexer* l)
@@ -150,10 +156,9 @@ void PrintLex(bc::lexer::bcLexer* l)
 	std::cout << "Lexer Output " << std::endl;
 	for(int t=0;t<l->Get()->size();++t)
 	{
-		std::cout << "00" << t << "	type:\t" << l->Get()->at(t).type << "\t" << GetTypeAsString(l->Get()->at(t).type) << "\t\t\tdata: " <<  l->Get()->at(t).data << std::endl;
+		std::cout << "00" << t << " "<< l->Get()->at(t).line << ","<<l->Get()->at(t).col<< "	type:\t" << l->Get()->at(t).type << "\t" << GetTypeAsString(l->Get()->at(t).type) << "\t\t\tdata: " <<  l->Get()->at(t).data << std::endl;
 	}
 	std::cout << std::endl;
-	std::string c;
-	std::cin >> c;
+	
 }
 

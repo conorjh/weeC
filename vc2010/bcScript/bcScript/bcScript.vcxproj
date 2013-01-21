@@ -63,6 +63,7 @@
     <ClInclude Include="bcscript.h" />
     <ClInclude Include="error.h" />
     <ClInclude Include="lexer.h" />
+    <ClInclude Include="parser.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="testcommon.h" />
     <ClInclude Include="test_lexer.h" />
@@ -72,6 +73,7 @@
   <ItemGroup>
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="parser.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -109,6 +109,10 @@ bcTokenType lexer::DeriveType(string _in)
 	if(_in.size()==1)	return DeriveType(_in[0]);			
 	if(_in=="++") 		return tt_incr;
 	if(_in=="--") 		return tt_decr;
+	if(_in=="+=") 		return tt_plusassign;
+	if(_in=="-=") 		return tt_minusassign;
+	if(_in=="*=") 		return tt_multassign;
+	if(_in=="/=") 		return tt_divassign;
 	if(_in=="==") 		return tt_equal;
 	if(_in=="!=")		return tt_notequal;
 	if(_in==">=") 		return tt_greaterequal;
@@ -180,6 +184,8 @@ bcTokenType lexer::DeriveType(char _c)
 		return tt_pow;
 	case '\'': 
 		return tt_squote;
+	case '"': 
+		return tt_dquote;
 	case '=': 
 		return tt_assign;	
 	case '|': 
@@ -188,6 +194,8 @@ bcTokenType lexer::DeriveType(char _c)
 		return tt_dollar;
 	case '&': 
 		return tt_amper;
+	case '!':
+		return tt_lognot;
 	case '>': 
 		return tt_greater;
 	case '<': 
@@ -220,7 +228,7 @@ bcLexer::bcLexer()
 	done=false;
 	error=0;
 	iserror=false;
-	in=NULL;
+	in=new vector<string>();
 	out=new vector<bcToken>;
 	yindex=xindex=0;	
 }
@@ -230,7 +238,7 @@ bcLexer::bcLexer(vector<string>* _in)
 	done=false;
 	error=0;
 	iserror=false;
-	in=NULL;
+	in=new vector<string>();
 	out=new vector<bcToken>;
 	yindex=xindex=0;
 	Setup(_in);
@@ -241,7 +249,7 @@ bcLexer::bcLexer(string _in)
 	done=false;
 	error=0;
 	iserror=false;
-	in=NULL;
+	in=new vector<string>();
 	out=new vector<bcToken>;
 	yindex=xindex=0;
 	Setup(_in);
@@ -249,18 +257,23 @@ bcLexer::bcLexer(string _in)
 
 int bcLexer::Setup(vector<string>* _in)
 {
+	out->clear();
 	if(!_in)	return 0;
 	in=_in;
-	yindex=xindex=0;
+	yindex=0;
+	xindex=0;
 	done=false;
 	return 1;
 }
 
 int bcLexer::Setup(string _in)
 {
-	in=new vector<string>;
+	out->clear();
+	in->clear();
+	//if(in)	delete in;	
 	in->push_back(_in);
-	yindex=xindex=0;
+	yindex=0;
+	xindex=0;
 	done=false;
 	return 1;
 }
@@ -291,11 +304,13 @@ bcToken* bcLexer::NextToken()
 	if(!IncIndex() || done)		return NULL;
 	tokbuff.data=GetChar();
 	tokbuff.type=DeriveType(tokbuff.data);
+	tokbuff.col=xindex;
+	tokbuff.line=yindex;
 
 	//- - -token analyis state machine- - -
 	switch(tokbuff.type)
 	{
-		//trim whitespace	DROP
+		//drop whitespace
 		case tt_ws:
 		case tt_tab:
 		case tt_newline:			
@@ -368,8 +383,8 @@ bcToken* bcLexer::NextToken()
 					if(!IncIndex())		break;				
 				}			
 				tokbuff.type=tt_fltlit;
-			}
-					
+				if(tokbuff.data.substr(tokbuff.data.size()-1,1)==".")	return NULL;//error, no rvalue
+			}					
 			DecIndex();
 			out->push_back(tokbuff);
 			return GetToken();
@@ -392,7 +407,28 @@ bcToken* bcLexer::NextToken()
 			out->push_back(tokbuff);
 			return GetToken();
 			break;
-	
+
+		//dual step tokens		
+		case tt_greater:// >=			
+		case tt_less:// <=
+		case tt_lognot:	// !=
+		case tt_assign:// ==			
+		case tt_plus:// ++ or +=	
+		case tt_minus:// -- or -=			
+		case tt_amper:// &&			
+		case tt_pipe:// ||
+			if(	(DeriveType(GetChar()+PeekChar())!=tt_greaterequal) && (DeriveType(GetChar()+PeekChar())!=tt_lessequal) &&
+				(DeriveType(GetChar()+PeekChar())!=tt_notequal) && (DeriveType(GetChar()+PeekChar())!=tt_equal) && 
+				(DeriveType(GetChar()+PeekChar())!=tt_incr) && (DeriveType(GetChar()+PeekChar())!=tt_plusassign) &&
+				(DeriveType(GetChar()+PeekChar())!=tt_decr) && (DeriveType(GetChar()+PeekChar())!=tt_minusassign) &&
+				(DeriveType(GetChar()+PeekChar())!=tt_logand) &&(DeriveType(GetChar()+PeekChar())!=tt_logor)	)	break;		
+			IncIndex();
+			tokbuff.data+=GetChar();
+			tokbuff.type=DeriveType(tokbuff.data);
+			out->push_back(tokbuff);
+			return GetToken();
+			break;		
+
 		//build token, check for delims
 		default:		
 			if(!IsDelim(tokbuff.data))
@@ -406,16 +442,13 @@ bcToken* bcLexer::NextToken()
 			}
 			//check for the first char being a delim		
 			tokbuff.type=DeriveType(tokbuff.data);		
-			out->push_back(tokbuff);			
+			out->push_back(tokbuff);	
+			return GetToken();
 			break;
 
 	}	
-
-	//- - -post token analysis- - -
-	//possible float
-	
-
-	return GetToken();	
+	out->push_back(tokbuff);	
+	return GetToken();
 }
 
 bcToken* bcLexer::PeekToken()
@@ -457,8 +490,7 @@ string bcLexer::PeekChar()
 }
 
 bool bcLexer::IncIndex()
-{
-	
+{	
 	if(xindex+1 <= in->at(yindex).size()-1)
 	{		
 		xindex++;		

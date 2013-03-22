@@ -2,7 +2,7 @@
 #include <stack>
 #include "util.h"
 //#include "error.h"
-
+/*
 bcByteCodeGen::bcByteCodeGen()
 {
 	index=NULL;
@@ -647,4 +647,4 @@ bool bcByteCodeGen::IsError()
 bcErrorCode bcByteCodeGen::GetError()
 {
 	return errorcode;
-}
+}*/

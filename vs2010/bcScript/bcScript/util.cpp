@@ -72,30 +72,30 @@ std::string bctolower(char in)
 
 bool bcfexists(const char *filename)
 {
-  std::ifstream ifile(filename);
-  return ifile.good();
+	std::ifstream ifile(filename);
+	return ifile.good();
 }
 
 bool bcreadfile(const char* in,std::vector<std::string>* out)
 {
-  std::string line;
-  std::ifstream myfile(in);
+	std::string line;
+	std::ifstream myfile(in);
   
-  if (myfile.is_open())
-  {
-    while ( myfile.good() )
-    {
-		getline (myfile,line);
-		line.append("\n");
-		out->push_back( line );		
-    }
-    myfile.close();
-	return true;
-  }
-  else
-  {
-	  return false;
-  }
+	if (myfile.is_open())
+	{
+		while ( myfile.good() )
+		{
+			getline (myfile,line);
+			line.append("\n");
+			out->push_back( line );		
+		}
+		myfile.close();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 int GetPrecedence(bcToken tokin)

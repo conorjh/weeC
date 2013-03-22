@@ -1,0 +1,27 @@
+//isBigger
+//bcScript Example Program
+
+func bool IsBigger(int a,int b)
+{
+	if(a>b)	return true;
+	return false;
+}
+
+func main()
+{
+	int num1=49;
+	int num2=88;
+	
+	if(isBigger(num1,num2))
+	{
+		//number 1 is bigger than number 2
+		
+	}
+	else
+	{
+		//number 2 is bigger than number 1
+		
+	}
+}
+	
+

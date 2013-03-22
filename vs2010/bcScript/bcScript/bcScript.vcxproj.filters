@@ -31,6 +31,9 @@
     <Filter Include="test\lexer">
       <UniqueIdentifier>{d7ebe2f5-6cc3-4ae2-9207-a452f290a58f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="test\parser">
+      <UniqueIdentifier>{0d29ab68-55a7-4b9a-86e9-e8be7bbd56cf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bcscript.h" />
@@ -55,6 +58,19 @@
     <ClInclude Include="test.h">
       <Filter>test</Filter>
     </ClInclude>
+    <ClInclude Include="parser.h">
+      <Filter>parser</Filter>
+    </ClInclude>
+    <ClInclude Include="TODO.h" />
+    <ClInclude Include="codegen.h">
+      <Filter>codegen</Filter>
+    </ClInclude>
+    <ClInclude Include="vm.h">
+      <Filter>vm</Filter>
+    </ClInclude>
+    <ClInclude Include="test_parser.h">
+      <Filter>test\parser</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lexer.cpp">
@@ -65,6 +81,15 @@
     </ClCompile>
     <ClCompile Include="util.cpp">
       <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="parser.cpp">
+      <Filter>parser</Filter>
+    </ClCompile>
+    <ClCompile Include="codegen.cpp">
+      <Filter>codegen</Filter>
+    </ClCompile>
+    <ClCompile Include="vm.cpp">
+      <Filter>vm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

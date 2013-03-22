@@ -2,7 +2,6 @@
 #include "types.h"
 #include "error.h"
 #include <vector>
-#include <map>
 
 namespace bc
 {
@@ -19,22 +18,22 @@ namespace bc
 			bcLexer(vector<string>*);
 			bcLexer(string);
 
-			int Setup(vector<string>*);
-			int Setup(string);
-			bool	IsError();
-			int		GetError();
+			int	Setup(vector<string>*);
+			int	Setup(string);
+			bool IsError();
+			int	GetError();
 			vector<bcToken>* Get()	{return out;};	//get output
 
 			int Lex();				//lex entire input
 			bcToken* GetToken();	//return current token
 			bcToken* NextToken();	//inc index, return next token	
 			bcToken* PeekToken();	//return next token without inc'ing index		
+			string GetChar();
+			string PeekChar();	
 
 		private:
 			bool IncIndex();
-			bool DecIndex();
-			string GetChar();
-			string PeekChar();
+			bool DecIndex();				
 
 			bool done;
 			bool iserror;
@@ -43,6 +42,5 @@ namespace bc
 			vector<string>* in;
 			vector<bcToken>* out;
 		};
-
 	}
 }

@@ -1,0 +1,14 @@
+//Hello World
+//bcScript Example Program
+
+include std.io
+
+func main()
+{
+	string hello,world;
+	hello="Hello ";
+	world="World!";
+	std.io.console.print(hello+world);
+}
+	
+

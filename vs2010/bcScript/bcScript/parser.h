@@ -1,109 +1,102 @@
+#pragma once
 #include "types.h"
-#include "util.h"
 #include "error.h"
-#include "tree.hh"
-#include <stack>
-#include <map>
 #include <vector>
+#include <map>
+#include "tree.hh"
 
-const bool bcParser_CheckEmptyInput = false;
-
-class bcParser
+namespace bc
 {
+	namespace parser
+	{		
+		class bcParser
+		{
+		public:
+			bcParser();
+			bcParser(vector<bcToken>*);			
+			int Setup(vector<bcToken>*);
+			int Parse();
+			
+			//token input
+			bcToken* GetToken();
+			bcToken* PeekToken();
+			bcToken* NextToken();
+			bcToken* NextToken(bcTokenType);
+			
 
-public:
-	bcParser();
-	bcParser(vector<bcToken>*);
-	int Init();		
-	int Load(vector<bcToken>*);
+			//Parse index
+			tree<bcParseNode>* Get();
+			tree<bcParseNode>::iterator* GetNode();			
+			tree<bcParseNode>::iterator* AddNode(bcParseNode);
+			tree<bcParseNode>::iterator* AddNode(tree<bcParseNode>::iterator*,bcParseNode);
+			tree<bcParseNode>::iterator* AddNodeRTP(bcParseNode);
+			tree<bcParseNode>::iterator* AddNodeRTP(tree<bcParseNode>::iterator*,bcParseNode);
+			void SetNode(tree<bcParseNode>::iterator*);
+			void GetParentNode();
+			void RevertToParent();
+			void RTP(){RevertToParent();};
+			
+			//error
+			bool IsError();
+			bcErrorCode GetError();
+			int GetErrorLine();
+			int GetErrorCol();
+			void SetError(bcErrorCode,int line,int col);
+			void ResetError();
 
-	//Token input
-	bcToken* ReadToken();
-	bcToken* ReadToken(bcTokenType);
-	bcToken* CurrentToken();
-	bcToken* NextToken();
-	bcToken* PreviousToken();
-	void ClearPNBuff();
-	
-	//Main Parsing methods
-	int Parse();
-	int Parse(vector<bcToken>* );		
-	int PreParse();	
-	int ParseStatement();
-	int ParseBlock();
-	int ParseBlockNoDec();
-	int ParseAssignment();
-	int ParseFuncCall();
-	int ParseDec();
-	int ParseDecFunc();
-	int ParseDecFunc_Type();
-	int ParseDecFunc_Ident();
-	int ParseIf();
-	int ParseWhile();
-	int ParseBreak();
-	int ParseReturn();
-	int ParseContinue();		
-	int ParseParamList();
-	int ParseDecParamList();	
-	int ParseDecInParam();	
-	int ParseFExp();
-	bcToken ParseExp();
-	bcToken ParseSubExp();
-	bcToken ParseTerm();
-	bcToken ParseFactor();
+		private:			
+			vector<bcToken>* in;
+			tree<bcParseNode>* out;				
+			map<string,bcSymbol>* symtab;
+			int tindex;								//Cuurent token we are looking at			
+			tree<bcParseNode>::iterator pindex;		//Current parse node we are working on	
+			bcErrorCode errorcode;			
+		};
+		
+		//Recursive parsing methods			
+		//level 1
+		void ParseStatement(bcParser*);
+		//level 2
+		void ParseBlock(bcParser*);
+		void ParseBlockNoDec(bcParser*);
+		void ParseWhile(bcParser*);
+		void ParseAssignment(bcParser*);
+		void ParseDec(bcParser*);
+		void ParseFuncCall(bcParser*);
+		void ParseFExp(bcParser*);
+		void ParseIf(bcParser*);
+		//level 3
+		void ParseDecFunc(bcParser*);
+		void ParseDecVar(bcParser*);
+		void ParseBreak(bcParser*);
+		void ParseReturn(bcParser*);
+		void ParseContinue(bcParser*);			
+		bcToken		ParseExp(bcParser*);
+		//level 4
+		void ParseParamList(bcParser*);	
+		void ParseDecParamList(bcParser*);			
+		void ParseDecFunc_Type(bcParser*);
+		void ParseDecFunc_Ident(bcParser*);		
+		void ParseIdent(bcParser*);
+		bcToken		ParseSubExp(bcParser*);		
+		//level 5		
+		void ParseDecInParam(bcParser*);
+		bcToken		ParseTerm(bcParser*);
+		//level 6
+		bcToken		ParseFactor(bcParser*);
 
-	//data comparison
-	bool CheckOperandTypes(bcToken,bcToken,bcTokenType);
-	bool CheckOperandInt(bcToken,bcTokenType);
-	bool CheckOperandFloat(bcToken,bcTokenType);
-	bool CheckOperandString(bcToken,bcTokenType);
-	bool CheckOperandBool(bcToken,bcTokenType);
-	bool CheckOperandObject(bcToken,bcTokenType);
-	bool CheckOperandVar(bcToken,bcTokenType);
-	bool CheckOperandFunction(bcToken,bcTokenType);
-	bool CompareFuncSigs(string, vector<map<string,bcSymbol>::iterator>);
-	string GetTag(bcSymbol*);
+		//type compatability
+		bool CheckOperandTypes(bcParser*,bcToken,bcToken,bcTokenType);
+		bool CheckOperandInt(bcParser*,bcToken,bcTokenType);
+		bool CheckOperandFloat(bcParser*,bcToken,bcTokenType);
+		bool CheckOperandString(bcParser*,bcToken,bcTokenType);
+		bool CheckOperandBool(bcParser*,bcToken,bcTokenType);
+		bool CheckOperandObject(bcParser*,bcToken,bcTokenType);
+		bool CheckOperandVar(bcParser*,bcToken,bcTokenType);
+		bool CheckOperandFunction(bcParser*,bcToken,bcTokenType);
+		bool CompareFuncSigs(bcParser*,string, vector<map<string,bcSymbol>::iterator>);
+		string GetTag(bcParser*,bcSymbol*);
 
-	//Symbol table
-	map<string,bcSymbol> symtab;
-	bcSymbolType ToSymbolType(bcTokenType);
-	map<string,bcSymbol>::iterator AddSymbol(bcSymbol);
-	map<string,bcSymbol>::iterator AddSymbol(bcSymbol,string);
-	map<string,bcSymbol>::iterator AddSymbol(string,bcSymbolType,string,map<string,bcSymbol>::iterator);
-	bcSymbol* GetSymbol(string ident);
-	map<string,bcSymbol>::iterator GetSymbolIt(string ident); //iterator from symtab key
-	map<string,bcSymbol>::iterator GetSymbolIt(bcToken); //iterator from bcToken
-	string SigToIdent(string,vector<map<string,bcSymbol>::iterator>);	//generate a funcsig key from symbolname and vector of symtab iterators
-	bool IsScopeValid(bcSymbol*);						//checks a symbols scope is valid in the current scope
-
-	//Error	
-	bcErrorCode errorcode;
-	bool IsError();
-	bcErrorCode GetError();
-	int GetErrorLine();
-	int GetErrorCol();
-	void SetError(bcErrorCode,int line,int col);
-	void ResetError();
-	bool error;
-	int error_line;
-	int error_col;
-	int whilecount,funccount;
-	
-	//data
-	tree<bcParseNode> ptree;										//the AST we create 
-	tree<bcParseNode>::iterator pindex;								//Current node we are working on
-	map<string,vector<map<string,bcSymbol>::iterator>> stackframes;	//Stores stackframes for function decs and global
-	bcParseNode pnbuff;												//current node we are constructing
-	map<string,bcSymbol>::iterator scope;							//current scope as a symbol
-	stack<map<string,bcSymbol>::iterator> openscopes;				//list of opened scopes
-	vector<map<string,bcSymbol>::iterator>* stackframebuff;			//current functions stackframe	(params, locals, return addy)
-	map<string,vector<map<string,bcSymbol>::iterator>> funcsigs;	//iternal symbol name, vector of symtab iterators
-	vector<map<string,bcSymbol>::iterator> sigbuff,callsigbuff;		//buffers to store params from ParseParamList/ParseDecParamList, and check in CallFunc/DecFunc
-	vector<bcSymbol> parambuff;										//parameter symbols generated by function dec (parsedecparamlist())				
-	int parencount;
-	int bracecount;
-	int index;
-	bool safe;
-	bool nodec;//if true, declarations are invalid (inside if/while blocks for instance)
-	vector<bcToken>* in;
-};
+		bcParseNodeType DeriveType(bcToken);
+	}
+}

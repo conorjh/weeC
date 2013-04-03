@@ -3,6 +3,9 @@
 #include "lexer.h"
 #include <iostream>
 
+using namespace bc;
+using namespace bc::parser;
+
 string GetTypeAsString(bcTokenType _t)
 {
 	switch(_t)

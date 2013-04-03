@@ -2,6 +2,8 @@
 #include <fstream>
 #include "types.h"
 
+using namespace bc;
+using namespace bc::util;
 
 std::string bcitos(int in)
 {
@@ -76,7 +78,7 @@ bool bcfexists(const char *filename)
 	return ifile.good();
 }
 
-bool bcreadfile(const char* in,std::vector<std::string>* out)
+bool util::bcreadfile(const char* in,std::vector<std::string>* out)
 {
 	std::string line;
 	std::ifstream myfile(in);

@@ -30,7 +30,22 @@ int test_parser_bigger()
 {
 	vector<string> source;
 	bc::parser::bcParser parser;
-	bcreadfile("example\\isbigger.bcs",&source);
+	util::bcreadfile("example\\isbigger.bcs",&source);
+	std::string c;
+	std::cin >> c;
+	bc::lexer::bcLexer lex(&source);
+	lex.Lex();
+	PrintLex(&lex);	
+	parser.Setup(lex.Get());
+	parser.Parse();
+	return 1;
+}
+
+int test_parser_func()
+{
+	vector<string> source;
+	bc::parser::bcParser parser;
+	util::bcreadfile("example\\func.bcs",&source);
 	std::string c;
 	std::cin >> c;
 	bc::lexer::bcLexer lex(&source);

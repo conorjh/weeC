@@ -72,8 +72,8 @@ bcParseNodeType parser::DeriveType(bcToken in)
 bcParser::bcParser()
 {
 	tindex=0;
-	
-
+	//out=new tree<bcParseNode>(bcParseNode(pn_head));
+	//pindex=out->begin();
 }
 
 int bcParser::Parse()
@@ -88,21 +88,25 @@ int bcParser::Parse()
 int bcParser::Setup(vector<bcToken>* _in)
 {
 	in=_in;
-	bcParseNode tnode;
-	out=new tree<bcParseNode>();
-	out->set_head(tnode);
-	pindex=out->begin();
+	ast.tree=new tree<bcParseNode>(bcParseNode(pn_head));
+	pindex=ast.tree->begin();
+	ast.symtab=new map<std::string,bcSymbol>();
 	return 1;
 }
 
-void bcParser::RevertToParent()
+bcAST* bcParser::Get()
 {
-	pindex--;
+	return &ast;
 }
 
-tree<bcParseNode>* bcParser::Get()
+tree<bcParseNode>* bcParser::GetTree()
 {
-	return out;
+	return ast.tree;
+}
+
+std::map<std::string,bcSymbol>* bcParser::GetSymtab()
+{
+	return ast.symtab;
 }
 
 bcToken* bcParser::GetToken()
@@ -136,9 +140,20 @@ void bcParser::SetError(bcErrorCode ec,int l,int c)
 
 tree<bcParseNode>::iterator* bcParser::AddNode(bcParseNode pn)
 {
-	tree<bcParseNode>::iterator* out=NULL;
-	
-	return out;
+	pindex=ast.tree->append_child(pindex,pn);
+	return &pindex;
+}
+
+
+tree<bcParseNode>::iterator* bcParser::AddChild(bcParseNode pn)
+{
+	ast.tree->append_child(pindex,pn);
+	return &pindex;
+}
+
+void bcParser::Parent()
+{
+	pindex=ast.tree->parent(pindex);
 }
 
 bcErrorCode bcParser::GetError()
@@ -153,12 +168,9 @@ bool bcParser::IsError()
 
 void parser::ParseStatement(bcParser* par)
 {	
-	bcParseNode out;
-	out.type=pn_statement;	
-	out.tokens.push_back(*par->GetToken());	//needed?
-	par->AddNode(out);
-	out.Clear();
-
+	//create parent node	
+	par->AddNode(bcParseNode(pn_statement,*par->GetToken()));	
+	
 	switch(par->GetToken()->type)
 	{
 		case tt_eof:
@@ -182,12 +194,11 @@ void parser::ParseStatement(bcParser* par)
 
 		default:
 			par->SetError(ec_par_invalidtoken,par->GetToken()->line,par->GetToken()->col);
-			break;
-			
+			break;			
 	}
 	
 	//Return to parent node 
-	par->RTP();
+	par->Parent();
 }
 
 void parser::ParseDec(bcParser* par)
@@ -213,23 +224,18 @@ void parser::ParseDec(bcParser* par)
 	//(optional) initialize object
 	
 	//Return to parent node 
-	par->RTP();
+	//par->RTP();
 }
 
 void parser::ParseDecFunc(bcParser* par)
 {
-	//init buffers	
-	bcParseNode out;	
-	out.type=pn_funcdec;
-
 	//1. get our declaration type	(func/builtin type/user type)
+	//	 and create our parent node
 	switch(par->GetToken()->type)
 	{
 	case tt_function:			
-		out.tokens.push_back(*par->GetToken());	//needed?
-		par->AddNode(out);
+		par->AddNode(bcParseNode(pn_funcdec,*par->GetToken()));
 		par->NextToken();
-		out.Clear();
 		break;
 
 	default:
@@ -237,12 +243,29 @@ void parser::ParseDecFunc(bcParser* par)
 		break;
 	}
 	
-	//2. get identifier
+	//2. get type/identifier
 	switch(par->GetToken()->type)
 	{
+	//ident (namespace, var, method)
 	case tt_ident:		
 		ParseIdent(par);		
 		break;
+
+	//basic type
+	case tt_bool:
+	case tt_int:
+	case tt_string:
+	case tt_float:
+		ParseDecFunc_Type(par);
+		ParseDecFunc_Ident(par);
+		break;
+
+	//object type
+	case tt_object:
+
+		break;
+
+	
 
 	default:
 		//error
@@ -280,17 +303,50 @@ void parser::ParseDecFunc(bcParser* par)
 	}
 
 	//Return to parent node (statement most times);
-	par->RTP();
+	par->Parent();
 
+}
+
+void parser::ParseDecFunc_Type(bcParser* par)
+{
+	switch(par->GetToken()->type)
+	{
+	case tt_int:
+	case tt_string:
+	case tt_float:
+	case tt_bool:
+		par->AddChild(bcParseNode(pn_funcdec_type,*par->GetToken()));
+		par->NextToken();
+		break;
+
+	case tt_ident:
+
+		break;
+
+	default:
+		//error
+		break;
+	}
+}
+
+void parser::ParseDecFunc_Ident(bcParser* par)
+{
+	switch(par->GetToken()->type)
+	{
+	case tt_ident:
+		ParseIdent(par);
+		break;
+
+	default:
+		//error
+		break;
+	}
 }
 
 void parser::ParseParamList(bcParser* par)
 {
-	//init buffers
-	bcParseNode out;	
-	out.type=pn_paramlist;
-	par->AddNode(out);
-	out.Clear();
+	//add paramlist node	
+	par->AddNode(bcParseNode(pn_paramlist));	
 
 	//get our opening parenthesis (
 	if(par->GetToken()->type!=tt_oparen)	return;//error!
@@ -308,31 +364,45 @@ void parser::ParseParamList(bcParser* par)
 			//error
 
 		}
-
 		//consume comma 
 		par->NextToken();
 	}
 	
 	//consume cparen
-	par->NextToken();
-	//Return to parent node 
-	par->RTP();
-	
+	par->NextToken();	
 }
 
 void parser::ParseIdent(bcParser* par)
 {
-	//init buffers
-	bcParseNode out;	
-	out.type=pn_paramlist;
-	par->AddNode(out);
-	out.Clear();
+	//create node
+	par->AddChild(bcParseNode(pn_ident));	
 	
-	//1.parse the first ident
+	//1.check our first ident exists in the symbol table
+	if(par->GetSymtab()->find( par->GetToken()->data ) == par->GetSymtab()->end())
+	{
+		//no such identifier
+		
+	}
+	par->NextToken();
 
+	//2.(optional) parse namespace (::) or parse member (.)
+	while(par->GetToken()->type==tt_dcolon || par->GetToken()->type==tt_period)
+	{
+		switch(par->GetToken()->type)
+		{
+		case tt_dcolon:
 
-	//2.(optional) parse namespace :: 
+			break;
 
+		case tt_period:
+
+			break;
+
+		default:
+
+			break;
+		}
+	}
 
 	//3.(optional) parse members .
 
@@ -342,10 +412,7 @@ void parser::ParseIdent(bcParser* par)
 void parser::ParseBlock(bcParser* par)
 {
 	//init buffers
-	bcParseNode out;	
-	out.type=pn_block;
-	par->AddNode(out);
-	out.Clear();
+	par->AddNode(bcParseNode(pn_block));
 	
 
 }

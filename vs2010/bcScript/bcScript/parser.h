@@ -13,7 +13,10 @@ namespace bc
 		{
 		public:
 			bcParser();
-			bcParser(vector<bcToken>*);			
+			bcParser(vector<bcToken>*);	
+			bcAST*							Get();
+			tree<bcParseNode>*				GetTree();
+			std::map<std::string,bcSymbol>* GetSymtab();
 			int Setup(vector<bcToken>*);
 			int Parse();
 			
@@ -21,20 +24,13 @@ namespace bc
 			bcToken* GetToken();
 			bcToken* PeekToken();
 			bcToken* NextToken();
-			bcToken* NextToken(bcTokenType);
-			
+			bcToken* NextToken(bcTokenType);			
 
-			//Parse index
-			tree<bcParseNode>* Get();
-			tree<bcParseNode>::iterator* GetNode();			
-			tree<bcParseNode>::iterator* AddNode(bcParseNode);
-			tree<bcParseNode>::iterator* AddNode(tree<bcParseNode>::iterator*,bcParseNode);
-			tree<bcParseNode>::iterator* AddNodeRTP(bcParseNode);
-			tree<bcParseNode>::iterator* AddNodeRTP(tree<bcParseNode>::iterator*,bcParseNode);
-			void SetNode(tree<bcParseNode>::iterator*);
-			void GetParentNode();
-			void RevertToParent();
-			void RTP(){RevertToParent();};
+			//Parse index							//pointer to the parse tree
+			tree<bcParseNode>::iterator* GetNode();				
+			tree<bcParseNode>::iterator* AddNode(bcParseNode);	//add node and point pindex to the new child node
+			tree<bcParseNode>::iterator* AddChild(bcParseNode);	//add node, but pindex remains on parent node
+			void Parent();
 			
 			//error
 			bool IsError();
@@ -44,10 +40,9 @@ namespace bc
 			void SetError(bcErrorCode,int line,int col);
 			void ResetError();
 
-		private:			
+		private:	
+			bcAST ast;
 			vector<bcToken>* in;
-			tree<bcParseNode>* out;				
-			map<string,bcSymbol>* symtab;
 			int tindex;								//Cuurent token we are looking at			
 			tree<bcParseNode>::iterator pindex;		//Current parse node we are working on	
 			bcErrorCode errorcode;			

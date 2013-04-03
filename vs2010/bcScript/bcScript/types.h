@@ -5,7 +5,8 @@
 #include "tree.hh"
 
 using namespace std;
-
+namespace bc
+{
 	//bottom level construct
 	enum bcTokenType{tt_null, tt_unk , tt_empty , tt_string, tt_int, tt_float, tt_object, tt_var, tt_bool, tt_scolon, tt_colon, tt_dcolon, tt_comma, tt_period, tt_squote,
 					tt_dquote, tt_qmark, tt_pipe, tt_minus, tt_plus, tt_div, tt_mult, tt_mod, tt_pow, tt_assign, tt_underscore, tt_tilde,
@@ -20,24 +21,26 @@ using namespace std;
 					};
 
 
-
-	//top level construct
-	enum bcParseNodeType{pn_null,pn_unk, pn_head,
-						pn_exp, pn_type,
+	namespace parser
+	{
+		//top level construct
+		enum bcParseNodeType{pn_null,pn_unk, pn_head,
+							pn_exp, pn_type,
 					
-						//straight copies of their tt_ counterparts
-						pn_string, pn_int, pn_float, pn_object, pn_var, pn_bool, pn_scolon, pn_colon, pn_comma, pn_period, pn_squote,
-						pn_dquote, pn_qmark, pn_exclam, pn_minus, pn_plus,pn_pipe, pn_div, pn_mult, pn_mod, pn_pow, pn_assign, pn_underscore, pn_tilde,
-						pn_oparen, pn_cparen, pn_obracket, pn_cbracket, pn_obrace, pn_cbrace, pn_bslash, pn_percent, pn_newline,
-						pn_dollar, pn_amper, pn_greater, pn_less, pn_greaterequal, pn_lessequal, pn_equal, pn_notequal, pn_logand, pn_logor, pn_lognot,
-						pn_intlit, pn_strlit, pn_fltlit, pn_ident, pn_comment, pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr,pn_plusassign, pn_minusassign, pn_multassign, pn_divassign,
+							//straight copies of their tt_ counterparts
+							pn_string, pn_int, pn_float, pn_object, pn_var, pn_bool, pn_scolon, pn_colon, pn_comma, pn_period, pn_squote,
+							pn_dquote, pn_qmark, pn_exclam, pn_minus, pn_plus,pn_pipe, pn_div, pn_mult, pn_mod, pn_pow, pn_assign, pn_underscore, pn_tilde,
+							pn_oparen, pn_cparen, pn_obracket, pn_cbracket, pn_obrace, pn_cbrace, pn_bslash, pn_percent, pn_newline,
+							pn_dollar, pn_amper, pn_greater, pn_less, pn_greaterequal, pn_lessequal, pn_equal, pn_notequal, pn_logand, pn_logor, pn_lognot,
+							pn_intlit, pn_strlit, pn_fltlit, pn_ident, pn_comment, pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr,pn_plusassign, 
+							pn_minusassign, pn_multassign, pn_divassign,
 	
-						pn_assignment, pn_block,pn_declaration,pn_paramdeclaration,pn_funcdec,pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else,
-						pn_while,pn_break, pn_return, pn_continue,
+							pn_assignment, pn_block,pn_declaration,pn_paramdeclaration,pn_funcdec,pn_funcdec_type,pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else,
+							pn_while,pn_break, pn_return, pn_continue,
 	
-						pn_statement
-						};
-					
+							pn_statement
+							};
+	}				
 
 
 	enum bcSymbolType{
@@ -66,16 +69,22 @@ using namespace std;
 		std::string data;
 	};
 
-	//node for our parsetree, contains an index to lexer.data
-	struct bcParseNode
+	namespace parser
 	{
-		
-		bcParseNodeType type;
-		std::vector<bcToken> tokens;	//index of tokens in bcLexer.data
-		std::string tag;			//used to hold internal function names currently TODO find a better way to do this!
-		bcParseNode(){type=pn_null;};
-		void Clear(){type=pn_null;tokens.clear();tag="";};
-	};
+		//node for our parsetree, contains copies of tokens usually obtained from the lexer
+		struct bcParseNode
+		{			
+			bcParseNodeType type;
+			std::vector<bcToken> tokens;		//index of tokens in bcLexer.data
+			std::string tag;					//used to hold internal function names currently TODO find a better way to do this!		
+			void Clear(){type=pn_null;tokens.clear();tag="";};
+
+			//ctors
+			bcParseNode(){type=pn_null;};
+			bcParseNode(bcParseNodeType t){type=t;};
+			bcParseNode(bcParseNodeType t, bcToken tok){type=t;tokens.push_back(tok);};
+		};
+	}
 
 	struct bcSymbol
 	{
@@ -93,15 +102,16 @@ using namespace std;
 		std::string data;
 	};
 
-	struct bcAST
+	namespace parser
 	{
-		tree<bcParseNode>* tree;
-		std::map<std::string,bcSymbol>* symtab;
-		std::map<std::string,std::vector<std::map<std::string,bcSymbol>::iterator>>* funcsig;
-		std::vector<bcToken>* tokens;
-		std::map<std::string,std::vector<std::map<std::string,bcSymbol>::iterator>>* stackframes;
-	};
-
+		struct bcAST
+		{
+			tree<bcParseNode>* tree;
+			std::map<std::string,bcSymbol>* symtab;
+			std::map<std::string,std::vector<std::map<std::string,bcSymbol>::iterator>>* funcsig;
+			std::map<std::string,std::vector<std::map<std::string,bcSymbol>::iterator>>* stackframes;
+		};
+	}
 	struct bcInstr
 	{
 		bcInstr()														{opcode=oc_null;operands.reserve(3);};
@@ -122,3 +132,4 @@ using namespace std;
 		std::string data;
 		bcValType type;
 	};
+}

@@ -22,7 +22,7 @@ int test_lexer_console()
 int test_lexer_basic()
 {
 	vector<string> source;
-	bcreadfile("example\\helloworld.bcs",&source);
+	util::bcreadfile("example\\helloworld.bcs",&source);
 	std::string c;	
 	std::cin >> c;
 	bc::lexer::bcLexer lex(&source);
@@ -35,7 +35,7 @@ int test_lexer_basic()
 int test_lexer_bigger()
 {
 	vector<string> source;
-	bcreadfile("twbar.cpp",&source);
+	util::bcreadfile("twbar.cpp",&source);
 	std::string c;
 	std::cin >> c;
 	bc::lexer::bcLexer lex(&source);

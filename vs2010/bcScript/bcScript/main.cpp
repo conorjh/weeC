@@ -11,5 +11,5 @@
 
 int main()
 {	
-	return test_parser_bigger();
+	return test_parser_func();
 }

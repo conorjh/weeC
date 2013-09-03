@@ -35,8 +35,8 @@ namespace bc
 							pn_intlit, pn_strlit, pn_fltlit, pn_ident, pn_comment, pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr,pn_plusassign, 
 							pn_minusassign, pn_multassign, pn_divassign,
 	
-							pn_assignment, pn_block,pn_declaration,pn_paramdeclaration,pn_funcdec,pn_funcdec_type,pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else,
-							pn_while,pn_break, pn_return, pn_continue,
+							pn_assignment, pn_block,pn_declaration,pn_paramdeclaration,pn_funcdec,pn_funcdec_type,pn_vardec,pn_vardec_type,pn_paramlist,pn_decparamlist,
+							pn_funccall, pn_if,pn_else,pn_while,pn_break, pn_return, pn_continue,
 	
 							pn_statement
 							};

@@ -12,10 +12,10 @@ namespace bc
 		{
 		public:
 			bcByteCodeGen();
-			bcByteCodeGen(tree<bcParseNode>*, map<string,bcSymbol>* _symtab,map<string,vector<map<string,bcSymbol>::iterator>>*,
+			bcByteCodeGen(tree<parser::bcParseNode>*, map<string,bcSymbol>* _symtab,map<string,vector<map<string,bcSymbol>::iterator>>*,
 							vector<bcToken>*,map<string,vector<map<string,bcSymbol>::iterator>>* );
 	
-			int Init(tree<bcParseNode>*,  map<string,bcSymbol>* _symtab,map<string,vector<map<string,bcSymbol>::iterator>>*,
+			int Init(tree<parser::bcParseNode>*,  map<string,bcSymbol>* _symtab,map<string,vector<map<string,bcSymbol>::iterator>>*,
 						vector<bcToken>*, map<string,vector<map<string,bcSymbol>::iterator>>*);
 
 			int Gen();
@@ -45,11 +45,11 @@ namespace bc
 			int AddInstr(bcOpcode,bcOperandType,string);	//for instructions with one operand
 			int AddInstr(bcOpcode,vector<bcOperand> ops);
 
-			tree<bcParseNode>::iterator CurrentNode();
-			tree<bcParseNode>::iterator NextNode();
-			tree<bcParseNode>::iterator PreviousNode();
+			tree<parser::bcParseNode>::iterator CurrentNode();
+			tree<parser::bcParseNode>::iterator NextNode();
+			tree<parser::bcParseNode>::iterator PreviousNode();
 			int IncNode();
-			int IncNode(bcParseNodeType);	
+			int IncNode(parser::bcParseNodeType);	
 
 			void SetError(bcErrorCode);
 			bcErrorCode GetError();
@@ -59,8 +59,8 @@ namespace bc
 			map<string,int> functab;		//internal ident to line number
 			vector<bcInstr> istream;
 
-			tree<bcParseNode>::iterator index;
-			tree<bcParseNode>* in;
+			tree<parser::bcParseNode>::iterator index;
+			tree<parser::bcParseNode>* in;
 			map<string,bcSymbol>* symtab;
 			vector<bcToken>* tokens;
 			map<string,vector<map<string,bcSymbol>::iterator>>* funcsigs;

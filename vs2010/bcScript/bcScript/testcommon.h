@@ -158,22 +158,17 @@ string GetTypeAsString(bcTokenType _t)
 
 void PrintLex(bc::lexer::bcLexer* l)
 {
-	std::cout << "Lexer Output " << std::endl;
+	std::cout << "Lexer Output " << std::endl << "- - - -" << std::endl;
 	for(int t=0;t<l->Get()->size();++t)
 	{
 		std::cout << "00" << t << " "<< l->Get()->at(t).line << ","<<l->Get()->at(t).col<< "	type:\t" << l->Get()->at(t).type << "\t" << GetTypeAsString(l->Get()->at(t).type) << "\t\t\tdata: " <<  l->Get()->at(t).data << std::endl;
 	}
-	std::cout << std::endl;
+	std::cout << "- - - -" << std::endl ;
 	
 }
 
-void PrintParser(bc::parser::bcParser* p)
+void PrintParser(bc::parser::bcAST* p)
 {
-	/*std::cout << "Lexer Output " << std::endl;
-	for(int t=0;t<p->Get()->size();++t)
-	{
-		std::cout << "00" << t << " "<< p->Get()->at(t).line << ","<<l->Get()->at(t).col<< "	type:\t" << p->Get()->at(t).type << "\t" << GetTypeAsString(p->Get()->at(t).type) << "\t\t\tdata: " <<  p->Get()->at(t).data << std::endl;
-	}
-	std::cout << std::endl;*/
+	//p->tree->head->data
 	
 }

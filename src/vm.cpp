@@ -1,5 +1,5 @@
 #include "vm.h"
-#include "util.h"
+#include "util.h"/*
 bcVM::bcVM()
 {
 
@@ -299,4 +299,4 @@ int bcVM::RunInstr_land()
 int bcVM::RunInstr_lor()
 {
 	return 1; 
-}
+}*/

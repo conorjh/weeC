@@ -216,6 +216,19 @@ void parser::ParseDec(bcParser* par)
 	case tt_ident:
 		ParseIdent(par);
 		break;
+
+	case tt_var:
+	case tt_int:
+	case tt_string:
+	case tt_float:
+	case tt_bool:
+	case tt_object:
+		ParseDecVar(par);
+		break;
+
+	default:
+		//not sure
+		break;
 	}
 	
 	//get identifier
@@ -343,6 +356,40 @@ void parser::ParseDecFunc_Ident(bcParser* par)
 	}
 }
 
+void parser::ParseDecVar(bcParser* par)
+{
+	switch(par->GetToken()->type)
+	{
+	case tt_int:
+	case tt_string:
+	case tt_float:
+	case tt_bool:
+		ParseDecVar_Type(par);
+		break;
+
+	default:
+		//error
+		break;
+	}
+}
+
+void parser::ParseDecVar_Type(bcParser* par)
+{
+	switch(par->GetToken()->type)
+	{
+	case tt_int:
+	case tt_string:
+	case tt_float:
+	case tt_bool:
+		ParseDecVar_Type(par);
+		break;
+
+	default:
+		//error
+		break;
+	}
+}
+
 void parser::ParseParamList(bcParser* par)
 {
 	//add paramlist node	
@@ -366,6 +413,7 @@ void parser::ParseParamList(bcParser* par)
 		}
 		//consume comma 
 		par->NextToken();
+		
 	}
 	
 	//consume cparen
@@ -411,10 +459,31 @@ void parser::ParseIdent(bcParser* par)
 
 void parser::ParseBlock(bcParser* par)
 {
-	//init buffers
+	//check for opening brace
+	if(par->GetToken()->type!=tt_obrace)
+	{
+		//error yo
+		par->SetError(ec_par_invalidtoken,par->GetToken()->line,par->GetToken()->col);
+		return;
+	}
+
+	//consume it
+	par->NextToken();
 	par->AddNode(bcParseNode(pn_block));
 	
+	while(par->GetToken()->type!=tt_cbrace)
+	{
+		ParseStatement(par);
+	}
 
+	//check for and consume closing brace
+	if(par->GetToken()->type!=tt_cbrace)
+	{
+		//error yo, no closing brace
+		par->SetError(ec_par_nocbrace,par->GetToken()->line,par->GetToken()->col);
+		return;
+	}
+	par->NextToken();
 }
 
 

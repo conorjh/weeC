@@ -51,6 +51,7 @@ namespace bc
 		//Recursive parsing methods			
 		//level 1
 		void ParseStatement(bcParser*);
+		
 		//level 2
 		void ParseBlock(bcParser*);
 		void ParseBlockNoDec(bcParser*);
@@ -60,6 +61,7 @@ namespace bc
 		void ParseFuncCall(bcParser*);
 		void ParseFExp(bcParser*);
 		void ParseIf(bcParser*);
+		
 		//level 3
 		void ParseDecFunc(bcParser*);
 		void ParseDecVar(bcParser*);
@@ -67,16 +69,21 @@ namespace bc
 		void ParseReturn(bcParser*);
 		void ParseContinue(bcParser*);			
 		bcToken		ParseExp(bcParser*);
+		
 		//level 4
 		void ParseParamList(bcParser*);	
 		void ParseDecParamList(bcParser*);			
 		void ParseDecFunc_Type(bcParser*);
-		void ParseDecFunc_Ident(bcParser*);		
+		void ParseDecFunc_Ident(bcParser*);
+		void ParseDecVar_Type(bcParser*);
+		void ParseDecVar_Ident(bcParser*);
 		void ParseIdent(bcParser*);
 		bcToken		ParseSubExp(bcParser*);		
+		
 		//level 5		
 		void ParseDecInParam(bcParser*);
 		bcToken		ParseTerm(bcParser*);
+		
 		//level 6
 		bcToken		ParseFactor(bcParser*);
 
@@ -93,5 +100,6 @@ namespace bc
 		string GetTag(bcParser*,bcSymbol*);
 
 		bcParseNodeType DeriveType(bcToken);
+
 	}
 }

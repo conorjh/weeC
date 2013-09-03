@@ -1,9 +1,7 @@
 /*
 bcScript API 
-v0.1
-
-
-
+v0.1	(~25/12/12 -  / /13)
+Conor Haddock
 
 
 */

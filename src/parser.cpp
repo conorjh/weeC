@@ -358,6 +358,7 @@ void parser::ParseDecFunc_Ident(bcParser* par)
 
 void parser::ParseDecVar(bcParser* par)
 {
+	//get type
 	switch(par->GetToken()->type)
 	{
 	case tt_int:
@@ -367,10 +368,45 @@ void parser::ParseDecVar(bcParser* par)
 		ParseDecVar_Type(par);
 		break;
 
+	case tt_ident:
+
+		break;
+
 	default:
 		//error
 		break;
 	}
+
+	//get ident
+	switch(par->GetToken()->type)
+	{
+	case tt_ident:
+		ParseDecVar_Ident(par);
+		break;
+
+	default:
+		//error
+		break;
+	}
+
+	//check for assignment
+	switch(par->GetToken()->type)
+	{
+	case tt_scolon:
+		//consume
+		par->NextToken();
+		break;
+
+	case tt_assign:
+		par->NextToken();
+		ParseFExp(par);
+		break;
+
+	default:
+		//error
+		break;
+	}
+
 }
 
 void parser::ParseDecVar_Type(bcParser* par)
@@ -381,7 +417,23 @@ void parser::ParseDecVar_Type(bcParser* par)
 	case tt_string:
 	case tt_float:
 	case tt_bool:
-		ParseDecVar_Type(par);
+		par->AddChild(bcParseNode(pn_vardec_type,*par->GetToken()));
+		par->NextToken();
+		break;
+
+	default:
+		//error
+		break;
+	}
+}
+
+void parser::ParseDecVar_Ident(bcParser* par)
+{
+	
+	switch(par->GetToken()->type)
+	{
+	case tt_ident:
+		ParseIdent(par);
 		break;
 
 	default:
@@ -466,11 +518,11 @@ void parser::ParseBlock(bcParser* par)
 		par->SetError(ec_par_invalidtoken,par->GetToken()->line,par->GetToken()->col);
 		return;
 	}
-
 	//consume it
 	par->NextToken();
 	par->AddNode(bcParseNode(pn_block));
 	
+	//parse inner statements
 	while(par->GetToken()->type!=tt_cbrace)
 	{
 		ParseStatement(par);
@@ -484,6 +536,11 @@ void parser::ParseBlock(bcParser* par)
 		return;
 	}
 	par->NextToken();
+}
+
+void parser::ParseFExp(bcParser* par)
+{
+
 }
 
 

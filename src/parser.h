@@ -50,38 +50,38 @@ namespace bc
 		
 		//Recursive parsing methods			
 		//level 1
-		void ParseStatement(bcParser*);
+		void		ParseStatement(bcParser*);
 		
 		//level 2
-		void ParseBlock(bcParser*);
-		void ParseBlockNoDec(bcParser*);
-		void ParseWhile(bcParser*);
-		void ParseAssignment(bcParser*);
-		void ParseDec(bcParser*);
-		void ParseFuncCall(bcParser*);
-		void ParseFExp(bcParser*);
-		void ParseIf(bcParser*);
+		void		ParseBlock(bcParser*);
+		void		ParseBlockNoDec(bcParser*);
+		void		ParseWhile(bcParser*);
+		void		ParseAssignment(bcParser*);
+		void		ParseDec(bcParser*);
+		void		ParseFuncCall(bcParser*);
+		void		ParseFExp(bcParser*);
+		void		ParseIf(bcParser*);
 		
 		//level 3
-		void ParseDecFunc(bcParser*);
-		void ParseDecVar(bcParser*);
-		void ParseBreak(bcParser*);
-		void ParseReturn(bcParser*);
-		void ParseContinue(bcParser*);			
+		void		ParseDecFunc(bcParser*);
+		void		ParseDecVar(bcParser*);
+		void		ParseBreak(bcParser*);
+		void		ParseReturn(bcParser*);
+		void		ParseContinue(bcParser*);			
 		bcToken		ParseExp(bcParser*);
 		
 		//level 4
-		void ParseParamList(bcParser*);	
-		void ParseDecParamList(bcParser*);			
-		void ParseDecFunc_Type(bcParser*);
-		void ParseDecFunc_Ident(bcParser*);
-		void ParseDecVar_Type(bcParser*);
-		void ParseDecVar_Ident(bcParser*);
-		void ParseIdent(bcParser*);
+		void		ParseParamList(bcParser*);	
+		void		ParseDecParamList(bcParser*);			
+		void		ParseDecFunc_Type(bcParser*);
+		void		ParseDecFunc_Ident(bcParser*);
+		void		ParseDecVar_Type(bcParser*);
+		void		ParseDecVar_Ident(bcParser*);
+		void		ParseIdent(bcParser*);
 		bcToken		ParseSubExp(bcParser*);		
 		
 		//level 5		
-		void ParseDecInParam(bcParser*);
+		void		ParseDecInParam(bcParser*);
 		bcToken		ParseTerm(bcParser*);
 		
 		//level 6

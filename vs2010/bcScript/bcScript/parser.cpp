@@ -390,7 +390,22 @@ void parser::ParseDecVar(bcParser* par)
 	}
 
 	//check for assignment
+	switch(par->GetToken()->type)
+	{
+	case tt_scolon:
+		//consume
+		par->NextToken();
+		break;
 
+	case tt_assign:
+		par->NextToken();
+		ParseFExp(par);
+		break;
+
+	default:
+		//error
+		break;
+	}
 
 }
 
@@ -503,11 +518,11 @@ void parser::ParseBlock(bcParser* par)
 		par->SetError(ec_par_invalidtoken,par->GetToken()->line,par->GetToken()->col);
 		return;
 	}
-
 	//consume it
 	par->NextToken();
 	par->AddNode(bcParseNode(pn_block));
 	
+	//parse inner statements
 	while(par->GetToken()->type!=tt_cbrace)
 	{
 		ParseStatement(par);
@@ -521,6 +536,11 @@ void parser::ParseBlock(bcParser* par)
 		return;
 	}
 	par->NextToken();
+}
+
+void parser::ParseFExp(bcParser* par)
+{
+
 }
 
 

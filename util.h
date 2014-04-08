@@ -2,10 +2,11 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include "types.h"
+
 
 namespace bc
 {
+	namespace lex{struct bcToken;}
 	namespace util
 	{
 		//conversion
@@ -23,7 +24,7 @@ namespace bc
 		bool bcreadfile(const char*,std::vector<std::string>*);
 
 		//RPN helpers
-		int GetPrecedence(bcToken);
-		int IsOperator(bcToken);
+		int GetPrecedence(lex::bcToken);
+		int IsOperator(lex::bcToken);
 	}
 }

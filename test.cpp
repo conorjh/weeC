@@ -1,21 +1,44 @@
-#pragma once
+#include "test.h"
 #include "util.h"
-#include "lexer.h"
 #include <iostream>
 
 using namespace bc;
-using namespace bc::parser;
+using namespace bc::test;
+using namespace bc::lex;
+using namespace bc::parse;
 
-string GetTypeAsString(bcTokenType _t)
+int bc::test::test_lexer()
+{
+	bcLexer l;
+	l.startup();
+	bc::util::bcreadfile("scripts/lex.bcs",l.source);
+	l.lex();
+	printLexer(&l);
+	l.shutdown();
+	return 1;
+}
+
+int bc::test::test_parser()
+{
+	bcLexer l;
+	l.startup();
+	bc::util::bcreadfile("scripts/lex.bcs",l.source);
+
+	bcParser p;
+	p.startup();
+	p.lexer=&l;
+	p.parse();
+
+	return 1;
+}
+
+
+std::string test::getTypeAsString(bcTokenType _t)
 {
 	switch(_t)
 	{
 		case tt_null: 
 			return "null";  
-		case tt_unk: 
-			return "unknown"; 
-		case tt_empty:
-			return "empty"; 
 		case tt_string:
 			return "string keyw"; 
 		case tt_int: 
@@ -156,19 +179,12 @@ string GetTypeAsString(bcTokenType _t)
 	return "null";
 }
 
-void PrintLex(bc::lexer::bcLexer* l)
+void test::printLexer(bc::lex::bcLexer* l)
 {
-	std::cout << "Lexer Output " << std::endl << "- - - -" << std::endl;
-	for(int t=0;t<l->Get()->size();++t)
+	std::cout << "Lexer Output " << std::endl;
+	for(int t=0;t<l->tokens.size();++t)
 	{
-		std::cout << "00" << t << " "<< l->Get()->at(t).line << ","<<l->Get()->at(t).col<< "	type:\t" << l->Get()->at(t).type << "\t" << GetTypeAsString(l->Get()->at(t).type) << "\t\t\tdata: " <<  l->Get()->at(t).data << std::endl;
+		std::cout << "00" << t << " "<< l->tokens[t].y << ","<<l->tokens[t].x<< "	type:\t" << l->tokens[t].type << "\t" << getTypeAsString(l->tokens[t].type) << "\t\t\tdata: " <<  l->tokens[t].data << std::endl;
 	}
-	std::cout << "- - - -" << std::endl ;
-	
-}
-
-void PrintParser(bc::parser::bcAST* p)
-{
-	//p->tree->head->data
-	
+	std::cout << std::endl;
 }

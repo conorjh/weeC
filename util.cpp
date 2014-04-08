@@ -1,11 +1,12 @@
 #include "util.h"
 #include <fstream>
-#include "types.h"
+#include "lexer.h"
 
 using namespace bc;
-using namespace bc::util;
+using namespace bc::lex;
+using bc::lex::bcTokenType;
 
-std::string bcitos(int in)
+std::string util::bcitos(int in)
 {
 	std::string s;
 	std::stringstream out;
@@ -14,7 +15,7 @@ std::string bcitos(int in)
 }
 	
 
-int bcstoi(std::string in)
+int util::bcstoi(std::string in)
 {	
 	int retval;
 	std::stringstream convert(in);
@@ -28,7 +29,7 @@ int bcstoi(std::string in)
 	}
 }
 
-std::string bcftos(float in)
+std::string util::bcftos(float in)
 {
 	std::string s;
 	std::stringstream out;
@@ -37,7 +38,7 @@ std::string bcftos(float in)
 }
 	
 
-float bcstof(std::string in)
+float util::bcstof(std::string in)
 {	
 	float retval;
 	std::stringstream convert(in);
@@ -51,7 +52,7 @@ float bcstof(std::string in)
 	}
 }
 
-std::string bctolower(std::string in)
+std::string util::bctolower(std::string in)
 {
 	for (int i=0;i<strlen(in.c_str());i++)
 	if (in[i] >= 0x41 && in[i] <= 0x5A)
@@ -61,7 +62,7 @@ std::string bctolower(std::string in)
 	return in;
 }
 
-std::string bctolower(char in)
+std::string util::bctolower(char in)
 {
 	std::string out;
 	if (in >= 0x41 && in <= 0x5A)
@@ -72,7 +73,7 @@ std::string bctolower(char in)
 	return out;
 }
 
-bool bcfexists(const char *filename)
+bool util::bcfexists(const char *filename)
 {
 	std::ifstream ifile(filename);
 	return ifile.good();
@@ -87,7 +88,7 @@ bool util::bcreadfile(const char* in,std::vector<std::string>* out)
 	{
 		while ( myfile.good() )
 		{
-			getline (myfile,line);
+			getline(myfile,line);
 			line.append("\n");
 			out->push_back( line );		
 		}
@@ -100,7 +101,7 @@ bool util::bcreadfile(const char* in,std::vector<std::string>* out)
 	}
 }
 
-int GetPrecedence(bcToken tokin)
+int util::GetPrecedence(lex::bcToken tokin)
 {
 	switch(tokin.type)
 	{
@@ -139,7 +140,7 @@ int GetPrecedence(bcToken tokin)
 	}
 }
 
-int IsOperator(bcToken tokin)
+int util::IsOperator(lex::bcToken tokin)
 {
 	switch(tokin.type)
 	{

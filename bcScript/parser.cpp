@@ -13,9 +13,18 @@ using bc::parse::bcSymbol;
 void bcParser::startup()
 {
 	lexer=NULL;
+
+	//tree
 	ast.tree=new tree<bcParseNode>(bcParseNode(pn_head));
 	pindex=ast.tree->begin();
+	
+	//symbol table
 	ast.symtab=new std::unordered_map<std::string,bcSymbol>();
+	bcSymbol sym;	sym.fullident = sym.ident = "$global";	sym.type = st_namespace;
+	addSymbol(sym.ident,&sym);currentScope = getSymbol("$global");
+	
+	
+
 }
 
 tree<bcParseNode>::iterator* bcParser::getNode()
@@ -40,11 +49,27 @@ void bcParser::parent()
 	pindex=ast.tree->parent(pindex);
 }
 
-bcSymbol* bcParser::getSymbol(std::string id)
+bool bcParser::addSymbol(std::string id,bcSymbol* sym)
 {
-	if(ast.symtab->find(id)==ast.symtab->end())
+	if(ast.symtab->find(sym->fullident)!=ast.symtab->end())
+		return false;	//already exists
+	ast.symtab->insert( std::make_pair( sym->fullident,*sym ));
+	return true;
+}
+
+bcSymbol* bcParser::getSymbol(std::string fullid)
+{
+	if(ast.symtab->find(fullid)==ast.symtab->end())
 		return NULL;
-	return &ast.symtab->at(id);
+	return &ast.symtab->at(fullid);
+}
+
+//shortid
+bcSymbol* bcParser::getSymbol(std::string id,bcSymbol* sc)
+{
+	if(ast.symtab->find(getFullIdent(id,sc))==ast.symtab->end())
+		return NULL;
+	return &ast.symtab->at(getFullIdent(id,sc));
 }
 
 int bcParser::parse()
@@ -57,9 +82,11 @@ int bcParser::parse()
 
 void parse::parseStatement(bcParser* par)
 {	
+
 	//create parent node	
 	par->addNode(bcParseNode(pn_statement,*par->lexer->getToken()));	
-	
+	bcSymbol* sym;
+
 	switch(par->lexer->getToken()->type)
 	{
 		case tt_eof:
@@ -75,16 +102,23 @@ void parse::parseStatement(bcParser* par)
 			parseDec(par);
 			break;
 
+		case tt_ident:
+			sym = parseIdent(par);
+			if(sym->type == st_null)
+			break;
+
 		default:
 			//par->SetError(ec_par_invalidtoken,par->GetToken()->line,par->GetToken()->col);
 			break;			
 	}
+
 	//Return to parent node 
 	par->parent();
 }
 
 void parse::parseDec(bcParser* par)
 {	
+	bcSymbol* sym;
 	//get our declaration type	(func/builtin type/user type)
 	switch(par->lexer->getToken()->type)
 	{
@@ -96,28 +130,38 @@ void parse::parseDec(bcParser* par)
 	case tt_float:
 	case tt_string:
 	case tt_bool:
-//		parseDecVar(par);
+		parseDecVar(par);
 		break;
 
 	case tt_ident:
-//		parseIdent(par);
+		sym = parseIdent(par);
 		break;
 	}
 }
 
 void parse::parseDecVar(bcParser* par)
 {
-	bcToken* ty=NULL;
-	bcToken* id=NULL;
+	bcSymbol* sym;
 	par->addNode(bcParseNode(pn_vardec));
 
-	//1. get type
+	//1. type
 	switch(par->lexer->getToken()->type)
 	{
-	case tt_int:case tt_float:
-	case tt_string:case tt_bool:
-		ty=par->lexer->getToken();
+	case tt_int:
+	case tt_float:
+	case tt_string:
+	case tt_bool:
+		par->addChild(bcParseNode(pn_type,*par->lexer->getToken()));
 		par->lexer->nextToken();
+		break;
+	
+	case tt_ident:
+		sym = parseIdent(par);
+		if(sym->type == st_type)
+			par->addChild(bcParseNode(pn_type,sym->fullident));
+		else		
+			//error unknown symbol
+			return;
 		break;
 
 	default:
@@ -129,8 +173,10 @@ void parse::parseDecVar(bcParser* par)
 	switch(par->lexer->getToken()->type)
 	{
 	case tt_ident:
-		id=par->lexer->getToken();
-		parseIdent(par);
+		sym = parseIdent(par);
+		if(sym->type != st_null)
+			return;	//error
+		par->addChild(bcParseNode(pn_ident,sym->fullident));
 		break;
 
 	default:
@@ -142,28 +188,27 @@ void parse::parseDecVar(bcParser* par)
 	switch(par->lexer->getToken()->type)
 	{
 	case tt_scolon:
-		par->lexer->nextToken();
+		parseSColon(par);
 		break;
 
 	case tt_assign:
 		par->lexer->nextToken();
 		//parseFExp(par);
-		//parseSColon(par);
+		parseSColon(par);
 		break;
 
 	default:
 		//error
-		//par->SetError(ec_par_invalidtoken,par->lexer->getToken()->line,par->lexer->getToken()->col);
 		break;
 	}
 
-	//
+	par->parent();
 }
 
 void parse::parseDecFunc(bcParser* par)
 {
-	//1. get our declaration type	(func/builtin type/user type)
-	//	 and create our parent node
+	bcSymbol* oldScope = par->currentScope;
+	//function keyword
 	switch(par->lexer->getToken()->type)
 	{
 	case tt_function:			
@@ -176,20 +221,10 @@ void parse::parseDecFunc(bcParser* par)
 		break;
 	}
 	
-	//2. get type/identifier
+	//type and ident
 	switch(par->lexer->getToken()->type)
 	{
 	case tt_ident:
-		if(resolveIdent(par,par->lexer->getToken()->data).type != st_null)
-		{
-
-		}
-		else
-		{
-			//fall down to bool,int,string,float etc
-		}
-		break;
-
 	case tt_bool:
 	case tt_int:
 	case tt_string:
@@ -203,12 +238,13 @@ void parse::parseDecFunc(bcParser* par)
 		break;
 	}
 
-	//3. (optional) parameter list
+	//3. scolon or paramlist
 	switch(par->lexer->getToken()->type)
 	{
 	case tt_scolon:
 		//forward dec
 		//not supported atm
+		par->lexer->nextToken();
 		break;
 
 	case tt_oparen:
@@ -229,29 +265,39 @@ void parse::parseDecFunc(bcParser* par)
 		break;
 
 	default:
-
 		break;
 	}
 
 	//Return to parent node (statement most times);
+	par->currentScope = oldScope;
 	par->parent();
 
 }
 
 void parse::parseDecFunc_Type(bcParser* par)
 {
+	bcSymbol* sym;
 	switch(par->lexer->getToken()->type)
 	{
+	case tt_ident:
+		sym = parseIdent(par);
+		if(sym->type == st_type)
+		{
+			par->addChild(bcParseNode(pn_type,sym->fullident));
+		}
+		else
+		{
+			//error unknown symbol
+			return;
+		}
+		break;
+
 	case tt_int:
 	case tt_string:
 	case tt_float:
 	case tt_bool:
-		par->addChild(bcParseNode(pn_funcdec_type,*par->lexer->getToken()));
+		par->addChild(bcParseNode(pn_type,*par->lexer->getToken()));
 		par->lexer->nextToken();
-		break;
-
-	case tt_ident:
-
 		break;
 
 	default:
@@ -262,10 +308,22 @@ void parse::parseDecFunc_Type(bcParser* par)
 
 void parse::parseDecFunc_Ident(bcParser* par)
 {
+	bcSymbol* sym;
 	switch(par->lexer->getToken()->type)
 	{
 	case tt_ident:
-		parseIdent(par);
+		sym = parseIdent(par);
+		if(sym->type == st_null)		
+		{
+			par->addSymbol(sym->fullident,sym);
+			sym->type = st_function;
+			par->currentScope = sym;
+			par->addChild(bcParseNode(pn_ident,sym->fullident));
+		}
+		else
+		{
+			//error redefinition
+		}
 		break;
 
 	default:
@@ -304,49 +362,73 @@ void parse::parseParamList(bcParser* par)
 	par->lexer->nextToken();	
 }
 
+void parse::parseSColon(bcParser* par)
+{
+	if(par->lexer->getToken()->type!=tt_scolon)
+		return;	//error
+	par->lexer->nextToken();
+}
+
+
 bcSymbol* parse::parseIdent(bcParser* par)
 {
 	//create node
-	par->addChild(bcParseNode(pn_ident));	
+	//par->addNode(bcParseNode(pn_ident));	
 	
-	//1.check our first ident exists in the symbol table
-	//if(!par->SymbolExists( par->lexer->getToken()->data ))	
-	//	return NULL;
 	std::string id;
-	//namespace
-	while(par->getSymbol(par->lexer->getToken()->data,par->currentScope) 
-		&& par->getSymbol(par->lexer->getToken()->data,par->currentScope)->type==st_namespace)
+	while(par->lexer->getToken()->type == tt_ident)
 	{
-		id+=par->lexer->getToken()->data;
-		if(par->lexer->nextToken()->type!=tt_dcolon)
-			return NULL;	//error
-		id+=par->lexer->getToken()->data;
-		par->lexer->nextToken();					
-	}
-
-	while(par->getSymbol(par->lexer->getToken()->data,par->currentScope) 
-		&& par->getSymbol(par->lexer->getToken()->data,par->currentScope)->type==st_var)
-	{
-		id+=par->lexer->getToken()->data;
-		if(par->lexer->nextToken()->type!=tt_period)
-			return NULL;	//error
 		id+=par->lexer->getToken()->data;
 		par->lexer->nextToken();
 	}
+
+	if(par->getSymbol(id,par->currentScope))
+		return par->getSymbol(id,par->currentScope);
 	
-	//3.(optional) parse members
-	return NULL;
+	bcSymbol sym;	sym.type=st_null;	sym.ident=id;	sym.fullident=getFullIdent(id,par->currentScope);	
+	par->addSymbol(id,&sym);	//add everytime?
+	//par->getNode()->node->data.tokens.push_back(bcToken(tt_ident,id)); 
+
+	par->parent();
+	return par->getSymbol(id,par->currentScope);
 }
 
 void parse::parseBlock(bcParser* par)
 {
+	//opening brace
+	if(par->lexer->getToken()->type!=tt_obrace)
+		return;	//error
+	par->lexer->nextToken();
+	par->addNode(bcParseNode(pn_block));
+	
+	//inner contents
+	while(par->lexer->getToken()->type!=tt_cbrace)
+		parseStatement(par);
 
+	//closing brace
+	par->lexer->nextToken();
+	par->parent();
 }
 
 bcSymbol parse::resolveIdent(bcParser* par,std::string id)
 {
 	bcSymbol out;
+	out.type = st_null;
 	
-
 	return out;
+}
+
+std::string parse::getFullIdent(std::string ident,bcSymbol* scope)
+{
+	switch(scope->type)
+	{
+	case st_namespace:
+		return scope->fullident+"::"+ident;
+	case st_function:
+		return scope->fullident+":"+ident;
+	default:
+		return "";
+	}
+		
+
 }

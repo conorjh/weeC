@@ -152,11 +152,11 @@ bcToken* bcLexer::nextToken()
 				(getTokenType(&(getChar()+peekChar()))!=tt_decr) && (getTokenType(&(getChar()+peekChar()))!=tt_minusassign) &&
 				(getTokenType(&(getChar()+peekChar()))!=tt_logand) &&(getTokenType(&(getChar()+peekChar()))!=tt_logor) &&	
 				(getTokenType(&(getChar()+peekChar()))!=tt_dcolon)))	
-			{
-				inc();
-				tok.data+=getChar();
-				tok.type=getTokenType(&tok.data);
-			}			
+				{
+					inc();
+					tok.data+=getChar();
+					tok.type=getTokenType(&tok.data);
+				}			
 			tokens.push_back(tok);
 			return getToken();
 			

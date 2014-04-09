@@ -18,7 +18,7 @@ namespace bc
 							pn_logand, pn_logor, pn_lognot,	pn_intlit, pn_strlit, pn_fltlit, pn_ident, pn_comment, 
 							pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr,pn_plusassign, pn_minusassign, 
 							pn_multassign, pn_divassign, pn_assignment,pn_block,pn_vardec,pn_paramdec,pn_funcdec,
-							pn_funcdec_type,pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else, pn_while,pn_break,
+							pn_funcdec_type,pn_funcdec_ident,pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else, pn_while,pn_break,
 							pn_return, pn_continue,
 							pn_statement
 							};
@@ -34,20 +34,18 @@ namespace bc
 	
 		enum bcSymbolType{st_null, st_var, st_type, st_object, st_function, st_namespace};
 
+		//symbols are referenced from symtab by their fullidents
 		struct bcSymbol
 		{
-			std::string ident;
+			std::string ident;		//variable name
+			std::string fullident;	//full name $global::varname
 			bcSymbolType type;
-			std::string datatype;
-			std::unordered_map<std::string,bcSymbol>::iterator scope;
-			int stackindex;
-			std::string init;
 		};
 
 		struct bcAST
 		{
 			tree<bcParseNode>* tree;
-			std::unordered_map<std::string,bcSymbol>* symtab;
+			std::unordered_map<std::string,bcSymbol>* symtab;	
 			//std::unordered_map<std::string,std::vector<std::unordered_map<std::string,bcSymbol>::iterator>>* funcsig;
 			//std::unordered_map<std::string,std::vector<std::unordered_map<std::string,bcSymbol>::iterator>>* stackframes;
 		};
@@ -64,8 +62,10 @@ namespace bc
 			tree<bcParseNode>::iterator* addNode(bcParseNode);	//add node and point pindex to the new child node
 			tree<bcParseNode>::iterator* addChild(bcParseNode);	//add node, but pindex remains on parent node
 			void parent();
+			//symbol table
 			bcSymbol* getSymbol(std::string);
 			bcSymbol* getSymbol(std::string,bcSymbol*);
+			bool addSymbol(std::string,bcSymbol*);
 		
 			bcAST ast;
 			bcSymbol* currentScope;
@@ -102,6 +102,9 @@ namespace bc
 		void parseDecFunc_Type(bcParser*);
 		void parseDecFunc_Ident(bcParser*);		
 		bcSymbol* parseIdent(bcParser*);
+		void parseIdent_Namespace(bcParser*);
+		void parseIdent_Var(bcParser*);
+		void parseIdent_Function(bcParser*);
 		lex::bcToken	parseSubExp(bcParser*);
 
 		//level 5		
@@ -125,5 +128,6 @@ namespace bc
 
 		bcParseNodeType DeriveType(lex::bcToken);
 		bcSymbol resolveIdent(bcParser*,std::string);
+		std::string getFullIdent(std::string ident,bcSymbol* scope);
 	}
 }

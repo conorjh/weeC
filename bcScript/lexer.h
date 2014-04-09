@@ -22,6 +22,9 @@ namespace bc
 	
 		struct bcToken
 		{
+			bcToken(){};
+			bcToken(std::string id){data=id;};
+			bcToken(bcTokenType ty,std::string id){type=ty;data=id;};
 			std::string data;
 			bcTokenType type;
 			unsigned int x,y;

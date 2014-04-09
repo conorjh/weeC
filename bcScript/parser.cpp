@@ -22,9 +22,6 @@ void bcParser::startup()
 	ast.symtab=new std::unordered_map<std::string,bcSymbol>();
 	bcSymbol sym;	sym.fullident = sym.ident = "$global";	sym.type = st_namespace;
 	addSymbol(sym.ident,&sym);currentScope = getSymbol("$global");
-	
-	
-
 }
 
 tree<bcParseNode>::iterator* bcParser::getNode()
@@ -49,11 +46,16 @@ void bcParser::parent()
 	pindex=ast.tree->parent(pindex);
 }
 
+bool bcParser::addSymbol(bcSymbol* sym)
+{
+	return addSymbol(sym->fullident,sym);
+}
+
 bool bcParser::addSymbol(std::string id,bcSymbol* sym)
 {
-	if(ast.symtab->find(sym->fullident)!=ast.symtab->end())
+	if(ast.symtab->find(id)!=ast.symtab->end())
 		return false;	//already exists
-	ast.symtab->insert( std::make_pair( sym->fullident,*sym ));
+	ast.symtab->insert( std::make_pair( id,*sym ));
 	return true;
 }
 
@@ -82,7 +84,6 @@ int bcParser::parse()
 
 void parse::parseStatement(bcParser* par)
 {	
-
 	//create parent node	
 	par->addNode(bcParseNode(pn_statement,*par->lexer->getToken()));	
 	bcSymbol* sym;
@@ -105,6 +106,7 @@ void parse::parseStatement(bcParser* par)
 		case tt_ident:
 			sym = parseIdent(par);
 			if(sym->type == st_null)
+				return;
 			break;
 
 		default:
@@ -157,11 +159,9 @@ void parse::parseDecVar(bcParser* par)
 	
 	case tt_ident:
 		sym = parseIdent(par);
-		if(sym->type == st_type)
-			par->addChild(bcParseNode(pn_type,sym->fullident));
-		else		
-			//error unknown symbol
-			return;
+		if(sym->type != st_type)
+			return;	//error unknown symbol
+		par->addChild(bcParseNode(pn_type,sym->fullident));
 		break;
 
 	default:
@@ -176,6 +176,8 @@ void parse::parseDecVar(bcParser* par)
 		sym = parseIdent(par);
 		if(sym->type != st_null)
 			return;	//error
+		sym->type=st_var;
+		par->addSymbol(sym);
 		par->addChild(bcParseNode(pn_ident,sym->fullident));
 		break;
 
@@ -315,9 +317,9 @@ void parse::parseDecFunc_Ident(bcParser* par)
 		sym = parseIdent(par);
 		if(sym->type == st_null)		
 		{
-			par->addSymbol(sym->fullident,sym);
 			sym->type = st_function;
-			par->currentScope = sym;
+			par->addSymbol(sym->fullident,sym);
+			par->currentScope = par->getSymbol(sym->fullident);
 			par->addChild(bcParseNode(pn_ident,sym->fullident));
 		}
 		else
@@ -370,10 +372,10 @@ void parse::parseSColon(bcParser* par)
 }
 
 
-bcSymbol* parse::parseIdent(bcParser* par)
+bcSymbol parse::parseIdent(bcParser* par)
 {
 	//create node
-	//par->addNode(bcParseNode(pn_ident));	
+	par->addNode(bcParseNode(pn_ident));	
 	
 	std::string id;
 	while(par->lexer->getToken()->type == tt_ident)
@@ -383,14 +385,13 @@ bcSymbol* parse::parseIdent(bcParser* par)
 	}
 
 	if(par->getSymbol(id,par->currentScope))
-		return par->getSymbol(id,par->currentScope);
+		return *par->getSymbol(id,par->currentScope);
 	
 	bcSymbol sym;	sym.type=st_null;	sym.ident=id;	sym.fullident=getFullIdent(id,par->currentScope);	
-	par->addSymbol(id,&sym);	//add everytime?
-	//par->getNode()->node->data.tokens.push_back(bcToken(tt_ident,id)); 
+	par->getNode()->node->data.tokens.push_back(bcToken(tt_ident,id)); 
 
 	par->parent();
-	return par->getSymbol(id,par->currentScope);
+	return sym;
 }
 
 void parse::parseBlock(bcParser* par)

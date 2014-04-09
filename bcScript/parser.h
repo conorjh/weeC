@@ -65,6 +65,7 @@ namespace bc
 			//symbol table
 			bcSymbol* getSymbol(std::string);
 			bcSymbol* getSymbol(std::string,bcSymbol*);
+			bool addSymbol(bcSymbol*);
 			bool addSymbol(std::string,bcSymbol*);
 		
 			bcAST ast;
@@ -101,7 +102,7 @@ namespace bc
 		void parseDecParamList(bcParser*);			
 		void parseDecFunc_Type(bcParser*);
 		void parseDecFunc_Ident(bcParser*);		
-		bcSymbol* parseIdent(bcParser*);
+		bcSymbol parseIdent(bcParser*);
 		void parseIdent_Namespace(bcParser*);
 		void parseIdent_Var(bcParser*);
 		void parseIdent_Function(bcParser*);

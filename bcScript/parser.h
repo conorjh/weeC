@@ -95,7 +95,7 @@ namespace bc
 		void parseBreak(bcParser*);
 		void parseReturn(bcParser*);
 		void parseContinue(bcParser*);			
-		lex::bcToken	ParseExp(bcParser*);
+		lex::bcToken	parseExp(bcParser*);
 
 		//level 4
 		void parseParamList(bcParser*);	

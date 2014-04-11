@@ -46,7 +46,7 @@ namespace bc
 
 			std::vector<bcToken> tokens;
 			std::vector<std::string>* source;
-		private:
+		
 			bool done;
 			int x,y;
 		};

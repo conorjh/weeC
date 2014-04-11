@@ -20,11 +20,12 @@ namespace bc
 							pn_multassign, pn_divassign, pn_assignment,pn_block,pn_vardec,pn_paramdec,pn_funcdec,
 							pn_funcdec_type,pn_funcdec_ident,pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else, pn_while,pn_break,
 							pn_return, pn_continue,
-							pn_statement
+							pn_statement, pn_negate
 							};
 
 		struct bcParseNode
-		{			
+		{	
+			bcParseNode(lex::bcTokenType t);
 			bcParseNode(bcParseNodeType t){type=t;};
 			bcParseNode(bcParseNodeType t,lex::bcToken tk){type=t;tokens.push_back(tk);};
 			bcParseNodeType type;
@@ -68,6 +69,7 @@ namespace bc
 			bool addSymbol(bcSymbol*);
 			bool addSymbol(std::string,bcSymbol*);
 		
+			unsigned int parenCount;
 			bcAST ast;
 			bcSymbol* currentScope;
 			lex::bcLexer* lexer;		

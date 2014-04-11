@@ -28,7 +28,8 @@ int bc::test::test_parser()
 	p.startup();
 	p.lexer=&l;
 	p.parse();
-
+	printParser(&p);
+	std::cin >> std::string();
 	return 1;
 }
 
@@ -179,6 +180,143 @@ std::string test::getTypeAsString(bcTokenType _t)
 	return "null";
 }
 
+
+std::string test::getTypeAsString(bcParseNodeType _t)
+{
+	switch(_t)
+	{
+		case pn_null: 
+			return "null";  
+		case pn_string:
+			return "string keyw"; 
+		case pn_int: 
+			return "int keyw"; 
+		case pn_float:
+			return "float keyw"; 
+		case pn_object:
+			return "object keyw"; 
+		case pn_var:
+			return "var keyw"; 
+		case pn_bool:
+			return "bool keyw";
+		case pn_scolon:
+			return "semi colon (;)";
+		case pn_colon:
+			return "colon (:)";
+				
+		case pn_comma:
+			return "comma"; 
+		case pn_period:
+			return "period";
+		case pn_squote:
+			return "single quote";
+		case pn_dquote:
+			return "double quote";
+		case pn_qmark:
+			return "question mark";
+		case pn_pipe:
+			return "pipe";  
+		case pn_minus:
+			return "minus"; 
+		case pn_plus: 
+			return "plus"; 
+		case pn_div:
+			return "divide (/)"; 
+		case pn_mult: 
+			return "multiply (*)"; 
+		case pn_mod: 
+			return "modulus";
+		case pn_pow:
+			return "power"; 
+		case pn_assign:
+			return "assignment (=)";
+		case pn_underscore:
+			return "undrescore"; 
+		case pn_tilde: 
+			return "tilde (`)"; 
+		case pn_oparen:
+			return "open parenthesis (";  
+		case pn_cparen:
+			return "close parenthesis )"; 
+		case pn_obracket: 
+			return "open bracket [";  
+		case pn_cbracket: 
+			return "close bracket ]";  
+		case pn_obrace:
+			return "open brace {";  
+		case pn_cbrace:
+			return "close brace }";  
+		case pn_bslash:
+			return "backslash \\"; 
+		case pn_percent: 
+			return "percentage (%)";  
+		case pn_newline:
+			return "newline";  
+		case pn_dollar:
+			return "dollar"; 
+		case pn_amper:
+			return "ampersand &";  
+		case pn_greater:
+			return "greater than"; 
+		case pn_less: 
+			return "less than"; 
+		case pn_equal:
+			return "equal to"; 
+		case pn_notequal: 
+			return "not equal to";
+		case pn_greaterequal: 
+			return "equal or greater than";
+		case pn_lessequal: 
+			return "equal or less than";
+		case pn_lognot:
+			return "logical not"; 
+		case pn_logor:
+			return "logical or"; 
+		case pn_logand: 
+			return "logical and";
+		case pn_plusassign:
+			return "plus assign +=";
+		case pn_minusassign:
+			return "minus assign -=";
+		case pn_incr: 
+			return "increment ++";
+		case pn_decr: 
+			return "derement --";
+		case pn_intlit: 
+			return "int literal"; 
+		case pn_strlit: 
+			return "string literal"; 
+		case pn_fltlit: 
+			return "float literal";  
+		case pn_ident: 
+			return "identifier";  
+		case pn_comment: 
+			return "comment"; 
+		case pn_dec:
+			return "dec keyw";
+		case pn_true:
+			return "true keyw";
+		case pn_false: 
+			return "false keyw"; 
+		case pn_function: 
+			return "function keyw";  
+		case pn_if: 
+			return "if keyw";  
+		case pn_else: 
+			return "else keyw"; 
+		case pn_while: 
+			return "while keyw"; 
+		case pn_break: 
+			return "break keyw"; 
+		case pn_return: 
+			return "return keyw"; 
+		case pn_continue: 
+			return "continue keyw"; 
+	}
+	return "null";
+}
+
+
 void test::printLexer(bc::lex::bcLexer* l)
 {
 	std::cout << "Lexer Output " << std::endl;
@@ -187,4 +325,22 @@ void test::printLexer(bc::lex::bcLexer* l)
 		std::cout << "00" << t << " "<< l->tokens[t].y << ","<<l->tokens[t].x<< "	type:\t" << l->tokens[t].type << "\t" << getTypeAsString(l->tokens[t].type) << "\t\t\tdata: " <<  l->tokens[t].data << std::endl;
 	}
 	std::cout << std::endl;
+}
+
+
+void test::printParser(bc::parse::bcParser* p)
+{
+	tree<bcParseNode>::iterator it=p->ast.tree->begin();
+	std::cout << "Parser" << std::endl;
+	while(it!=p->ast.tree->end()) 
+	{
+		for(int t=0;t<p->ast.tree->depth(it);++t)
+		{
+			std::cout << " ";
+		}
+		std::cout << (it->type) <<"."<< getTypeAsString(it->type) << std::endl;
+		++it;
+    }
+
+
 }

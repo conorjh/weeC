@@ -40,7 +40,10 @@ bcToken* bcLexer::nextToken()
 {
 	bcToken tok;
 	if(!inc())
+	{
+		done=true;
 		return NULL;	//some kind of error
+	}
 	tok.x=x;	tok.y=y;
 	tok.data=getChar();
 	tok.type=getTokenType(&tok.data);
@@ -56,7 +59,10 @@ bcToken* bcLexer::nextToken()
 			while(tok.type==tt_ws || tok.type==tt_tab || tok.type==tt_newline)
 			{
 				if(!inc())		
+				{
+					done=true;
 					return NULL;			
+				}
 				tok.type=getTokenType(&getChar());
 			}
 			dec();

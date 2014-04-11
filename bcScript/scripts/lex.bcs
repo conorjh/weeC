@@ -1,23 +1,13 @@
 //Lexer example
 
 
-
 function int main()
 {
 	int a;
 	int b;
-	a=1;
+	a=55+(17*2)+4*(22-21);
 	b=2;
-	if(a>=b)
-		return 2;
-	return 1;
-}
-
-namespace ns
-{
-	function int testfunc()
-	{
-		int fasher;
-		return fasher;
-	}
+	//if(a>=b)
+	//	return 2;
+	//return 1;
 }

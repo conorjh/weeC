@@ -10,9 +10,72 @@ using bc::parse::bcParseNode;
 using bc::parse::bcParseNodeType;
 using bc::parse::bcSymbol;
 
+bcParseNode::bcParseNode(bcTokenType t)
+{
+	switch(t)
+	{
+	case tt_greater: 
+		type=pn_greater;	break;
+	case tt_less: 
+		type=pn_less;	break;
+	case tt_equal: 
+		type=pn_equal;	break;
+	case tt_notequal: 
+		type=pn_notequal;	break;
+	case tt_greaterequal: 
+		type=pn_greaterequal;	break;
+	case tt_lessequal:
+		type=pn_lessequal;	break;
+	case tt_lognot: 
+		type=pn_lognot;	break;
+	case tt_logor: 
+		type=pn_logor;	break;
+	case tt_logand: 
+		type=pn_logand;	break;
+	case tt_incr: 
+		type=pn_incr;	break;
+	case tt_decr: 
+		type=pn_decr;	break;
+	case tt_plusassign: 
+		type=pn_plusassign;	break;
+	case tt_minusassign: 
+		type=pn_minusassign;	break;
+	case tt_multassign: 
+		type=pn_multassign;	break;
+	case tt_divassign:
+		type=pn_divassign;	break;
+	case tt_intlit: 
+		type=pn_intlit;	break;
+	case tt_strlit: 
+		type=pn_strlit;	break;
+	case tt_fltlit: 
+		type=pn_fltlit;	break;
+	case tt_ident:
+		type=pn_ident;	break;
+	case tt_minus:
+		type=pn_minus;	break;
+	case tt_plus:			
+		type=pn_plus;	break;
+	case tt_div:
+		type=pn_div;	break;
+	case tt_mult: 
+		type=pn_mult;	break;
+	case tt_mod:
+		type=pn_mod;	break;
+	case tt_pow:
+		type=pn_pow;	break;
+	case tt_assign:
+		type=pn_assign;	break;
+	default:
+		type=pn_null;
+	}
+
+}
+
 void bcParser::startup()
 {
 	lexer=NULL;
+	parenCount=0;
 
 	//tree
 	ast.tree=new tree<bcParseNode>(bcParseNode(pn_head));
@@ -20,7 +83,7 @@ void bcParser::startup()
 	
 	//symbol table
 	ast.symtab=new std::unordered_map<std::string,bcSymbol>();
-	bcSymbol sym;	sym.fullident = sym.ident = "$global";	sym.type = st_namespace;
+	bcSymbol sym;	sym.fullident = sym.ident = "$global";	sym.type = st_namespace; 
 	addSymbol(sym.ident,&sym);currentScope = getSymbol("$global");
 }
 
@@ -77,7 +140,7 @@ bcSymbol* bcParser::getSymbol(std::string id,bcSymbol* sc)
 int bcParser::parse()
 {
 	lexer->nextToken();
-	while(true)
+	while(!lexer->done)
 		parseStatement(this);
 	return 1;
 }
@@ -86,7 +149,7 @@ void parse::parseStatement(bcParser* par)
 {	
 	//create parent node	
 	par->addNode(bcParseNode(pn_statement,*par->lexer->getToken()));	
-	bcSymbol* sym;
+	bcSymbol sym;
 
 	switch(par->lexer->getToken()->type)
 	{
@@ -104,19 +167,19 @@ void parse::parseStatement(bcParser* par)
 			break;
 
 		case tt_ident:
-			sym = &parseIdent(par);
-			switch(sym->type)
+			sym = parseIdent(par);
+			switch(sym.type)
 			{
 			case st_var:
 			case st_function:
 				parseAssignment(par);
+				
 			break;
 			default:
-				//error
+				true;//error
 				return;
 			}
 		default:
-			//par->SetError(ec_par_invalidtoken,par->GetToken()->line,par->GetToken()->col);
 			break;			
 	}
 
@@ -141,8 +204,15 @@ void parse::parseDec(bcParser* par)
 		parseDecVar(par);
 		break;
 
-	case tt_ident:
-		sym = parseIdent(par);
+	case tt_ident:sym = parseIdent(par);
+			switch(sym.type)
+			{
+			case st_type:
+				parseDecVar(par);				
+			break;
+			default:
+				return;
+			}
 		break;
 	}
 }
@@ -365,7 +435,8 @@ void parse::parseParamList(bcParser* par)
 	}
 	
 	//consume cparen
-	par->lexer->nextToken();	
+	par->lexer->nextToken();
+	par->parent();
 }
 
 void parse::parseSColon(bcParser* par)
@@ -374,7 +445,6 @@ void parse::parseSColon(bcParser* par)
 		return;	//error
 	par->lexer->nextToken();
 }
-
 
 bcSymbol parse::parseIdent(bcParser* par)
 {
@@ -393,8 +463,8 @@ bcSymbol parse::parseIdent(bcParser* par)
 	
 	bcSymbol sym;	sym.type=st_null;	sym.ident=id;	sym.fullident=getFullIdent(id,par->currentScope);	
 	par->getNode()->node->data.tokens.push_back(bcToken(tt_ident,id)); 
-
 	par->parent();
+
 	return sym;
 }
 
@@ -436,258 +506,142 @@ std::string parse::getFullIdent(std::string ident,bcSymbol* scope)
 	}
 }
 
+void parse::parseAssignment(bcParser* par)
+{
+	par->addNode(bcParseNode(pn_assignment));
+	par->lexer->nextToken();
+	parseFExp(par);
+	par->parent();
+}
+
 //full expression
 void parse::parseFExp(bcParser* par)
 {	
+	//3 lines for an expression, zimples!
+	par->addNode(bcParseNode(pn_exp));
 	parseExp(par);
+	par->parent();
+	par->lexer->nextToken();
 }
 
 lex::bcToken parse::parseExp(bcParser* par)
 {
-	
-	return bcToken();
+	bcToken oper1,oper2,op;
+	oper1=parseSubExp(par);
+
+	while(par->lexer->getToken())
+	{
+		op=*par->lexer->getToken();
+		par->addChild(bcParseNode(op.type));
+		switch(op.type)
+		{		
+		case tt_less:	case tt_greater:	case tt_lessequal:			case tt_greaterequal:
+		case tt_equal:	case tt_notequal:	case tt_logand:		case tt_logor:		
+			par->addChild(bcParseNode(op.type));
+			par->lexer->nextToken();
+			break;
+		default:
+			return oper1;
+		}
+		oper2 = parseSubExp(par);
+	}
+	return oper1;
 }
 
 lex::bcToken parse::parseSubExp(bcParser* par)
 {
-	bcToken out;
-	return out;
+	bcToken oper1,oper2,op;
+	oper1=parseTerm(par);
+
+	while(par->lexer->getToken())
+	{
+		op=*par->lexer->getToken();
+		par->addChild(bcParseNode(op.type));
+		switch(op.type)
+		{		
+		case tt_plus:	case tt_minus:
+			par->addChild(bcParseNode(op.type));
+			par->lexer->nextToken();
+			break;
+		default:
+			return oper1;
+		}
+		oper2 = parseTerm(par);
+	}
+	return oper1;
 }
 
 lex::bcToken parse::parseTerm(bcParser* par)
 {
-	bcToken out;	
+	bcToken oper1,oper2,op;
+	oper1=parseFactor(par);
 
-	return out;
+	while(par->lexer->getToken())
+	{
+		op=*par->lexer->getToken();
+		par->addChild(bcParseNode(op.type));
+		switch(op.type)
+		{		
+		case tt_div:	case tt_mult:	case tt_pow:	case tt_mod:
+			par->addChild(bcParseNode(op.type));
+			par->lexer->nextToken();
+			break;
+		default:
+			return oper1;
+		}
+		oper2 = parseFactor(par);
+	}
+	return oper1;
 }
 
-bcToken parse::ParseFactor()
+bcToken parse::parseFactor(bcParser* par)
 {
-	tree<bcParseNode>::iterator oldpindex=pindex;
-	bcToken out;	
-	bool negative=false;
-	bool positive=false;
+	bcToken oper1,oper2,op;
+	bool negate;
+	oper1=*par->lexer->getToken();
 
-	if(bcParser_CheckEmptyInput && in->size()<1)
+	//check for negation
+	if(oper1.type==tt_minus)
 	{
-		//error
-		return out;
-	}
-	
-	//Must check for eof, as index is incremented in ParseTerm()
-	if(index>in->size()-1)
-	{
-		SetError(ec_par_eof,PreviousToken()->line,PreviousToken()->col);
-		return out;
-	}
-		
-	//minus or plus unary operators
-	if(CurrentToken()->type==tt_minus)
-	{
-		negative=true;
-		//changes made to lexer.data, pnode.links gets boken if lexer.data changes 
-		//in->erase(in->begin()+index,in->begin()+index+1);
-		pnbuff.tokens.push_back(index);
-		pnbuff.type=pn_minus;
-		ptree.append_child(pindex,pnbuff);
-		ClearPNBuff();
-		ReadToken();	//tok=CurrentToken();
-	}
-	else 
-	{
-		if(CurrentToken()->type==tt_plus)
-		{
-			//changes made to lexer.data, pnode.links gets boken if lexer.data changes 
-			//in->erase(in->begin()+index,in->begin()+index+1);
-			pnbuff.tokens.push_back(index);
-			pnbuff.type=pn_plus;
-			ptree.append_child(pindex,pnbuff);
-			ClearPNBuff();
-			ReadToken();	//tok=CurrentToken();
-			positive=true;
-		}
-		
+		negate=true;
+		oper1 = *par->lexer->nextToken();
 	}
 
-	switch(CurrentToken()->type)
-	{
-	case tt_intlit:
-		//neg the var todo: do this in lexer
-		if(negative)
-		{
-			CurrentToken()->data=bcitos(0-(bcstoi(CurrentToken()->data)));
-		}
-		pnbuff.tokens.push_back(index);
-		pnbuff.type=pn_intlit;
-		ptree.append_child(pindex,pnbuff);
-		ClearPNBuff();
-		ReadToken();
-		return *PreviousToken();
-		
-
-	case tt_strlit:
-		pnbuff.tokens.push_back(index);
-		pnbuff.type=pn_strlit;
-		ptree.append_child(pindex,pnbuff);
-		ClearPNBuff();
-		ReadToken();
-		return *PreviousToken();
-		
-	case tt_fltlit:
-		if(negative)
-		{
-			CurrentToken()->data=bcftos(0-(bcstof(CurrentToken()->data)));
-		}
-		pnbuff.tokens.push_back(index);
-		pnbuff.type=pn_fltlit;
-		ptree.append_child(pindex,pnbuff);
-		ClearPNBuff();
-		ReadToken();
-		return *PreviousToken();
-
-	case tt_true:
-		if(negative||positive)
-		{
-			//cant negate true/false
-			SetError(ec_par_invalidop,PreviousToken()->line,PreviousToken()->col);
-			return out;
-		}
-		pnbuff.tokens.push_back(index);
-		pnbuff.type=pn_true;
-		ptree.append_child(pindex,pnbuff);
-		ClearPNBuff();
-		
-		ReadToken();
-		return *PreviousToken();
-
-	case tt_false:
-		if(negative||positive)
-		{
-			//cant negate true/false
-			SetError(ec_par_invalidop,PreviousToken()->line,PreviousToken()->col);
-			return out;
-		}
-		pnbuff.tokens.push_back(index);
-		pnbuff.type=pn_false;
-		ptree.append_child(pindex,pnbuff);
-		ClearPNBuff();
-		
-		ReadToken();
-		return *PreviousToken();
-		
-	case tt_ident:
-		//Check symbol exists, and that its type is permitted in an exp (variable, function call)
-		if(GetSymbol(CurrentToken()->data)!=NULL)
-		{
-			switch(GetSymbol(CurrentToken()->data)->type)
-			{
-			case st_function:
-				if(!IsScopeValid(GetSymbol(CurrentToken()->data)))
-				{
-					//error, identifier not valid in this scope
-					SetError(ec_par_identinvalidscope,CurrentToken()->line,CurrentToken()->col);
-					return out;
-				}
-				//tok=CurrentToken();
-				ParseFuncCall();
-				if(IsError())	return out;
-				return *CurrentToken();
-				break;
-
-			case st_var:
-				if(!IsScopeValid(GetSymbol(CurrentToken()->data)))
-				{
-					//error, identifier not valid in this scope
-					SetError(ec_par_identinvalidscope,CurrentToken()->line,CurrentToken()->col);
-					return out;
-				}
-				pnbuff.tokens.push_back(index);
-				pnbuff.type=pn_var;
-				if(GetSymbolIt(CurrentToken()->data)->second.scope->first=="$global")
-				{
-					pnbuff.tag=CurrentToken()->data;
-				}
-				else
-				{
-					pnbuff.tag=GetSymbolIt(CurrentToken()->data)->second.scope->first+"."+CurrentToken()->data;
-				}
-				ptree.append_child(pindex,pnbuff);
-				ClearPNBuff();
-				ReadToken();
-				return *PreviousToken();
-
-			case st_object:
-				if(IsScopeValid(GetSymbol(CurrentToken()->data)))
-				{
-					//error, identifier not valid in this scope
-					SetError(ec_par_identinvalidscope,CurrentToken()->line,CurrentToken()->col);
-					return out;
-				}
-				pnbuff.tokens.push_back(index);
-				pnbuff.type=pn_object;
-				ptree.append_child(pindex,pnbuff);
-				ClearPNBuff();
-				ReadToken();
-				return *PreviousToken();
-
-			default:
-				SetError(ec_par_invalidident,CurrentToken()->line,CurrentToken()->col);
-				return out;
-			}
-		}
-		else
-		{
-			SetError(ec_par_undeclaredident,CurrentToken()->line,CurrentToken()->col);
-			return out;
-		}
-		
-		//ReadToken();
-		return *PreviousToken();
-
+	switch(oper1.type)
+	{		
 	case tt_oparen:
-		++parencount;
-		pnbuff.tokens.push_back(index);
-		pnbuff.type=pn_oparen;
-		ptree.append_child(pindex,pnbuff);
-		ClearPNBuff();
-		ReadToken();
-		out=ParseExp();
-		if(IsError())
-		{
-			return out;
-		}
+		par->parenCount++;
+		par->addChild(bcParseNode(tt_oparen));
+		par->lexer->nextToken();
+
+		parseExp(par);
 		
-		if(CurrentToken()->type!=tt_cparen)
-		{
-			//error no closing parenthesis 
-			SetError(ec_par_nocparen,CurrentToken()->line,CurrentToken()->col);
-			return out;
-		}
-		else
-		{
-			pnbuff.tokens.push_back(index);
-			pnbuff.type=pn_cparen;
-			ptree.append_child(pindex,pnbuff);
-			ClearPNBuff();
-			ReadToken();
-			--parencount;
-			return out;
-		}
+		if(par->lexer->getToken()->type!=tt_cparen)
+			return NULL;	//error
+		par->parenCount--;
+		par->addChild(bcParseNode(tt_cparen));
+		par->lexer->nextToken();
 		break;
 
 	case tt_cparen:
-		//error?
-		SetError(ec_par_invalidcparen,CurrentToken()->line,CurrentToken()->col);
-		return out;
-		break;
-
-	default:
 		//error
-		SetError(ec_par_invalidtoken,CurrentToken()->line,CurrentToken()->col);
-		return out;
-		break;
-	}
-	
+		return NULL;
 
-	return out;
+	case tt_ident:
+
+		break;
+
+	case tt_intlit:
+	case tt_strlit:	
+	case tt_fltlit:	
+	case tt_mod:
+	case tt_true:
+	case tt_false:
+		par->addChild(bcParseNode(oper1.type));
+		par->lexer->nextToken();
+		break;
+	default:
+		return NULL;	//error
+	}	
+	return oper1;
 }

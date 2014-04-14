@@ -9,6 +9,7 @@ using std::vector;
 
 void bcLexer::startup()
 {
+	offset=0;
 	x=-1;y=0;
 	done=false;
 	source = new std::vector<std::string>();
@@ -16,34 +17,45 @@ void bcLexer::startup()
 
 void bcLexer::shutdown()
 {
+	clear();
 	x=-1;y=0;
 	delete source;
 }
 
+void bcLexer::clear()
+{
+	source->clear();
+	tokens.clear();
+}
+
 bcToken* bcLexer::getToken()
 {
+	//if(x==-1)
+	//	return nextToken();
 	if(!tokens.size())
 		return NULL;
-	return &tokens[tokens.size()-1];
+	return &tokens[tokens.size()-1-offset];
 }
 
 int bcLexer::lex()
 {
 	while(nextToken())
-	{
 		true;
-	}
 	return true;
+}
+
+bcToken* bcLexer::prevToken()
+{
+	offset=+1;
+	return getToken();
 }
 
 bcToken* bcLexer::nextToken()
 {
+	offset=0;
 	bcToken tok;
 	if(!inc())
-	{
-		done=true;
-		return NULL;	//some kind of error
-	}
+		return NULL;	//end of file
 	tok.x=x;	tok.y=y;
 	tok.data=getChar();
 	tok.type=getTokenType(&tok.data);
@@ -52,9 +64,7 @@ bcToken* bcLexer::nextToken()
 	switch(tok.type)
 	{
 		//drop whitespace
-		case tt_ws:
-		case tt_tab:
-		case tt_newline:	
+		case tt_ws:	case tt_tab:	case tt_newline:	
 			//chomp up reocurring whitespace
 			while(tok.type==tt_ws || tok.type==tt_tab || tok.type==tt_newline)
 			{
@@ -182,6 +192,8 @@ bcToken* bcLexer::nextToken()
 
 bool bcLexer::inc()
 {	
+	if(done)
+		return false;
 	if(x+1 <= source->at(y).size()-1)
 	{		
 		x++;		
@@ -191,7 +203,7 @@ bool bcLexer::inc()
 		x=0,y++;
 		if(y>source->size()-1)
 		{
-			x=y=-1;
+			done=true;
 			return false;	//eof
 		}		
 	}
@@ -239,37 +251,14 @@ bool lex::isDelim(string* s)
 {
 	switch(getTokenType(s))
 	{
-	case tt_ws:		
-	case tt_newline:
-	case tt_tab: 
-	case tt_period:
-	case tt_comma: 
-	case tt_plus: 
-	case tt_minus:
-	case tt_div:
-	case tt_mult:
-	case tt_pow: 
-	case tt_mod: 
-	case tt_squote:
-	case tt_assign:
-	case tt_pipe: 
-	case tt_dollar:
-	case tt_amper: 
-	case tt_greater:
-	case tt_less: 
-	case tt_lognot:
-	case tt_dquote:
-	case tt_bslash:
-	case tt_scolon:
-	case tt_percent:
-	case tt_oparen: 
-	case tt_cparen: 
-	case tt_obrace: 
-	case tt_cbrace: 
-	case tt_obracket:
-	case tt_cbracket:
-	case tt_tilde: 
-	case tt_colon: 
+	case tt_ws:	case tt_newline:	case tt_tab:	case tt_period:
+	case tt_comma:	case tt_plus:	case tt_minus:	case tt_div:
+	case tt_mult:	case tt_pow: 	case tt_mod: 	case tt_squote:
+	case tt_assign:	case tt_pipe: 	case tt_dollar:	case tt_amper: 
+	case tt_greater:case tt_less: 	case tt_lognot:	case tt_dquote:
+	case tt_bslash:	case tt_scolon:	case tt_percent:case tt_oparen: 
+	case tt_cparen: case tt_obrace: case tt_cbrace: case tt_obracket:
+	case tt_cbracket:case tt_tilde: case tt_colon: 
 		return true;
 	default:
 		return false;
@@ -319,16 +308,9 @@ bcTokenType lex::getTokenType(char c)
 {
 	switch(c)
 	{
-	case '0':	
-	case '1':		
-	case '2':		
-	case '3':		
-	case '4':		
-	case '5':		
-	case '6':
-	case '7':		
-	case '8':		
-	case '9':
+	case '0':	case '1':	case '2':		
+	case '3':	case '4':	case '5':		
+	case '6':	case '7':	case '8':	case '9':
 		return tt_intlit;		
 	case '\n': 
 		return tt_newline;	

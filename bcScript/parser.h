@@ -57,6 +57,7 @@ namespace bc
 			void startup(),shutdown();
 			
 			int parse();			
+			void clear();
 
 			//Parse tree
 			tree<bcParseNode>::iterator* getNode();				
@@ -103,7 +104,7 @@ namespace bc
 		void parseParamList(bcParser*);	
 		void parseDecParamList(bcParser*);			
 		void parseDecFunc_Type(bcParser*);
-		void parseDecFunc_Ident(bcParser*);		
+		void parseDecFunc_Ident(bcParser*);
 		bcSymbol parseIdent(bcParser*);
 		void parseIdent_Namespace(bcParser*);
 		void parseIdent_Var(bcParser*);
@@ -131,6 +132,7 @@ namespace bc
 
 		bcParseNodeType DeriveType(lex::bcToken);
 		bcSymbol resolveIdent(bcParser*,std::string);
+		std::string consumeIdent(bcParser*);
 		std::string getFullIdent(std::string ident,bcSymbol* scope);
 	}
 }

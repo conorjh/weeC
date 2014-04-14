@@ -101,10 +101,13 @@ bool util::bcreadfile(const char* in,std::vector<std::string>* out)
 	}
 }
 
-int util::GetPrecedence(lex::bcToken tokin)
+int util::getPrecedence(lex::bcToken tokin)
 {
 	switch(tokin.type)
 	{
+	case tt_assign:
+		return 15;
+
 	case tt_logor:
 		return 14;
 
@@ -148,6 +151,7 @@ int util::IsOperator(lex::bcToken tokin)
 	case tt_div:
 	case tt_plus:
 	case tt_minus:
+	case tt_assign:
 		return true;
 	}
 	return false;

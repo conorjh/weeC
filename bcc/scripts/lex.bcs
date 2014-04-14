@@ -1,0 +1,30 @@
+//Lexer example
+
+function int add()
+{
+	return 55+(22*(22+1));
+}
+
+function int main()
+{
+	int a;
+	int b;
+	a=55+(17*a)+4*(22-21);
+	b=2;
+	int c;
+	while(true)
+	{
+		c=a*(a+b-(2/0.55));
+		a=a*c;
+		if(a>=b)
+		{
+			add();
+			c++;
+			break;
+			return 2;
+		}
+	}
+	return 1;
+}
+
+

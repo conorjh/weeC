@@ -87,6 +87,16 @@ void bcParser::startup()
 	addSymbol(sym.ident,&sym);currentScope = getSymbol("$global");
 }
 
+
+void bcParser::clear()
+{
+	ast.symtab->clear();
+	ast.tree->clear();
+	lexer->clear();
+}
+
+
+
 tree<bcParseNode>::iterator* bcParser::getNode()
 {
 	return &pindex;
@@ -158,12 +168,32 @@ void parse::parseStatement(bcParser* par)
 
 		case tt_scolon:
 			//empty statement
-			par->lexer->nextToken();			
+			parseSColon(par);
 			break;	
 
 		case tt_var:case tt_int:case tt_string:case tt_float:
 		case tt_bool:case tt_object:case tt_function:case tt_dec:
 			parseDec(par);
+			break;
+			
+		case tt_if:
+			parseIf(par);
+			break;
+
+		case tt_while:
+			parseWhile(par);
+			break;
+
+		case tt_continue:
+			parseContinue(par);
+			break;
+
+		case tt_break:
+			parseBreak(par);
+			break;
+
+		case tt_return:
+			parseReturn(par);
 			break;
 
 		case tt_ident:
@@ -171,9 +201,11 @@ void parse::parseStatement(bcParser* par)
 			switch(sym.type)
 			{
 			case st_var:
-			case st_function:
 				parseAssignment(par);
-				
+				break;
+			case st_function:
+				parseFuncCall(par);
+				break;
 			break;
 			default:
 				true;//error
@@ -395,7 +427,7 @@ void parse::parseDecFunc_Ident(bcParser* par)
 			sym.type = st_function;
 			par->addSymbol(sym.fullident,&sym);
 			par->currentScope = par->getSymbol(sym.fullident);
-			par->addChild(bcParseNode(pn_ident,sym.fullident));
+			par->addChild(bcParseNode(pn_funcdec_ident,sym.fullident));
 		}
 		else
 		{
@@ -446,28 +478,6 @@ void parse::parseSColon(bcParser* par)
 	par->lexer->nextToken();
 }
 
-bcSymbol parse::parseIdent(bcParser* par)
-{
-	//create node
-	par->addNode(bcParseNode(pn_ident));	
-	
-	std::string id;
-	while(par->lexer->getToken()->type == tt_ident)
-	{
-		id+=par->lexer->getToken()->data;
-		par->lexer->nextToken();
-	}
-
-	if(par->getSymbol(id,par->currentScope))
-		return *par->getSymbol(id,par->currentScope);
-	
-	bcSymbol sym;	sym.type=st_null;	sym.ident=id;	sym.fullident=getFullIdent(id,par->currentScope);	
-	par->getNode()->node->data.tokens.push_back(bcToken(tt_ident,id)); 
-	par->parent();
-
-	return sym;
-}
-
 void parse::parseBlock(bcParser* par)
 {
 	//opening brace
@@ -485,12 +495,107 @@ void parse::parseBlock(bcParser* par)
 	par->parent();
 }
 
+void parse::parseIf(bcParser* par)
+{	
+	//opening if
+	if(par->lexer->getToken()->type!=tt_if)
+		return;	//error
+	par->lexer->nextToken();
+	par->addNode(bcParseNode(pn_if));
+
+	//if expression
+	parseFExp(par);
+
+	//true block
+	parseBlock(par);
+	
+	//optional elseif/else
+	while(par->lexer->getToken()->type==tt_else || par->lexer->getToken()->type==tt_elseif)
+	{
+		par->addNode(bcParseNode(par->lexer->getToken()->type));
+		par->lexer->nextToken();
+		parseBlock(par);
+	}
+}
+
+void parse::parseReturn(bcParser* par)
+{	
+	//return keyword
+	if(par->lexer->getToken()->type!=tt_return)
+		return;	//error
+	par->lexer->nextToken();
+	par->addChild(bcParseNode(pn_return));
+	//return expression
+	parseFExp(par);
+	//semi colon
+	parseSColon(par);
+}
+
+void parse::parseBreak(bcParser* par)
+{	
+	if(par->lexer->getToken()->type!=tt_break)
+		return;	//error
+	par->lexer->nextToken();
+	par->addChild(bcParseNode(pn_break));
+	parseSColon(par);
+}
+
+void parse::parseContinue(bcParser* par)
+{	
+	if(par->lexer->getToken()->type!=tt_continue)
+		return;	//error
+	par->lexer->nextToken();
+	par->addChild(bcParseNode(pn_continue));
+	parseSColon(par);
+}
+
+//nextToken til end of ident, return shortident
+std::string parse::consumeIdent(bcParser* par)
+{
+	std::string id;
+	bool exit=false;
+	while(!exit)
+	{
+		switch(par->lexer->getToken()->type)
+		{
+		case tt_ident:
+			id+=par->lexer->getToken()->data;
+			par->lexer->nextToken();
+			break;
+		case tt_period:
+			id+=par->lexer->getToken()->data;
+			par->lexer->nextToken();
+			break;
+		default:
+			exit=true;
+		}
+		
+	}
+	return id;
+}
+bcSymbol parse::parseIdent(bcParser* par)
+{
+	std::string ident;
+	//create node
+	par->addNode(bcParseNode(pn_ident));		
+	//get symbol, if any, consume ident in lexer
+	bcSymbol sym = resolveIdent(par,ident = consumeIdent(par));
+	//add fullident name to node
+	par->getNode()->node->data.tokens.push_back(bcToken(tt_ident,sym.fullident)); 
+	//back to parent
+	par->parent();
+
+	return sym;
+}
+
+//check ident is a valid symbol in current scope
 bcSymbol parse::resolveIdent(bcParser* par,std::string id)
 {
-	bcSymbol out;
-	out.type = st_null;
-	
-	return out;
+	if(par->getSymbol(id,par->currentScope))
+		return *par->getSymbol(id,par->currentScope);
+	//return a null type symbol if the ident doesnt resolve at currentScope
+	bcSymbol sym;	sym.type=st_null;	sym.ident=id;	sym.fullident=getFullIdent(id,par->currentScope);	
+	return sym;
 }
 
 std::string parse::getFullIdent(std::string ident,bcSymbol* scope)
@@ -506,22 +611,60 @@ std::string parse::getFullIdent(std::string ident,bcSymbol* scope)
 	}
 }
 
+void parse::parseFuncCall(bcParser* par)
+{
+	//func name
+	if(par->lexer->getToken()->type!=tt_ident)
+		return;	//error
+	bcSymbol sym = parseIdent(par);
+	if(sym.type!=st_function)
+		return;	//error
+	else if(sym.type==st_null)
+		return;	//undeclared ident
+	par->addNode(bcParseNode(pn_funccall));
+	par->getNode()->node->data.tokens.push_back(bcToken(sym.fullident));
+
+	//params
+	parseParamList(par);
+
+	//semi colon
+	parseSColon(par);
+
+	par->parent();
+}
+
+void parse::parseWhile(bcParser* par)
+{
+	//while keyword
+	if(par->lexer->getToken()->type!=tt_while)
+		return;	//error
+	par->lexer->nextToken();
+	
+	par->addChild(bcParseNode(pn_while));
+	
+	//condition
+	parseFExp(par);
+
+	//block to execute
+	parseBlock(par);
+}
+
 void parse::parseAssignment(bcParser* par)
 {
 	par->addNode(bcParseNode(pn_assignment));
-	par->lexer->nextToken();
+	par->lexer->nextToken();	//consume "assign
 	parseFExp(par);
+	parseSColon(par);
 	par->parent();
 }
 
 //full expression
 void parse::parseFExp(bcParser* par)
 {	
-	//3 lines for an expression, zimples!
 	par->addNode(bcParseNode(pn_exp));
 	parseExp(par);
 	par->parent();
-	par->lexer->nextToken();
+	//par->lexer->nextToken();
 }
 
 lex::bcToken parse::parseExp(bcParser* par)
@@ -536,7 +679,7 @@ lex::bcToken parse::parseExp(bcParser* par)
 		switch(op.type)
 		{		
 		case tt_less:	case tt_greater:	case tt_lessequal:			case tt_greaterequal:
-		case tt_equal:	case tt_notequal:	case tt_logand:		case tt_logor:		
+		case tt_equal:	case tt_notequal:	case tt_logand:		case tt_logor:		case tt_assign:
 			par->addChild(bcParseNode(op.type));
 			par->lexer->nextToken();
 			break;
@@ -559,7 +702,7 @@ lex::bcToken parse::parseSubExp(bcParser* par)
 		par->addChild(bcParseNode(op.type));
 		switch(op.type)
 		{		
-		case tt_plus:	case tt_minus:
+		case tt_plus:	case tt_minus: case tt_assign:
 			par->addChild(bcParseNode(op.type));
 			par->lexer->nextToken();
 			break;
@@ -596,6 +739,7 @@ lex::bcToken parse::parseTerm(bcParser* par)
 
 bcToken parse::parseFactor(bcParser* par)
 {
+	bcSymbol sym;
 	bcToken oper1,oper2,op;
 	bool negate;
 	oper1=*par->lexer->getToken();
@@ -628,7 +772,18 @@ bcToken parse::parseFactor(bcParser* par)
 		return NULL;
 
 	case tt_ident:
-
+		sym = parseIdent(par);
+		switch(sym.type)
+		{
+		case st_var:
+		case st_function:
+			
+			break;
+		default:
+			//error
+			return NULL;
+			break;
+		}
 		break;
 
 	case tt_intlit:

@@ -8,3 +8,6 @@ Lightweight embedabble scripting language
 #include "config.h"
 #include "lexer.h"
 #include "parser.h"
+#include "bytecode.h"
+#include "vm.h"
+#include "util.h"

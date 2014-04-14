@@ -1,5 +1,3 @@
-
- 
 #include "bcscript.h"
 #include "test.h"
 

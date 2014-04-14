@@ -14,7 +14,7 @@ namespace bc
 			tt_dollar, tt_amper, tt_greater, tt_less, tt_equal, tt_notequal, tt_greaterequal, tt_lessequal,
 			tt_lognot, tt_logor, tt_logand, tt_incr, tt_decr, tt_plusassign, tt_minusassign, tt_multassign, tt_divassign,
 			tt_intlit, tt_strlit, tt_fltlit, tt_ident, tt_comment, tt_dec,
-			tt_true, tt_false, tt_function, tt_if, tt_else, tt_while, tt_break, tt_return, tt_continue,
+			tt_true, tt_false, tt_function, tt_if, tt_else, tt_elseif, tt_while, tt_break, tt_return, tt_continue,
 			tt_varident,tt_funcident,
 				
 			tt_tab, tt_ws,tt_eof				
@@ -35,20 +35,20 @@ namespace bc
 		public:
 			void startup();
 			void shutdown();
-
 			int lex();
 			void clear();
+
 			bcToken* nextToken();
 			bcToken* getToken();
+			bcToken* prevToken();
 			bcToken* peekToken();
 			bool inc(),dec();
 			std::string getChar(),peekChar();
 
 			std::vector<bcToken> tokens;
 			std::vector<std::string>* source;
-		
 			bool done;
-			int x,y;
+			int x,y,offset;
 		};
 
 		bcTokenType getTokenType(std::string*);

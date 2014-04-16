@@ -9,7 +9,7 @@ namespace bc
 		class bcVM
 		{
 		public:
-			void exec(unsigned int instructions);
+			unsigned int exec(unsigned int instructions);
 
 			std::vector<bcByteCode>	istream;
 			std::stack<bcVal>		stack;

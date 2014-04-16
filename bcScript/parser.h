@@ -85,10 +85,11 @@ namespace bc
 		void parseBlock(bcParser*);
 		void parseBlockNoDec(bcParser*);
 		void parseWhile(bcParser*);
-		void parseAssignment(bcParser*);
+		void parseAssignment(bcParser*,bcSymbol);
 		void parseDec(bcParser*);
-		void parseFuncCall(bcParser*);
-		void parseFExp(bcParser*);
+		void parseFuncCall(bcParser*,bcSymbol);
+		void parseFExp(bcParser*);		
+		void parseFExp(bcParser*,bcSymbol);
 		void parseIf(bcParser*);
 		void parseSColon(bcParser*);
 
@@ -131,8 +132,11 @@ namespace bc
 		std::string GetTag(bcParser*,bcSymbol*);
 
 		bcParseNodeType DeriveType(lex::bcToken);
+		//identifier tings
 		bcSymbol resolveIdent(bcParser*,std::string);
 		std::string consumeIdent(bcParser*);
-		std::string getFullIdent(std::string ident,bcSymbol* scope);
+		std::string getFullIdent(bcParser* par,std::string ident,bcSymbol* scope);
+		std::string getShortIdent(std::string);
+		bool isIdentExplicit(bcParser*,std::string);
 	}
 }

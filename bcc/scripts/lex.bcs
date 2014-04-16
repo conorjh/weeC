@@ -1,15 +1,16 @@
 //Lexer example
-
 function int add()
 {
+	int a=4;
+	int bb;
 	return 55+(22*(22+1));
 }
-
+int tits;
 function int main()
 {
 	int a;
 	int b;
-	a=55+(17*a)+4*(22-21);
+	a=55+(17*b)+4*(22-21);
 	b=2;
 	int c;
 	while(true)
@@ -18,8 +19,7 @@ function int main()
 		a=a*c;
 		if(a>=b)
 		{
-			add();
-			c++;
+			//main::a=2+2;
 			break;
 			return 2;
 		}

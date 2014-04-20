@@ -19,18 +19,13 @@ namespace bc
 
 		enum bcOperandType
 		{
-			ot_mem,ot_stack,ot_astack,ot_int,ot_float,int_string,ot_funccall,ot_vmcall
-		};
-
-		struct bcVal
-		{
-			unsigned int v;
+			ot_mem,ot_reg,ot_stack,ot_astack,ot_int,ot_float,int_string,ot_funccall,ot_vmcall
 		};
 
 		struct bcOperand
 		{
 			bcOperandType type;
-			bcVal val;	
+			parse::bcVal val;	
 		};
 
 		struct bcByteCode
@@ -42,9 +37,12 @@ namespace bc
 		class bcByteCodeGen
 		{
 		public:
-			void gen();
+			std::vector<bcByteCode>* gen();
 
-			parse::bcAST ast;
+			parse::bcAST* ast;
+			tree<parse::bcParseNode>::iterator pi;
 		};
+
+		void genFuncDec(bcByteCodeGen*);
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include "error.h" 
 #include "lexer.h"
 #include "include/tree.hh"
 
@@ -7,6 +8,11 @@ namespace bc
 {
 	namespace parse
 	{
+		struct bcVal
+		{
+			unsigned int v;
+		};
+
 		enum bcParseNodeType{
 							pn_null, pn_head, pn_exp, pn_type,					
 							//straight copies of their tt_ counterparts
@@ -33,22 +39,35 @@ namespace bc
 			std::string tag;					//used to hold internal function names currently TODO find a better way to do this!		
 		};
 	
-		enum bcSymbolType{st_null, st_var, st_type, st_object, st_function, st_namespace};
-
+		
 		//symbols are referenced from symtab by their fullidents
+		enum bcSymbolType{st_null, st_var, st_type, st_object, st_function, st_namespace};
 		struct bcSymbol
 		{
-			std::string ident;		//variable name
-			std::string fullident;	//full name $global::varname
+			std::string ident;		//local identifier 
+			std::string fullident;	//fully qualified name $global::varname
 			bcSymbolType type;
 		};
 
+		struct bcParamList
+		{
+			std::unordered_map<std::string,bcSymbol*> params;	//string method signature to entry in symtable to st_type
+		};
+		struct bcFuncInfo
+		{
+			std::string ident,fullident;
+			bool isOverloaded;													//has overloaded method signatures
+			std::vector<std::string> stackframe;								//fullidents
+			std::unordered_map<std::string,tree<bcParseNode>::iterator*> body;	//method signature to parsenode 
+			std::unordered_map<std::string,bcParamList>	sigs;					//overloaded string signature to paramlist (inc methodsig)
+		};																		//	if(!isOverloaded) sigs[0] is functions signature
 		struct bcAST
 		{
-			tree<bcParseNode>* tree;
-			std::unordered_map<std::string,bcSymbol>* symtab;	
-			//std::unordered_map<std::string,std::vector<std::unordered_map<std::string,bcSymbol>::iterator>>* funcsig;
-			//std::unordered_map<std::string,std::vector<std::unordered_map<std::string,bcSymbol>::iterator>>* stackframes;
+			tree<bcParseNode>* tree;			
+			std::vector<std::vector<std::string>> stackframes;		//working stackframes stack
+			std::unordered_map<std::string,bcSymbol>* symtab;		//fullident to bcSymbol
+			std::unordered_map<std::string,bcFuncInfo>* functab;	//fullident to funcinfo
+			std::unordered_map<std::string,bcVal> consttab;			//fullident to constant bcVal
 		};
 
 		class bcParser
@@ -64,16 +83,22 @@ namespace bc
 			tree<bcParseNode>::iterator* addNode(bcParseNode);	//add node and point pindex to the new child node
 			tree<bcParseNode>::iterator* addChild(bcParseNode);	//add node, but pindex remains on parent node
 			void parent();
+
 			//symbol table
 			bcSymbol* getSymbol(std::string);
 			bcSymbol* getSymbol(std::string,bcSymbol*);
 			bool addSymbol(bcSymbol*);
 			bool addSymbol(std::string,bcSymbol*);
 		
+			//error
+			unsigned int getError();
+
 			unsigned int parenCount;
+			bool noDecVar,noDecFunc,noDecName;
 			bcAST ast;
 			bcSymbol* currentScope;
-			lex::bcLexer* lexer;		
+			bcFuncInfo* currentFunc;
+			lex::bcLexer* lexer;
 			tree<bcParseNode>::iterator pindex;		//Current parse node we are working on	
 		};
 
@@ -82,11 +107,12 @@ namespace bc
 		void parseStatement(bcParser*);
 
 		//level 2
+		void parseDecFunc(bcParser*);
+		void parseDecVar(bcParser*);
+		void parseDecNamespace(bcParser*);
 		void parseBlock(bcParser*);
-		void parseBlockNoDec(bcParser*);
 		void parseWhile(bcParser*);
 		void parseAssignment(bcParser*,bcSymbol);
-		void parseDec(bcParser*);
 		void parseFuncCall(bcParser*,bcSymbol);
 		void parseFExp(bcParser*);		
 		void parseFExp(bcParser*,bcSymbol);
@@ -94,8 +120,6 @@ namespace bc
 		void parseSColon(bcParser*);
 
 		//level 3
-		void parseDecFunc(bcParser*);
-		void parseDecVar(bcParser*);
 		void parseBreak(bcParser*);
 		void parseReturn(bcParser*);
 		void parseContinue(bcParser*);			
@@ -104,12 +128,7 @@ namespace bc
 		//level 4
 		void parseParamList(bcParser*);	
 		void parseDecParamList(bcParser*);			
-		void parseDecFunc_Type(bcParser*);
-		void parseDecFunc_Ident(bcParser*);
-		bcSymbol parseIdent(bcParser*);
-		void parseIdent_Namespace(bcParser*);
-		void parseIdent_Var(bcParser*);
-		void parseIdent_Function(bcParser*);
+		bcSymbol parseIdent(bcParser*);		
 		lex::bcToken	parseSubExp(bcParser*);
 
 		//level 5		
@@ -137,6 +156,7 @@ namespace bc
 		std::string consumeIdent(bcParser*);
 		std::string getFullIdent(bcParser* par,std::string ident,bcSymbol* scope);
 		std::string getShortIdent(std::string);
+		bcSymbol* addDecIdent(bcParser*,bcSymbolType);
 		bool isIdentExplicit(bcParser*,std::string);
 	}
 }

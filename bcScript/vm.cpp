@@ -40,7 +40,8 @@ unsigned int bcVM::exec(unsigned int instructions)
 		default:
 				break;
 		}
+		pc++;
 		--instructions;
 	}
-
+	return true;
 }

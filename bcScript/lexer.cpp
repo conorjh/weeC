@@ -152,15 +152,15 @@ bcToken* bcLexer::nextToken()
 			tokens.push_back(tok);
 			return getToken();
 		
-		case tt_greater:// >=			
-		case tt_less:// <=
-		case tt_lognot:	// !=
-		case tt_assign:// ==			
-		case tt_plus:// ++ or +=	
-		case tt_minus:// -- or -=			
-		case tt_amper:// &&			
-		case tt_pipe:// ||
-		case tt_colon:// ::
+		case tt_greater:	// >=			
+		case tt_less:		// <=
+		case tt_lognot:		// !=
+		case tt_assign:		// ==			
+		case tt_plus:		// ++ or +=	
+		case tt_minus:		// -- or -=			
+		case tt_amper:		// &&			
+		case tt_pipe:		// ||
+		case tt_colon:		// ::
 			//dual step tokens		
 			if(!((getTokenType(&(getChar()+peekChar()))!=tt_greaterequal) && (getTokenType(&(getChar()+peekChar()))!=tt_lessequal) &&
 				(getTokenType(&(getChar()+peekChar()))!=tt_notequal) && (getTokenType(&(getChar()+peekChar()))!=tt_equal) && 
@@ -226,6 +226,7 @@ bool bcLexer::dec()
 		--x;
 	return true;
 }
+
 string bcLexer::getChar()
 {
 	return source->at(y).substr(x,1);
@@ -293,6 +294,7 @@ bcTokenType lex::getTokenType(string* s)
 	if(*s=="bool")					return tt_bool;
 	if(*s=="true") 					return tt_true;
 	if(*s=="false") 				return tt_false;
+	if(*s=="namespace")				return tt_namespace;
 	if(*s=="function")				return tt_function;
 	if(*s=="func")					return tt_function;
 	if(*s=="if")					return tt_if;

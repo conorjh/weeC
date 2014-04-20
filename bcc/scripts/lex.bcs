@@ -16,10 +16,10 @@ function int main()
 	while(true)
 	{
 		c=a*(a+b-(2/0.55));
-		a=a*c;
+		a=a*tits+c;
 		if(a>=b)
 		{
-			//main::a=2+2;
+			//bb=2+2;
 			break;
 			return 2;
 		}

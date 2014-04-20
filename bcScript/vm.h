@@ -12,7 +12,7 @@ namespace bc
 			unsigned int exec(unsigned int instructions);
 
 			std::vector<bcByteCode>	istream;
-			std::stack<bcVal>		stack;
+			std::stack<parse::bcVal>		stack;
 			unsigned int pc;
 		};
 

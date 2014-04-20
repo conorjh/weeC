@@ -1,0 +1,17 @@
+int a
+namespace t
+{
+	int bb;
+}
+func int add()
+{
+	int b;
+	b=a;
+	int a;
+	b=a;	
+	if(b)
+		b=a+22;
+	else
+		b=t::bb;
+}
+int c;

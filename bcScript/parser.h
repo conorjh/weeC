@@ -8,10 +8,6 @@ namespace bc
 {
 	namespace parse
 	{
-		struct bcVal
-		{
-			unsigned int v;
-		};
 
 		enum bcParseNodeType{
 							pn_null, pn_head, pn_exp, pn_type,					
@@ -46,6 +42,7 @@ namespace bc
 		{
 			std::string ident;		//local identifier 
 			std::string fullident;	//fully qualified name $global::varname
+			std::string datatype;
 			bcSymbolType type;
 		};
 
@@ -53,21 +50,23 @@ namespace bc
 		{
 			std::unordered_map<std::string,bcSymbol*> params;	//string method signature to entry in symtable to st_type
 		};
+
 		struct bcFuncInfo
 		{
-			std::string ident,fullident;
+			std::string ident,fullident,datatype;
 			bool isOverloaded;													//has overloaded method signatures
 			std::vector<std::string> stackframe;								//fullidents
 			std::unordered_map<std::string,tree<bcParseNode>::iterator*> body;	//method signature to parsenode 
 			std::unordered_map<std::string,bcParamList>	sigs;					//overloaded string signature to paramlist (inc methodsig)
 		};																		//	if(!isOverloaded) sigs[0] is functions signature
+
 		struct bcAST
 		{
 			tree<bcParseNode>* tree;			
 			std::vector<std::vector<std::string>> stackframes;		//working stackframes stack
 			std::unordered_map<std::string,bcSymbol>* symtab;		//fullident to bcSymbol
 			std::unordered_map<std::string,bcFuncInfo>* functab;	//fullident to funcinfo
-			std::unordered_map<std::string,bcVal> consttab;			//fullident to constant bcVal
+//			std::unordered_map<std::string,bcVal> consttab;			//fullident to constant bcVal
 		};
 
 		class bcParser
@@ -158,5 +157,6 @@ namespace bc
 		std::string getShortIdent(std::string);
 		bcSymbol* addDecIdent(bcParser*,bcSymbolType);
 		bool isIdentExplicit(bcParser*,std::string);
+		std::string getStringSignature(bcParamList*);
 	}
 }

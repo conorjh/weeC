@@ -4,54 +4,126 @@ using namespace bc::vm;
 using namespace bc::parse;
 using bc::parse::bcAST;
 using bc::parse::bcParseNodeType;
+using bc::vm::bcValType;
 
-std::vector<bcByteCode>* bcByteCodeGen::gen()
+bcValType bc::vm::getValType(bcSymbol* sym)
 {
-	
-	std::vector<bcByteCode>* istream;
+	switch(sym->type)
+	{
+	case st_type:
+	case st_var:
+		if(sym->datatype == "int")
+			return vt_int;
+		else if(sym->datatype == "float")
+			return vt_float;
+		else if(sym->datatype == "string")
+			return vt_string;
+		else if(sym->datatype == "bool")
+			return vt_bool;
+		else
+			return vt_mem;
+		break;
+	}
+	return vt_null;
+}
+
+bcByteCodeGen::bcByteCodeGen()
+{
+	inDecFunc=false;
+}
+
+void bcByteCodeGen::gen()
+{
+	bcByteCode bc;
+	istream=new std::vector<bcByteCode>;
+	fistream=new std::vector<bcByteCode>;
 	pi=ast->tree->begin();
 
 	//load global stackframe
 	for(int t=0;t<ast->stackframes.at(0).size();++t)
 	{
-		//ast->stackframes.at(0).at(t)
-			
+		bc.op = oc_push;
+		bc.arg1.type = getValType(&ast->symtab->at(ast->stackframes.at(0).at(t)));	
+		bc.arg1.val = 0;
+		istream->push_back(bc);
 	}
 	
 	while(pi!=ast->tree->end())
-	{
-		switch(pi->type)
+		genStatement(this);
+}
+
+void bc::vm::genStatement(bcByteCodeGen* bg)
+{
+	int olddepth=bg->ast->tree->depth(bg->pi);	
+	while(bg->ast->tree->depth(bg->pi) >= olddepth)
+		switch(bg->pi->type)
 		{
 		case pn_null:
 		case pn_head:
-			pi++;
+			bg->pi++;
 			break;
 		case pn_exp:
-			pi++;
+			bg->pi++;
 			break;
 		case pn_funcdec:
-			genFuncDec(this);
+			genDecFunc(bg);
+			break;
+		case pn_vardec:
+			genDecVar(bg);
+			break;
+		case pn_block:
+			genBlock(bg);
 			break;
 		default:
-			++pi;
+			++bg->pi;
 		}
-	}
-	return istream;
 }
 
-void bc::vm::genFuncDec(bcByteCodeGen* bg)
+void bc::vm::genDecFunc(bcByteCodeGen* bg)
 {
+	bcFuncInfo fi;
+	bg->inDecFunc=true;
+	//collect func dec info
 	int olddepth=bg->ast->tree->depth(bg->pi);
-	
-	while(bg->ast->tree->depth(bg->pi))
+	++bg->pi;
+	while(bg->ast->tree->depth(bg->pi) > olddepth)
 		switch(bg->pi->type)
 		{
 		case pn_ident:
 			++bg->pi;
+			fi=bg->ast->functab->at( bg->pi.node->data.tokens.at(0).data );
 			break;
 
 		default:
 			++bg->pi;
 			break;
 		}
+
+	//build body into fstream, take note of offset
+	tree<bcParseNode>::iterator oldpi=bg->pi;
+	bg->pi = *fi.body[fi.fullident];
+	int fOffset = bg->fistream->size();
+	genBlock(bg);
+}
+
+void bc::vm::genDecVar(bcByteCodeGen* bg)
+{
+
+}
+
+void bc::vm::genBlock(bcByteCodeGen* bg)
+{
+	int olddepth=bg->ast->tree->depth(bg->pi);
+	while(bg->ast->tree->depth(bg->pi) > olddepth)
+		switch(bg->pi->type)
+		{
+		case pn_block:
+			++bg->pi;
+			break;
+
+		default:
+			genStatement(bg);
+				break;
+		}
+
 }

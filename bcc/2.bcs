@@ -1,0 +1,9 @@
+int a;
+a=2;
+func int main()
+{
+	int m;
+	m=a+2;
+}
+int b;
+b=a;

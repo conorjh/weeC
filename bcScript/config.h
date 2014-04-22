@@ -8,4 +8,5 @@ namespace bc
 	const int bcVerRC = 0;
 	const int bcVerDemo = 1;
 	const char* bcVerName = "Little Pea";
+	const unsigned int bcMaxRegisters = 32;
 }

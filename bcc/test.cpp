@@ -314,7 +314,12 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 			return "continue keyw"; 
 		case pn_funcdec:
 			return "func dec";
+		case pn_statement:
+			return "statement";
+		case pn_exp:
+			return "expression";
 	}
+
 	return "null";
 }
 

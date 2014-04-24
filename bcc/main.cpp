@@ -36,7 +36,7 @@ int main()
 						{
 							p.parse();
 							g.ast=&p.ast;
-							g.gen();
+							//g.gen();
 							printLexer(&l);
 							printParser(&p);
 						}

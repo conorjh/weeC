@@ -8,6 +8,16 @@ namespace bc
 {
 	namespace parse
 	{
+		//symbols are referenced from symtab by their fullidents
+		enum bcSymbolType{st_null, st_var, st_type, st_object, st_function, st_namespace};
+	
+		struct bcSymbol
+		{
+			std::string ident;		//local identifier 
+			std::string fullident;	//fully qualified name $global::varname
+			std::string datatype;
+			bcSymbolType type;
+		};
 
 		enum bcParseNodeType{
 							pn_null, pn_head, pn_exp, pn_type,					
@@ -18,6 +28,7 @@ namespace bc
 							pn_obracket, pn_cbracket, pn_obrace, pn_cbrace, pn_bslash, pn_percent, pn_newline, pn_dollar, 
 							pn_amper, pn_greater, pn_less, pn_greaterequal, pn_lessequal, pn_equal, pn_notequal, 
 							pn_logand, pn_logor, pn_lognot,	pn_intlit, pn_strlit, pn_fltlit, pn_ident, pn_comment, 
+							pn_varident,pn_funcident,pn_namespaceident,
 							pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr,pn_plusassign, pn_minusassign, 
 							pn_multassign, pn_divassign, pn_assignment,pn_block,pn_vardec,pn_paramdec,pn_funcdec,
 							pn_funcdec_type,pn_funcdec_ident,pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else, pn_while,pn_break,
@@ -28,6 +39,7 @@ namespace bc
 		struct bcParseNode
 		{	
 			bcParseNode(lex::bcTokenType t);
+			bcParseNode(bcSymbolType t);
 			bcParseNode(bcParseNodeType t){type=t;};
 			bcParseNode(bcParseNodeType t,lex::bcToken tk){type=t;tokens.push_back(tk);};
 			bcParseNodeType type;
@@ -35,17 +47,6 @@ namespace bc
 			std::string tag;					//used to hold internal function names currently TODO find a better way to do this!		
 		};
 	
-		
-		//symbols are referenced from symtab by their fullidents
-		enum bcSymbolType{st_null, st_var, st_type, st_object, st_function, st_namespace};
-		struct bcSymbol
-		{
-			std::string ident;		//local identifier 
-			std::string fullident;	//fully qualified name $global::varname
-			std::string datatype;
-			bcSymbolType type;
-		};
-
 		struct bcParamList
 		{
 			std::unordered_map<std::string,bcSymbol*> params;	//string method signature to entry in symtable to st_type
@@ -127,7 +128,7 @@ namespace bc
 		//level 4
 		void parseParamList(bcParser*);	
 		void parseDecParamList(bcParser*);			
-		bcSymbol parseIdent(bcParser*);		
+		bcParseNode parseIdent(bcParser*);		
 		lex::bcToken	parseSubExp(bcParser*);
 
 		//level 5		
@@ -147,7 +148,6 @@ namespace bc
 		bool checkOperandVar(bcParser*,lex::bcToken,lex::bcTokenType);
 		bool checkOperandFunction(bcParser*,lex::bcToken,lex::bcTokenType);
 		bool compareFuncSigs(bcParser*,std::string,std::vector<std::unordered_map<std::string,bcSymbol>::iterator>);
-		std::string GetTag(bcParser*,bcSymbol*);
 
 		bcParseNodeType DeriveType(lex::bcToken);
 		//identifier tings

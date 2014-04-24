@@ -54,13 +54,18 @@ void bcByteCodeGen::gen()
 
 void bc::vm::genStatement(bcByteCodeGen* bg)
 {
-	int olddepth=bg->ast->tree->depth(bg->pi);	
+	int olddepth=bg->ast->tree->depth(bg->pi);
+	bg->pi++;
+
 	while(bg->ast->tree->depth(bg->pi) >= olddepth)
 		switch(bg->pi->type)
 		{
 		case pn_null:
 		case pn_head:
 			bg->pi++;
+			break;
+		case pn_statement:
+			genStatement(bg);
 			break;
 		case pn_exp:
 			bg->pi++;
@@ -83,17 +88,23 @@ void bc::vm::genDecFunc(bcByteCodeGen* bg)
 {
 	bcFuncInfo fi;
 	bg->inDecFunc=true;
-	//collect func dec info
-	int olddepth=bg->ast->tree->depth(bg->pi);
-	++bg->pi;
+
+	//collect func dec info from current node
+	int olddepth=bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while(bg->ast->tree->depth(bg->pi) > olddepth)
 		switch(bg->pi->type)
 		{
 		case pn_ident:
-			++bg->pi;
 			fi=bg->ast->functab->at( bg->pi.node->data.tokens.at(0).data );
+			++bg->pi;
 			break;
 
+		case pn_block:
+			genBlock(bg);
+			break;
+
+		case pn_paramlist:
+		case pn_type:
 		default:
 			++bg->pi;
 			break;
@@ -108,22 +119,15 @@ void bc::vm::genDecFunc(bcByteCodeGen* bg)
 
 void bc::vm::genDecVar(bcByteCodeGen* bg)
 {
-
+	int olddepth=bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while(bg->ast->tree->depth(bg->pi) > olddepth)
+		bg->pi++;
 }
 
 void bc::vm::genBlock(bcByteCodeGen* bg)
 {
-	int olddepth=bg->ast->tree->depth(bg->pi);
+	int olddepth=bg->ast->tree->depth(bg->pi); bg->pi++;
 	while(bg->ast->tree->depth(bg->pi) > olddepth)
-		switch(bg->pi->type)
-		{
-		case pn_block:
-			++bg->pi;
-			break;
-
-		default:
 			genStatement(bg);
-				break;
-		}
 
 }

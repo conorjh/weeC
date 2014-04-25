@@ -337,7 +337,22 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 	return "null";
 }
 
-
+std::string test::getTypeAsString(bcSymbolType _t)
+{
+	switch(_t)
+	{
+	case st_var:
+		return "st_var";
+	case st_function:
+		return "st_function";
+	case st_namespace:
+		return "st_namespace";
+	case st_type:
+		return "st_type";
+	default:
+		return "st_null";
+	}
+}
 void test::printLexer(bc::lex::bcLexer* l)
 {
 	std::cout << "Lexer Output " << std::endl;
@@ -362,4 +377,10 @@ void test::printParser(bc::parse::bcParser* p)
 		std::cout << (it->type) <<"."<< getTypeAsString(it->type) << std::endl;
 		++it;
     }
+
+	std::cout << "Symbol Table" << std::endl;
+	for(auto it = p->ast.symtab->begin();it!=p->ast.symtab->end();++it)
+	{
+		std::cout << getTypeAsString(it->second.type) << "		  " << it->second.fullident << std::endl; 
+	}
 }

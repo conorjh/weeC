@@ -10,6 +10,7 @@ namespace bc
 		
 		std::string getTypeAsString(lex::bcTokenType _t);
 		std::string getTypeAsString(parse::bcParseNodeType _t);
+		std::string getTypeAsString(parse::bcSymbolType _t);
 		void printLexer(lex::bcLexer*);
 		void printParser(parse::bcParser*);
 	}

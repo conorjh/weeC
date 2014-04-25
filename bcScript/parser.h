@@ -30,22 +30,19 @@ namespace bc
 							pn_logand, pn_logor, pn_lognot,	pn_intlit, pn_strlit, pn_fltlit, pn_ident, pn_comment, 
 							pn_varident,pn_funcident,pn_namespaceident,
 							pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr,pn_plusassign, pn_minusassign, 
-							pn_multassign, pn_divassign, pn_assignment,pn_block,pn_vardec,pn_paramdec,pn_funcdec,
-							pn_funcdec_type,pn_funcdec_ident,pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else, pn_while,pn_break,
+							pn_multassign, pn_divassign, pn_assignment,pn_block,pn_vardec,pn_paramdec,pn_funcdec, pn_namespacedec,
+							pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else, pn_while,pn_break,
 							pn_return, pn_continue,
 							pn_statement, pn_negate
 							};
 
 		struct bcParseNode
 		{	
-			bcParseNode();
-			bcParseNode(lex::bcTokenType t);
-			bcParseNode(bcSymbolType t);
-			bcParseNode(bcParseNodeType t){type=t;};
+			bcParseNode();			bcParseNode(lex::bcTokenType t);
+			bcParseNode(bcSymbolType t);			bcParseNode(bcParseNodeType t){type=t;};
 			bcParseNode(bcParseNodeType t,lex::bcToken tk){type=t;tokens.push_back(tk);};
 			bcParseNodeType type;
 			std::vector<lex::bcToken> tokens;		//index of tokens in bcLexer.data
-			std::string tag;					//used to hold internal function names currently TODO find a better way to do this!		
 		};
 	
 		struct bcParamList
@@ -155,10 +152,12 @@ namespace bc
 		//identifier tings
 		bcSymbol resolveIdent(bcParser*,std::string);
 		std::string consumeIdent(bcParser*);
-		std::string getFullIdent(bcParser* par,std::string ident,bcSymbol* scope);
-		std::string getShortIdent(std::string);
 		bcSymbol* addDecIdent(bcParser*,bcSymbolType);
 		bool isIdentExplicit(bcParser*,std::string);
+		//ident strings
+		std::string getFullIdent(bcParser* par,std::string ident,bcSymbol* scope);
+		std::string getShortIdent(std::string);
+		//params
 		std::string getStringSignature(bcParamList*);
 	}
 }

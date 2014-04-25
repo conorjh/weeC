@@ -270,6 +270,7 @@ void parse::parseDecNamespace(bcParser* par)
 		return;	//error
 	par->lexer->nextToken();
 	par->noDecName=par->noDecVar=par->noDecFunc=false;
+	par->addNode(bcParseNode(pn_namespacedec));
 
 	//ident
 	bcSymbol* sym=addDecIdent(par,st_namespace);

@@ -38,6 +38,7 @@ namespace bc
 
 		struct bcParseNode
 		{	
+			bcParseNode();
 			bcParseNode(lex::bcTokenType t);
 			bcParseNode(bcSymbolType t);
 			bcParseNode(bcParseNodeType t){type=t;};
@@ -80,6 +81,7 @@ namespace bc
 
 			//Parse tree
 			tree<bcParseNode>::iterator* getNode();				
+			tree<bcParseNode>::iterator* prevNode();				
 			tree<bcParseNode>::iterator* addNode(bcParseNode);	//add node and point pindex to the new child node
 			tree<bcParseNode>::iterator* addChild(bcParseNode);	//add node, but pindex remains on parent node
 			void parent();
@@ -105,21 +107,21 @@ namespace bc
 		//Recursive parsing methods			
 		//level 1
 		void parseStatement(bcParser*);
+		void parseBlock(bcParser*);
 
 		//level 2
 		void parseDecFunc(bcParser*);
 		void parseDecVar(bcParser*);
 		void parseDecNamespace(bcParser*);
-		void parseBlock(bcParser*);
-		void parseWhile(bcParser*);
-		void parseAssignment(bcParser*,bcSymbol);
-		void parseFuncCall(bcParser*,bcSymbol);
-		void parseFExp(bcParser*);		
-		void parseFExp(bcParser*,bcSymbol);
 		void parseIf(bcParser*);
-		void parseSColon(bcParser*);
+		void parseWhile(bcParser*);
+		void parseAssignment(bcParser*,bcParseNode);
+		void parseFuncCall(bcParser*,bcParseNode);
+		void parseFExp(bcParser*);		
+		void parseFExp(bcParser*,bcParseNode);
 
 		//level 3
+		void parseSColon(bcParser*);
 		void parseBreak(bcParser*);
 		void parseReturn(bcParser*);
 		void parseContinue(bcParser*);			

@@ -290,8 +290,18 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 			return "float literal";  
 		case pn_ident: 
 			return "identifier";  
+		case pn_varident: 
+			return "var identifier";  
+		case pn_funcident: 
+			return "func identifier";  
+		case pn_namespaceident: 
+			return "namespace identifier";  
 		case pn_comment: 
 			return "comment"; 
+		case pn_block:
+			return "code block";
+		case pn_paramlist:
+			return "parameter list";
 		case pn_dec:
 			return "dec keyw";
 		case pn_true:
@@ -314,10 +324,14 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 			return "continue keyw"; 
 		case pn_funcdec:
 			return "func dec";
+		case pn_vardec:
+			return "var dec";
 		case pn_statement:
 			return "statement";
 		case pn_exp:
 			return "expression";
+		case pn_type:
+			return "type";
 	}
 
 	return "null";

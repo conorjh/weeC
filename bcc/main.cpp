@@ -25,6 +25,7 @@ int main()
 	while(!exit)
 	{
 		std::getline(std::cin, line);
+		//line="run \"2.bcs\"";
 		conlex.source->push_back(line);
 		if(conlex.nextToken())
 			switch(conlex.getToken()->type)

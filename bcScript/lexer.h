@@ -13,7 +13,7 @@ namespace bc
 			tt_oparen, tt_cparen, tt_obracket, tt_cbracket, tt_obrace, tt_cbrace, tt_bslash, tt_percent, tt_newline,
 			tt_dollar, tt_amper, tt_greater, tt_less, tt_equal, tt_notequal, tt_greaterequal, tt_lessequal,
 			tt_lognot, tt_logor, tt_logand, tt_incr, tt_decr, tt_plusassign, tt_minusassign, tt_multassign, tt_divassign,
-			tt_intlit, tt_strlit, tt_fltlit, tt_ident, tt_comment, tt_dec,
+			tt_intlit, tt_strlit, tt_fltlit, tt_ident, tt_comment, tt_dec, tt_const,
 			tt_true, tt_false,tt_namespace, tt_function, tt_if, tt_else, tt_elseif, tt_while, tt_break, tt_return, tt_continue,
 			tt_varident,tt_funcident,
 				

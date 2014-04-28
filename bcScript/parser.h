@@ -9,14 +9,16 @@ namespace bc
 	namespace parse
 	{
 		//symbols are referenced from symtab by their fullidents
-		enum bcSymbolType{st_null, st_var, st_type, st_object, st_function, st_namespace};
+		enum bcSymbolType{st_null, st_namespace, st_var, st_type, st_utype, st_object, st_function};
 	
 		struct bcSymbol
 		{
+			bcSymbol();
 			std::string ident;		//local identifier 
 			std::string fullident;	//fully qualified name $global::varname
 			std::string datatype;
 			bcSymbolType type;
+			bool isConst,isArray;
 		};
 
 		enum bcParseNodeType{
@@ -28,7 +30,7 @@ namespace bc
 							pn_obracket, pn_cbracket, pn_obrace, pn_cbrace, pn_bslash, pn_percent, pn_newline, pn_dollar, 
 							pn_amper, pn_greater, pn_less, pn_greaterequal, pn_lessequal, pn_equal, pn_notequal, 
 							pn_logand, pn_logor, pn_lognot,	pn_intlit, pn_strlit, pn_fltlit, pn_ident, pn_comment, 
-							pn_varident,pn_funcident,pn_namespaceident,
+							pn_arrayindex, pn_varident,pn_funcident,pn_namespaceident,
 							pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr,pn_plusassign, pn_minusassign, 
 							pn_multassign, pn_divassign, pn_assignment,pn_block,pn_vardec,pn_paramdec,pn_funcdec, pn_namespacedec,
 							pn_paramlist,pn_decparamlist,pn_funccall, pn_if,pn_else, pn_while,pn_break,
@@ -44,10 +46,17 @@ namespace bc
 			bcParseNodeType type;
 			std::vector<lex::bcToken> tokens;		//index of tokens in bcLexer.data
 		};
+
+		struct bcExpression
+		{
+			std::string datatype,rpn;
+			tree<bcParseNode>::iterator* node;
+			bool isConst;
+		};
 	
 		struct bcParamList
 		{
-			std::unordered_map<std::string,bcSymbol*> params;	//string method signature to entry in symtable to st_type
+			std::vector<std::string> params;	//fullident of type
 		};
 
 		struct bcFuncInfo
@@ -114,50 +123,47 @@ namespace bc
 		void parseWhile(bcParser*);
 		void parseAssignment(bcParser*,bcParseNode);
 		void parseFuncCall(bcParser*,bcParseNode);
-		void parseFExp(bcParser*);		
-		void parseFExp(bcParser*,bcParseNode);
+		bcExpression parseFExp(bcParser*);		
+		bcExpression parseFExp(bcParser*,bcParseNode);
 
 		//level 3
+		bcParseNode parseIdent(bcParser*);
+		void parseArrayIndex(bcParser*,bcParseNode*);
+		void parseType(bcParser*);
+		void parseParamListCall(bcParser*,bcSymbol*);	
+		void parseParamListDec(bcParser*);	
 		void parseSColon(bcParser*);
 		void parseBreak(bcParser*);
 		void parseReturn(bcParser*);
 		void parseContinue(bcParser*);			
-		lex::bcToken	parseExp(bcParser*);
+		bcExpression	parseExp(bcParser*);
 
-		//level 4
-		void parseParamList(bcParser*);	
-		void parseDecParamList(bcParser*);			
-		bcParseNode parseIdent(bcParser*);		
-		lex::bcToken	parseSubExp(bcParser*);
+		//level 4			
+		lex::bcToken	parseSubExp(bcParser*,bcExpression*);
 
 		//level 5		
 		void parseDecInParam(bcParser*);
-		lex::bcToken	parseTerm(bcParser*);
+		lex::bcToken	parseTerm(bcParser*,bcExpression*);
 
 		//level 6
-		lex::bcToken	parseFactor(bcParser*);
+		lex::bcToken	parseFactor(bcParser*,bcExpression*);
 
 		//type compatability
-		bool checkOperandTypes(bcParser*,lex::bcToken,lex::bcToken,lex::bcTokenType);
-		bool checkOperandInt(bcParser*,lex::bcToken,lex::bcTokenType);
-		bool checkOperandFloat(bcParser*,lex::bcToken,lex::bcTokenType);
-		bool checkOperandString(bcParser*,lex::bcToken,lex::bcTokenType);
-		bool checkOperandBool(bcParser*,lex::bcToken,lex::bcTokenType);
-		bool checkOperandObject(bcParser*,lex::bcToken,lex::bcTokenType);
-		bool checkOperandVar(bcParser*,lex::bcToken,lex::bcTokenType);
-		bool checkOperandFunction(bcParser*,lex::bcToken,lex::bcTokenType);
-		bool compareFuncSigs(bcParser*,std::string,std::vector<std::unordered_map<std::string,bcSymbol>::iterator>);
-
+		bool checkOperandTypes(bcParser*,lex::bcToken oper1,lex::bcToken op,lex::bcToken oper2);
+		
 		bcParseNodeType DeriveType(lex::bcToken);
 		//identifier tings
 		bcSymbol resolveIdent(bcParser*,std::string);
 		std::string consumeIdent(bcParser*);
 		bcSymbol* addDecIdent(bcParser*,bcSymbolType);
 		bool isIdentExplicit(bcParser*,std::string);
+		//symbol ting
+		std::string getDatatype(bcParser*,lex::bcToken);
 		//ident strings
 		std::string getFullIdent(bcParser* par,std::string ident,bcSymbol* scope);
 		std::string getShortIdent(std::string);
 		//params
-		std::string getStringSignature(bcParamList*);
+		std::string getMethodStringSignature(bcParamList*);
+		bool checkForOverload(bcParser*,bcParamList* pl,bcSymbol* s);	//check a potential paramlist exists or not (bcSymbol.sigs[pl.StringMethodSignature])
 	}
 }

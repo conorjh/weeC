@@ -39,7 +39,9 @@ void bcByteCodeGen::gen()
 	fistream=new std::vector<bcByteCode>;
 	pi=ast->tree->begin();
 
-	//load global stackframe
+	//push command line args
+
+	//push global stackframe
 	for(int t=0;t<ast->stackframes.at(0).size();++t)
 	{
 		bc.op = oc_push;
@@ -47,6 +49,8 @@ void bcByteCodeGen::gen()
 		bc.arg1.val = 0;
 		istream->push_back(bc);
 	}
+
+	//
 	
 	while(pi!=ast->tree->end())
 		genStatement(this);

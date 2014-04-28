@@ -355,10 +355,10 @@ std::string test::getTypeAsString(bcSymbolType _t)
 }
 void test::printLexer(bc::lex::bcLexer* l)
 {
-	std::cout << "Lexer Output " << std::endl;
+	std::cout << "\n- - -\nbcLexer.tokens\n- - -" << std::endl;
 	for(int t=0;t<l->tokens.size();++t)
 	{
-		std::cout << "00" << t << " "<< l->tokens[t].y << ","<<l->tokens[t].x<< "	type:\t" << l->tokens[t].type << "\t" << getTypeAsString(l->tokens[t].type) << "\t\t\tdata: " <<  l->tokens[t].data << std::endl;
+		std::cout << "00" << t << "	type:\t" << l->tokens[t].type << "\t" << getTypeAsString(l->tokens[t].type) << "\t\t\tdata: " <<  l->tokens[t].data << std::endl;
 	}
 	std::cout << std::endl;
 }
@@ -367,7 +367,7 @@ void test::printLexer(bc::lex::bcLexer* l)
 void test::printParser(bc::parse::bcParser* p)
 {
 	tree<bcParseNode>::iterator it=p->ast.tree->begin();
-	std::cout << "Parser" << std::endl;
+	std::cout << "\n- - -\nbcParser.ast\n- - -" << std::endl;
 	while(it!=p->ast.tree->end()) 
 	{
 		for(int t=0;t<p->ast.tree->depth(it);++t)
@@ -378,9 +378,27 @@ void test::printParser(bc::parse::bcParser* p)
 		++it;
     }
 
-	std::cout << "Symbol Table" << std::endl;
+	std::cout <<"\n- - -\n Symbol Table\n- - -" << std::endl;
+	std::string types,vars,names,funcs;
 	for(auto it = p->ast.symtab->begin();it!=p->ast.symtab->end();++it)
 	{
-		std::cout << getTypeAsString(it->second.type) << "		  " << it->second.fullident << std::endl; 
+		switch(it->second.type)
+		{
+		case st_var:
+			vars+=getTypeAsString(it->second.type) + " "+it->second.datatype+ "		  " +char(it->second.isConst+48)+" "+ it->second.fullident +"\n"; 
+			break;
+		case st_namespace:
+			names+=getTypeAsString(it->second.type) + "	" + it->second.fullident + "\n"; 
+			break;
+		case st_function:
+			funcs+=getTypeAsString(it->second.type) + "	" + it->second.fullident + "\n"; 
+			break;
+		case st_type:
+			types+=getTypeAsString(it->second.type) + "		  " + it->second.fullident + "\n"; 
+			break;
+		default:
+			std::cout << getTypeAsString(it->second.type) + "		  " + it->second.fullident + "\n";
+		}
 	}
+	std::cout<<vars<<names<<funcs<<types;
 }

@@ -294,6 +294,7 @@ bcTokenType lex::getTokenType(string* s)
 	if(*s=="bool")					return tt_bool;
 	if(*s=="true") 					return tt_true;
 	if(*s=="false") 				return tt_false;
+	if(*s=="const") 				return tt_const;
 	if(*s=="namespace")				return tt_namespace;
 	if(*s=="function")				return tt_function;
 	if(*s=="func")					return tt_function;

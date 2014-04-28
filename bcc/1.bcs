@@ -1,4 +1,5 @@
 int a;
+string test_string;
 
 namespace t
 {
@@ -9,15 +10,16 @@ namespace t
 		int cc;
 	}
 }
-func int add()
+func int add(int var1,int var2)
 {
 	int b;
 	b=a;
 	int a;
 	b=a;	
 	if(b)
-		b=a+22;
+		b=a+22*var1;
 	else
 		b=t::bb;
 }
-int c;
+const int c;
+c=add(a,c);

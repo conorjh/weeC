@@ -9,16 +9,18 @@ namespace bc
 	namespace parse
 	{
 		//symbols are referenced from symtab by their fullidents
-		enum bcSymbolType{st_null, st_namespace, st_var, st_type, st_utype, st_object, st_function};
+		enum bcSymbolType{
+			st_null, st_namespace, st_var, st_type, st_utype, st_object, st_function	};
 	
 		struct bcSymbol
 		{
 			bcSymbol();
-			std::string ident;		//local identifier 
+			std::string ident;		//local identifier varname
 			std::string fullident;	//fully qualified name $global::varname
-			std::string datatype;
-			bcSymbolType type;
-			bool isConst,isArray;
+			std::string datatype;	//string varname;
+			bcSymbolType type;		//pointer to type symbol
+			unsigned int size;		//number of sequential copies in memory
+			bool isConst,isArray;	
 		};
 
 		enum bcParseNodeType{
@@ -51,7 +53,10 @@ namespace bc
 		{
 			std::string datatype,rpn;
 			tree<bcParseNode>::iterator* node;
-			bool isConst;
+			bool	isConst,	//all operands are const
+					isBool,		//leftmost operand is bool
+					isFunc,		//leftmost operand is a function
+					isAssign;	//operator is tt_assign
 		};
 	
 		struct bcParamList
@@ -100,9 +105,14 @@ namespace bc
 		
 			//error
 			unsigned int getError();
+			void setError(bcErrorCode,std::string);		//line and column from lexer->getToken()
+			void setError(bcErrorCode,int,int,std::string);
 
 			unsigned int parenCount;
 			bool noDecVar,noDecFunc,noDecName;
+			bcErrorCode error;
+			int errorL,errorC;
+			std::string errorS;
 			bcAST ast;
 			bcSymbol* currentScope;
 			bcFuncInfo* currentFunc;
@@ -155,7 +165,7 @@ namespace bc
 		//identifier tings
 		bcSymbol resolveIdent(bcParser*,std::string);
 		std::string consumeIdent(bcParser*);
-		bcSymbol* addDecIdent(bcParser*,bcSymbolType);
+		bcSymbol* addIdentDec(bcParser*,bcSymbolType);
 		bool isIdentExplicit(bcParser*,std::string);
 		//symbol ting
 		std::string getDatatype(bcParser*,lex::bcToken);
@@ -163,7 +173,10 @@ namespace bc
 		std::string getFullIdent(bcParser* par,std::string ident,bcSymbol* scope);
 		std::string getShortIdent(std::string);
 		//params
-		std::string getMethodStringSignature(bcParamList*);
+		std::string getMethodStringSignature(bcParamList*);				//all param datatypes mashed into a string
 		bool checkForOverload(bcParser*,bcParamList* pl,bcSymbol* s);	//check a potential paramlist exists or not (bcSymbol.sigs[pl.StringMethodSignature])
+		//RPN helpers
+		int getPrecedence(lex::bcToken);
+		int isOperator(lex::bcToken);
 	}
 }

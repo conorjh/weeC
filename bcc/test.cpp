@@ -332,6 +332,8 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 			return "expression";
 		case pn_type:
 			return "type";
+		case pn_head:
+			return "head";
 	}
 
 	return "null";
@@ -363,6 +365,22 @@ void test::printLexer(bc::lex::bcLexer* l)
 	std::cout << std::endl;
 }
 
+std::string test::getTypeAsString(bcErrorCode t)
+{
+	switch(t)
+	{
+	case ec_p_undeclaredsymbol:
+		return "undeclared symbol";
+	case ec_p_invalidsymbol:
+		return "invalid symbol";
+	case ec_p_unexpectedtoken:
+		return "unexpected token";
+	case ec_p_badparams:
+		return "incorrect parameters";
+	default:
+		return "";
+	}
+}
 
 void test::printParser(bc::parse::bcParser* p)
 {
@@ -401,4 +419,6 @@ void test::printParser(bc::parse::bcParser* p)
 		}
 	}
 	std::cout<<vars<<names<<funcs<<types;
+	if(p->error)	
+		std::cout << getTypeAsString(p->error) << std::endl << p->lexer->source->at(p->errorL) <<std::endl;
 }

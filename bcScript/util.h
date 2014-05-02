@@ -23,8 +23,5 @@ namespace bc
 		bool bcfexists(const char*);
 		bool bcreadfile(const char*,std::vector<std::string>*);
 
-		//RPN helpers
-		int getPrecedence(lex::bcToken);
-		int IsOperator(lex::bcToken);
 	}
 }

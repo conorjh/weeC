@@ -7,7 +7,7 @@ namespace bc
 	{
 		enum bcOpCode
 		{
-			oc_null,
+			oc_nop,
 			oc_mov,
 			oc_push,oc_pop,
 			oc_je,oc_jne,oc_jg,oc_jl,oc_jge,oc_jle,
@@ -40,8 +40,17 @@ namespace bc
 			bcByteCodeGen();
 			void gen();
 
+			void addByteCode(bcByteCode);
+			void addByteCode(bcOpCode);
+			void addByteCode(bcOpCode,bcValType);
+			void addByteCode(bcOpCode,bcValType,bcValType);
+			void addByteCode(bcOpCode,bcValType,unsigned int);
+			void addByteCode(bcOpCode,bcValType,unsigned int,bcValType,unsigned int);
+			void addByteCode(bcOpCode,bcVal);
+			void addByteCode(bcOpCode,bcVal,bcVal);
+			
+			tree<parse::bcParseNode>::iterator pi;	//parse index
 			parse::bcAST* ast;
-			tree<parse::bcParseNode>::iterator pi;
 			std::vector<bcByteCode>* istream;
 			std::vector<bcByteCode>* fistream;
 			bool inDecFunc;
@@ -51,6 +60,10 @@ namespace bc
 		void genDecFunc(bcByteCodeGen*);
 		void genBlock(bcByteCodeGen*);
 		void genDecVar(bcByteCodeGen*);
+		void genDecFunc(bcByteCodeGen*);
+		void genExp(bcByteCodeGen*);
+		void genRpnToByteCode(bcByteCodeGen*,std::vector<parse::bcParseNode*>*);
+		void genNodeToByteCode(bcByteCodeGen*,parse::bcParseNode*);
 		bcValType getValType(parse::bcSymbol*);
 	}
 }

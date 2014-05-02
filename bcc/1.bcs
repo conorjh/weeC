@@ -10,6 +10,7 @@ namespace t
 		int cc;
 	}
 }
+
 func int add(int var1,int var2)
 {
 	int b;
@@ -21,5 +22,6 @@ func int add(int var1,int var2)
 	else
 		b=t::bb;
 }
-const int c;
+
+const func int c;
 c=add(a,c);

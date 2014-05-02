@@ -1,13 +1,1 @@
-const int a;
-a=2;
-func int main(int c,int d)
-{
-	int m;
-	m=a+2;
-}
-main(2,4);
-int b;
-b=a;
-int j;
-int i;
-j=i;
+int a=55+((67-55)+1.0);

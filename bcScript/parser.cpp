@@ -716,9 +716,9 @@ std::string parse::consumeIdent(bcParser* par)
 	return id;
 }
 
+//get symbol, if any, consume ident in lexer
 bcParseNode parse::parseIdent(bcParser* par)
 {
-	//get symbol, if any, consume ident in lexer
 	std::string sident;		
 	bcSymbol sym = resolveIdent(par,sident = consumeIdent(par));
 	bcParseNode pn(sym.type);
@@ -756,7 +756,6 @@ void parse::parseArrayIndex(bcParser* par,bcParseNode* pn)
 		//error
 		break;
 	}
-
 }
 
 //check shortident is a valid symbol in current scope
@@ -765,11 +764,11 @@ void parse::parseArrayIndex(bcParser* par,bcParseNode* pn)
 //cleanup the return object
 bcSymbol parse::resolveIdent(bcParser* par,std::string shortid)
 {
-	std::string buff,fullid;
-	int ind;
 	//return a null type symbol if the shortident doesnt resolve at any scope
 	bcSymbol sym;	sym.type=st_null;	sym.ident=shortid;	
 	sym.fullident=getFullIdent(par,shortid,par->currentScope);
+	std::string buff,fullid;
+	int ind;
 	
 	//deal with explicit identifiers (with scope/member prefix)
 	if(isIdentExplicit(par,shortid))
@@ -802,6 +801,7 @@ bcSymbol parse::resolveIdent(bcParser* par,std::string shortid)
 			default:
 				--ind;
 		}
+	
 	return sym;
 }
 
@@ -818,8 +818,8 @@ std::string parse::getFullIdent(bcParser* par,std::string sident,bcSymbol* scope
 		default:
 			return "";
 		}
-	else
-		return sident;//actually explicait
+	
+	return sident;//actually explicait
 }
 
 //check whether a given string contains any scope or members ie (main:arg1 or std::string)
@@ -828,6 +828,7 @@ bool parse::isIdentExplicit(bcParser* par,std::string id)
 	std::string shortid;
 	bcSymbol sc;
 	int ind=id.size()-1;
+
 	while(ind>0)
 		switch(id[ind])
 		{
@@ -838,6 +839,7 @@ bool parse::isIdentExplicit(bcParser* par,std::string id)
 		default:
 		--ind;
 		}
+
 	return false;
 }
 
@@ -855,8 +857,9 @@ std::string parse::getShortIdent(std::string fullident)
 
 void parse::parseFuncCall(bcParser* par,bcParseNode pn)
 {
-	//ident must be a function symbol
+	//ident must be a declared function symbol
 	bcSymbol sym = *par->getSymbol(pn.tokens.at(0).data);
+	
 	if(sym.type!=st_function)
 		return par->setError(ec_p_invalidsymbol,par->lexer->getToken()->data);
 	else if(sym.type==st_null)
@@ -1030,11 +1033,11 @@ lex::bcToken parse::parseTerm(bcParser* par,bcExpression* ex)
 bcToken parse::parseFactor(bcParser* par,bcExpression* ex)
 {
 	bcExpression ex2;
-	bcParseNode pn;
-	bcParseNode pni;
+	bcParseNode pn,pni;
 	bcSymbol sym;sym.type=st_null;
 	bcToken oper1,oper2,op;
 	bool negate;
+
 	oper1=*par->lexer->getToken();
 	//check for negation
 	if(oper1.type==tt_minus)
@@ -1068,9 +1071,11 @@ bcToken parse::parseFactor(bcParser* par,bcExpression* ex)
 		par->addChild(pn);
 		par->lexer->nextToken();
 		break;
+
 	case tt_cparen:
 		//par->setError(ec_p_unexpectedtoken,par->lexer->getToken()->data);
 		return oper1;
+
 	case tt_ident:
 		pni = parseIdent(par);
 		if(par->getSymbol(pni.tokens.at(0).data))
@@ -1095,6 +1100,7 @@ bcToken parse::parseFactor(bcParser* par,bcExpression* ex)
 			break;
 		}
 		break;
+
 	case tt_intlit:
 	case tt_strlit:	
 	case tt_fltlit:
@@ -1106,6 +1112,7 @@ bcToken parse::parseFactor(bcParser* par,bcExpression* ex)
 		par->addChild(pn);
 		par->lexer->nextToken();
 		break;
+
 	default:
 		//par->setError(ec_p_unexpectedtoken,par->lexer->getToken()->data);
 		return oper1;	//error

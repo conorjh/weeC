@@ -19,7 +19,7 @@ function int main()
 		a=a*tits+c;
 		if(a>=b)
 		{
-			bb=2+2;
+			c=2+2;
 			break;
 			return 2;
 		}

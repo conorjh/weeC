@@ -8,6 +8,31 @@ using bc::parse::bcAST;
 using bc::parse::bcParseNodeType;
 using bc::vm::bcValType;
 
+bcExecContext::bcExecContext()
+{
+	this->offset=0;
+	this->pc=0;
+	this->regFlags=0;
+	for(int t=0;t<32;t++)
+	{
+		reg[t].val=0;
+		regFlags[t]=0;
+	}
+	halt=false;
+}
+int bc::vm::getValTypeSize(bcValType t)
+{
+	switch(t)
+	{
+	default:
+	case vt_bool:
+	case vt_string:
+	case vt_int:
+		return 1;
+	case vt_float:
+		return 2;
+	}
+}
 bcValType bc::vm::getValType(bcSymbol* sym)
 {
 	switch(sym->type)
@@ -36,10 +61,10 @@ bcByteCodeGen::bcByteCodeGen()
 
 void bcByteCodeGen::addByteCode(bcByteCode bc)
 {
-	if(inDecFunc)
-		fistream->push_back(bc);
-	else
+	if(!inDecFunc)
 		istream->push_back(bc);
+	else
+		fstream->push_back(bc);
 }
 
 void bcByteCodeGen::addByteCode(bcOpCode oc)
@@ -104,16 +129,17 @@ void bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1,bcValT
 }
 
 
-void bcByteCodeGen::gen()
+bcExecContext* bcByteCodeGen::gen()
 {
+	bcExecContext* ec=new bcExecContext();
 	bcByteCode bc;
 	istream=new std::vector<bcByteCode>;
-	fistream=new std::vector<bcByteCode>;
+	fstream=new std::vector<bcByteCode>;
 	pi=ast->tree->begin();
 
 	//push command line args
 
-	//push global stackframe
+	//push global stackframe variables
 	for(int t=0;t<ast->stackframes.at(0).size();++t)
 	{
 		bc.op = oc_push;
@@ -122,10 +148,13 @@ void bcByteCodeGen::gen()
 		addByteCode(bc);
 	}
 
-	//
-	
+	//parse body
 	while(pi!=ast->tree->end())
 		genStatement(this);
+
+	ec->istream=*this->istream;
+	ec->fstream=*this->fstream;
+	return ec;
 }
 
 void bc::vm::genStatement(bcByteCodeGen* bg)
@@ -147,6 +176,9 @@ void bc::vm::genStatement(bcByteCodeGen* bg)
 			bg->pi++;
 			genExp(bg);
 			break;
+		case pn_namespacedec:
+			genDecNamespace(bg);
+			break;
 		case pn_funcdec:
 			genDecFunc(bg);
 			break;
@@ -156,14 +188,27 @@ void bc::vm::genStatement(bcByteCodeGen* bg)
 		case pn_block:
 			genBlock(bg);
 			break;
+		case pn_if:
+			genIf(bg);
+			break;
 		default:
 			++bg->pi;
 		}
 }
 
+void bc::vm::genDecParamList(bcByteCodeGen* bg)
+{
+	int olddepth=bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while(bg->ast->tree->depth(bg->pi) > olddepth)
+		bg->pi++;
+}
+
 void bc::vm::genDecFunc(bcByteCodeGen* bg)
 {
+	int fOffset;
+	tree<bcParseNode>::iterator oldpi;
 	bcFuncInfo fi;
+	std::string paramString;
 	bg->inDecFunc=true;
 
 	//collect func dec info from current node
@@ -171,26 +216,38 @@ void bc::vm::genDecFunc(bcByteCodeGen* bg)
 	while(bg->ast->tree->depth(bg->pi) > olddepth)
 		switch(bg->pi->type)
 		{
-		case pn_ident:
+		case pn_funcident:
 			fi=bg->ast->functab->at( bg->pi.node->data.tokens.at(0).data );
 			++bg->pi;
 			break;
 
 		case pn_block:
+			oldpi=bg->pi;
+			bg->pi = fi.body[paramString];
+			fOffset = bg->istream->size();
 			genBlock(bg);
 			break;
 
-		case pn_paramlist:
+		case pn_decparamlist:
+			paramString = bg->pi->tokens.at(0).data;
+			genDecParamList(bg);
+			//++bg->pi;
+			break;
+
 		case pn_type:
 		default:
 			++bg->pi;
 			break;
 		}
+	bg->inDecFunc=false;
+}
 
-	//build body into fstream, take note of offset
-	tree<bcParseNode>::iterator oldpi=bg->pi;
-	bg->pi = *fi.body[fi.fullident];
-	int fOffset = bg->fistream->size();
+void bc::vm::genDecNamespace(bcByteCodeGen* bg)
+{
+	//collect func dec info from current node
+	int olddepth=bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while(bg->ast->tree->depth(bg->pi) > olddepth)
+		
 	genBlock(bg);
 }
 
@@ -213,6 +270,26 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 
 }
 
+void bc::vm::genIf(bcByteCodeGen* bg)
+{
+	//collect func dec info from current node
+	int olddepth=bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while(bg->ast->tree->depth(bg->pi) > olddepth)
+		switch(bg->pi->type)
+		{
+		case pn_exp:
+			genExp(bg);
+			break;
+
+		case pn_if_trueblock:
+			genBlock(bg);
+			break;
+
+		default:
+			bg->pi++;
+			break;
+		}
+}
 
 void bc::vm::genExp(bcByteCodeGen* bg)
 {
@@ -241,28 +318,18 @@ void bc::vm::genExp(bcByteCodeGen* bg)
 			//operators
 		case pn_logor:	case pn_logand:	case pn_equal:	case pn_notequal:	case pn_assign:
 		case pn_greater:case pn_less:	case pn_lessequal:	case pn_greaterequal:
-		case pn_mult:	case pn_div:	case pn_plus:	case pn_minus:	case pn_lognot:
-			while(stk.size()>0)
-				// either o1 is left-associative and its precedence is equal to that of o2,
-				// or o1 has precedence less than that of o2,
-				if(getPrecedence(bg->pi.node->data.tokens[0]) < getPrecedence(stk[stk.size()-1]->tokens.at(0)))
-				{
-					out.push_back(stk[stk.size()-1]);
-					stk.erase(stk.end()-1,stk.end());
-				}
-			
-				stk.push_back(&bg->pi.node->data);
+		case pn_mult:	case pn_div:	case pn_plus:	case pn_minus:	case pn_lognot:	case pn_expo:	case pn_mod:
+			while( 
+				stk.size()>0 && (getPrecedence(bg->pi.node->data.tokens[0]) == getPrecedence(stk[stk.size()-1]->tokens.at(0)) && !getAssociativity(bg->pi.node->data.tokens[0])  || 
+				getAssociativity(bg->pi.node->data.tokens[0]) && getPrecedence(bg->pi.node->data.tokens[0])< getPrecedence(stk[stk.size()-1]->tokens.at(0))) 
+				)
+			{
+				out.push_back(stk[stk.size()-1]);
+				stk.erase(stk.end()-1,stk.end());
+			}
+			stk.push_back(&bg->pi.node->data);
 			break;
 
-			
-  /*  If the token is a left parenthesis, then push it onto the stack.
-    If the token is a right parenthesis:
-
-        Until the token at the top of the stack is a left parenthesis, pop operators off the stack onto the output queue.
-        Pop the left parenthesis from the stack, but not onto the output queue.
-        If the token at the top of the stack is a function token, pop it onto the output queue.
-        If the stack runs out without finding a left parenthesis, then there are mismatched parentheses.
-*/		
 		case pn_oparen:
 				stk.push_back(&bg->pi.node->data);
 				break;
@@ -289,19 +356,20 @@ void bc::vm::genExp(bcByteCodeGen* bg)
 			stk.erase(stk.end()-1,stk.end());
 			
 			//func ident
-			if(stk[stk.size()-1]->type!=pn_funcident)
+			if(stk[stk.size()-1]->type==pn_funcident)
 			{
 				out.push_back(stk[stk.size()-1]);
 				stk.erase(stk.end()-1,stk.end());
 			}
-
 			break;
+
 		case pn_type:	
 		default:
 			break;
 		}
 		++bg->pi;
 	}
+
 	//pop off remaining operators
 	while(stk.size()>0)
 	{
@@ -322,17 +390,25 @@ void bc::vm::genBlock(bcByteCodeGen* bg)
 
 void bc::vm::genRpnToByteCode(bcByteCodeGen* bg,std::vector<bcParseNode*>* rpn)
 {
-	bcByteCode bc;
+//	bcByteCode bc;
 	while(rpn->size())
 	{
 		switch(rpn->at(0)->type)
 		{
-		case pn_strlit:	case pn_fltlit:	case pn_intlit:
-		case pn_true:	case pn_false:
-			bc.op = oc_push;
-			bc.arg1.type = bcValType::vt_bool;	
-			bc.arg1.val = 0;
-			bg->addByteCode(bc);
+		case pn_strlit:	
+			//bg->addByteCode(oc_push,vt_string,bcstoi(rpn->at(0)->tokens.at(0).data));
+			break;
+		case pn_fltlit:	
+			bg->addByteCode(oc_push,vt_float,bcstof(rpn->at(0)->tokens.at(0).data));
+			break;
+		case pn_intlit:
+			bg->addByteCode(oc_push,vt_int,bcstoi(rpn->at(0)->tokens.at(0).data));
+			break;
+		case pn_true:	
+			bg->addByteCode(oc_push,vt_bool,1);
+			break;
+		case pn_false:
+			bg->addByteCode(oc_push,vt_bool,0);
 			break;
 		
 			//variables
@@ -340,16 +416,46 @@ void bc::vm::genRpnToByteCode(bcByteCodeGen* bg,std::vector<bcParseNode*>* rpn)
 			break;
 
 			//operators
-		case pn_logor:	case pn_logand:	case pn_equal:	case pn_notequal:	case pn_assign:
-		case pn_greater:case pn_less:	case pn_lessequal:	case pn_greaterequal:
-		case pn_mult:	case pn_div:	case pn_plus:	case pn_minus:	case pn_lognot:
+		case pn_lognot:
+			bg->addByteCode(oc_not);	break;
 			break;
+		case pn_logor:	
+			bg->addByteCode(oc_or);	break;
+		case pn_logand:
+			bg->addByteCode(oc_and);	break;
+		case pn_equal:
+			bg->addByteCode(oc_je);	break;
+		case pn_notequal:
+			bg->addByteCode(oc_jne);	break;	
+		case pn_assign:
+			//bg->addByteCode(oc_or);	break;
+		case pn_greater:
+			bg->addByteCode(oc_jg);	break;
+		case pn_less:
+			bg->addByteCode(oc_jl);	break;
+		case pn_lessequal:
+			bg->addByteCode(oc_jle);	break;
+		case pn_greaterequal:
+			bg->addByteCode(oc_jge);	break;
+		case pn_mult:
+			bg->addByteCode(oc_mult);	break;
+		case pn_div:
+			bg->addByteCode(oc_div);	break;
+		case pn_plus:
+			bg->addByteCode(oc_plus);	break;
+		case pn_minus:
+			bg->addByteCode(oc_minus);	break;
+		case pn_mod:
+			bg->addByteCode(oc_mod);	break;
+		case pn_expo:
+			bg->addByteCode(oc_expo);	break;
 				
 		//case pn_ident:
 		case pn_type:	
 		default:
 			break;
 		}
+		rpn->erase(rpn->begin());
 	}
 
 }
@@ -377,18 +483,40 @@ void bc::vm::genNodeToByteCode(bcByteCodeGen* bg,bcParseNode* pn)
 			break;
 
 			//operators
-		case pn_logor:	
-		case pn_logand:	
-		case pn_equal:	
-		case pn_notequal:	
+		case pn_logor:
+			bg->addByteCode(oc_or);
+			break;			
+		case pn_logand:
+			bg->addByteCode(oc_and);
+			break;			
+		case pn_equal:
+			bg->addByteCode(oc_je);
+			break;			
+		case pn_notequal:
+			bg->addByteCode(oc_jne);
+			break;			
 		case pn_assign:
 		case pn_greater:
-		case pn_less:	
-		case pn_lessequal:	
+			bg->addByteCode(oc_jg);
+			break;		
+		case pn_less:
+			bg->addByteCode(oc_jl);
+			break;			
+		case pn_lessequal:
+			bg->addByteCode(oc_jle);
+			break;			
 		case pn_greaterequal:
-		case pn_mult:	
-		case pn_div:	
-		case pn_minus:	
+			bg->addByteCode(oc_jge);
+			break;		
+		case pn_mult:
+			bg->addByteCode(oc_mult);
+			break;		
+		case pn_div:
+			bg->addByteCode(oc_div);
+			break;		
+		case pn_minus:
+			bg->addByteCode(oc_minus);
+			break;		
 		case pn_lognot:
 			
 			break;

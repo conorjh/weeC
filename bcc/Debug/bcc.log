@@ -1,4 +1,4 @@
-﻿Build started 01/05/2014 22:24:39.
+﻿Build started 13/05/2014 08:47:24.
      1>Project "C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\bcc\bcc.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\bcc.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -8,7 +8,8 @@
          Generating Code...
          Compiling...
          test.cpp
-     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcc\test.cpp(361): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcc\test.cpp(362): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcc\test.cpp(495): warning C4018: '<' : signed/unsigned mismatch
          Generating Code...
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\Debug\bcc.exe" /NOLOGO /LIBPATH:"C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\/Debug" bcscript.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\bcc.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\Debug\bcc.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\Debug\bcc.lib" /MACHINE:X86 Debug\main.obj
@@ -24,4 +25,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:02.54
+Time Elapsed 00:00:02.74

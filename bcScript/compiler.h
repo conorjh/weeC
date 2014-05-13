@@ -8,14 +8,13 @@ namespace bc
 		struct bcProgram
 		{
 			std::vector<vm::bcOpCode> istream;
-			std::vector<vm::bcOpCode> fistream;
+			std::vector<vm::bcOpCode> fstream;
 		};
 
 		class bcCompiler
 		{
 			void startup(),shutdown();
-			void load();
-			void compile();
+			bcProgram compile(std::vector<std::string>*);	//opcodes from source code
 		};
 	}
 }

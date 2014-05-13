@@ -1,0 +1,17 @@
+//arrays and method overloads
+function int f1(int f1p1,int f1p2)
+{
+	int arr1[100];
+	const int s=2;
+	arr1[2+s]=s;
+}
+
+function int f2(int f2p1,int f2p2)
+{
+	int arr2[1+1];
+}
+
+function int f2(int f2ap1)
+{
+	int arr3[33];
+}

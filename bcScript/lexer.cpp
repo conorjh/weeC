@@ -254,7 +254,7 @@ bool lex::isDelim(string* s)
 	{
 	case tt_ws:	case tt_newline:	case tt_tab:	case tt_period:
 	case tt_comma:	case tt_plus:	case tt_minus:	case tt_div:
-	case tt_mult:	case tt_pow: 	case tt_mod: 	case tt_squote:
+	case tt_mult:	case tt_expo: 	case tt_mod: 	case tt_squote:
 	case tt_assign:	case tt_pipe: 	case tt_dollar:	case tt_amper: 
 	case tt_greater:case tt_less: 	case tt_lognot:	case tt_dquote:
 	case tt_bslash:	case tt_scolon:	case tt_percent:case tt_oparen: 
@@ -336,7 +336,7 @@ bcTokenType lex::getTokenType(char c)
 	case '%': 
 		return tt_mod;
 	case '^': 
-		return tt_pow;
+		return tt_expo;
 	case '\'': 
 		return tt_squote;
 	case '"': 

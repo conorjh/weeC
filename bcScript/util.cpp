@@ -20,13 +20,9 @@ int util::bcstoi(std::string in)
 	int retval;
 	std::stringstream convert(in);
 	if ( !(convert >> retval) )
-	{
 		return 0;
-	}
 	else
-	{
 		return retval;
-	}
 }
 
 std::string util::bcftos(float in)
@@ -43,22 +39,16 @@ float util::bcstof(std::string in)
 	float retval;
 	std::stringstream convert(in);
 	if ( !(convert >> retval) )
-	{
 		return 0;
-	}
 	else
-	{
 		return retval;
-	}
 }
 
 std::string util::bctolower(std::string in)
 {
 	for (int i=0;i<strlen(in.c_str());i++)
 	if (in[i] >= 0x41 && in[i] <= 0x5A)
-	{
 		in[i] = in[i] + 0x20;
-	}
 	return in;
 }
 
@@ -66,9 +56,7 @@ std::string util::bctolower(char in)
 {
 	std::string out;
 	if (in >= 0x41 && in <= 0x5A)
-	{
 		in = in + 0x20;
-	}
 	out+=in;
 	return out;
 }

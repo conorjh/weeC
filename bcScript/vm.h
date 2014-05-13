@@ -1,7 +1,8 @@
 #pragma once
 #include <stack>
-#include "bytecode.h"
+#include <bitset>
 #include "config.h"
+#include "bytecode.h"
 
 namespace bc
 {
@@ -10,6 +11,7 @@ namespace bc
 		struct bcRTVal
 		{
 			unsigned int type;
+			int val;
 		};
 		
 		struct bcRTInt : public bcRTVal
@@ -32,20 +34,26 @@ namespace bc
 			bool b;
 		};
 
+		enum bcReg
+		{
+			pc,
+			eax,
+			ret,
+			t1 = 30,
+			t2 = 31
+		};
+
+
 		class bcVM
 		{
 		public:
+			bcVM();
 			unsigned int exec(unsigned int instructions);
+			//void load(bcExecContext*);
 
 			//runtime data
-			bcVal									reg[bcMaxRegisters];	//vm registers
-			bool									regFlags[bcMaxRegisters];
-			std::vector<bcByteCode>					istream;				//(global) instruction stream
-			std::vector<bcByteCode>					fistream;				//function instructions
-			std::stack<bcVal>						stack;					//runtime stack
-			std::unordered_map<int,bcRTVal*>		rtvals;					//runtime values
-			unsigned int							pc;						//program counter
-			
+			bcExecContext* con;
+
 			//debug data
 			std::unordered_map<std::string,parse::bcSymbol>	symtab;			//symbol table
 		};

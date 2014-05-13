@@ -8,17 +8,17 @@ using namespace bc::parse;
 using namespace bc::vm;
 using namespace std;
 
-int main()
+int main(int argc,const char* args[])
 {
 	string line;
 	bcLexer l,conlex;
-	l.startup();
-	conlex.startup();
 	bcParser p;	
 	bcByteCodeGen g;
+	bcVM vm;
+	l.startup();
+	conlex.startup();
 	p.startup();	p.lexer=&l;	
 
-	//return test_parser();
 	cout << "bcScript Compiler   ";
 	cout << bc::bcVerMajor << "." << bc::bcVerMinor << "." << bc::bcVerPatch << "." << bc::bcVerRC << "-" << bc::bcVerDemo << endl;
 	bool exit = false;
@@ -37,9 +37,13 @@ int main()
 						{
 							p.parse();
 							g.ast=&p.ast;
-							g.gen();
+							vm.con=g.gen();
 							printLexer(&l);
 							printParser(&p);
+							printGen(&g);
+							std::cout << std::endl;
+							while(!vm.con->halt)
+								vm.exec(1);
 						}
 						else
 						{
@@ -53,14 +57,11 @@ int main()
 				break;
 			}
 
-		p.clear();
-		p.startup();
-		p.lexer=&l;
-		line="";
-		l.clear();
-		conlex.clear();
-		conlex.startup();
-		l.startup();
+		p.clear();	p.startup();
+		vm=bcVM();
+		p.lexer=&l;	line="";
+		l.clear();conlex.clear();
+		conlex.startup();l.startup();
 	}
 	return 1;
 }

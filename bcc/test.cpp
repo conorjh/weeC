@@ -6,6 +6,7 @@ using namespace bc;
 using namespace bc::test;
 using namespace bc::lex;
 using namespace bc::parse;
+using namespace bc::vm;
 
 int bc::test::test_lexer()
 {
@@ -80,7 +81,7 @@ std::string test::getTypeAsString(bcTokenType _t)
 			return "multiply (*)"; 
 		case tt_mod: 
 			return "modulus";
-		case tt_pow:
+		case tt_expo:
 			return "power"; 
 		case tt_assign:
 			return "assignment (=)";
@@ -226,7 +227,7 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 			return "multiply (*)"; 
 		case pn_mod: 
 			return "modulus";
-		case pn_pow:
+		case pn_expo:
 			return "power"; 
 		case pn_assign:
 			return "assignment (=)";
@@ -299,7 +300,7 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 		case pn_comment: 
 			return "comment"; 
 		case pn_block:
-			return "code block";
+			return "code blcase ock";
 		case pn_paramlist:
 			return "parameter list";
 		case pn_dec:
@@ -377,8 +378,70 @@ std::string test::getTypeAsString(bcErrorCode t)
 		return "unexpected token";
 	case ec_p_badparams:
 		return "incorrect parameters";
+	case ec_p_nonintsubscript:
+		return "non int array subscript";
+	case ec_p_expmustbeconst:
+		return "exp must be const";
+	case ec_p_expmustbearray:
+		return "exp must be array";
 	default:
 		return "";
+	}
+}
+
+std::string test::getTypeAsString(vm::bcOpCode _t)
+{
+	switch(_t)
+	{
+		case oc_nop:	return "oc_nop";
+		case oc_mov:	return "oc_mov";
+		case oc_push:	return "oc_push";
+		case oc_pop:	return "oc_pop";
+		case oc_je:		return "oc_je";
+		case oc_jne:	return "oc_jne";
+		case oc_jg:		return "oc_jg";
+		case oc_jl:		return "oc_jl";
+		case oc_jge:	return "oc_jge";
+		case oc_jle:	return "oc_jle";
+		case oc_plus:	return "oc_plus";
+		case oc_minus:	return "oc_minus";
+		case oc_mult:	return "oc_mult";
+		case oc_div:	return "oc_div";
+		case oc_expo:	return "oc_expo";
+		case oc_mod:	return "oc_mod";
+		case oc_inc:	return "oc_inc";
+		case oc_dec:	return "oc_dec";
+		case oc_and:	return "oc_and";
+		case oc_or:		return "oc_or";
+		case oc_xor:	return "oc_xor";
+		case oc_not:	return "oc_not";
+		case oc_shfl:	return "oc_shfl";
+		case oc_shfr:	return "oc_shfr";
+		case oc_call:	return "oc_call";
+		case oc_ret:	return "oc_return";
+		case oc_callvm:	return "oc_callvm";
+		case oc_pause:	return "oc_pause";
+		case oc_halt:	return "oc_halt";
+			default:	return "-";
+	}
+}
+
+std::string test::getTypeAsString(vm::bcValType _t)
+{
+	switch(_t)
+	{
+		case vt_null:		return "vt_null";
+		case vt_mem:		return "vt_mem";
+		case vt_reg:		return "vt_reg";
+		case vt_stack:		return "vt_stack";
+		case vt_astack:		return "vt_astack";
+		case vt_int:		return "vt_int";
+		case vt_float:		return "vt_float";
+		case vt_string:		return "vt_string";
+		case vt_bool:		return "vt_bool";
+		case vt_funccall:	return "vt_funccall";
+		case vt_vmcall:		return "vt_vmcall";
+		default:	return "-";
 	}
 }
 
@@ -403,7 +466,7 @@ void test::printParser(bc::parse::bcParser* p)
 		switch(it->second.type)
 		{
 		case st_var:
-			vars+=getTypeAsString(it->second.type) + " "+it->second.datatype+ "		  " +char(it->second.isConst+48)+" "+ it->second.fullident +"\n"; 
+			vars+=getTypeAsString(it->second.type) + " "+it->second.datatype+ "		  " +char(it->second.isConst+48)+" "+ it->second.fullident+" "+util::bcitos(it->second.offset)+"\n"; 
 			break;
 		case st_namespace:
 			names+=getTypeAsString(it->second.type) + "	" + it->second.fullident + "\n"; 
@@ -421,4 +484,19 @@ void test::printParser(bc::parse::bcParser* p)
 	std::cout<<vars<<names<<funcs<<types;
 	if(p->error)	
 		std::cout << getTypeAsString(p->error) << std::endl << p->lexer->source->at(p->errorL) <<std::endl;
+}
+
+
+void test::printGen(bc::vm::bcByteCodeGen* bg)
+{
+	
+	std::cout << "\n- - -\nbcByteCodeGen.istream\n- - -" << std::endl;
+	int t=0;
+	while(t<bg->istream->size()) 
+	{
+		std::cout << t << "	op: " << getTypeAsString(bg->istream->at(t).op);
+		std::cout << "	arg1: " << getTypeAsString(bg->istream->at(t).arg1.type) << " = " << bg->istream->at(t).arg1.val;
+		std::cout << "	arg2: " << getTypeAsString(bg->istream->at(t).arg2.type) << " = " << bg->istream->at(t).arg2.val << std::endl;
+		++t;
+    }
 }

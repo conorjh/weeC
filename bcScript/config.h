@@ -7,6 +7,6 @@ namespace bc
 	const int bcVerPatch = 0;
 	const int bcVerRC = 0;
 	const int bcVerDemo = 1;
-	const char* bcVerName = "Little Pea";
+	static const char* bcVerName = "Little Pea";
 	const unsigned int bcMaxRegisters = 32;
 }

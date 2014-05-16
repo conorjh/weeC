@@ -47,14 +47,17 @@ namespace bc
 			bcByteCodeGen();
 			bcExecContext* gen();
 
-			void addByteCode(bcByteCode);
-			void addByteCode(bcOpCode);
-			void addByteCode(bcOpCode,bcValType);
-			void addByteCode(bcOpCode,bcValType,bcValType);
-			void addByteCode(bcOpCode,bcValType,unsigned int);
-			void addByteCode(bcOpCode,bcValType,unsigned int,bcValType,unsigned int);
-			void addByteCode(bcOpCode,bcVal);
-			void addByteCode(bcOpCode,bcVal,bcVal);
+			unsigned int addByteCode(bcByteCode);
+			unsigned int addByteCode(bcOpCode);
+			unsigned int addByteCode(bcOpCode,bcValType);
+			unsigned int addByteCode(bcOpCode,bcValType,bcValType);
+			unsigned int addByteCode(bcOpCode,bcValType,unsigned int);
+			unsigned int addByteCode(bcOpCode,bcValType,unsigned int,bcValType,unsigned int);
+			unsigned int addByteCode(bcOpCode,bcVal);
+			unsigned int addByteCode(bcOpCode,bcVal,bcVal);
+			bcByteCode* getByteCode(unsigned int instr);
+			bcByteCode* getByteCode(unsigned int instr,bool isFunc);
+			std::vector<bcByteCode>* getCurrentStream();
 			
 			tree<parse::bcParseNode>::iterator pi;	//parse index
 			parse::bcAST* ast;

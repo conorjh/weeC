@@ -59,65 +59,70 @@ bcByteCodeGen::bcByteCodeGen()
 	inDecFunc=false;
 }
 
-void bcByteCodeGen::addByteCode(bcByteCode bc)
+unsigned int bcByteCodeGen::addByteCode(bcByteCode bc)
 {
 	if(!inDecFunc)
+	{
 		istream->push_back(bc);
+		return istream->size()-1;
+	}
 	else
+	{
 		fstream->push_back(bc);
+		return fstream->size()-1;
+	}
 }
 
-void bcByteCodeGen::addByteCode(bcOpCode oc)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc)
 {
 	bcByteCode bc;
 	bc.op=oc;
-	addByteCode(bc);
+	return addByteCode(bc);
 }
 
-void bcByteCodeGen::addByteCode(bcOpCode oc,bcVal a1)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcVal a1)
 {
 	bcByteCode bc;
 	bc.op=oc;
 	bc.arg1=a1;
-	addByteCode(bc);
+	return addByteCode(bc);
 }
 
-void bcByteCodeGen::addByteCode(bcOpCode oc,bcVal a1,bcVal a2)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcVal a1,bcVal a2)
 {
 	bcByteCode bc;
 	bc.op=oc;
 	bc.arg1=a1;
 	bc.arg2=a2;
-	addByteCode(bc);
+	return addByteCode(bc);
 }
 
-void bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1)
 {
 	bcByteCode bc;
 	bc.op=oc;
 	bc.arg1.type=vt1;
-	addByteCode(bc);
+	return addByteCode(bc);
 }
 
-void bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,bcValType vt2)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,bcValType vt2)
 {
 	bcByteCode bc;
 	bc.op=oc;
 	bc.arg1.type=vt1;
 	bc.arg2.type=vt2;
-	addByteCode(bc);
+	return addByteCode(bc);
 }
-
-void bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1)
 {
 	bcByteCode bc;
 	bc.op=oc;
 	bc.arg1.type=vt1;
 	bc.arg1.val=v1;
-	addByteCode(bc);
+	return addByteCode(bc);
 }
 
-void bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1,bcValType vt2,unsigned int v2)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1,bcValType vt2,unsigned int v2)
 {
 	bcByteCode bc;
 	bc.op=oc;
@@ -125,10 +130,29 @@ void bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1,bcValT
 	bc.arg1.val=v1;
 	bc.arg2.type=vt2;
 	bc.arg2.val=v2;
-	addByteCode(bc);
+	return addByteCode(bc);
 }
 
+bcByteCode* bcByteCodeGen::getByteCode(unsigned int ind)
+{
+	if(inDecFunc)
+		return &fstream->at(ind);
+	return &istream->at(ind);
+}
 
+bcByteCode* bcByteCodeGen::getByteCode(unsigned int ind, bool isFunc)
+{
+	if(isFunc)
+		return &fstream->at(ind);
+	return &istream->at(ind);
+}
+
+std::vector<bcByteCode>* bcByteCodeGen::getCurrentStream()
+{
+	if(inDecFunc)
+		return fstream;
+	return istream;
+}
 bcExecContext* bcByteCodeGen::gen()
 {
 	bcExecContext* ec=new bcExecContext();
@@ -173,7 +197,7 @@ void bc::vm::genStatement(bcByteCodeGen* bg)
 			genStatement(bg);
 			break;
 		case pn_exp:
-			bg->pi++;
+			//bg->pi++;
 			genExp(bg);
 			break;
 		case pn_namespacedec:
@@ -273,6 +297,7 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 void bc::vm::genIf(bcByteCodeGen* bg)
 {
 	//collect func dec info from current node
+	unsigned int trueindex;
 	int olddepth=bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while(bg->ast->tree->depth(bg->pi) > olddepth)
 		switch(bg->pi->type)
@@ -280,8 +305,14 @@ void bc::vm::genIf(bcByteCodeGen* bg)
 		case pn_exp:
 			genExp(bg);
 			break;
-
+			
 		case pn_if_trueblock:
+			trueindex = bg->addByteCode(oc_jne,vt_astack,0,vt_instr,0);
+			genBlock(bg);
+			bg->getByteCode(trueindex,bg->inDecFunc)->arg2.val=bg->getCurrentStream()->size()+1;
+			break;
+
+		case pn_if_elseblock:
 			genBlock(bg);
 			break;
 
@@ -356,7 +387,7 @@ void bc::vm::genExp(bcByteCodeGen* bg)
 			stk.erase(stk.end()-1,stk.end());
 			
 			//func ident
-			if(stk[stk.size()-1]->type==pn_funcident)
+			if(stk.size() && stk[stk.size()-1]->type==pn_funcident)
 			{
 				out.push_back(stk[stk.size()-1]);
 				stk.erase(stk.end()-1,stk.end());
@@ -428,7 +459,7 @@ void bc::vm::genRpnToByteCode(bcByteCodeGen* bg,std::vector<bcParseNode*>* rpn)
 		case pn_notequal:
 			bg->addByteCode(oc_jne);	break;	
 		case pn_assign:
-			//bg->addByteCode(oc_or);	break;
+			bg->addByteCode(oc_mov);	break;
 		case pn_greater:
 			bg->addByteCode(oc_jg);	break;
 		case pn_less:

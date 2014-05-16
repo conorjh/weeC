@@ -1058,6 +1058,7 @@ bcExpression parse::parseExp(bcParser* par)
 {
 	bcExpression ex;ex.isConst=true;
 	bcToken oper1,oper2,op;
+	bcParseNode pn;
 	oper1=parseSubExp(par,&ex);
 	ex.datatype = getDatatype(par,oper1);
 	while(par->lexer->getToken())
@@ -1067,7 +1068,9 @@ bcExpression parse::parseExp(bcParser* par)
 		{		
 		case tt_less:	case tt_greater:	case tt_lessequal:			case tt_greaterequal:
 		case tt_equal:	case tt_notequal:	case tt_logand:		case tt_logor:		case tt_assign:	
-			par->addChild(bcParseNode(op.type))->node->data.tokens.push_back(op);
+			pn=bcParseNode(op.type);
+			pn.tokens.push_back(op);
+			par->addChild(pn);
 			par->lexer->nextToken();
 			break;
 		default:

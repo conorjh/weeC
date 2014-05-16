@@ -431,6 +431,7 @@ std::string test::getTypeAsString(vm::bcValType _t)
 	switch(_t)
 	{
 		case vt_null:		return "vt_null";
+		case vt_instr:		return "vt_instr";
 		case vt_mem:		return "vt_mem";
 		case vt_reg:		return "vt_reg";
 		case vt_stack:		return "vt_stack";

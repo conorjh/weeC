@@ -10,7 +10,18 @@ namespace bc
 	{
 		enum bcValType
 		{
-			vt_null,vt_mem,vt_reg,vt_stack,vt_astack,vt_int,vt_float,vt_string,vt_bool,vt_funccall,vt_vmcall
+			vt_null,
+			vt_instr,		//instruction (istream ref)
+			vt_mem,			//objects and dynamic memory in the newstore
+			vt_reg,			//registers
+			vt_stack,		//local stack
+			vt_astack,		//an absolute entire stack reference 
+			vt_int,			//integer
+			vt_float,		//float	(2*int)
+			vt_string,		//string table ref
+			vt_bool,		//boolean
+			vt_funccall,	//function call	(fstream ref)
+			vt_vmcall		//vm function call (c++ code)
 		};
 
 		struct bcVal

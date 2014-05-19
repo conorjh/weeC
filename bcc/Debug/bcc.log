@@ -1,4 +1,4 @@
-﻿Build started 16/05/2014 08:13:55.
+﻿Build started 19/05/2014 08:25:34.
      1>Project "C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\bcc\bcc.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\bcc.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -18,4 +18,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.59
+Time Elapsed 00:00:00.71

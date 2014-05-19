@@ -64,12 +64,12 @@ unsigned int bcByteCodeGen::addByteCode(bcByteCode bc)
 	if(!inDecFunc)
 	{
 		istream->push_back(bc);
-		return istream->size()-1;
+		return istream->size();
 	}
 	else
 	{
 		fstream->push_back(bc);
-		return fstream->size()-1;
+		return fstream->size();
 	}
 }
 
@@ -297,7 +297,7 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 void bc::vm::genIf(bcByteCodeGen* bg)
 {
 	//collect func dec info from current node
-	unsigned int trueindex;
+	unsigned int trueindex,truejump;
 	int olddepth=bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while(bg->ast->tree->depth(bg->pi) > olddepth)
 		switch(bg->pi->type)
@@ -307,9 +307,9 @@ void bc::vm::genIf(bcByteCodeGen* bg)
 			break;
 			
 		case pn_if_trueblock:
-			trueindex = bg->addByteCode(oc_jne,vt_astack,0,vt_instr,0);
+			//trueindex = bg->addByteCode(oc_jne,vt_astack,0,vt_instr,0);
 			genBlock(bg);
-			bg->getByteCode(trueindex,bg->inDecFunc)->arg2.val=bg->getCurrentStream()->size()+1;
+			//bg->getByteCode(trueindex,bg->inDecFunc)->arg2.val=truejump=bg->getCurrentStream()->size()+1;
 			break;
 
 		case pn_if_elseblock:
@@ -443,7 +443,10 @@ void bc::vm::genRpnToByteCode(bcByteCodeGen* bg,std::vector<bcParseNode*>* rpn)
 			break;
 		
 			//variables
-		case pn_ident:	case pn_varident:	case pn_funcident:
+		case pn_ident:	case pn_varident:	
+			break;
+		
+		case pn_funcident:
 			break;
 
 			//operators

@@ -36,11 +36,53 @@ unsigned int bcVM::exec(unsigned int instructions)
 			con->stack.pop();
 			break;
 		case oc_je: 
+			con->reg[con->reg[t2].val].val = con->stack.top();
+			con->stack.pop();
+			con->reg[t1].val = con->stack.top();
+			con->stack.pop();
+			if(con->reg[t1].val == con->reg[t2].val)
+				con->reg[pc].val = con->istream[pc].arg2.val;			
+			break;
 		case oc_jne: 
+			con->reg[con->reg[t2].val].val = con->stack.top();
+			con->stack.pop();
+			con->reg[t1].val = con->stack.top();
+			con->stack.pop();
+			if(con->reg[t1].val != con->reg[t2].val)
+				con->reg[pc].val = con->istream[pc].arg2.val;			
+			break; 
 		case oc_jg: 
+			con->reg[con->reg[t2].val].val = con->stack.top();
+			con->stack.pop();
+			con->reg[t1].val = con->stack.top();
+			con->stack.pop();
+			if(con->reg[t1].val > con->reg[t2].val)
+				con->reg[pc].val = con->istream[pc].arg2.val;			
+			break; 
 		case oc_jl: 
-		case oc_jge: 
-		case oc_jle: 
+			con->reg[con->reg[t2].val].val = con->stack.top();
+			con->stack.pop();
+			con->reg[t1].val = con->stack.top();
+			con->stack.pop();
+			if(con->reg[t1].val < con->reg[t2].val)
+				con->reg[pc].val = con->istream[pc].arg2.val;			
+			break; 
+		case oc_jge:  
+			con->reg[con->reg[t2].val].val = con->stack.top();
+			con->stack.pop();
+			con->reg[t1].val = con->stack.top();
+			con->stack.pop();
+			if(con->reg[t1].val >= con->reg[t2].val)
+				con->reg[pc].val = con->istream[pc].arg2.val;			
+			break;
+		case oc_jle:  
+			con->reg[con->reg[t2].val].val = con->stack.top();
+			con->stack.pop();
+			con->reg[t1].val = con->stack.top();
+			con->stack.pop();
+			if(con->reg[t1].val <= con->reg[t2].val)
+				con->reg[pc].val = con->istream[pc].arg2.val;			
+			break;
 		case oc_plus: 
 			con->reg[con->reg[t2].val].val = con->stack.top();
 			con->stack.pop();

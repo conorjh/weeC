@@ -22,22 +22,33 @@ namespace bc
 
 		struct bcByteCode
 		{
+			bcByteCode();
 			bcOpCode op;
-			bcVal arg1,arg2;
+			int arg1,arg2;
+		};
+
+		class bcStack
+		{
+		public:
+			bcStack();			
+			void push(int);
+			int pop();
+			int top();
+			int size();
+			void clear();
+			std::vector<int> cont;
 		};
 
 		class bcExecContext
 		{
 		public:
 			bcExecContext();
-			bcVal									reg[bcMaxRegisters];	//vm registers
+			int										reg[bcMaxRegisters];	//vm registers
 			std::bitset<bcMaxRegisters>				regFlags;				//flags for each register
-			bool									halt;					//has execution halted
 			std::vector<bcByteCode>					istream;				//instruction stream
-			std::stack<int>							stack;					//runtime stack
+			bcStack									stack;					//runtime stack
 			std::unordered_map<std::string,int>		newstore;				//dynamic memory
-			unsigned int							pc;						//program counter
-			int										offset;					//current scopes stack offset
+			bool									halt;					//has execution halted
 		};
 
 		class bcByteCodeGen
@@ -56,7 +67,6 @@ namespace bc
 			unsigned int addByteCode(bcOpCode,bcVal,bcVal);
 			bcByteCode* getByteCode(unsigned int instr);
 			bcByteCode* getByteCode(unsigned int instr,bool isFunc);
-			std::vector<bcByteCode>* getCurrentStream();
 			
 			tree<parse::bcParseNode>::iterator pi;	//parse index
 			parse::bcAST* ast;

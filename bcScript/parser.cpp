@@ -420,7 +420,7 @@ void parse::parseDecVar(bcParser* par)
 		else if(!ex.isConst)
 			return par->setError(ec_p_expmustbeconst,ix,iy,ex.rpn);
 		//evaluate as a const expression, compile time expressions 
-//		par->ast.consttab.at(symi->fullident).val = evalConstExp(par,ex);
+//		par->ast.consttab.at(symi->fullident) = evalConstExp(par,ex);
 
 		//consume closing bracket
 		par->lexer->nextToken();

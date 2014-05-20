@@ -1,6 +1,8 @@
 int a=2;
 if(a>3)
 	a=4;
+else
+	a=5;
 
 
 

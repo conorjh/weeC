@@ -497,8 +497,8 @@ void test::printGen(bc::vm::bcByteCodeGen* bg)
 	while(t<bg->istream->size()) 
 	{
 		std::cout << t << "	op: " << getTypeAsString(bg->istream->at(t).op);
-		std::cout << "	arg1: " << getTypeAsString(bg->istream->at(t).arg1.type) << " = " << bg->istream->at(t).arg1.val;
-		std::cout << "	arg2: " << getTypeAsString(bg->istream->at(t).arg2.type) << " = " << bg->istream->at(t).arg2.val << std::endl;
+		std::cout << "	arg1: "  << bg->istream->at(t).arg1;
+		std::cout << "	arg2: "  << bg->istream->at(t).arg2 << std::endl;
 		++t;
     }
 }

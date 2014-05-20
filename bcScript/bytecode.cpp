@@ -8,18 +8,56 @@ using bc::parse::bcAST;
 using bc::parse::bcParseNodeType;
 using bc::vm::bcValType;
 
+bcStack::bcStack()
+{
+
+}
+
+void bcStack::clear()
+{
+	cont.clear();
+}
+
+int bcStack::pop()
+{
+	int ret = cont[cont.size()-1];
+	cont.pop_back();
+	return ret;
+}
+
+int bcStack::top()
+{
+	return cont[cont.size()-1];	
+}
+
+int bcStack::size()
+{
+	return cont.size();
+}
+
+void bcStack::push(int a)
+{
+	cont.push_back(a);
+}
+
+
+bcByteCode::bcByteCode()
+{
+	arg1=0;
+	arg2=0;
+	op=oc_nop;
+}
 bcExecContext::bcExecContext()
 {
-	this->offset=0;
-	this->pc=0;
 	this->regFlags=0;
 	for(int t=0;t<32;t++)
 	{
-		reg[t].val=0;
+		reg[t]=0;
 		regFlags[t]=0;
 	}
 	halt=false;
 }
+
 int bc::vm::getValTypeSize(bcValType t)
 {
 	switch(t)
@@ -76,7 +114,7 @@ unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcVal a1)
 {
 	bcByteCode bc;
 	bc.op=oc;
-	bc.arg1=a1;
+	bc.arg1=a1.val;
 	return addByteCode(bc);
 }
 
@@ -84,8 +122,8 @@ unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcVal a1,bcVal a2)
 {
 	bcByteCode bc;
 	bc.op=oc;
-	bc.arg1=a1;
-	bc.arg2=a2;
+	bc.arg1=a1.val;
+	bc.arg2=a2.val;
 	return addByteCode(bc);
 }
 
@@ -93,7 +131,7 @@ unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1)
 {
 	bcByteCode bc;
 	bc.op=oc;
-	bc.arg1.type=vt1;
+	//bc.arg1.type=vt1;
 	return addByteCode(bc);
 }
 
@@ -101,16 +139,16 @@ unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,bcValType vt2)
 {
 	bcByteCode bc;
 	bc.op=oc;
-	bc.arg1.type=vt1;
-	bc.arg2.type=vt2;
+	//bc.arg1.type=vt1;
+	//bc.arg2.type=vt2;
 	return addByteCode(bc);
 }
 unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1)
 {
 	bcByteCode bc;
 	bc.op=oc;
-	bc.arg1.type=vt1;
-	bc.arg1.val=v1;
+	//bc.arg1.type=vt1;
+	bc.arg1=v1;
 	return addByteCode(bc);
 }
 
@@ -118,10 +156,10 @@ unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v
 {
 	bcByteCode bc;
 	bc.op=oc;
-	bc.arg1.type=vt1;
-	bc.arg1.val=v1;
-	bc.arg2.type=vt2;
-	bc.arg2.val=v2;
+	//bc.arg1.type=vt1;
+	bc.arg1=v1;
+	//bc.arg2.type=vt2;
+	bc.arg2=v2;
 	return addByteCode(bc);
 }
 
@@ -148,8 +186,7 @@ bcExecContext* bcByteCodeGen::gen()
 	for(int t=0;t<ast->stackframes.at(0).size();++t)
 	{
 		bc.op = oc_push;
-		bc.arg1.type = getValType(&ast->symtab->at(ast->stackframes.at(0).at(t)));	
-		bc.arg1.val = 0;
+		bc.arg1 = 0;
 		addByteCode(bc);
 	}
 
@@ -287,12 +324,14 @@ void bc::vm::genIf(bcByteCodeGen* bg)
 			break;
 			
 		case pn_if_trueblock:
-			//trueindex = bg->addByteCode(oc_jne,vt_astack,0,vt_instr,0);
+			bg->addByteCode(oc_nop);
+			trueindex = bg->addByteCode(oc_jne,vt_astack,0,vt_instr,0);
 			genBlock(bg);
-			//bg->getByteCode(trueindex,bg->inDecFunc)->arg2.val=truejump=bg->getCurrentStream()->size()+1;
+			bg->getByteCode(trueindex,bg->inDecFunc)->arg2=truejump=bg->istream->size()+1;
 			break;
 
 		case pn_if_elseblock:
+			bg->addByteCode(oc_nop);
 			genBlock(bg);
 			break;
 
@@ -399,6 +438,7 @@ void bc::vm::genBlock(bcByteCodeGen* bg)
 
 }
 
+//rpn is provided as a vector of parsenodes
 void bc::vm::genRpnToByteCode(bcByteCodeGen* bg,std::vector<bcParseNode*>* rpn)
 {
 //	bcByteCode bc;

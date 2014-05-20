@@ -23,7 +23,7 @@ namespace bc
 		struct bcToken
 		{
 			bcToken(){};
-			bcToken(std::string id){data=id;};
+			bcToken(std::string id){type=tt_ident;data=id;};
 			bcToken(bcTokenType ty,std::string id){type=ty;data=id;};
 			std::string data;
 			bcTokenType type;
@@ -42,13 +42,14 @@ namespace bc
 			bcToken* getToken();
 			bcToken* prevToken();
 			bcToken* peekToken();
+			void rewind();
 			bool inc(),dec();
 			std::string getChar(),peekChar();
 
 			std::vector<bcToken> tokens;
 			std::vector<std::string>* source;
 			bool done;
-			int x,y,offset;
+			int oldx,oldy,x,y,offset;
 		};
 
 		bcTokenType getTokenType(std::string*);

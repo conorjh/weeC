@@ -341,7 +341,7 @@ void parse::parseDecVar(bcParser* par)
 {
 	int ix,iy;
 	bool setToConst=false;
-	bcParseNode pnt,pni;
+	bcParseNode pnt,pni,pnv;
 	bcSymbol symt,*symi;
 	bcExpression ex;
 	par->addNode(bcParseNode(pn_vardec));
@@ -429,7 +429,7 @@ void parse::parseDecVar(bcParser* par)
 	//now we know if its an array, make sure to adjust the stack offset 
 	//with the size of this variable
 	par->getSymbol(symi->fullident)->offset = par->sOffset;
-	par->sOffset += getTypeSize(pnt.tokens.at(0))*par->getSymbol(symi->fullident)->size;
+	par->sOffset += getTypeSize(pnt.tokens.at(0)) * par->getSymbol(symi->fullident)->size;
 
 	//3. semi colon, or assignment (optional)
 	switch(par->lexer->getToken()->type)
@@ -438,9 +438,9 @@ void parse::parseDecVar(bcParser* par)
 		parseSColon(par);
 		break;
 	case tt_assign:
-		par->lexer->nextToken();
+		par->lexer->rewind();	//parse as an expression
 		ex=parseFExp(par);
-		if(symi->isArray&&!ex.isArray)
+		if(symi->isArray && !ex.isArray)
 			return par->setError(ec_p_expmustbearray,ix,iy,ex.rpn);
 		parseSColon(par);
 		break;
@@ -996,6 +996,7 @@ void parse::parseAssignment(bcParser* par,bcParseNode pn)
 	//ident already parsed
 	bcSymbol sym = *par->getSymbol(pn.tokens.at(0).data);
 	par->addNode(bcParseNode(pn_assignment));
+	par->lexer->rewind();
 	//expression
 	parseFExp(par,pn);
 	//semi colon
@@ -1014,7 +1015,7 @@ bcExpression parse::parseFExp(bcParser* par)
 	return ex;
 }
 
-//for when weve already consumed the identifier with parseIdent()
+//for when weve already consumed the identifier with parseIdent(), copy code from parseSubExp
 bcExpression parse::parseFExp(bcParser* par,bcParseNode id)
 {	
 	bcExpression ex;ex.isConst=true;
@@ -1078,11 +1079,6 @@ bcExpression parse::parseExp(bcParser* par)
 			return ex;
 		}
 		oper2 = parseSubExp(par,&ex);
-		//check this operation is valid for the types we have
-		//if(!checkOperandTypes(par,oper1,op,oper2))
-		{
-			//error
-		}
 	}
 	return ex;
 }

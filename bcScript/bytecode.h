@@ -13,7 +13,7 @@ namespace bc
 			oc_nop,		
 			oc_mov,			
 			oc_push,oc_pop,	
-			oc_je,oc_jne,oc_jg,oc_jl,oc_jge,oc_jle,
+			oc_cmp,oc_je,oc_jne,oc_jg,oc_jl,oc_jge,oc_jle,
 			oc_plus,oc_minus,oc_mult,oc_div,oc_expo,oc_mod,oc_inc,oc_dec,
 			oc_and,oc_or,oc_xor,oc_not,oc_shfl,oc_shfr,
 			oc_call,oc_ret,oc_callvm,
@@ -34,7 +34,6 @@ namespace bc
 			std::bitset<bcMaxRegisters>				regFlags;				//flags for each register
 			bool									halt;					//has execution halted
 			std::vector<bcByteCode>					istream;				//instruction stream
-			std::vector<bcByteCode>					fstream;				//function instruction stream
 			std::stack<int>							stack;					//runtime stack
 			std::unordered_map<std::string,int>		newstore;				//dynamic memory
 			unsigned int							pc;						//program counter
@@ -62,7 +61,6 @@ namespace bc
 			tree<parse::bcParseNode>::iterator pi;	//parse index
 			parse::bcAST* ast;
 			std::vector<bcByteCode>* istream;
-			std::vector<bcByteCode>* fstream;
 			bool inDecFunc;
 		};
 

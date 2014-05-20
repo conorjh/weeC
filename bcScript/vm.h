@@ -37,8 +37,11 @@ namespace bc
 		enum bcReg
 		{
 			pc,
+			sp,
 			eax,
 			ret,
+			cmp1,
+			cmp2,
 			t1 = 30,
 			t2 = 31
 		};

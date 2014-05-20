@@ -397,6 +397,7 @@ std::string test::getTypeAsString(vm::bcOpCode _t)
 		case oc_mov:	return "oc_mov";
 		case oc_push:	return "oc_push";
 		case oc_pop:	return "oc_pop";
+		case oc_cmp:	return "oc_cmp";
 		case oc_je:		return "oc_je";
 		case oc_jne:	return "oc_jne";
 		case oc_jg:		return "oc_jg";

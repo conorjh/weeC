@@ -19,6 +19,7 @@ void bcLexer::shutdown()
 {
 	clear();
 	x=-1;y=0;
+	oldx=oldy=0;
 	delete source;
 }
 
@@ -30,11 +31,17 @@ void bcLexer::clear()
 
 bcToken* bcLexer::getToken()
 {
-	//if(x==-1)
-	//	return nextToken();
 	if(!tokens.size())
 		return NULL;
 	return &tokens[tokens.size()-1-offset];
+}
+
+//for when we parse an ident, but also need parseFExp to include it
+void bcLexer::rewind()
+{
+	tokens.erase(tokens.end()-1);
+	x=oldx;y=oldy;
+	offset=0;
 }
 
 int bcLexer::lex()
@@ -54,6 +61,7 @@ bcToken* bcLexer::nextToken()
 {
 	offset=0;
 	bcToken tok;
+	oldx=x;	oldy=y;
 	if(!inc())
 		return NULL;	//end of file
 	tok.x=x;	tok.y=y;

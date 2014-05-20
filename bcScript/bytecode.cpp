@@ -61,16 +61,8 @@ bcByteCodeGen::bcByteCodeGen()
 
 unsigned int bcByteCodeGen::addByteCode(bcByteCode bc)
 {
-	if(!inDecFunc)
-	{
-		istream->push_back(bc);
-		return istream->size();
-	}
-	else
-	{
-		fstream->push_back(bc);
-		return fstream->size();
-	}
+	istream->push_back(bc);
+	return istream->size();
 }
 
 unsigned int bcByteCodeGen::addByteCode(bcOpCode oc)
@@ -135,30 +127,19 @@ unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v
 
 bcByteCode* bcByteCodeGen::getByteCode(unsigned int ind)
 {
-	if(inDecFunc)
-		return &fstream->at(ind);
 	return &istream->at(ind);
 }
 
 bcByteCode* bcByteCodeGen::getByteCode(unsigned int ind, bool isFunc)
 {
-	if(isFunc)
-		return &fstream->at(ind);
 	return &istream->at(ind);
 }
 
-std::vector<bcByteCode>* bcByteCodeGen::getCurrentStream()
-{
-	if(inDecFunc)
-		return fstream;
-	return istream;
-}
 bcExecContext* bcByteCodeGen::gen()
 {
 	bcExecContext* ec=new bcExecContext();
 	bcByteCode bc;
 	istream=new std::vector<bcByteCode>;
-	fstream=new std::vector<bcByteCode>;
 	pi=ast->tree->begin();
 
 	//push command line args
@@ -177,7 +158,6 @@ bcExecContext* bcByteCodeGen::gen()
 		genStatement(this);
 
 	ec->istream=*this->istream;
-	ec->fstream=*this->fstream;
 	return ec;
 }
 
@@ -457,20 +437,11 @@ void bc::vm::genRpnToByteCode(bcByteCodeGen* bg,std::vector<bcParseNode*>* rpn)
 			bg->addByteCode(oc_or);	break;
 		case pn_logand:
 			bg->addByteCode(oc_and);	break;
-		case pn_equal:
-			bg->addByteCode(oc_je);	break;
-		case pn_notequal:
-			bg->addByteCode(oc_jne);	break;	
+		case pn_equal:	case pn_notequal:	case pn_greater:
+		case pn_less:	case pn_lessequal:	case pn_greaterequal:
+			bg->addByteCode(oc_cmp);	break;
 		case pn_assign:
 			bg->addByteCode(oc_mov);	break;
-		case pn_greater:
-			bg->addByteCode(oc_jg);	break;
-		case pn_less:
-			bg->addByteCode(oc_jl);	break;
-		case pn_lessequal:
-			bg->addByteCode(oc_jle);	break;
-		case pn_greaterequal:
-			bg->addByteCode(oc_jge);	break;
 		case pn_mult:
 			bg->addByteCode(oc_mult);	break;
 		case pn_div:
@@ -523,25 +494,16 @@ void bc::vm::genNodeToByteCode(bcByteCodeGen* bg,bcParseNode* pn)
 		case pn_logand:
 			bg->addByteCode(oc_and);
 			break;			
-		case pn_equal:
-			bg->addByteCode(oc_je);
-			break;			
-		case pn_notequal:
-			bg->addByteCode(oc_jne);
-			break;			
 		case pn_assign:
-		case pn_greater:
-			bg->addByteCode(oc_jg);
-			break;		
+			bg->addByteCode(oc_mov);
+			break;
+		case pn_equal:	
+		case pn_notequal:		
+		case pn_greater:	
 		case pn_less:
-			bg->addByteCode(oc_jl);
-			break;			
 		case pn_lessequal:
-			bg->addByteCode(oc_jle);
-			break;			
 		case pn_greaterequal:
-			bg->addByteCode(oc_jge);
-			break;		
+			bg->addByteCode(oc_cmp);
 		case pn_mult:
 			bg->addByteCode(oc_mult);
 			break;		
@@ -552,7 +514,7 @@ void bc::vm::genNodeToByteCode(bcByteCodeGen* bg,bcParseNode* pn)
 			bg->addByteCode(oc_minus);
 			break;		
 		case pn_lognot:
-			
+			bg->addByteCode(oc_not);
 			break;
 		case pn_plus:
 			bg->addByteCode(oc_plus);

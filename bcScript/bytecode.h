@@ -24,11 +24,17 @@ namespace bc
 		enum bcOpCode
 		{
 			oc_nop,		
-			oc_mov,			
-			oc_push,oc_pop,	
+			//load memory
+			oc_mov,oc_lr,oc_lrfs,oc_ls,oc_lsfr,
+			//stack operations
+			oc_push,oc_pop,
+			//conditional jumps
 			oc_cmp,oc_jmp,oc_je,oc_jne,oc_jg,oc_jl,oc_jge,oc_jle,
+			//arithmetic
 			oc_plus,oc_minus,oc_mult,oc_div,oc_expo,oc_mod,oc_inc,oc_dec,
+			//logical operations
 			oc_and,oc_or,oc_xor,oc_not,oc_shfl,oc_shfr,
+			//function calls
 			oc_call,oc_ret,oc_callvm,
 			oc_pause,oc_halt
 		};
@@ -39,19 +45,23 @@ namespace bc
 			bcOpCode op;
 			int arg1,arg2;
 		};
-		extern class bcExecContext;
+
+		class bcExecContext;
+
 		class bcStack
 		{
 		public:
 			bcStack();			
-			void push(int);
+			void push(int);	
+			void push(bcExecContext*,int);
 			int pop();
+			int pop(bcExecContext*);
 			int top();
 			int size();
 			int* at(int);
 			void clear();
+			void clear(bcExecContext*);
 			std::vector<int> cont;
-			bcExecContext ec;
 		};
 
 		class bcExecContext
@@ -65,7 +75,6 @@ namespace bc
 			std::unordered_map<std::string,int>		newstore;				//dynamic memory
 			bool									halt;					//has execution halted
 		};
-		
 		
 		class bcByteCodeGen
 		{

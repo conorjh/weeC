@@ -16,6 +16,11 @@ bcStack::bcStack()
 void bcStack::clear()
 {
 	cont.clear();
+}
+
+void bcStack::clear(bcExecContext* ec)
+{
+	cont.clear();
 	if(ec)
 		ec->reg[tos]=0;
 }
@@ -24,14 +29,16 @@ int bcStack::pop()
 {
 	int ret = cont[cont.size()-1];
 	cont.pop_back();
-	if(ec)
-		ec->reg[tos]--;
 	return ret;
 }
 
-int* bcStack::at(int i)
+int bcStack::pop(bcExecContext* ec)
 {
-	return &cont[i];
+	int ret = cont[cont.size()-1];
+	cont.pop_back();
+	if(ec)
+		ec->reg[tos]--;
+	return ret;
 }
 
 int* bcStack::at(int i)
@@ -50,6 +57,11 @@ int bcStack::size()
 }
 
 void bcStack::push(int a)
+{
+	cont.push_back(a);
+}
+
+void bcStack::push(bcExecContext* ec,int a)
 {
 	cont.push_back(a);
 	if(ec)

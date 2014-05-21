@@ -262,6 +262,13 @@ void parse::parseStatement(bcParser* par)
 			//empty statement
 			parseSColon(par);
 			break;	
+			
+		//treat literals as the start of an expression
+		case tt_strlit:	case tt_intlit:	case tt_fltlit:
+		case tt_true:	case tt_false:
+			parseFExp(par);
+			break;
+
 		case tt_const:	case tt_int:case tt_string:case tt_float:case tt_bool:case tt_object:
 			if(!par->noDecVar)
 				parseDecVar(par);
@@ -288,7 +295,7 @@ void parse::parseStatement(bcParser* par)
 			break;
 		case tt_return:
 			parseReturn(par);
-			break;
+			break;	
 		case tt_ident:
 			pni = parseIdent(par);
 			if(par->getSymbol(pni.tokens.at(0).data))
@@ -304,6 +311,7 @@ void parse::parseStatement(bcParser* par)
 				ex=parseFExp(par,pni);
 				parseSColon(par);
 				break;
+			
 			case st_null:
 			default:
 				//unknown identifier
@@ -804,7 +812,6 @@ std::string parse::consumeIdent(bcParser* par)
 		default:
 			exit=true;
 		}
-
 	return id;
 }
 
@@ -903,7 +910,6 @@ bcSymbol parse::resolveIdent(bcParser* par,std::string shortid)
 			default:
 				--ind;
 		}
-	
 	return sym;
 }
 
@@ -941,7 +947,6 @@ bool parse::isIdentExplicit(bcParser* par,std::string id)
 		default:
 		--ind;
 		}
-
 	return false;
 }
 

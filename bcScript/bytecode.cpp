@@ -16,13 +16,27 @@ bcStack::bcStack()
 void bcStack::clear()
 {
 	cont.clear();
+	if(ec)
+		ec->reg[tos]=0;
 }
 
 int bcStack::pop()
 {
 	int ret = cont[cont.size()-1];
 	cont.pop_back();
+	if(ec)
+		ec->reg[tos]--;
 	return ret;
+}
+
+int* bcStack::at(int i)
+{
+	return &cont[i];
+}
+
+int* bcStack::at(int i)
+{
+	return &cont[i];
 }
 
 int bcStack::top()
@@ -38,8 +52,9 @@ int bcStack::size()
 void bcStack::push(int a)
 {
 	cont.push_back(a);
+	if(ec)
+		ec->reg[tos]++;
 }
-
 
 bcByteCode::bcByteCode()
 {
@@ -47,6 +62,7 @@ bcByteCode::bcByteCode()
 	arg2=0;
 	op=oc_nop;
 }
+
 bcExecContext::bcExecContext()
 {
 	this->regFlags=0;
@@ -71,6 +87,7 @@ int bc::vm::getValTypeSize(bcValType t)
 		return 2;
 	}
 }
+
 bcValType bc::vm::getValType(bcSymbol* sym)
 {
 	switch(sym->type)
@@ -100,7 +117,7 @@ bcByteCodeGen::bcByteCodeGen()
 unsigned int bcByteCodeGen::addByteCode(bcByteCode bc)
 {
 	istream->push_back(bc);
-	return istream->size();
+	return istream->size()-1;
 }
 
 unsigned int bcByteCodeGen::addByteCode(bcOpCode oc)
@@ -110,56 +127,17 @@ unsigned int bcByteCodeGen::addByteCode(bcOpCode oc)
 	return addByteCode(bc);
 }
 
-unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcVal a1)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,int a1)
 {
 	bcByteCode bc;
-	bc.op=oc;
-	bc.arg1=a1.val;
+	bc.op=oc;	bc.arg1=a1;	bc.arg2=0;
 	return addByteCode(bc);
 }
 
-unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcVal a1,bcVal a2)
+unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,int a1,int a2)
 {
 	bcByteCode bc;
-	bc.op=oc;
-	bc.arg1=a1.val;
-	bc.arg2=a2.val;
-	return addByteCode(bc);
-}
-
-unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1)
-{
-	bcByteCode bc;
-	bc.op=oc;
-	//bc.arg1.type=vt1;
-	return addByteCode(bc);
-}
-
-unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,bcValType vt2)
-{
-	bcByteCode bc;
-	bc.op=oc;
-	//bc.arg1.type=vt1;
-	//bc.arg2.type=vt2;
-	return addByteCode(bc);
-}
-unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1)
-{
-	bcByteCode bc;
-	bc.op=oc;
-	//bc.arg1.type=vt1;
-	bc.arg1=v1;
-	return addByteCode(bc);
-}
-
-unsigned int bcByteCodeGen::addByteCode(bcOpCode oc,bcValType vt1,unsigned int v1,bcValType vt2,unsigned int v2)
-{
-	bcByteCode bc;
-	bc.op=oc;
-	//bc.arg1.type=vt1;
-	bc.arg1=v1;
-	//bc.arg2.type=vt2;
-	bc.arg2=v2;
+	bc.op=oc;	bc.arg1=a1;	bc.arg2=a2;
 	return addByteCode(bc);
 }
 
@@ -314,7 +292,7 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 void bc::vm::genIf(bcByteCodeGen* bg)
 {
 	//collect func dec info from current node
-	unsigned int trueindex,truejump;
+	unsigned int trueindex,truejump,elseindex,elsejump;
 	int olddepth=bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while(bg->ast->tree->depth(bg->pi) > olddepth)
 		switch(bg->pi->type)
@@ -323,22 +301,26 @@ void bc::vm::genIf(bcByteCodeGen* bg)
 			genExp(bg);
 			break;
 			
-		case pn_if_trueblock:
-			bg->addByteCode(oc_nop);
-			trueindex = bg->addByteCode(oc_jne,vt_astack,0,vt_instr,0);
-			genBlock(bg);
-			bg->getByteCode(trueindex,bg->inDecFunc)->arg2=truejump=bg->istream->size()+1;
+		case pn_if_trueblock:			
+			trueindex = bg->addByteCode(oc_jne,0,0);
+			genBlock(bg); 
+			truejump = bg->addByteCode(oc_jmp);
 			break;
 
 		case pn_if_elseblock:
-			bg->addByteCode(oc_nop);
+			//point the topmost jne to the first else block
+			bg->getByteCode(trueindex,bg->inDecFunc)->arg2 = bg->istream->size();	
+			//inner contents
 			genBlock(bg);
-			break;
+			//point the jmp at the end of the true block past the else block
+			bg->getByteCode(truejump,bg->inDecFunc)->arg2 = elsejump = bg->istream->size();	break;
 
 		default:
 			bg->pi++;
 			break;
 		}
+	//if this is the last statement, we need an address to land on after else
+	bg->addByteCode(oc_nop);
 }
 
 void bc::vm::genExp(bcByteCodeGen* bg)
@@ -450,16 +432,16 @@ void bc::vm::genRpnToByteCode(bcByteCodeGen* bg,std::vector<bcParseNode*>* rpn)
 			//bg->addByteCode(oc_push,vt_string,bcstoi(rpn->at(0)->tokens.at(0).data));
 			break;
 		case pn_fltlit:	
-			bg->addByteCode(oc_push,vt_float,bcstof(rpn->at(0)->tokens.at(0).data));
+			bg->addByteCode(oc_push,bcstof(rpn->at(0)->tokens.at(0).data));
 			break;
 		case pn_intlit:
-			bg->addByteCode(oc_push,vt_int,bcstoi(rpn->at(0)->tokens.at(0).data));
+			bg->addByteCode(oc_push,bcstoi(rpn->at(0)->tokens.at(0).data));
 			break;
 		case pn_true:	
-			bg->addByteCode(oc_push,vt_bool,1);
+			bg->addByteCode(oc_push,1);
 			break;
 		case pn_false:
-			bg->addByteCode(oc_push,vt_bool,0);
+			bg->addByteCode(oc_push,0);
 			break;
 		
 			//variables

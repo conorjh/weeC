@@ -5,8 +5,7 @@ using bc::vm::bcReg;
 
 bcVM::bcVM()
 {
-	//con->halt = false;
-	//con->reg[pc] = 0;
+	con->stack.ec=con;
 }
 
 /*void bcVM::load(bcByteCodeGen* g)
@@ -19,13 +18,14 @@ unsigned int bcVM::exec(unsigned int instructions)
 {
 	while(con->istream.size() && !con->halt && instructions>0)
 	{
-		switch(con->istream[con->reg[pc]].op)
+		int* rpc = &con->reg[pc];		//shorthand for the program counter
+		switch(con->istream[*rpc].op)
 		{
 		case oc_mov:
-			//con->stack.
+			*con->stack.at(con->istream[*rpc].arg1) = *con->stack.at(con->istream[*rpc].arg2);
 			break;
 		case oc_push:
-			con->stack.push(con->istream[con->reg[pc]].arg1);
+			con->stack.push(con->istream[*rpc].arg1);
 			break;
 		case oc_pop:
 			con->stack.pop();
@@ -37,29 +37,31 @@ unsigned int bcVM::exec(unsigned int instructions)
 			con->stack.pop();
 			con->reg[cmp1] = con->reg[t1] - con->reg[t2];
 			break;
+		case oc_jmp:
+			*rpc=con->istream[*rpc].arg1;
 		case oc_je: 
 			if(!con->reg[cmp1])
-				con->reg[pc] = con->istream[pc].arg2;			
+				*rpc = con->istream[*rpc].arg2;			
 			break;
 		case oc_jne:
 			if(con->reg[cmp1])
-				con->reg[pc] = con->istream[pc].arg2;			
+				*rpc = con->istream[*rpc].arg2;			
 			break; 
 		case oc_jg: 
 			if(con->reg[cmp1]>0)
-				con->reg[pc] = con->istream[pc].arg2;			
+				*rpc = con->istream[*rpc].arg2;			
 			break; 
 		case oc_jl: 
 			if(con->reg[cmp1]<0)
-				con->reg[pc] = con->istream[pc].arg2;				
+				*rpc = con->istream[*rpc].arg2;				
 			break; 
 		case oc_jge:  
 			if(con->reg[cmp1]>=0)
-				con->reg[pc] = con->istream[pc].arg2;	
+				*rpc = con->istream[*rpc].arg2;	
 			break;
 		case oc_jle:  
 			if(con->reg[cmp1]<=0)
-				con->reg[pc] = con->istream[pc].arg2;			
+				*rpc = con->istream[*rpc].arg2;			
 			break;
 		case oc_plus: 
 			con->reg[t2] = con->stack.top();
@@ -131,8 +133,8 @@ unsigned int bcVM::exec(unsigned int instructions)
 		}
 		
 		//inc program counter
-		con->reg[pc]++;
-		if(con->reg[pc] >= con->istream.size())
+		(*rpc)++;
+		if(*rpc >= con->istream.size())
 		{
 			con->halt = true;
 			break;

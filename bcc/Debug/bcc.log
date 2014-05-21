@@ -1,17 +1,20 @@
-﻿Build started 20/05/2014 17:17:17.
-     1>Project "C:\Users\ittemp\Documents\Visual Studio 2010\Projects\bcScript\bcc\bcc.vcxproj" on node 2 (build target(s)).
+﻿Build started 21/05/2014 09:47:32.
+     1>Project "C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\bcc\bcc.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
-         Creating "Debug\bcc.unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "Debug\bcc.unsuccessfulbuild".
        ClCompile:
-         All outputs are up-to-date.
-       Link:
-         All outputs are up-to-date.
-         bcc.vcxproj -> C:\Users\ittemp\Documents\Visual Studio 2010\Projects\bcScript\Debug\bcc.exe
-       FinalizeBuildStatus:
-         Deleting file "Debug\bcc.unsuccessfulbuild".
-         Touching "Debug\bcc.lastbuildstate".
-     1>Done Building Project "C:\Users\ittemp\Documents\Visual Studio 2010\Projects\bcScript\bcc\bcc.vcxproj" (build target(s)).
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\/bcscript" /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp test.cpp
+         test.cpp
+     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcscript\bytecode.h(42): warning C4091: 'extern ' : ignored on left of 'bc::vm::bcExecContext' when no variable is declared
+     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcscript\bytecode.h(54): error C2079: 'bc::vm::bcStack::ec' uses undefined class 'bc::vm::bcExecContext'
+     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcc\test.cpp(362): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcc\test.cpp(498): warning C4018: '<' : signed/unsigned mismatch
+         main.cpp
+     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcscript\bytecode.h(42): warning C4091: 'extern ' : ignored on left of 'bc::vm::bcExecContext' when no variable is declared
+     1>c:\users\bobo\documents\visual studio 2010\projects\bcscript\bcscript\bytecode.h(54): error C2079: 'bc::vm::bcStack::ec' uses undefined class 'bc::vm::bcExecContext'
+         Generating Code...
+     1>Done Building Project "C:\Users\Bobo\Documents\Visual Studio 2010\Projects\bcScript\bcc\bcc.vcxproj" (build target(s)) -- FAILED.
 
-Build succeeded.
+Build FAILED.
 
-Time Elapsed 00:00:00.04
+Time Elapsed 00:00:01.83

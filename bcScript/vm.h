@@ -52,20 +52,24 @@ namespace bc
 		//instructions
 		inline void ocNop(bcExecContext*);	
 		inline void ocMov(bcExecContext*);		//copy new memory
+		inline void ocSf(bcExecContext*);		//set flag
+		inline void ocRf(bcExecContext*);		//read flag to stack
 		inline void ocLr(bcExecContext*);		//load value into a register
 		inline void ocLs(bcExecContext*);		//load value into the stack
 		inline void ocLrfs(bcExecContext*);		//load value from stack into a register
 		inline void ocLsfr(bcExecContext*);		//load value from register into the stack
 		inline void ocPush(bcExecContext*);		//push onto the stack
+		inline void ocPushfs(bcExecContext*);	//push onto the stack, from a given stackindex
 		inline void ocPop(bcExecContext*);		//pop from stack
-		inline void ocCmp(bcExecContext*);
-		inline void ocJmp(bcExecContext*);
-		inline void ocJe(bcExecContext*);
+		inline void ocCmp(bcExecContext*);		//compare top 2 stack items, store in cmp1
+		inline void ocJmp(bcExecContext*);		//uncondtional jump
+		inline void ocJe(bcExecContext*);		
 		inline void ocJne(bcExecContext*);
 		inline void ocJg(bcExecContext*);
 		inline void ocJl(bcExecContext*);
 		inline void ocJge(bcExecContext*);
 		inline void ocJle(bcExecContext*);
+		inline void ocAssign(bcExecContext*);
 		inline void ocPlus(bcExecContext*);
 		inline void ocMinus(bcExecContext*);
 		inline void ocMult(bcExecContext*);
@@ -80,5 +84,10 @@ namespace bc
 		inline void ocNot(bcExecContext*);
 		inline void ocShfl(bcExecContext*);
 		inline void ocShfr(bcExecContext*);
+		inline void ocCall(bcExecContext*);
+		inline void ocCallvm(bcExecContext*);
+		inline void ocPause(bcExecContext*);
+		inline void ocHalt(bcExecContext*);
+		inline void ocRet(bcExecContext*);
 	}
 }

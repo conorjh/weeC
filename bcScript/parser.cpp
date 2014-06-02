@@ -1,8 +1,10 @@
 #include "parser.h"
+#include "util.h"
 
 //using namespace bc::parse;
 using namespace bc;
 using namespace bc::lex;
+using namespace bc::util;
 using bc::lex::bcToken;
 using bc::lex::bcTokenType;
 using bc::parse::bcParser;
@@ -181,26 +183,26 @@ unsigned int bcParser::getError()
 	return error;
 }
 
-tree<bcParseNode>::iterator* bcParser::getNode()
+tree<bcParseNode>::iterator bcParser::getNode()
 {
-	return &pindex;
+	return pindex;
 }
 
-tree<bcParseNode>::iterator* bcParser::prevNode()
+tree<bcParseNode>::iterator bcParser::prevNode()
 {
-	return &--pindex;
+	return --pindex;
 }
 
-tree<bcParseNode>::iterator* bcParser::addNode(bcParseNode pn)
+tree<bcParseNode>::iterator bcParser::addNode(bcParseNode pn)
 {
 	pindex=ast.tree->append_child(pindex,pn);
-	return &pindex;
+	return pindex;
 }
 
-tree<bcParseNode>::iterator* bcParser::addChild(bcParseNode pn)
+tree<bcParseNode>::iterator bcParser::addChild(bcParseNode pn)
 {
 	ast.tree->append_child(pindex,pn);
-	return &pindex;
+	return ast.tree->child(pindex,ast.tree->number_of_children(pindex)-1);
 }
 
 void bcParser::parent()
@@ -634,7 +636,7 @@ void parse::parseParamListDec(bcParser* par)
 	if(par->lexer->getToken()->type!=tt_oparen)	
 		return par->setError(ec_p_unexpectedtoken,par->lexer->getToken()->data);
 	par->lexer->nextToken();
-	tree<bcParseNode>::iterator* plnode = par->addNode(bcParseNode(pn_decparamlist));	
+	tree<bcParseNode>::iterator plnode = par->addNode(bcParseNode(pn_decparamlist));	
 	
 	//loop thru all the parameters in the func call
 	while(par->lexer->getToken()->type!=tt_cparen)
@@ -683,7 +685,7 @@ void parse::parseParamListDec(bcParser* par)
 	//consume cparen, add to current bcFuncInfo
 	par->currentFunc->sigs.insert(std::make_pair(getMethodStringSignature(&pl),pl));
 	par->currentParamList=&par->currentFunc->sigs[getMethodStringSignature(&pl)];
-	plnode->node->data.tokens.push_back(bcToken(getMethodStringSignature(&pl)));
+	plnode.node->data.tokens.push_back(bcToken(getMethodStringSignature(&pl)));
 	par->lexer->nextToken();
 	par->parent();
 }
@@ -707,7 +709,7 @@ void parse::parseBlock(bcParser* par)
 	//if were currently declaring a function, or (currentFunc!=NULL), make a note of the body
 	par->addNode(bcParseNode(pn_block));
 	if(par->currentFunc)
-		par->currentFunc->body[getMethodStringSignature(par->currentParamList)]=*par->getNode();
+		par->currentFunc->body[getMethodStringSignature(par->currentParamList)]=par->getNode();
 
 	//inner contents
 	while(!par->error && par->lexer->getToken()->type!=tt_cbrace)
@@ -822,6 +824,7 @@ bcParseNode parse::parseIdent(bcParser* par)
 	bcSymbol sym = resolveIdent(par,sident = consumeIdent(par));
 	bcParseNode pn(sym.type);
 	pn.tokens.push_back(bcToken(tt_ident,sym.fullident));
+	pn.tokens.push_back(bcToken(tt_intlit,bcitos(sym.offset)));
 
 	//parse array index or func call
 	if(sym.isArray)
@@ -971,7 +974,7 @@ void parse::parseFuncCall(bcParser* par,bcParseNode pn)
 		return par->setError(ec_p_invalidsymbol,par->lexer->getToken()->data);
 	else if(sym.type==st_null)
 		return par->setError(ec_p_undeclaredsymbol,par->lexer->getToken()->data);
-	par->addNode(bcParseNode(pn_funccall))->node->data.tokens.push_back(bcToken(sym.fullident));
+	par->addNode(bcParseNode(pn_funccall)).node->data.tokens.push_back(bcToken(sym.fullident));
 
 	//params
 	parseParamListCall(par,par->getSymbol(sym.fullident));
@@ -1012,7 +1015,7 @@ void parse::parseAssignment(bcParser* par,bcParseNode pn)
 //full expression - only this method makes the pn_exp parse node
 bcExpression parse::parseFExp(bcParser* par)
 {	
-	tree<bcParseNode>::iterator* exnode;
+	tree<bcParseNode>::iterator exnode;
 	exnode=par->addNode(bcParseNode(pn_exp));
 	bcExpression ex = parseExp(par);
 	ex.node=exnode;
@@ -1024,6 +1027,7 @@ bcExpression parse::parseFExp(bcParser* par)
 bcExpression parse::parseFExp(bcParser* par,bcParseNode id)
 {	
 	bcExpression ex;ex.isConst=true;
+	bcParseNode pn;
 	ex.node=par->addNode(bcParseNode(pn_exp));
 	//taken from parseFactor
 	bcSymbol sym = *par->getSymbol(id.tokens.at(0).data);
@@ -1046,7 +1050,10 @@ bcExpression parse::parseFExp(bcParser* par,bcParseNode id)
 		{		
 		case tt_less:	case tt_greater:	case tt_lessequal:	case tt_greaterequal:
 		case tt_equal:	case tt_notequal:	case tt_logand:		case tt_logor:		case tt_assign:
-			par->addChild(bcParseNode(op.type))->node->data.tokens.push_back(op);
+			pn=bcParseNode(op.type);
+			pn.tokens.push_back(op);
+			pn.tokens.push_back(bcitos(par->getSymbol(id.tokens.at(0).data)->offset));	//stack index of oper1
+			par->addChild(pn);
 			par->lexer->nextToken();
 			break;
 		default:	
@@ -1076,6 +1083,8 @@ bcExpression parse::parseExp(bcParser* par)
 		case tt_equal:	case tt_notequal:	case tt_logand:		case tt_logor:		case tt_assign:	
 			pn=bcParseNode(op.type);
 			pn.tokens.push_back(op);
+			//use last idents token string in getSymbol to push the stack offset of lastIdent onto this parseNode. used in ByteCode generation
+			pn.tokens.push_back(bcitos(par->getSymbol(par->lastIdent.node->data.tokens.at(0).data)->offset));	
 			par->addChild(pn);
 			par->lexer->nextToken();
 			break;
@@ -1195,7 +1204,7 @@ bcToken parse::parseFactor(bcParser* par,bcExpression* ex)
 		case st_var:
 			if(!sym.isConst)	ex->isConst=false;
 			if(sym.isArray)		parseArrayIndex(par,&pni);	//the [] subscript
-			par->addChild(pni);
+			par->lastIdent = par->addChild(pni);
 			break;
 		case st_namespace:
 			par->setError(ec_p_invalidsymbol,par->lexer->getToken()->data);

@@ -186,155 +186,82 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 {
 	switch(_t)
 	{
-		case pn_null: 
-			return "null";  
-		case pn_string:
-			return "string keyw"; 
-		case pn_int: 
-			return "int keyw"; 
-		case pn_float:
-			return "float keyw"; 
-		case pn_object:
-			return "object keyw"; 
-		case pn_var:
-			return "var keyw"; 
-		case pn_bool:
-			return "bool keyw";
-		case pn_scolon:
-			return "semi colon (;)";
-		case pn_colon:
-			return "colon (:)";
-				
-		case pn_comma:
-			return "comma"; 
-		case pn_period:
-			return "period";
-		case pn_squote:
-			return "single quote";
-		case pn_dquote:
-			return "double quote";
-		case pn_qmark:
-			return "question mark";
-		case pn_pipe:
-			return "pipe";  
-		case pn_minus:
-			return "minus"; 
-		case pn_plus: 
-			return "plus"; 
-		case pn_div:
-			return "divide (/)"; 
-		case pn_mult: 
-			return "multiply (*)"; 
-		case pn_mod: 
-			return "modulus";
-		case pn_expo:
-			return "power"; 
-		case pn_assign:
-			return "assignment (=)";
-		case pn_underscore:
-			return "undrescore"; 
-		case pn_tilde: 
-			return "tilde (`)"; 
-		case pn_oparen:
-			return "open parenthesis (";  
-		case pn_cparen:
-			return "close parenthesis )"; 
-		case pn_obracket: 
-			return "open bracket [";  
-		case pn_cbracket: 
-			return "close bracket ]";  
-		case pn_obrace:
-			return "open brace {";  
-		case pn_cbrace:
-			return "close brace }";  
-		case pn_bslash:
-			return "backslash \\"; 
-		case pn_percent: 
-			return "percentage (%)";  
-		case pn_newline:
-			return "newline";  
-		case pn_dollar:
-			return "dollar"; 
-		case pn_amper:
-			return "ampersand &";  
-		case pn_greater:
-			return "greater than"; 
-		case pn_less: 
-			return "less than"; 
-		case pn_equal:
-			return "equal to"; 
-		case pn_notequal: 
-			return "not equal to";
-		case pn_greaterequal: 
-			return "equal or greater than";
-		case pn_lessequal: 
-			return "equal or less than";
-		case pn_lognot:
-			return "logical not"; 
-		case pn_logor:
-			return "logical or"; 
-		case pn_logand: 
-			return "logical and";
-		case pn_plusassign:
-			return "plus assign +=";
-		case pn_minusassign:
-			return "minus assign -=";
-		case pn_incr: 
-			return "increment ++";
-		case pn_decr: 
-			return "derement --";
-		case pn_intlit: 
-			return "int literal"; 
-		case pn_strlit: 
-			return "string literal"; 
-		case pn_fltlit: 
-			return "float literal";  
-		case pn_ident: 
-			return "identifier";  
-		case pn_varident: 
-			return "var identifier";  
-		case pn_funcident: 
-			return "func identifier";  
-		case pn_namespaceident: 
-			return "namespace identifier";  
-		case pn_comment: 
-			return "comment"; 
-		case pn_block:
-			return "code blcase ock";
-		case pn_paramlist:
-			return "parameter list";
-		case pn_dec:
-			return "dec keyw";
-		case pn_true:
-			return "true keyw";
-		case pn_false: 
-			return "false keyw"; 
-		case pn_function: 
-			return "function keyw";  
-		case pn_if: 
-			return "if keyw";  
-		case pn_else: 
-			return "else keyw"; 
-		case pn_while: 
-			return "while keyw"; 
-		case pn_break: 
-			return "break keyw"; 
-		case pn_return: 
-			return "return keyw"; 
-		case pn_continue: 
-			return "continue keyw"; 
-		case pn_funcdec:
-			return "func dec";
-		case pn_vardec:
-			return "var dec";
-		case pn_statement:
-			return "statement";
-		case pn_exp:
-			return "expression";
-		case pn_type:
-			return "type";
-		case pn_head:
-			return "head";
+		case pn_null: 			return "null";  
+		case pn_string:			return "string keyw"; 
+		case pn_int: 			return "int keyw"; 
+		case pn_float:			return "float keyw"; 
+		case pn_object:			return "object keyw"; 
+		case pn_var:			return "var keyw"; 
+		case pn_bool:			return "bool keyw";
+		case pn_scolon:			return "semi colon (;)";
+		case pn_colon:			return "colon (:)";				
+		case pn_comma:			return "comma"; 
+		case pn_period:			return "period";
+		case pn_squote:			return "single quote";
+		case pn_dquote:			return "double quote";
+		case pn_qmark:			return "question mark";
+		case pn_pipe:			return "pipe";  
+		case pn_minus:			return "minus"; 
+		case pn_plus: 			return "plus"; 
+		case pn_div:			return "divide (/)"; 
+		case pn_mult: 			return "multiply (*)"; 
+		case pn_mod: 			return "modulus";
+		case pn_expo:			return "power"; 
+		case pn_assign:			return "assignment (=)";
+		case pn_underscore:			return "undrescore"; 
+		case pn_tilde: 			return "tilde (`)"; 
+		case pn_oparen:			return "open parenthesis (";  
+		case pn_cparen:			return "close parenthesis )"; 
+		case pn_obracket: 			return "open bracket [";  
+		case pn_cbracket: 			return "close bracket ]";  
+		case pn_obrace:			return "open brace {";  
+		case pn_cbrace:			return "close brace }";  
+		case pn_bslash:			return "backslash \\"; 
+		case pn_percent: 			return "percentage (%)";  
+		case pn_newline:			return "newline";  
+		case pn_dollar:			return "dollar"; 
+		case pn_amper:			return "ampersand &";  
+		case pn_greater:			return "greater than"; 
+		case pn_less: 			return "less than"; 
+		case pn_equal:			return "equal to"; 
+		case pn_notequal: 			return "not equal to";
+		case pn_greaterequal: 			return "equal or greater than";
+		case pn_lessequal: 			return "equal or less than";
+		case pn_lognot:			return "logical not"; 
+		case pn_logor:			return "logical or"; 
+		case pn_logand: 			return "logical and";
+		case pn_plusassign:			return "plus assign +=";
+		case pn_minusassign:			return "minus assign -=";
+		case pn_incr: 			return "increment ++";
+		case pn_decr: 			return "derement --";
+		case pn_intlit: 			return "int literal"; 
+		case pn_strlit: 			return "string literal"; 
+		case pn_fltlit: 			return "float literal";  
+		case pn_ident: 			return "identifier";  
+		case pn_varident: 			return "var identifier";  
+		case pn_funcident: 			return "func identifier";  
+		case pn_namespaceident: 			return "namespace identifier";  
+		case pn_comment: 			return "comment"; 
+		case pn_block:			return "code blcase ock";
+		case pn_paramlist:			return "parameter list";
+		case pn_dec:			return "dec keyw";
+		case pn_true:			return "true keyw";
+		case pn_false: 			return "false keyw"; 
+		case pn_function: 			return "function keyw";  
+		case pn_if: 			return "if keyw";  
+		case pn_if_trueblock: 			return "if trueblock";  
+		case pn_if_elseblock: 			return "if elseblock";  
+		case pn_else: 			return "else keyw"; 
+		case pn_while: 			return "while keyw"; 
+		case pn_break: 			return "break keyw"; 
+		case pn_return: 			return "return keyw"; 
+		case pn_continue: 			return "continue keyw"; 
+		case pn_funcdec:			return "func dec";
+		case pn_vardec:			return "var dec";
+		case pn_statement:			return "statement";
+		case pn_exp:			return "expression";
+		case pn_type:			return "type";
+		case pn_head:			return "head";
 	}
 
 	return "null";
@@ -393,9 +320,16 @@ std::string test::getTypeAsString(vm::bcOpCode _t)
 {
 	switch(_t)
 	{
+		case oc_sf:		return "oc_sf";
+		case oc_rf:		return "oc_rf";
+		case oc_lr:		return "oc_lr";
+		case oc_ls:		return "oc_ls";
+		case oc_lrfs:	return "oc_lrfs";
+		case oc_lsfr:	return "oc_lsfr";
 		case oc_nop:	return "oc_nop";
 		case oc_mov:	return "oc_mov";
 		case oc_push:	return "oc_push";
+		case oc_pushfs:	return "oc_pushfs";
 		case oc_pop:	return "oc_pop";
 		case oc_cmp:	return "oc_cmp";
 		case oc_jmp:	return "oc_jmp";
@@ -405,6 +339,7 @@ std::string test::getTypeAsString(vm::bcOpCode _t)
 		case oc_jl:		return "oc_jl";
 		case oc_jge:	return "oc_jge";
 		case oc_jle:	return "oc_jle";
+		case oc_assign:	return "oc_assign";
 		case oc_plus:	return "oc_plus";
 		case oc_minus:	return "oc_minus";
 		case oc_mult:	return "oc_mult";

@@ -43,7 +43,7 @@ int main(int argc,const char* args[])
 							printGen(&g);
 							std::cout << std::endl;
 							while(!vm.con->halt)
-								vm.exec(1);
+								vm.exec(0);
 						}
 						else
 						{
@@ -56,7 +56,7 @@ int main(int argc,const char* args[])
 			default:
 				break;
 			}
-
+		cout << bc::util::bcitos(*vm.con->stack.at(vm.con->stack.size()-1)) << std::endl;
 		p.clear();	p.startup();
 		vm=bcVM();
 		p.lexer=&l;	line="";

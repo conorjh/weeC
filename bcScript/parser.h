@@ -81,7 +81,7 @@ namespace bc
 		{
 			bcExpression();
 			std::string datatype,rpn;	//datatypes fullident,reverse polish notation (postfix) conversion
-			tree<bcParseNode>::iterator* node;
+			tree<bcParseNode>::iterator node;
 			bool	isConst,	//all operands are const
 					isBool,		//leftmost operand is bool
 					isFunc,		//leftmost operand is a function
@@ -121,10 +121,10 @@ namespace bc
 			void clear();
 
 			//Parse tree
-			tree<bcParseNode>::iterator* getNode();				
-			tree<bcParseNode>::iterator* prevNode();				
-			tree<bcParseNode>::iterator* addNode(bcParseNode);	//add node and point pindex to the new child node
-			tree<bcParseNode>::iterator* addChild(bcParseNode);	//add node, but pindex remains on parent node
+			tree<bcParseNode>::iterator getNode();				
+			tree<bcParseNode>::iterator prevNode();				
+			tree<bcParseNode>::iterator addNode(bcParseNode);	//add node and point pindex to the new child node
+			tree<bcParseNode>::iterator addChild(bcParseNode);	//add node, but pindex remains on parent node
 			void parent();
 
 			//symbol table
@@ -143,6 +143,7 @@ namespace bc
 			unsigned int parenCount;
 			int sOffset;
 			bool noDecVar,noDecFunc,noDecName;
+			tree<bcParseNode>::iterator lastIdent;
 			bcErrorCode error;
 			int errorL,errorC;
 			std::string errorS;

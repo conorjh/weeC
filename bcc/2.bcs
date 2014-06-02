@@ -1,8 +1,14 @@
 int a=2;
-if(a>3)
+if(a<=22)
+{
+//tits
 	a=4;
+}
 else
+{
 	a=5;
+	a=a*2;
+}
 
 
 

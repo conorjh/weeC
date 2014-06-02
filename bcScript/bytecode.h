@@ -10,15 +10,17 @@ namespace bc
 	{
 		enum bcReg
 		{
-			pc,
-			sp,
-			tos,
-			eax,
-			ret,
-			cmp1,
-			cmp2,
-			t1 = 30,
-			t2 = 31
+			pc,			//program counter
+			sp,			//stack pointer to start of local scope
+			tos,		//top of stack
+			eax,		//
+			ret,		//return address
+			cmp,		//compare result
+			sti,		//stack index
+			hlt,		//halt register
+			r20,r21,r22,r23,r24,r25,r26,r27,r28,r29,	//general registers
+			t1 = 30,	//temp var1
+			t2 = 31		//temp var2
 		};
 
 		enum bcOpCode
@@ -26,13 +28,14 @@ namespace bc
 			oc_nop,		
 			//load memory
 			oc_mov,oc_lr,oc_lrfs,oc_ls,oc_lsfr,
-			//stack operations
-			oc_push,oc_pop,
+			//flags
+			oc_sf,oc_rf,
+			//stack io
+			oc_push,oc_pushfs,oc_pop,
 			//conditional jumps
 			oc_cmp,oc_jmp,oc_je,oc_jne,oc_jg,oc_jl,oc_jge,oc_jle,
-			//arithmetic
-			oc_plus,oc_minus,oc_mult,oc_div,oc_expo,oc_mod,oc_inc,oc_dec,
-			//logical operations
+			//stack math/logical operations
+			oc_assign,oc_plus,oc_minus,oc_mult,oc_div,oc_expo,oc_mod,oc_inc,oc_dec,
 			oc_and,oc_or,oc_xor,oc_not,oc_shfl,oc_shfr,
 			//function calls
 			oc_call,oc_ret,oc_callvm,
@@ -93,6 +96,7 @@ namespace bc
 			parse::bcAST* ast;
 			std::vector<bcByteCode>* istream;
 			bool inDecFunc;
+			int ifJmpIndex;
 		};
 
 		void genStatement(bcByteCodeGen*);
@@ -109,5 +113,6 @@ namespace bc
 	
 		bcValType getValType(parse::bcSymbol*);
 		int getValTypeSize(bcValType);
+		void adjustJumps(bcByteCodeGen*,int,int,int);
 	}
 }

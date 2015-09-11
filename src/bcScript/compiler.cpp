@@ -7,9 +7,13 @@ using namespace bc::vm;
 
 bc::vm::bcExecContext* bc::comp::bcCompiler::compile(vector<string>* p_sc)
 {
-	//lex & parse
+	//lexer
+	l.startup();
 	l.source = p_sc;
+
+	//parser
 	p.lexer = &l;
+	p.startup();
 	p.parse();
 
 	if (p.getError())

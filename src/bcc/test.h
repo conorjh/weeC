@@ -13,6 +13,8 @@ namespace bc
 	{
 		int test_lexer();
 		int test_parser();
+		int test_parser_if();
+
 		
 		std::string getTypeAsString(lex::bcTokenType _t);
 		std::string getTypeAsString(parse::bcParseNodeType _t);

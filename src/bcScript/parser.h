@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BC_PARSER_H
+#define BC_PARSER_H
+
 #include <unordered_map>
 #include "error.h" 
 #include "lexer.h"
@@ -217,3 +219,5 @@ namespace bc
 		int isOperator(lex::bcToken);
 	}
 }
+
+#endif

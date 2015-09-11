@@ -1,5 +1,5 @@
-#ifndef BCC_COMPILER_H
-#define BCC_COMPILER_H
+#ifndef BC_COMPILER_H
+#define BC_COMPILER_H
 
 #include "parser.h"
 #include "bytecode.h"

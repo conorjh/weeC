@@ -20,7 +20,7 @@ namespace bc
 		void shutdown();
 
 		int compile();
-		bccData getData();
+		bccData* getData();
 
 		std::vector<std::string>* loadSourceCode(const char*);
 

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BC_VM_H
+#define BC_VM_H
+
 #include <stack>
 #include <bitset>
 #include "config.h"
@@ -91,3 +93,5 @@ namespace bc
 		inline void ocRet(bcExecContext*);
 	}
 }
+
+#endif

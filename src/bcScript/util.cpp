@@ -69,6 +69,9 @@ bool util::bcfexists(const char *filename)
 
 bool util::bcreadfile(const char* in,std::vector<std::string>* out)
 {
+	if (!bcfexists(in))
+		return false;
+
 	std::string line;
 	std::ifstream myfile(in);
   

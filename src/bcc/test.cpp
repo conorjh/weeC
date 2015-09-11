@@ -35,6 +35,22 @@ int bc::test::test_parser()
 }
 
 
+int bc::test::test_parser_if()
+{
+	bcLexer l;
+	l.startup();
+	bc::util::bcreadfile("scripts/lex.bcs", l.source);
+
+	bcParser p;
+	p.startup();
+	p.lexer = &l;
+	p.parse();
+	printParser(&p);
+	std::cin >> std::string();
+	return 1;
+}
+
+
 std::string test::getTypeAsString(bcTokenType _t)
 {
 	switch(_t)

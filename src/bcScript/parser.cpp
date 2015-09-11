@@ -130,9 +130,9 @@ void bcParser::startup()
 {
 	sOffset = parenCount = 0;
 	error = ec_null;
-	currentParamList = NULL;
-	currentFunc = NULL;
-	currentScope = NULL;
+	currentParamList = nullptr;
+	currentFunc = nullptr;
+	currentScope = nullptr;
 	noDecVar = noDecFunc = noDecName = false;
 
 	//tree
@@ -229,7 +229,7 @@ bcSymbol* bcParser::getSymbol(std::string fullid)
 	if (fullid.size() && fullid.substr(0, 9) != "$global::" && (fullid != "$global" && fullid != "int" && fullid != "float" && fullid != "string" && fullid != "bool"))
 		fullid = "$global::" + fullid;
 	if (ast.symTab->find(fullid) == ast.symTab->end())
-		return NULL;
+		return nullptr;
 	return &ast.symTab->at(fullid);
 }
 
@@ -237,7 +237,7 @@ bcSymbol* bcParser::getSymbol(std::string fullid)
 bcSymbol* bcParser::getSymbol(std::string shortid, bcSymbol* sc)
 {
 	if (ast.symTab->find(getFullIdent(this, shortid, sc)) == ast.symTab->end())
-		return NULL;
+		return nullptr;
 	return &ast.symTab->at(getFullIdent(this, shortid, sc));
 }
 
@@ -496,7 +496,15 @@ void parse::parseDecFunc(bcParser* p_par)
 
 		//user type
 	case tt_ident:
+		//check its a valid identifier
 		pni = parseIdent(p_par);
+		if (p_par->getSymbol(pni.tokens.at(0).data)==nullptr)
+		{
+			//error unknown symbol
+			return p_par->setError(ec_p_undeclaredsymbol, p_par->lexer->getToken()->data);
+		}
+
+		//and check the identifier relates to a user defined type
 		sym = *p_par->getSymbol(pni.tokens.at(0).data);
 		if (sym.type == st_type)
 		{
@@ -505,7 +513,7 @@ void parse::parseDecFunc(bcParser* p_par)
 		}
 		else
 		{
-			//error unknown symbol
+			//unknow error mandem, expected an type here
 			return p_par->setError(ec_p_undeclaredsymbol, p_par->lexer->getToken()->data);
 		}
 		break;
@@ -584,8 +592,8 @@ void parse::parseDecFunc(bcParser* p_par)
 	p_par->ast.funcTab->insert(std::make_pair(sym.fullIdent, fi));
 	//change scopes back 
 	p_par->currentScope = oldScope;
-	p_par->currentFunc = NULL;
-	p_par->currentParamList = NULL;
+	p_par->currentFunc = nullptr;
+	p_par->currentParamList = nullptr;
 	p_par->parent();
 }
 
@@ -709,7 +717,7 @@ void parse::parseBlock(bcParser* p_par)
 		return p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data);
 	p_par->lexer->nextToken();
 
-	//if were currently declaring a function, or (currentFunc!=NULL), make a note of the body
+	//if were currently declaring a function, or (currentFunc!=nullptr), make a note of the body
 	p_par->addNode(bcParseNode(pn_block));
 	if (p_par->currentFunc)
 		p_par->currentFunc->body[getMethodStringSignature(p_par->currentParamList)] = p_par->getNode();
@@ -1282,7 +1290,7 @@ bcSymbol* parse::addIdentDec(bcParser* p_par, bcSymbolType ty)
 		{
 		//same identifier exists in this scope
 		p_par->setError(ec_p_redefinition, sym.ident);
-		return NULL;	//redefinition
+		return nullptr;	//redefinition
 		}
 		else
 		{

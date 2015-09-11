@@ -11,16 +11,25 @@ namespace bc
 }
 
 using namespace std;
+using namespace bc::bcc;
 
 void bc::bcc::startup()
 {
 	data.exportDelimiter = ",";
 }
 
+bccData* bc::bcc::getData()
+{
+	return &data;
+}
+
 vector<string>* bc::bcc::loadSourceCode(const char* p_f)
 {
-	vector<string>* out;
-	bc::util::bcreadfile(p_f, out);
+	vector<string>* out=new vector<string>;
+
+	if (!bc::util::bcreadfile(p_f, out))
+		return nullptr;
+	
 	return out;
 }
 
@@ -31,23 +40,28 @@ int bc::bcc::compile()
 		//no source
 		return -1;
 
-	//make a default destination filename if we arent given one
-	if (data.destPCS == "")
-		data.destPCS == data.destSource + ".bcs";
+	//attempt to load it
+	vector<string>* source = loadSourceCode(data.destSource.c_str());
+	if (source == nullptr)
+	{
+		//error loading source 
+		return -1;
+	}
 	
 	//compile source to an execution context, check for errors
 	comp::bcCompiler c;
-	vm::bcExecContext* ec = c.compile(loadSourceCode(data.destSource.c_str()));
+	vm::bcExecContext* ec = c.compile(source);
 	if (ec == nullptr)
 	{
 		//error
 		return -1;
 	}
 
-	//exp to a file
+	
+	//make a default destination filename if we arent given one
 	if (data.destPCS == "")
 	{
-		//undefined, use default settings (exp to bcs)
+		bc::bcc::data.destPCS = data.destSource + ".bcs";
 		exp::exportToByteCodeFile(ec, data.destPCS);
 	}
 

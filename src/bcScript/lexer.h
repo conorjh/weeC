@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BC_LEXER_H
+#define BC_LEXER_H
+
 #include <string>
 #include <vector>
 
@@ -57,3 +59,4 @@ namespace bc
 		bool isDelim(std::string*);
 	}
 }
+#endif

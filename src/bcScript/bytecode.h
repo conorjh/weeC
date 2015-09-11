@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BC_BYTECODE_H
+#define BC_BYTECODE_H
 #include "parser.h"
 #include "config.h"
 #include <bitset>
@@ -116,3 +117,4 @@ namespace bc
 		void adjustJumps(bcByteCodeGen*,int,int,int);
 	}
 }
+#endif

@@ -1,4 +1,5 @@
-#pragma once 
+#ifndef BC_ERROR_H
+#define BC_ERROR_H
 
 namespace bc
 {
@@ -16,3 +17,4 @@ namespace bc
 	};
 
 }
+#endif

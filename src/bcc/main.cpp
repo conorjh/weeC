@@ -6,9 +6,12 @@ using namespace std;
 
 int main(int argc, const char* args[])
 {
+
 	//execute command line args
 	for (int t = 0; t < argc; ++t)
 		bc::bcc::parseCmdLineArg(args,t);
+
+	bc::bcc::getData()->destSource = "test.bc";
 
 	//compile source if we were given one
 	bc::bcc::compile();

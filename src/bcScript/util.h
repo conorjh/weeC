@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BC_UTIL_H
+#define BC_UTIL_H
+
 #include <string>
 #include <sstream>
 #include <vector>
@@ -25,3 +27,4 @@ namespace bc
 
 	}
 }
+#endif

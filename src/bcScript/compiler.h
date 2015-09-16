@@ -8,12 +8,14 @@
 namespace bc
 {
 	namespace comp
-	{
-		
+	{		
 		class bcCompiler
 		{
 		public:
-			void startup(),shutdown();
+			bcCompiler();
+			bcCompiler(std::vector<std::string>*);
+
+			void startup(), shutdown();
 			vm::bcExecContext* compile(std::vector<std::string>*);	//opcodes from source code
 
 			lex::bcLexer l;

@@ -3,8 +3,7 @@
 
 #include <string>
 #include <vector>
-
-#include "bcscript.h"
+#include "..\bcscript\bcscript.h"
 #include "export.h"
 
 namespace bc
@@ -13,7 +12,7 @@ namespace bc
 	{
 		struct bccData
 		{
-			std::string destSource, destPCS, exportDelimiter;
+			std::string origSource, compileTarget, exportDelimiter;
 		};
 
 		void startup();
@@ -22,10 +21,11 @@ namespace bc
 		int compile();
 		bccData* getData();
 
-		std::vector<std::string>* loadSourceCode(const char*);
+		std::vector<std::string>* loadFileAsStrings(const char*);
 
-		void parseCmdLineArg(const char * args[], int p_i);
+		int parseCmdLineArg(const char * args[], int p_i);
 		int parseCmdLineArg_Compile(const char * args[], int p_i);
+		int parseCmdLineArg_Target(const char * args[], int p_i);
 
 		void exportToByteCodeFile(vm::bcExecContext*,std::string);
 	}

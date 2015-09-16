@@ -3,18 +3,20 @@
 #include <iostream>
 
 using namespace std;
+using namespace bc::bcc;
 
 int main(int argc, const char* args[])
 {
 
-	//execute command line args
-	for (int t = 0; t < argc; ++t)
-		bc::bcc::parseCmdLineArg(args,t);
+	//inspect the command line
+	int i = 0;
+	while (i<argc)
+		i = parseCmdLineArg(args, i);
 
-	bc::bcc::getData()->destSource = "test.bc";
+	//bc::bcc::getData()->origSource = "test.bc";
 
 	//compile source if we were given one
-	bc::bcc::compile();
+	compile();
 
 	return 0;
 }

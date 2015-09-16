@@ -2,15 +2,20 @@
 #include <iostream>
 
 using namespace std;
+using namespace bc;
 
 int main(int argc, const char* args[])
 {
-	//execute command line args
-	for (int t = 0; t < argc; ++t)
-		bc::bcvm::parseCmdLineArg(args, t);
+	//inspect the command line
+	int i = 0;
+	while (i<argc)
+		i = bc::bcvm::parseCmdLineArg(args, i);
 
-	//compile source if we were given one
-	bc::bcvm::run();
+	//do the command line
+	bc::bcvm::execCmdLine();
+
+	while (bcvm::isRunning())
+		bcvm::run();
 
 	return 0;
 }

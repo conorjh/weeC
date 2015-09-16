@@ -163,6 +163,11 @@ bcByteCode* bcByteCodeGen::getByteCode(unsigned int ind, bool isFunc)
 	return &istream->at(ind);
 }
 
+int bcByteCodeGen::getError()
+{
+	return errorCode;
+}
+
 bcExecContext* bcByteCodeGen::gen()
 {
 	bcExecContext* ec=new bcExecContext();

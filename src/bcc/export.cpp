@@ -15,6 +15,7 @@ namespace bc
 }
 
 
+
 void bc::bcc::exp::exportToByteCodeFile(vm::bcExecContext* p_ec, string p_fn)
 {
 	ofstream f;
@@ -22,6 +23,7 @@ void bc::bcc::exp::exportToByteCodeFile(vm::bcExecContext* p_ec, string p_fn)
 	f.open(p_fn.c_str());
 
 	//write header
+	f << bcVerMajor << dl << bcVerMinor << dl << bcVerPatch << dl << bcVerRC << dl;
 	f << p_fn << dl;							//program name
 	f << p_ec->istream.size() << dl;			//size of body
 	f << sizeof(p_ec->stack.size()) << dl;		//size of stack

@@ -11,6 +11,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bcc", "bcc\bcc.vcxproj", "{
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bcvm", "bcvm\bcvm.vcxproj", "{1C829CFA-8482-4639-806D-D67A28035535}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C9E69771-0A52-480A-853C-C8BA4503B4D3} = {C9E69771-0A52-480A-853C-C8BA4503B4D3}
+		{C873E69B-42CC-4FA2-889E-868AF3588230} = {C873E69B-42CC-4FA2-889E-868AF3588230}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bctest", "bctest\bctest.vcxproj", "{324349AE-55EF-49DE-9DB7-BFE0C225683F}"
 EndProject

@@ -16,14 +16,15 @@ namespace bc
 		int bcstoi(std::string in);
 		std::string bcftos(float in);
 		float bcstof(std::string in);
+		std::string getFileExt(std::string);
 
 		//str format
-		std::string bctolower(std::string in);
-		std::string bctolower(char in);
+		std::string toLower(std::string in);
+		std::string toLower(char in);
 
 		//file
-		bool bcfexists(const char*);
-		bool bcreadfile(const char*,std::vector<std::string>*);
+		bool fileExists(const char*);
+		bool readFile(const char*,std::vector<std::string>*);
 
 	}
 }

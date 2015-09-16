@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "bcscript.h"
+#include "..\bcscript\bcscript.h"
 
 namespace bc
 {

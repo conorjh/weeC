@@ -2,11 +2,12 @@
 #include <fstream>
 #include "lexer.h"
 
+using namespace std;
 using namespace bc;
 using namespace bc::lex;
 using bc::lex::bcTokenType;
 
-std::string util::bcitos(int in)
+std::string bc::util::bcitos(int in)
 {
 	std::string s;
 	std::stringstream out;
@@ -15,7 +16,7 @@ std::string util::bcitos(int in)
 }
 	
 
-int util::bcstoi(std::string in)
+int bc::util::bcstoi(std::string in)
 {	
 	int retval;
 	std::stringstream convert(in);
@@ -25,7 +26,7 @@ int util::bcstoi(std::string in)
 		return retval;
 }
 
-std::string util::bcftos(float in)
+std::string bc::util::bcftos(float in)
 {
 	std::string s;
 	std::stringstream out;
@@ -34,7 +35,7 @@ std::string util::bcftos(float in)
 }
 	
 
-float util::bcstof(std::string in)
+float bc::util::bcstof(std::string in)
 {	
 	float retval;
 	std::stringstream convert(in);
@@ -44,7 +45,19 @@ float util::bcstof(std::string in)
 		return retval;
 }
 
-std::string util::bctolower(std::string in)
+string bc::util::getFileExt(string p_filename)
+{
+	int index = p_filename.size() - 1;
+
+	while (index != 0)
+		if (p_filename.at(index) == '.')
+			return p_filename.substr(index, p_filename.size() - 1);
+		else
+			index--;
+	return "";
+}
+
+std::string bc::util::toLower(std::string in)
 {
 	for (int i=0;i<strlen(in.c_str());i++)
 	if (in[i] >= 0x41 && in[i] <= 0x5A)
@@ -52,7 +65,7 @@ std::string util::bctolower(std::string in)
 	return in;
 }
 
-std::string util::bctolower(char in)
+std::string bc::util::toLower(char in)
 {
 	std::string out;
 	if (in >= 0x41 && in <= 0x5A)
@@ -61,15 +74,15 @@ std::string util::bctolower(char in)
 	return out;
 }
 
-bool util::bcfexists(const char *filename)
+bool bc::util::fileExists(const char *filename)
 {
 	std::ifstream ifile(filename);
 	return ifile.good();
 }
 
-bool util::bcreadfile(const char* in,std::vector<std::string>* out)
+bool bc::util::readFile(const char* in,std::vector<std::string>* out)
 {
-	if (!bcfexists(in))
+	if (!fileExists(in))
 		return false;
 
 	std::string line;

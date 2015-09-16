@@ -1,4 +1,5 @@
 #include "bcvm.h"
+#include "..\bcc\bcc.h"
 #include <vector>
 #include <string>
 
@@ -14,8 +15,13 @@ namespace bc
 	}
 }
 
+void bc::bcvm::execCmdLine()
+{
+
+}
+
 //returns the new index
-void bc::bcvm::parseCmdLineArg(const char * p_args[], int p_i)
+int bc::bcvm::parseCmdLineArg(const char * p_args[], int p_i)
 {
 	int index = p_i;
 	string arg(p_args[index]);
@@ -26,19 +32,21 @@ void bc::bcvm::parseCmdLineArg(const char * p_args[], int p_i)
 		//opening string literal, trick parseCmdLineArg_Run into thinking
 		//we've already had a -r or -run
 		--index;
-		index = parseCmdLineArg_Run(p_args, index);
+		return index = parseCmdLineArg_Run(p_args, index);
 	}
 	//compile the given source code
 	if ((arg == "-r" || arg == "-run") && data.runFile == "")
 	{
 		//specify filename, next token should be a string literal
-		index = parseCmdLineArg_Run(p_args, index);
+		return index = parseCmdLineArg_Run(p_args, index);
 	}
 	else if (data.runFile != "" && (arg == "-r" || arg == "-run"))
 	{
 		//error - we opened the cmdline with a string literal, but now want to issue anothe run command
-		return;
+		return index;
 	}
+	return index++;	//unknown
+
 }
 
 //parse the -r or -run command
@@ -73,4 +81,9 @@ void bc::bcvm::run()
 {
 	//main loop
 	
+}
+
+bool bc::bcvm::isRunning()
+{
+	return (!data.vm.con->halt);
 }

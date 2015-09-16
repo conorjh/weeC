@@ -1,6 +1,7 @@
 #ifndef BCVM_H
 #define BCVM_H
 #include <string>
+#include "..\bcScript\bcscript.h"
 
 namespace bc
 {
@@ -9,12 +10,15 @@ namespace bc
 		struct bcvmData
 		{
 			std::string runFile;
+			bc::vm::bcVM vm;
 		};
 
-		void parseCmdLineArg(const char * args[], int p_i);
+		int parseCmdLineArg(const char * args[], int p_i);
 		int parseCmdLineArg_Run(const char * args[], int p_i);
+		void execCmdLine();
 
 		void run();
+		bool isRunning();
 
 		bcvmData* getData();
 	}

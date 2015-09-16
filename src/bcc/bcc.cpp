@@ -1,17 +1,15 @@
 #include "bcc.h"
 
+using namespace std;
+using namespace bc::bcc;
+
 namespace bc
 {
 	namespace bcc
 	{
-
 		bccData data;
-
 	}
 }
-
-using namespace std;
-using namespace bc::bcc;
 
 void bc::bcc::startup()
 {
@@ -23,11 +21,11 @@ bccData* bc::bcc::getData()
 	return &data;
 }
 
-vector<string>* bc::bcc::loadSourceCode(const char* p_f)
+vector<string>* bc::bcc::loadFileAsStrings(const char* p_f)
 {
 	vector<string>* out=new vector<string>;
 
-	if (!bc::util::bcreadfile(p_f, out))
+	if (!bc::util::readFile(p_f, out))
 		return nullptr;
 	
 	return out;
@@ -36,12 +34,12 @@ vector<string>* bc::bcc::loadSourceCode(const char* p_f)
 int bc::bcc::compile()
 {
 	//check we have a source file
-	if (data.destSource == "")
+	if (data.origSource == "")
 		//no source
 		return -1;
 
 	//attempt to load it
-	vector<string>* source = loadSourceCode(data.destSource.c_str());
+	vector<string>* source = loadFileAsStrings(data.origSource.c_str());
 	if (source == nullptr)
 	{
 		//error loading source 
@@ -57,21 +55,21 @@ int bc::bcc::compile()
 		return -1;
 	}
 
-	
-	//make a default destination filename if we arent given one
-	if (data.destPCS == "")
+	//make a destination filename if we arent given one
+	if (data.compileTarget == "")
 	{
-		bc::bcc::data.destPCS = data.destSource + ".bcs";
-		exp::exportToByteCodeFile(ec, data.destPCS);
+		data.compileTarget = data.origSource + ".bcs";
+		exp::exportToByteCodeFile(ec, data.compileTarget);
 	}
 
 	//report success to console
+
 
 	return 0;
 }
 
 //returns the new index
-void bc::bcc::parseCmdLineArg(const char * p_args[], int p_i)
+int bc::bcc::parseCmdLineArg(const char * p_args[], int p_i)
 {
 	int index = p_i;
 	string arg(p_args[index]);
@@ -82,18 +80,23 @@ void bc::bcc::parseCmdLineArg(const char * p_args[], int p_i)
 		//opening string literal, trick parseCmdLineArg_Compile into thinking
 		//we've already had a -c or -compile
 		--index;
-		index = parseCmdLineArg_Compile(p_args, index);
+		return index = parseCmdLineArg_Compile(p_args, index);
 	}
 	//compile the given source code
-	if ((arg == "-c" || arg == "-compile") && data.destSource == "")
+	if ((arg == "-c" || arg == "-compile") && data.origSource == "")
 	{
 		//specify filename, next token should be a string literal
-		index = parseCmdLineArg_Compile(p_args, index);
+		return index = parseCmdLineArg_Compile(p_args, index);
 	}
-	else if (data.destSource != "" && (arg == "-c" || arg == "-compile"))
+	else if (data.origSource != "" && (arg == "-c" || arg == "-compile"))
 	{
 		//error - we opened the cmdline with a string literal, but now want to compile again 
-		return;
+		return index;
+	}
+	else if (arg == "-t" || arg == "-target")
+	{
+		//specify filename, next token should be a string literal
+		return index = parseCmdLineArg_Target(p_args, index);
 	}
 }
 
@@ -106,14 +109,44 @@ int bc::bcc::parseCmdLineArg_Compile(const char * p_args[], int p_i)
 
 	//expect only a file name in quotes
 	if (arg[0] != '"')
+	{
+		//error
+		return p_i;
+	}
+	else if (arg[arg.size() - 1] != '"')
+	{
+		//no closing quote
+		return p_i;
+	}
+	else
+	{
+		//valid string format
+		data.origSource = arg;
+	}
+
+	//return index;
+	return p_i;
+
+}
+
+//parse the -t or -target command
+int bc::bcc::parseCmdLineArg_Target(const char * p_args[], int p_i)
+{
+	//consume the -t or -target
+	p_i++;
+	string arg(p_args[p_i]);
+
+	//expect only a file name in quotes
+	if (arg[0] != '"')
 		//error
 		return p_i;
 	else if (arg[arg.size() - 1] != '"')
 		//no closing quote
+
 		return p_i;
 	else
 		//valid string format
-		data.destSource = arg;
+		data.compileTarget = arg;
 
 	//return index;
 	return p_i;

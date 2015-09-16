@@ -155,6 +155,11 @@ void bcParser::startup()
 	sym.dataType = sym.fullIdent = sym.ident = "bool";		sym.type = st_type;		addSymbol(sym.ident, &sym);
 }
 
+void bcParser::shutdown()
+{
+
+}
+
 void bcParser::clear()
 {
 	ast.symTab->clear();

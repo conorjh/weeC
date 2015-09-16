@@ -12,7 +12,7 @@ int bc::test::test_lexer()
 {
 	bcLexer l;
 	l.startup();
-	bc::util::bcreadfile("scripts/lex.bcs",l.source);
+	bc::util::readFile("scripts/lex.bcs",l.source);
 	l.lex();
 	printLexer(&l);
 	l.shutdown();
@@ -23,7 +23,7 @@ int bc::test::test_parser()
 {
 	bcLexer l;
 	l.startup();
-	bc::util::bcreadfile("scripts/lex.bcs",l.source);
+	bc::util::readFile("scripts/lex.bcs",l.source);
 
 	bcParser p;
 	p.startup();
@@ -39,7 +39,7 @@ int bc::test::test_parser_if()
 {
 	bcLexer l;
 	l.startup();
-	bc::util::bcreadfile("scripts/lex.bcs", l.source);
+	bc::util::readFile("scripts/lex.bcs", l.source);
 
 	bcParser p;
 	p.startup();
@@ -420,7 +420,7 @@ void test::printParser(bc::parse::bcParser* p)
 		switch(it->second.type)
 		{
 		case st_var:
-			vars+=getTypeAsString(it->second.type) + " "+it->second.dataType+ "		  " +char(it->second.isConst+48)+" "+ it->second.fullIdent+" "+util::bcitos(it->second.offset)+"\n"; 
+			vars+=getTypeAsString(it->second.type) + " "+it->second.dataType+ "		  " +char(it->second.isConst+48)+" "+ it->second.fullIdent+" "+bc::util::bcitos(it->second.offset)+"\n"; 
 			break;
 		case st_namespace:
 			names+=getTypeAsString(it->second.type) + "	" + it->second.fullIdent + "\n"; 

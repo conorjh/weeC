@@ -85,6 +85,7 @@ namespace bc
 		public:
 			bcByteCodeGen();
 			bcExecContext* gen();
+			int getError();
 
 			unsigned int addByteCode(bcByteCode);
 			unsigned int addByteCode(bcOpCode);
@@ -98,6 +99,7 @@ namespace bc
 			std::vector<bcByteCode>* istream;
 			bool inDecFunc;
 			int ifJmpIndex;
+			int errorCode;
 		};
 
 		void genStatement(bcByteCodeGen*);

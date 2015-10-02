@@ -12,7 +12,7 @@ namespace bc
 	{
 		enum bcValType
 		{
-			vt_null,
+			vt_nullptr,
 			vt_instr,		//instruction (istream ref)
 			vt_mem,			//objects and dynamic memory in the newstore
 			vt_reg,			//registers
@@ -37,7 +37,7 @@ namespace bc
 	{
 		//symbols are referenced from symTab by their fullIdents
 		enum bcSymbolType{
-			st_null, st_namespace, st_var, st_type, st_utype, st_object, st_function	};
+			st_nullptr, st_namespace, st_var, st_type, st_utype, st_object, st_function	};
 	
 		struct bcSymbol
 		{
@@ -54,7 +54,7 @@ namespace bc
 		};
 
 		enum bcParseNodeType{
-							pn_null, pn_head, pn_exp, pn_type,					
+							pn_nullptr, pn_head, pn_exp, pn_type,					
 							//straight copies of their tt_ counterparts
 							pn_string, pn_int, pn_float, pn_object, pn_var, pn_bool, pn_scolon, pn_colon, pn_comma, 
 							pn_period, pn_squote, pn_dquote, pn_qmark, pn_exclam, pn_minus, pn_plus,pn_pipe, pn_div, 

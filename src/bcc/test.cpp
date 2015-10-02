@@ -55,8 +55,8 @@ std::string test::getTypeAsString(bcTokenType _t)
 {
 	switch(_t)
 	{
-		case tt_null: 
-			return "null";  
+		case tt_nullptr: 
+			return "nullptr";  
 		case tt_string:
 			return "string keyw"; 
 		case tt_int: 
@@ -194,7 +194,7 @@ std::string test::getTypeAsString(bcTokenType _t)
 		case tt_eof: 
 			return "end of file";
 	}
-	return "null";
+	return "nullptr";
 }
 
 
@@ -202,7 +202,7 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 {
 	switch(_t)
 	{
-		case pn_null: 			return "null";  
+		case pn_nullptr: 			return "nullptr";  
 		case pn_string:			return "string keyw"; 
 		case pn_int: 			return "int keyw"; 
 		case pn_float:			return "float keyw"; 
@@ -280,7 +280,7 @@ std::string test::getTypeAsString(bcParseNodeType _t)
 		case pn_head:			return "head";
 	}
 
-	return "null";
+	return "nullptr";
 }
 
 std::string test::getTypeAsString(bcSymbolType _t)
@@ -296,7 +296,7 @@ std::string test::getTypeAsString(bcSymbolType _t)
 	case st_type:
 		return "st_type";
 	default:
-		return "st_null";
+		return "st_nullptr";
 	}
 }
 void test::printLexer(bc::lex::bcLexer* l)
@@ -383,7 +383,7 @@ std::string test::getTypeAsString(vm::bcValType _t)
 {
 	switch(_t)
 	{
-		case vt_null:		return "vt_null";
+		case vt_nullptr:		return "vt_nullptr";
 		case vt_instr:		return "vt_instr";
 		case vt_mem:		return "vt_mem";
 		case vt_reg:		return "vt_reg";

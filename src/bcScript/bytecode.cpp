@@ -118,7 +118,7 @@ bcValType bc::vm::getValType(bcSymbol* sym)
 			return vt_mem;
 		break;
 	}
-	return vt_null;
+	return vt_nullptr;
 }
 
 bcByteCodeGen::bcByteCodeGen()
@@ -201,7 +201,7 @@ void bc::vm::genStatement(bcByteCodeGen* bg)
 	while(bg->pi!=bg->ast->tree->end() && bg->ast->tree->depth(bg->pi) >= olddepth)
 		switch(bg->pi->type)
 		{
-		case pn_null:
+		case pn_nullptr:
 		case pn_head:
 			bg->pi++;
 			break;

@@ -5,7 +5,7 @@ namespace bc
 {
 	enum bcErrorCode
 	{
-		ec_null,
+		ec_nullptr,
 		ec_p_undeclaredsymbol,			//symbol is not in symbol table
 		ec_p_redefinition,				//attempting to create a symbol with a fullIdent already in use
 		ec_p_unexpectedtoken,			//...

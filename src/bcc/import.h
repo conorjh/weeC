@@ -1,5 +1,5 @@
-#ifndef BCC_EXPORT_H
-#define BCC_EXPORT_H
+#ifndef BCC_IMPORT_H
+#define BCC_IMPORT_H
 
 #include <string>
 #include <vector>

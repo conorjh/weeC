@@ -1,0 +1,18 @@
+﻿Build started 02/10/2015 16:54:11.
+     1>Project "C:\Users\haddockc\Documents\GitHub\bcScript\src\bcvm\bcvm.vcxproj" on node 2 (Rebuild target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Release\\" /Fd"Release\vc140.pdb" /Gd /TP /analyze- /errorReport:prompt bcvm.cpp main.cpp
+         bcvm.cpp
+         main.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\haddockc\Documents\GitHub\bcScript\src\Release\bcvm.exe" /NOLOGO /LIBPATH:C:\Users\haddockc\Documents\GitHub\bcScript\src\/Release bcscript.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"C:\Users\haddockc\Documents\GitHub\bcScript\src\Release\bcvm.pdb" /OPT:REF /OPT:ICF /LTCG:incremental /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\haddockc\Documents\GitHub\bcScript\src\Release\bcvm.lib" /MACHINE:X86 /SAFESEH Release\bcvm.obj
+         Release\main.obj
+         Generating code
+         All 339 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+         Finished generating code
+         bcvm.vcxproj -> C:\Users\haddockc\Documents\GitHub\bcScript\src\Release\bcvm.exe
+     1>Done Building Project "C:\Users\haddockc\Documents\GitHub\bcScript\src\bcvm\bcvm.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.49

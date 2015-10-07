@@ -1,4 +1,5 @@
 #include "bcc.h"
+#include <iostream>
 
 using namespace std;
 using namespace bc::bcc;
@@ -16,6 +17,11 @@ void bc::bcc::startup()
 	data.exportDelimiter = ",";
 }
 
+void bc::bcc::shutdown()
+{
+	
+}
+
 bccData* bc::bcc::getData()
 {
 	return &data;
@@ -26,9 +32,18 @@ vector<string>* bc::bcc::loadFileAsStrings(const char* p_f)
 	vector<string>* out=new vector<string>;
 
 	if (!bc::util::readFile(p_f, out))
+	{
 		return nullptr;
+		}
 	
 	return out;
+}
+
+void bc::bcc::displaySplash()
+{
+	cout << "bcc" << endl;
+	if (data.origSource != "")
+		cout << "Compiling " << data.origSource << " to " << data.compileTarget << endl;
 }
 
 int bc::bcc::compile()
@@ -98,6 +113,12 @@ int bc::bcc::parseCmdLineArg(const char * p_args[], int p_i)
 		//specify filename, next token should be a string literal
 		return index = parseCmdLineArg_Target(p_args, index);
 	}
+	else
+	{
+		//unhandled
+		return index+1;
+	}
+	return index;
 }
 
 //parse the -c or -compile command

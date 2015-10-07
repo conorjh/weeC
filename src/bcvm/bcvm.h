@@ -1,5 +1,5 @@
-#ifndef BCVM_H
-#define BCVM_H
+#ifndef BCVM_BCVM_H
+#define BCVM_BCVM_H
 #include <string>
 #include "..\bcScript\bcscript.h"
 

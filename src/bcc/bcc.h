@@ -1,5 +1,5 @@
-#ifndef BCC_H
-#define BCC_H
+#ifndef BCC_BCC_H
+#define BCC_BCC_H
 
 #include <string>
 #include <vector>
@@ -20,6 +20,8 @@ namespace bc
 
 		int compile();
 		bccData* getData();
+
+		void displaySplash();
 
 		std::vector<std::string>* loadFileAsStrings(const char*);
 

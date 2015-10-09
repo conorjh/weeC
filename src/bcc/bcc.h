@@ -1,10 +1,9 @@
-#ifndef BCC_BCC_H
-#define BCC_BCC_H
+#ifndef BCC_H
+#define BCC_H
 
 #include <string>
 #include <vector>
 #include "..\bcscript\bcscript.h"
-#include "export.h"
 
 namespace bc
 {
@@ -20,8 +19,6 @@ namespace bc
 
 		int compile();
 		bccData* getData();
-
-		void displaySplash();
 
 		std::vector<std::string>* loadFileAsStrings(const char*);
 

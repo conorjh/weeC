@@ -11,11 +11,22 @@ int main(int argc, const char* args[])
 	while (i<argc)
 		i = bc::bcvm::parseCmdLineArg(args, i);
 
+	bcvm::getData()->runFile = "../scripts/test.bcs";
+	bcvm::getData()->runFileIsByteCode = false;
+
 	//do the command line
 	bc::bcvm::execCmdLine();
 
-	while (bcvm::isRunning())
-		bcvm::run();
+	//console loop
+	if (!bcvm::getData()->disableConsoleInput)
+		bcvm::consoleLoop();
+	else
+		while (bcvm::isRunning())
+			bcvm::run();
 
+	//cleanup
+
+
+	//exit
 	return 0;
 }

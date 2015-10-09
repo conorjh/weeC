@@ -70,15 +70,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bcc.cpp" />
-    <ClCompile Include="export.cpp" />
-    <ClCompile Include="import.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bcc.h" />
-    <ClInclude Include="export.h" />
-    <ClInclude Include="import.h" />
     <ClInclude Include="test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

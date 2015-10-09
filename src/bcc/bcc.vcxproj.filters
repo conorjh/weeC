@@ -24,24 +24,12 @@
     <ClCompile Include="bcc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="export.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="import.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bcc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="export.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="import.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

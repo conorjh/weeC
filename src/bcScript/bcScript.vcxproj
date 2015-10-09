@@ -78,6 +78,8 @@
     <ClInclude Include="compiler.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="error.h" />
+    <ClInclude Include="export.h" />
+    <ClInclude Include="import.h" />
     <ClInclude Include="lexer.h" />
     <ClInclude Include="parser.h" />
     <ClInclude Include="util.h" />
@@ -86,6 +88,8 @@
   <ItemGroup>
     <ClCompile Include="bytecode.cpp" />
     <ClCompile Include="compiler.cpp" />
+    <ClCompile Include="export.cpp" />
+    <ClCompile Include="import.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="util.cpp" />

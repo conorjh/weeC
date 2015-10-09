@@ -7,13 +7,13 @@ using namespace bc::vm;
 
 bc::comp::bcCompiler::bcCompiler()
 {
-
+	output = nullptr;
 }
 
 bc::comp::bcCompiler::bcCompiler(vector<string>* p_sc)
 {
 	startup();
-	compile(p_sc);
+	output = compile(p_sc);
 }
 
 void bc::comp::bcCompiler::startup()
@@ -42,10 +42,11 @@ bcExecContext* bc::comp::bcCompiler::compile(vector<string>* p_sc)
 
 	//build AST into bytecode
 	g.ast = &p.ast;
-	bcExecContext* ec = g.gen();
+	output = g.gen();
 	if (g.getError())
 	{
 
 	}
-	return ec;
+
+	return output;
 }

@@ -42,6 +42,12 @@
     <ClInclude Include="compiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="export.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="import.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lexer.cpp">
@@ -60,6 +66,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="compiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="export.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="import.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

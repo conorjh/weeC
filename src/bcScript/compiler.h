@@ -21,6 +21,7 @@ namespace bc
 			lex::bcLexer l;
 			parse::bcParser p;
 			vm::bcByteCodeGen g;
+			vm::bcExecContext* output;
 		};
 	}
 }

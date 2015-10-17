@@ -94,7 +94,8 @@ bcToken* bcLexer::nextToken()
 				inc();				
 				while(getTokenType(&getChar())!=tt_newline)
 				{
-					if(!inc())		break;			
+					if(!inc())
+						break;			
 					tok.type=getTokenType(&getChar());				
 				}
 				dec();
@@ -120,8 +121,12 @@ bcToken* bcLexer::nextToken()
 			else tokens.push_back(tok);
 			return getToken();
 			
-		case tt_intlit:	//int/float lit		
-			inc();				
+		case tt_intlit:	//int/float lit
+			if (!inc())
+			{
+				tokens.push_back(tok);
+				break;
+			}
 			while(getTokenType(&getChar())==tt_intlit)
 			{						
 				tok.data+=getChar();
@@ -274,16 +279,16 @@ bool lex::isDelim(string* s)
 	}
 }
 
-vector<string> lex::tokenize(string p_delim,string p_in)
+vector<string> bc::lex::tokenizeString(string p_in)
 {
+	bcLexer l;
+	l.startup();
+	l.source = new vector<string>();
+	l.source->push_back(p_in);
+	l.lex();
 	vector<string> out;
-	string buff;
-	int ind = 0;
-	while (ind < p_in.size())
-		if (p_in[ind] == p_delim[0])
-			out.push_back(buff);
-		else
-			buff += p_in[ind];
+	for (int t = 0; t < l.tokens.size(); ++t)
+		out.push_back(l.tokens[t].data);
 	return out;	
 }
 

@@ -158,3 +158,8 @@ int bc::bcc::parseCmdLineArg_Target(const char * p_args[], int p_i)
 	return p_i;
 
 }
+
+void bc::bcc::exportToByteCodeFile(vm::bcExecContext *, std::string)
+{
+
+}

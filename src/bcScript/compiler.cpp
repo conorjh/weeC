@@ -19,7 +19,6 @@ bc::comp::bcCompiler::bcCompiler(vector<string>* p_sc)
 void bc::comp::bcCompiler::startup()
 {
 	l.startup();
-
 	p.lexer = &l;
 	p.startup();
 }
@@ -45,7 +44,7 @@ bcExecContext* bc::comp::bcCompiler::compile(vector<string>* p_sc)
 	output = g.gen();
 	if (g.getError())
 	{
-
+		return nullptr;
 	}
 
 	return output;

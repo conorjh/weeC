@@ -10,8 +10,9 @@ namespace bc
 		struct bcvmData
 		{
 			std::string runFile;
-			bool runFileIsByteCode,disableConsoleInput;
+			bool runFileIsByteCode,displaySourceCode,runFileIsTest,disableConsoleInput;
 			vm::bcVM vm;
+			std::vector<std::string> src;
 		};
 
 		int parseCmdLineArg(const char * args[], int p_i);
@@ -23,7 +24,12 @@ namespace bc
 		int consoleLoop();
 		std::string consoleGetInput();
 		int consoleParseCmd(std::string);
+		int consoleParseCmd_Run(std::vector<std::string>);
+		int consoleParseCmd_RunTest(std::vector<std::string>);
 
+		bc::vm::bcExecContext* importTest(std::string);
+		std::string importTestAsString(std::string);
+		std::vector<std::string> loadFileAsStrings(const char* p_f);
 		bool isRunning();
 
 		bcvmData* getData();

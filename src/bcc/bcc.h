@@ -27,6 +27,7 @@ namespace bc
 		int parseCmdLineArg_Target(const char * args[], int p_i);
 
 		void exportToByteCodeFile(vm::bcExecContext*,std::string);
+		bool isValidScriptFilename(std::string);
 	}
 }
 

@@ -57,7 +57,7 @@ namespace bc
 		bcTokenType getTokenType(std::string*);
 		bcTokenType getTokenType(char);
 		bool isDelim(std::string*);
-		std::vector<std::string> tokenize(std::string,std::string);
+		std::vector<std::string> tokenizeString(std::string);
 	}
 }
 #endif

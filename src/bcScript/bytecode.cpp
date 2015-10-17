@@ -285,6 +285,7 @@ void bc::vm::genDecNamespace(bcByteCodeGen* bg)
 
 void bc::vm::genDecVar(bcByteCodeGen* bg)
 {
+	bool hasExp = false;
 	int olddepth = bg->ast->tree->depth(bg->pi);
 	++bg->pi;
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
@@ -292,6 +293,7 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 	{
 		case pn_exp:
 			genExp(bg);
+			hasExp = true;
 			break;
 
 		case pn_type:
@@ -300,10 +302,13 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 			++bg->pi;
 			break;
 	}
-	//pop the result of the expression into eax
-	bg->addByteCode(oc_lrfs, eax);
-	bg->addByteCode(oc_pop);
 
+	//pop the result of the expression into eax
+	if (hasExp)
+	{
+		bg->addByteCode(oc_lrfs, eax);
+		bg->addByteCode(oc_pop);
+	}
 }
 
 void bc::vm::genIf(bcByteCodeGen* bg)

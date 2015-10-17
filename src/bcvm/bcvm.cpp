@@ -1,4 +1,5 @@
 #include "bcvm.h"
+#include "..\bcc\bcc.h"
 #include "..\bcScript\export.h"
 #include "..\bcScript\import.h"
 #include <vector>
@@ -20,13 +21,17 @@ namespace bc
 
 void bc::bcvm::execCmdLine()
 {
-	//compile the runFile
-	if (getData()->runFileIsByteCode)
-		data.vm.con = bc::imp::importByteCodeFromFile(data.runFile);
-	else
-		data.vm.con = bc::imp::importScriptFromFile(data.runFile);
+	getData()->displaySourceCode = true;
 
-	
+	//run a file if given one from command line
+	if (bcvm::getData()->runFile != "")
+		if (!bcvm::getData()->runFileIsTest)
+			if (!bcvm::getData()->runFileIsByteCode)
+				bcvm::getData()->vm.con = bc::imp::importScriptFromFile(bcvm::getData()->runFile);
+			else
+				bcvm::getData()->vm.con = bc::imp::importByteCodeFromFile(bcvm::getData()->runFile);
+		else
+			bcvm::getData()->vm.con = bcvm::importTest(bcvm::getData()->runFile);	
 }
 
 //returns the new index
@@ -111,26 +116,60 @@ bcvmData* bc::bcvm::getData()
 string bc::bcvm::consoleGetInput()
 {
 	string in;
-	cout << ">";
-	cin >> in;
+	cout << ">"; 
+	getline(cin, in);
 	return in;
 }
 
 int bc::bcvm::consoleParseCmd(string p_in)
 {
-	vector<string> tokens = bc::lex::tokenize(p_in," ");
+	vector<string> tokens = bc::lex::tokenizeString(p_in);
+
 	if (tokens.size() == 0)
 		return 0;
-	if (tokens.at(0) == "runtest")
-		if (tokens.size() > 1 && tokens.at(1) == "1")
-		
 
-		
-		else if
-		
+	if (tokens.at(0) == "run")
+	{
+		return consoleParseCmd_Run(tokens);
+	}
+	else if (tokens.at(0) == "runtest")
+	{
+		return consoleParseCmd_RunTest(tokens);
+	}
+	else 
+	{
+		//unknown command;
+		cout << endl << "Unknown command: " << tokens.at(0) << endl;
+		return -1;
+	}
+}
 
-		
-	
+int bc::bcvm::consoleParseCmd_Run(vector<string> p_tok)
+{
+	if (p_tok.size() < 2)
+		//no parameters
+		return -1;
+
+	getData()->runFile = p_tok[1];
+	getData()->runFileIsTest = false;
+
+	return 1;
+}
+
+int bc::bcvm::consoleParseCmd_RunTest(vector<string> p_tok)
+{
+	if (p_tok.size() < 2)
+		//no test specified
+		return -1;
+	else if (p_tok.at(1) == "1" || p_tok.at(1) == "2" || p_tok.at(1) == "3")
+		//set our run file as the given test number
+		getData()->runFile = p_tok.at(1);
+	else
+		//error unknown test
+		return -2;
+
+	getData()->runFileIsTest = true;
+
 	return 1;
 }
 
@@ -140,17 +179,87 @@ int bc::bcvm::consoleLoop()
 	string in = consoleGetInput();
 	
 	//parse input
-	consoleParseCmd(in);
+	if (consoleParseCmd(in) < 0)
+		return 0;
 
-	//do input
+	//check file exists
+	bcvmData* d = bcvm::getData();
+	if (d->runFile != "")
+		if (!d->runFileIsTest)
+			if (!d->runFileIsByteCode)
+				d->vm.con = imp::importScriptFromFile(d->runFile);
+			else
+				d->vm.con = imp::importByteCodeFromFile(d->runFile);
+		else
+			d->vm.con = bcvm::importTest(d->runFile);
 	
+	//print source
+	if (d->displaySourceCode == true)
+	{
+		for (int t = 0; t < d->src.size(); ++t)
+			cout << d->src.at(t);
+	}
+	cout << endl;
 
+	//run
+	run();
+
+	cout << endl;
 	return 1;
 }
 
+bc::vm::bcExecContext* bc::bcvm::importTest(string p_t)
+{
+	vm::bcExecContext* ec = nullptr;
+	string script = importTestAsString(p_t);
+	getData()->src.clear(); 
+	getData()->src.push_back(script);
+	
+	//compile source to an execution context, check for errors
+	comp::bcCompiler c;
+	c.startup();
+	return c.compile(&bc::bcvm::getData()->src);
+}
+
+string bc::bcvm::importTestAsString(string p_t)
+{
+	if (p_t == "1")
+		return "int a;";
+	else if (p_t == "2")
+		return "int a = 2;";
+	else if (p_t == "3")
+		return
+		"int a = 2; \n\
+int b = 3;\n\
+int c = a + b;";
+	else if(p_t == "4")
+		return
+"int a =2; \n\
+int b = 3;\n\
+int c = a + b;\n\
+func int main()\n\
+{\n\
+	int mainvar = a*c;\n\
+	return mainvar;\n\
+}";
+	else
+		return ";";
+
+}
+
+vector<string> bc::bcvm::loadFileAsStrings(const char* p_f)
+{
+	vector<string> out;
+
+	bc::util::readFile(p_f, &out);
+
+	return out;
+}
+
+
 void bc::bcvm::run()
 {
-	//main loop
+	//run script until halt
 	while (!data.vm.con->halt)
 		data.vm.exec(1);
 }

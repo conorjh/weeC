@@ -30,9 +30,9 @@ namespace bc
 			//load memory
 			oc_mov,oc_lr,oc_lrfs,oc_ls,oc_lsfr,
 			//flags
-			oc_sf,oc_rf,
+			oc_setflag,oc_readflag,
 			//stack io
-			oc_push,oc_pushfs,oc_pop,
+			oc_push, oc_pushfs, oc_pushfr, oc_pop, oc_popr,
 			//conditional jumps
 			oc_cmp,oc_jmp,oc_je,oc_jne,oc_jg,oc_jl,oc_jge,oc_jle,
 			//stack math/logical operations
@@ -110,6 +110,7 @@ namespace bc
 		void genDecParamList(bcByteCodeGen*);
 		void genDecNamespace(bcByteCodeGen*);
 		void genIf(bcByteCodeGen*);
+		void genReturn(bcByteCodeGen*);
 		void genExp(bcByteCodeGen*);
 		void genRpnToByteCode(bcByteCodeGen*,std::vector<parse::bcParseNode*>*);
 		void genNodeToByteCode(bcByteCodeGen*,parse::bcParseNode*);

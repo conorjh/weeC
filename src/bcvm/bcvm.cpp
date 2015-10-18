@@ -1,5 +1,4 @@
 #include "bcvm.h"
-#include "..\bcc\bcc.h"
 #include "..\bcScript\export.h"
 #include "..\bcScript\import.h"
 #include <vector>
@@ -140,7 +139,7 @@ int bc::bcvm::consoleParseCmd(string p_in)
 	{
 		//unknown command;
 		cout << endl << "Unknown command: " << tokens.at(0) << endl;
-		return -1;
+		return 0;
 	}
 }
 
@@ -161,7 +160,7 @@ int bc::bcvm::consoleParseCmd_RunTest(vector<string> p_tok)
 	if (p_tok.size() < 2)
 		//no test specified
 		return -1;
-	else if (p_tok.at(1) == "1" || p_tok.at(1) == "2" || p_tok.at(1) == "3")
+	else if (p_tok.at(1) == "1" || p_tok.at(1) == "2" || p_tok.at(1) == "3" || p_tok.at(1) == "4" || p_tok.at(1) == "5")
 		//set our run file as the given test number
 		getData()->runFile = p_tok.at(1);
 	else
@@ -203,7 +202,9 @@ int bc::bcvm::consoleLoop()
 
 	//run
 	run();
-
+	cout << "istream: " << d->vm.con->istream.size() << endl;
+	cout << "eax: " << d->vm.con->reg[bc::vm::bcReg::eax] << endl;
+	cout << "returns: " << d->vm.con->reg[bc::vm::bcReg::ret] << endl;
 	cout << endl;
 	return 1;
 }
@@ -232,7 +233,13 @@ string bc::bcvm::importTestAsString(string p_t)
 		"int a = 2; \n\
 int b = 3;\n\
 int c = a + b;";
-	else if(p_t == "4")
+	else if (p_t == "4")
+		return
+		"int a =2; \n\
+int b = 3;\n\
+int c = a + b;\n\
+return c;";
+	else if (p_t == "5")
 		return
 "int a =2; \n\
 int b = 3;\n\

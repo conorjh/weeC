@@ -1,6 +1,8 @@
 #include "bytecode.h"
+#include "lexer.h"
 #include "util.h"
 
+using namespace bc::lex;
 using namespace bc::vm;
 using namespace bc::parse;
 using namespace bc::util;
@@ -203,10 +205,8 @@ void bc::vm::genStatement(bcByteCodeGen* bg)
 			genStatement(bg);
 			break;
 		case pn_exp:
-			//bg->pi++;
 			genExp(bg);
-			bg->addByteCode(oc_lrfs, eax);
-			bg->addByteCode(oc_pop);
+			bg->addByteCode(oc_popr, eax);
 			break;
 		case pn_namespacedec:
 			genDecNamespace(bg);
@@ -222,6 +222,9 @@ void bc::vm::genStatement(bcByteCodeGen* bg)
 			break;
 		case pn_if:
 			genIf(bg);
+			break;
+		case pn_return:
+			genReturn(bg);
 			break;
 		default:
 			++bg->pi;
@@ -297,7 +300,6 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 			break;
 
 		case pn_type:
-		case pn_ident:
 		default:
 			++bg->pi;
 			break;
@@ -306,9 +308,19 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 	//pop the result of the expression into eax
 	if (hasExp)
 	{
-		bg->addByteCode(oc_lrfs, eax);
-		bg->addByteCode(oc_pop);
+		bg->addByteCode(oc_popr, eax);
 	}
+}
+
+void bc::vm::genReturn(bcByteCodeGen* bg)
+{
+	int olddepth = bg->ast->tree->depth(bg->pi);
+	++bg->pi;
+
+	genExp(bg);
+	bg->addByteCode(oc_popr, eax);
+	bg->addByteCode(oc_mov, eax, ret);
+	
 }
 
 void bc::vm::genIf(bcByteCodeGen* bg)
@@ -322,6 +334,7 @@ void bc::vm::genIf(bcByteCodeGen* bg)
 	{
 		case pn_exp:
 			genExp(bg);
+			bg->addByteCode(oc_popr, eax);
 			break;
 
 		case pn_if_trueblock:
@@ -432,7 +445,6 @@ void bc::vm::genExp(bcByteCodeGen* bg)
 		out.push_back(stk[stk.size() - 1]);
 		stk.erase(stk.end() - 1, stk.end());
 	}
-
 	genRpnToByteCode(bg, &out);
 }
 
@@ -470,9 +482,14 @@ void bc::vm::genRpnToByteCode(bcByteCodeGen* bg, std::vector<bcParseNode*>* rpn)
 			break;
 
 			//variables
-		case pn_ident:	case pn_varident:
-			//copy stored value from stack, to the top of stack 
-			bg->addByteCode(oc_pushfs, bcstoi(rpn->at(0)->tokens.at(1).data));	//push value from stack, using stackindex from tokens[1]
+		case pn_ident:
+		case pn_varident:
+			if (rpn->at(0)->tokens.at(1).type == tt_lvalue)
+				//copy stackindex of variable, to the top of stack 
+				bg->addByteCode(oc_push, bcstoi(rpn->at(0)->tokens.at(1).data));
+			else
+				//copy stored value from stack, to the top of stack 
+				bg->addByteCode(oc_pushfs, bcstoi(rpn->at(0)->tokens.at(1).data));	//push value from stack, using stackindex from tokens[1]
 			break;
 
 		case pn_funcident:

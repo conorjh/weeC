@@ -62,7 +62,9 @@ namespace bc
 		inline void ocLsfr(bcExecContext*);		//load value from register into the stack
 		inline void ocPush(bcExecContext*);		//push onto the stack
 		inline void ocPushfs(bcExecContext*);	//push onto the stack, from a given stackindex
+		inline void ocPushfr(bcExecContext*);	//push onto the stack, from a given register
 		inline void ocPop(bcExecContext*);		//pop from stack
+		inline void ocPopr(bcExecContext*);		//pop from stack to a given register
 		inline void ocCmp(bcExecContext*);		//compare top 2 stack items, store in cmp1
 		inline void ocJmp(bcExecContext*);		//uncondtional jump
 		inline void ocJe(bcExecContext*);		

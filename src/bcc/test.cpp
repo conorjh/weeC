@@ -336,8 +336,8 @@ std::string test::getTypeAsString(vm::bcOpCode _t)
 {
 	switch(_t)
 	{
-		case oc_sf:		return "oc_sf";
-		case oc_rf:		return "oc_rf";
+		case oc_setflag:		return "oc_setflag";
+		case oc_readflag:		return "oc_readflag";
 		case oc_lr:		return "oc_lr";
 		case oc_ls:		return "oc_ls";
 		case oc_lrfs:	return "oc_lrfs";

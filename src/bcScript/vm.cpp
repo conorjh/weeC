@@ -25,10 +25,10 @@ unsigned int bcVM::exec(unsigned int instructions)
 		rpc = &con->reg[pc];		//shorthand for the program counter
 		switch(con->istream[*rpc].op)
 		{
-		case oc_sf:
+		case oc_setflag:
 			ocSf(con);
 			break;
-		case oc_rf:
+		case oc_readflag:
 			ocRf(con);
 			break;
 		case oc_lr:
@@ -52,8 +52,14 @@ unsigned int bcVM::exec(unsigned int instructions)
 		case oc_pushfs:
 			ocPushfs(con);
 			break;
+		case oc_pushfr:
+			ocPushfr(con);
+			break;
 		case oc_pop:
 			ocPop(con);
+			break;
+		case oc_popr:
+			ocPopr(con);
 			break;
 		case oc_cmp: 
 			ocCmp(con);
@@ -159,9 +165,18 @@ unsigned int bcVM::exec(unsigned int instructions)
 	return true;
 }
 
+//copy value of register arg1, to register arg2. if sti flg is set, arg1 and arg2 become stack indexes
 inline void bc::vm::ocMov(bcExecContext* ec)
 {
-	//*ec->stack.at(ec->istream[ ec->reg[pc] ].arg1) = *ec->stack.at(ec->istream[ ec->reg[pc] ].arg2);
+	if (ec->regFlags[sti]==1)
+	{
+		ec->regFlags[sti] = 0;
+		*ec->stack.at(ec->istream[ec->reg[pc]].arg2) = *ec->stack.at(ec->istream[ec->reg[pc]].arg1) ;
+	}
+	else
+	{
+		ec->reg[ec->istream[ec->reg[pc]].arg2] = ec->reg[ec->istream[ec->reg[pc]].arg1];
+	}
 }
 
 //set flag arg1 to literal value arg2
@@ -173,7 +188,7 @@ inline void bc::vm::ocSf(bcExecContext* ec)
 //push value from flag arg1 to stack
 inline void bc::vm::ocRf(bcExecContext* ec)
 {
-	ec->stack.push(ec->istream[ ec->reg[pc] ].arg1);
+	ec->stack.push(ec->regFlags[ec->istream[ ec->reg[pc] ].arg1]);
 }
 
 //load register arg1, with value arg2. if register sti=1, arg2 is treated as a stackindex
@@ -230,16 +245,28 @@ inline void bc::vm::ocPush(bcExecContext* ec)
 	ec->stack.push(ec,ec->istream[ ec->reg[pc] ].arg1);	
 }
 
-//push literal to stack, from a value already in the stack
+//push stackindex arg1, to top of stack
 inline void bc::vm::ocPushfs(bcExecContext* ec)
 {
-	ec->stack.push(ec,*ec->stack.at(ec->istream[ec->reg[pc]].arg1));	
+	ec->stack.push(ec, *ec->stack.at(ec->istream[ec->reg[pc]].arg1));
+}
+
+//push register arg1 to top of stack
+inline void bc::vm::ocPushfr(bcExecContext* ec)
+{
+	ec->stack.push(ec, ec->reg[ec->istream[ec->reg[pc]].arg1]);
 }
 
 //pop off the top element
 inline void bc::vm::ocPop(bcExecContext* ec)
 {
 	ec->stack.pop(ec);
+}
+
+//pop off the top element to register arg1
+inline void bc::vm::ocPopr(bcExecContext* ec)
+{
+	ec->reg[ec->istream[ec->reg[pc]].arg1] = ec->stack.pop((ec));
 }
 
 //compare top 2 stack items
@@ -291,13 +318,23 @@ inline void bc::vm::ocJle(bcExecContext* ec)
 		ec->reg[pc]=ec->istream[ec->reg[pc]].arg1;
 }
 
-//pop top 2 stack items, assign value at t1 to stack index at arg1
+//pop top 2 stack items, assign stackindex at t1 to value at t2, if sti is set, t2 is also a stackindex
 inline void bc::vm::ocAssign(bcExecContext* ec)
 {
-	ec->reg[t1] = ec->stack.pop(ec); ec->stack.pop(ec);	
-	ec->reg[t2] = ec->istream[ec->reg[pc]].arg1;		//always treat as stackindex
-	*ec->stack.at(ec->reg[t2])=ec->reg[t1];
-	ec->stack.push(ec,ec->reg[t1]);
+	ec->reg[t2] = ec->stack.pop(ec); 	
+	ec->reg[t1] = ec->stack.pop(ec);
+	if (ec->regFlags[sti])
+	{
+		ec->regFlags[sti] = 0;
+		*ec->stack.at(ec->reg[t1]) = *ec->stack.at(ec->reg[t2]);
+		ec->stack.push(*ec->stack.at(ec->reg[t2]));
+
+	}
+	else
+	{
+		*ec->stack.at(ec->reg[t1]) = ec->reg[t2]; 
+		ec->stack.push(ec->reg[t2]);
+	}
 }
 
 //pop top 2 stack items, add together, push back result to stack

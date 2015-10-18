@@ -597,6 +597,7 @@ void parse::parseDecFunc(bcParser* p_par)
 	p_par->currentScope = oldScope;
 	p_par->currentFunc = nullptr;
 	p_par->currentParamList = nullptr;
+	p_par->sOffset = oldOffset;
 	p_par->parent();
 }
 
@@ -1045,8 +1046,9 @@ bcExpression parse::parseFExp(bcParser* p_par)
 bcExpression parse::parseFExp(bcParser* p_par, bcParseNode id)
 {
 	bcExpression ex; ex.isConst = true;
-	bcParseNode pn;
+	bcParseNode pn; bcToken op;
 	ex.node = p_par->addNode(bcParseNode(pn_exp));
+
 	//taken from parseFactor
 	bcSymbol sym = *p_par->getSymbol(id.tokens.at(0).data);
 	switch (sym.type)
@@ -1060,7 +1062,6 @@ bcExpression parse::parseFExp(bcParser* p_par, bcParseNode id)
 	}
 	p_par->addChild(id);
 
-	bcToken op;
 	while (p_par->lexer->getToken())
 	{
 		op = *p_par->lexer->getToken();
@@ -1071,6 +1072,7 @@ bcExpression parse::parseFExp(bcParser* p_par, bcParseNode id)
 			pn = bcParseNode(op.type);
 			pn.tokens.push_back(op);
 			pn.tokens.push_back(bcitos(p_par->getSymbol(id.tokens.at(0).data)->offset));	//stack index of oper1
+			pn.tokens.at(pn.tokens.size()-1).type = tt_lvalue;	//denote that its an l-value
 			p_par->addChild(pn);
 			p_par->lexer->nextToken();
 			break;
@@ -1088,7 +1090,7 @@ bcExpression parse::parseFExp(bcParser* p_par, bcParseNode id)
 bcExpression parse::parseExp(bcParser* p_par)
 {
 	bcExpression ex; ex.isConst = true;
-	bcToken oper1, oper2, op;
+	bcToken oper1, oper2, op, tok;
 	bcParseNode pn;
 	oper1 = parseSubExp(p_par, &ex);
 	ex.dataType = getDatatype(p_par, oper1);
@@ -1102,7 +1104,10 @@ bcExpression parse::parseExp(bcParser* p_par)
 			pn = bcParseNode(op.type);
 			pn.tokens.push_back(op);
 			//use last idents token string in getSymbol to push the stack offset of lastIdent onto this parseNode. used in ByteCode generation
-			pn.tokens.push_back(bcitos(p_par->getSymbol(p_par->lastIdent.node->data.tokens.at(0).data)->offset));
+			tok = bcitos(p_par->getSymbol(p_par->lastIdent.node->data.tokens.at(0).data)->offset);
+			if (op.type = tt_assign)
+				p_par->lastIdent.node->data.tokens.at(1).type = tt_lvalue;
+			pn.tokens.push_back(tok);
 			p_par->addChild(pn);
 			p_par->lexer->nextToken();
 			break;
@@ -1220,8 +1225,10 @@ bcToken parse::parseFactor(bcParser* p_par, bcExpression* ex)
 			if (!sym.isConst)	ex->isConst = false;
 			break;
 		case st_var:
-			if (!sym.isConst)	ex->isConst = false;
-			if (sym.isArray)		parseArrayIndex(p_par, &pni);	//the [] subscript
+			if (!sym.isConst)	
+				ex->isConst = false;
+			if (sym.isArray)		
+				parseArrayIndex(p_par, &pni);	//the [] subscript
 			p_par->lastIdent = p_par->addChild(pni);
 			break;
 		case st_namespace:

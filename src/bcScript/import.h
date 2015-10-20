@@ -7,10 +7,13 @@
 
 namespace bc
 {
+	struct bcScript;
 	namespace imp
 	{
 		vm::bcExecContext* importScriptFromFile(std::string);
 		vm::bcExecContext* importByteCodeFromFile(std::string);
+		bc::bcScript importScriptFromFileToScript(std::string);
+		bc::bcScript importByteCodeFromFileToScript(std::string);
 	}
 }
 

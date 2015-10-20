@@ -72,6 +72,7 @@ namespace bc
 		{
 		public:
 			bcExecContext();
+			unsigned int							id;
 			int										reg[bcMaxRegisters];	//vm registers
 			std::bitset<bcMaxRegisters>				regFlags;				//flags for each register
 			std::vector<bcByteCode>					istream;				//instruction stream

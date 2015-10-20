@@ -74,5 +74,8 @@
     <ClCompile Include="import.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bcscript.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

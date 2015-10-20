@@ -39,3 +39,27 @@ bcExecContext* bc::imp::importByteCodeFromFile(string p_fn)
 
 	return nullptr;
 }
+
+bcScript bc::imp::importScriptFromFileToScript(string p_fn)
+{
+	bcScript s;
+	//attempt to load it
+	if (util::readFile(p_fn.c_str(), &s.src))
+	{
+		//error loading source 
+		return s;
+	}
+
+	//compile it 
+	bcCompiler c(&s.src);
+	s.con->istream = *c.g.istream;
+
+	//return it
+	return s;
+}
+
+bcScript bc::imp::importByteCodeFromFileToScript(string p_fn)
+{
+
+	return bcScript();
+}

@@ -1,6 +1,5 @@
 #ifndef BC_COMPILER_H
 #define BC_COMPILER_H
-
 #include "parser.h"
 #include "bytecode.h"
 #include "vm.h"

@@ -29,6 +29,7 @@ bcExecContext* bc::imp::importScriptFromFile(string p_fn)
 
 	//compile it 
 	bcCompiler c(source);
+	delete source;
 
 	//return it
 	return c.output;
@@ -43,6 +44,7 @@ bcExecContext* bc::imp::importByteCodeFromFile(string p_fn)
 bcScript bc::imp::importScriptFromFileToScript(string p_fn)
 {
 	bcScript s;
+
 	//attempt to load it
 	if (util::readFile(p_fn.c_str(), &s.src))
 	{
@@ -52,7 +54,22 @@ bcScript bc::imp::importScriptFromFileToScript(string p_fn)
 
 	//compile it 
 	bcCompiler c(&s.src);
-	s.con->istream = *c.g.istream;
+	s.con = c.output;
+	s.isCompiled = true;
+	
+	//return it
+	return s;
+}
+
+bc::bcScript bc::imp::importScriptFromVectorToScript(std::vector<std::string> p_vec)
+{
+	bcScript s;
+	s.src = p_vec;
+
+	//compile it 
+	bcCompiler c(&s.src);
+	s.con = c.output;
+	s.isCompiled = true;
 
 	//return it
 	return s;
@@ -62,4 +79,10 @@ bcScript bc::imp::importByteCodeFromFileToScript(string p_fn)
 {
 
 	return bcScript();
+}
+
+//loads a string into a script, 
+bc::bcScript bc::imp::importScriptFromStringToScript(string p_str)
+{
+	return importScriptFromVectorToScript(vector<string>({ p_str }));
 }

@@ -14,8 +14,8 @@ namespace bc
 			pc,			//program counter
 			sp,			//stack pointer to start of local scope
 			tos,		//top of stack
-			eax,		//
-			ret,		//return address
+			eax,		//last expression result
+			ret,		//return value
 			cmp,		//compare result
 			sti,		//stack index
 			hlt,		//halt register
@@ -26,21 +26,24 @@ namespace bc
 
 		enum bcOpCode
 		{
-			oc_nop,		
+			oc_nop,
 			//load memory
-			oc_mov,oc_lr,oc_lrfs,oc_ls,oc_lsfr,
+			oc_mov, oc_lr, oc_lrfs, oc_ls, oc_lsfr,
 			//flags
-			oc_setflag,oc_readflag,
+			oc_setflag, oc_readflag,
 			//stack io
 			oc_push, oc_pushfs, oc_pushfr, oc_pop, oc_popr,
 			//conditional jumps
-			oc_cmp,oc_jmp,oc_je,oc_jne,oc_jg,oc_jl,oc_jge,oc_jle,
+			oc_cmp, oc_jmp, oc_je, oc_jne, oc_jg, oc_jl, oc_jge, oc_jle,
 			//stack math/logical operations
-			oc_assign,oc_plus,oc_minus,oc_mult,oc_div,oc_expo,oc_mod,oc_inc,oc_dec,
-			oc_and,oc_or,oc_xor,oc_not,oc_shfl,oc_shfr,
+			oc_assign, oc_plus, oc_minus, oc_mult, oc_div, oc_expo, oc_mod, oc_inc, oc_dec,
+			oc_and, oc_or, oc_xor, oc_not, oc_shfl, oc_shfr,
 			//function calls
-			oc_call,oc_ret,oc_callvm,
-			oc_pause,oc_halt
+			oc_call, oc_ret, oc_callvm,
+			//stackframes 
+			oc_pushsf, oc_popsf, 
+
+			oc_pause, oc_halt
 		};
 
 		struct bcByteCode
@@ -68,17 +71,35 @@ namespace bc
 			std::vector<int> cont;
 		};
 
+		struct bcStoredStackFrame
+		{
+			bcStack data;
+		};
+
+		struct bcVMSymbol
+		{
+			std::string ident;		//variable identifier
+			int stackFrame;			//id of the stack frame in which it belongs
+			int offset;				//offset within the stackframe
+		};
+
 		class bcExecContext
 		{
 		public:
 			bcExecContext();
+			void clear();
 			unsigned int							id;
-			int										reg[bcMaxRegisters];	//vm registers
-			std::bitset<bcMaxRegisters>				regFlags;				//flags for each register
-			std::vector<bcByteCode>					istream;				//instruction stream
-			bcStack									stack;					//runtime stack
-			std::unordered_map<std::string,int>		newstore;				//dynamic memory
-			bool									halt;					//has execution halted
+			int										reg[bcMaxRegisters];		//vm registers
+			std::bitset<bcMaxRegisters>				regFlags;					//flags for each register
+			std::vector<bcByteCode>					istream;					//instruction stream
+			bcStack									stack;						//runtime stack
+			std::unordered_map<std::string,int>		newstore;					//dynamic memory
+			bool									halt;						//has execution halted
+
+			//debug data
+			std::unordered_map<std::string,vm::bcVMSymbol>	symTab;				//symbol table
+			std::unordered_map<int, std::vector<int>>		stackFrames;		//stackframe id to vector of stack values
+			std::unordered_map<int, bcStoredStackFrame>		storedFrames;		//stackframe data - maps stackframe id to storedStackFrames
 		};
 		
 		class bcByteCodeGen
@@ -110,11 +131,13 @@ namespace bc
 		void genDecFunc(bcByteCodeGen*);
 		void genDecParamList(bcByteCodeGen*);
 		void genDecNamespace(bcByteCodeGen*);
+		void genFuncCall(bcByteCodeGen*);
 		void genIf(bcByteCodeGen*);
 		void genReturn(bcByteCodeGen*);
 		void genExp(bcByteCodeGen*);
 		void genRpnToByteCode(bcByteCodeGen*,std::vector<parse::bcParseNode*>*);
 		void genNodeToByteCode(bcByteCodeGen*,parse::bcParseNode*);
+		void genStackFrames(bcByteCodeGen*,bcExecContext*);
 	
 		bcValType getValType(parse::bcSymbol*);
 		int getValTypeSize(bcValType);

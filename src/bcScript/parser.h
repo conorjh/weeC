@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include "error.h" 
 #include "lexer.h"
-#include "include/tree.hh"
+#include "tree.hh"
 
 namespace bc
 {

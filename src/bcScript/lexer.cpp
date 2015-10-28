@@ -32,7 +32,7 @@ void bcLexer::clear()
 bcToken* bcLexer::getToken()
 {
 	if(!tokens.size())
-		return NULL;
+		return nullptr;
 	return &tokens[tokens.size()-1-offset];
 }
 
@@ -63,7 +63,7 @@ bcToken* bcLexer::nextToken()
 	bcToken tok;
 	oldx=x;	oldy=y;
 	if(!inc())
-		return NULL;	//end of file
+		return nullptr;	//end of file
 	tok.x=x;	tok.y=y;
 	tok.data=getChar();
 	tok.type=getTokenType(&tok.data);
@@ -79,7 +79,7 @@ bcToken* bcLexer::nextToken()
 				if(!inc())		
 				{
 					done=true;
-					return NULL;			
+					return nullptr;			
 				}
 				tok.type=getTokenType(&getChar());
 			}
@@ -116,7 +116,7 @@ bcToken* bcLexer::nextToken()
 						}					
 				}				
 				//eof before end of comment error
-				return NULL;
+				return nullptr;
 			}
 			else tokens.push_back(tok);
 			return getToken();
@@ -146,7 +146,7 @@ bcToken* bcLexer::nextToken()
 				}			
 				tok.type=tt_fltlit;
 				if(tok.data.substr(tok.data.size()-1,1)==".")	
-					return NULL;//error, no rvalue
+					return nullptr;//error, no rvalue
 			}					
 			dec();
 			tokens.push_back(tok);
@@ -155,12 +155,12 @@ bcToken* bcLexer::nextToken()
 		case tt_dquote:	//string literal
 			tok.data="";
 			tok.type=tt_strlit;
-			if(!inc())		return NULL;	//inc past first dquote		
+			if(!inc())		return nullptr;	//inc past first dquote		
 			while(getTokenType(&getChar())!=tt_dquote)
 			{
 				//collect the inner contents of the quote
 				tok.data+=getChar();		
-				if(!inc())		return NULL;
+				if(!inc())		return nullptr;
 			}
 			tokens.push_back(tok);
 			return getToken();

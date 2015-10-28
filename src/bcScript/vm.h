@@ -42,57 +42,54 @@ namespace bc
 		public:
 			bcVM();
 			unsigned int exec(unsigned int instructions);
-			//void load(bcExecContext*);
-
-			//runtime data
+			
 			bcExecContext* con;
-
-			//debug data
-			std::unordered_map<std::string,parse::bcSymbol>	symTab;			//symbol table
 		};
 
 		//instructions
-		inline void ocNop(bcExecContext*);	
-		inline void ocMov(bcExecContext*);		//copy new memory
-		inline void ocSf(bcExecContext*);		//set flag
-		inline void ocRf(bcExecContext*);		//read flag to stack
-		inline void ocLr(bcExecContext*);		//load value into a register
-		inline void ocLs(bcExecContext*);		//load value into the stack
-		inline void ocLrfs(bcExecContext*);		//load value from stack into a register
-		inline void ocLsfr(bcExecContext*);		//load value from register into the stack
-		inline void ocPush(bcExecContext*);		//push onto the stack
-		inline void ocPushfs(bcExecContext*);	//push onto the stack, from a given stackindex
-		inline void ocPushfr(bcExecContext*);	//push onto the stack, from a given register
-		inline void ocPop(bcExecContext*);		//pop from stack
-		inline void ocPopr(bcExecContext*);		//pop from stack to a given register
-		inline void ocCmp(bcExecContext*);		//compare top 2 stack items, store in cmp1
-		inline void ocJmp(bcExecContext*);		//uncondtional jump
-		inline void ocJe(bcExecContext*);		
-		inline void ocJne(bcExecContext*);
-		inline void ocJg(bcExecContext*);
-		inline void ocJl(bcExecContext*);
-		inline void ocJge(bcExecContext*);
-		inline void ocJle(bcExecContext*);
-		inline void ocAssign(bcExecContext*);
-		inline void ocPlus(bcExecContext*);
-		inline void ocMinus(bcExecContext*);
-		inline void ocMult(bcExecContext*);
-		inline void ocDiv(bcExecContext*);
-		inline void ocExpo(bcExecContext*);
-		inline void ocMod(bcExecContext*);
-		inline void ocInc(bcExecContext*);
-		inline void ocDec(bcExecContext*);
-		inline void ocAnd(bcExecContext*);
-		inline void ocOr(bcExecContext*);
-		inline void ocXor(bcExecContext*);
-		inline void ocNot(bcExecContext*);
-		inline void ocShfl(bcExecContext*);
-		inline void ocShfr(bcExecContext*);
-		inline void ocCall(bcExecContext*);
-		inline void ocCallvm(bcExecContext*);
-		inline void ocPause(bcExecContext*);
-		inline void ocHalt(bcExecContext*);
-		inline void ocRet(bcExecContext*);
+		void ocNop(bcExecContext*);	
+		void ocMov(bcExecContext*);			//copy new memory
+		void ocSf(bcExecContext*);			//set flag
+		void ocRf(bcExecContext*);			//read flag to stack
+		void ocLr(bcExecContext*);			//load value into a register
+		void ocLs(bcExecContext*);			//load value into the stack
+		void ocLrfs(bcExecContext*);		//load value from stack into a register
+		void ocLsfr(bcExecContext*);		//load value from register into the stack
+		void ocPush(bcExecContext*);		//push onto the stack
+		void ocPushfs(bcExecContext*);		//push onto the stack, from a given stackindex
+		void ocPushfr(bcExecContext*);		//push onto the stack, from a given register
+		void ocPop(bcExecContext*);			//pop from stack
+		void ocPopr(bcExecContext*);		//pop from stack to a given register
+		void ocCmp(bcExecContext*);			//compare top 2 stack items, store in cmp1
+		void ocJmp(bcExecContext*);			//uncondtional jump
+		void ocJe(bcExecContext*);		
+		void ocJne(bcExecContext*);
+		void ocJg(bcExecContext*);
+		void ocJl(bcExecContext*);
+		void ocJge(bcExecContext*);
+		void ocJle(bcExecContext*);
+		void ocAssign(bcExecContext*);
+		void ocPlus(bcExecContext*);
+		void ocMinus(bcExecContext*);
+		void ocMult(bcExecContext*);
+		void ocDiv(bcExecContext*);
+		void ocExpo(bcExecContext*);
+		void ocMod(bcExecContext*);
+		void ocInc(bcExecContext*);
+		void ocDec(bcExecContext*);
+		void ocAnd(bcExecContext*);
+		void ocOr(bcExecContext*);
+		void ocXor(bcExecContext*);
+		void ocNot(bcExecContext*);
+		void ocShfl(bcExecContext*);
+		void ocShfr(bcExecContext*);
+		void ocCall(bcExecContext*);
+		void ocCallvm(bcExecContext*);
+		void ocPause(bcExecContext*);
+		void ocHalt(bcExecContext*);
+		void ocRet(bcExecContext*);
+		void ocPushsf(bcExecContext*);
+		void ocPopsf(bcExecContext*);
 	}
 }
 

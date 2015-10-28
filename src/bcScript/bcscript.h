@@ -23,32 +23,44 @@ namespace bc
 	struct bcContextData
 	{
 		unsigned int id;
+		bool alwaysAttachScriptOnRun;
 	};
 
 	struct bcScript
 	{
-		bool isCompiled;
+		void clear();
+
+		int load(std::string);
+		int load(std::vector<std::string>*);
+		int loadFromFile(std::string);
+
+		bool isCompiled,isExecuted;
 		std::vector<std::string> src;
 		bc::vm::bcExecContext* con;
 	}; 
 	
 	struct bcContext
 	{
-		int loadScript(bcScript);
 		bcScript scr;
 		vm::bcVM vm;
 		bcContextData data;
 	};
 
-
 	int startup(bcContext*);
 	int shutdown(bcContext*);
 
-	//load script
-	bcScript loadScriptFromFile(bcContext*, std::string);
-	bcScript loadScriptFromString(bcContext*, std::string);
+	//compile script
+	int compileScript(bcScript*);
+	
+	//run
+	int run(bcContext*, bcScript*);
+	int run(bcContext*, vm::bcExecContext*);
+	int runScriptFromFile(bcContext*, std::string);
 
-	//
-	int runScriptFromFile();
+	//symbol query
+	bool doesSymbolExist(bcScript*, std::string p_sym);
+	vm::bcVMSymbol getSymbol(bcScript*, std::string p_sym);
+	int getSymbolValue(bcScript*, std::string p_sym);
+	bool doesStoredFrameExist(bcScript*, int p_sid);
 }
 #endif

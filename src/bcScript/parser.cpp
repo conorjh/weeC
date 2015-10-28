@@ -1105,7 +1105,7 @@ bcExpression parse::parseExp(bcParser* p_par)
 			pn.tokens.push_back(op);
 			//use last idents token string in getSymbol to push the stack offset of lastIdent onto this parseNode. used in ByteCode generation
 			tok = bcitos(p_par->getSymbol(p_par->lastIdent.node->data.tokens.at(0).data)->offset);
-			if (op.type = tt_assign)
+			if (op.type == tt_assign)
 				p_par->lastIdent.node->data.tokens.at(1).type = tt_lvalue;
 			pn.tokens.push_back(tok);
 			p_par->addChild(pn);

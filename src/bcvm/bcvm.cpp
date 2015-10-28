@@ -160,7 +160,7 @@ int bc::bcvm::consoleParseCmd_RunTest(vector<string> p_tok)
 	if (p_tok.size() < 2)
 		//no test specified
 		return -1;
-	else if (p_tok.at(1) == "1" || p_tok.at(1) == "2" || p_tok.at(1) == "3" || p_tok.at(1) == "4" || p_tok.at(1) == "5")
+	else if (p_tok.at(1) == "1" || p_tok.at(1) == "2" || p_tok.at(1) == "3" || p_tok.at(1) == "4" || p_tok.at(1) == "5" || p_tok.at(1) == "6" || p_tok.at(1) == "7" || p_tok.at(1) == "8")
 		//set our run file as the given test number
 		getData()->runFile = p_tok.at(1);
 	else
@@ -194,10 +194,8 @@ int bc::bcvm::consoleLoop()
 	
 	//print source
 	if (d->displaySourceCode == true)
-	{
 		for (int t = 0; t < d->src.size(); ++t)
 			cout << d->src.at(t);
-	}
 	cout << endl;
 
 	//run
@@ -226,29 +224,37 @@ string bc::bcvm::importTestAsString(string p_t)
 {
 	if (p_t == "1")
 		return "int a;";
+
 	else if (p_t == "2")
 		return "int a = 2;";
+
 	else if (p_t == "3")
-		return
-		"int a = 2; \n\
-int b = 3;\n\
-int c = a + b;";
+		return "int a = 2;\n"
+		"return a;";
+
 	else if (p_t == "4")
 		return
-		"int a =2; \n\
-int b = 3;\n\
-int c = a + b;\n\
-return c;";
+		"int a = 2; \n"
+		"int b = 3;\n"
+		"int c = a + b;";
+
 	else if (p_t == "5")
 		return
-"int a =2; \n\
-int b = 3;\n\
-int c = a + b;\n\
-func int main()\n\
-{\n\
-	int mainvar = a*c;\n\
-	return mainvar;\n\
-}";
+		"int a =2; \n"
+		"int b = 3;\n"
+		"int c = a + b;\n"
+		"return c;";
+
+	else if (p_t == "6")
+		return
+		"int a =2; \n"
+		"int b = 3;\n"
+		"int c = a + b;\n"
+		"func int main()\n"
+		"{\n"	
+		"int mainvar = a*c;\n"
+		"return mainvar;\n"
+		"}";
 	else
 		return ";";
 
@@ -267,8 +273,7 @@ vector<string> bc::bcvm::loadFileAsStrings(const char* p_f)
 void bc::bcvm::run()
 {
 	//run script until halt
-	while (!data.vm.con->halt)
-		data.vm.exec(1);
+		data.vm.exec(0);
 }
 
 bool bc::bcvm::isRunning()

@@ -1,6 +1,7 @@
 #include "bytecode.h"
 #include "lexer.h"
 #include "util.h"
+#include <vector>
 
 using namespace bc::lex;
 using namespace bc::vm;
@@ -77,9 +78,23 @@ bcByteCode::bcByteCode()
 bcExecContext::bcExecContext()
 {
 	this->regFlags = 0;
-	for (int t = 0; t < 32; t++)
+	for (int t = 0; t < bcMaxRegisters; t++)
 		reg[t] = 0;
 	halt = false;
+}
+
+void bc::vm::bcExecContext::clear()
+{
+	halt = false;
+	istream.clear();
+	newstore.clear();
+	stack.clear();
+	symTab.clear();
+	for (int t = 0; t < bcMaxRegisters; ++t)
+	{
+		reg[t] = 0;
+		regFlags[t] = 0;
+	}
 }
 
 int bc::vm::getValTypeSize(bcValType t)
@@ -171,19 +186,24 @@ bcExecContext* bcByteCodeGen::gen()
 	istream = new std::vector < bcByteCode > ;
 	pi = ast->tree->begin();
 
+	//populate stackframes
+	genStackFrames(this, ec);
+
 	//push command line args
 
 	//push global stackframe variables
-	for (int t = 0; t < ast->stackFrames.at(0).size(); ++t)
-	{
-		bc.op = oc_push;
-		bc.arg1 = 0;
-		addByteCode(bc);
-	}
+	bc.op = oc_pushsf;
+	bc.arg1 = 0;
+	addByteCode(bc);
 
-	//parse body
+	//gen script functions and global statements
 	while (pi != ast->tree->end())
 		genStatement(this);
+	
+	//push global stackframe variables
+	bc.op = oc_popsf;
+	bc.arg1 = 0;
+	addByteCode(bc);
 
 	ec->istream = *this->istream;
 	return ec;
@@ -213,6 +233,9 @@ void bc::vm::genStatement(bcByteCodeGen* bg)
 			break;
 		case pn_funcdec:
 			genDecFunc(bg);
+			break;
+		case pn_funccall:
+			genFuncCall(bg);
 			break;
 		case pn_vardec:
 			genDecVar(bg);
@@ -282,8 +305,12 @@ void bc::vm::genDecNamespace(bcByteCodeGen* bg)
 	//collect func dec info from current node
 	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
-
 		genBlock(bg);
+}
+
+void bc::vm::genFuncCall(bcByteCodeGen *)
+{
+
 }
 
 void bc::vm::genDecVar(bcByteCodeGen* bg)
@@ -307,9 +334,8 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 
 	//pop the result of the expression into eax
 	if (hasExp)
-	{
 		bg->addByteCode(oc_popr, eax);
-	}
+	
 }
 
 void bc::vm::genReturn(bcByteCodeGen* bg)
@@ -326,7 +352,7 @@ void bc::vm::genReturn(bcByteCodeGen* bg)
 void bc::vm::genIf(bcByteCodeGen* bg)
 {
 	//collect func dec info from current node
-	unsigned int trueindex, truejump, elseindex, elsejump, iend;
+	unsigned int  truejump, elsejump, iend;
 	unsigned int ibegin = bg->istream->size() - 1;
 	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
@@ -566,7 +592,6 @@ void bc::vm::genNodeToByteCode(bcByteCodeGen* bg, bcParseNode* pn)
 	case pn_ident:
 	case pn_varident:
 	case pn_funcident:
-
 		break;
 
 		//operators
@@ -606,6 +631,24 @@ void bc::vm::genNodeToByteCode(bcByteCodeGen* bg, bcParseNode* pn)
 	case pn_plus:
 		bg->addByteCode(oc_plus);
 		break;
+	}
+}
+
+//create our stackframe records - used to populate the stack with parameters, local variables etc for
+//each function call or scope change. 
+void bc::vm::genStackFrames(bcByteCodeGen *bg,bcExecContext* p_ec)
+{ 
+	for (int t = 0; t < bg->ast->stackFrames.size(); ++t)
+	{
+		p_ec->stackFrames.insert(std::make_pair(t, std::vector<int>()));
+		for (int u = 0; u < bg->ast->stackFrames[t].size(); ++u)
+		{
+			bcVMSymbol sym;
+			sym.ident = bg->ast->stackFrames[t][u];
+			sym.offset = u;
+			sym.stackFrame = t;
+			p_ec->stackFrames[t].push_back(0);	//push empty values for now TODO: init values go here
+		}
 	}
 }
 

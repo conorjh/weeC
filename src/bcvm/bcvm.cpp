@@ -191,15 +191,19 @@ int bc::bcvm::consoleLoop()
 				d->vm.con = imp::importByteCodeFromFile(d->runFile);
 		else
 			d->vm.con = bcvm::importTest(d->runFile);
-	
+	else
+		return 1;
+
 	//print source
 	if (d->displaySourceCode == true)
 		for (int t = 0; t < d->src.size(); ++t)
 			cout << d->src.at(t);
 	cout << endl;
-
+	
 	//run
 	run();
+
+	//display output
 	cout << "istream: " << d->vm.con->istream.size() << endl;
 	cout << "eax: " << d->vm.con->reg[bc::vm::bcReg::eax] << endl;
 	cout << "returns: " << d->vm.con->reg[bc::vm::bcReg::ret] << endl;
@@ -251,10 +255,17 @@ string bc::bcvm::importTestAsString(string p_t)
 		"int b = 3;\n"
 		"int c = a + b;\n"
 		"func int main()\n"
-		"{\n"	
+		"{\n"
 		"int mainvar = a*c;\n"
 		"return mainvar;\n"
 		"}";
+
+	else if (p_t == "7")
+		return
+		"int a = 2; \n"
+		"int b = 3; \n"
+		"int c = (a + b) * a + (b * b);\n"
+		"return c;";
 	else
 		return ";";
 
@@ -263,17 +274,14 @@ string bc::bcvm::importTestAsString(string p_t)
 vector<string> bc::bcvm::loadFileAsStrings(const char* p_f)
 {
 	vector<string> out;
-
 	bc::util::readFile(p_f, &out);
-
 	return out;
 }
-
 
 void bc::bcvm::run()
 {
 	//run script until halt
-		data.vm.exec(0);
+	data.vm.exec(0);
 }
 
 bool bc::bcvm::isRunning()

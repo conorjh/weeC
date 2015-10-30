@@ -101,6 +101,7 @@ namespace bc
 			std::string ident,fullIdent,dataType;
 			bool isOverloaded;														//has overloaded method signatures
 			int gOffset,lOffset;													//global offset, and local offset for local vars
+			unsigned int sfOffset;													//stackframe index within bcExecContext.stackFrames
 			std::unordered_map<std::string,std::vector<std::string>> stackFrames;	//method signature to a vector of symbol fullIdents
 			std::unordered_map<std::string,tree<bcParseNode>::iterator> body;		//method signature to parsenode 
 			std::unordered_map<std::string,bcParamList>	sigs;						//method signature to paramlist (inc methodsig)

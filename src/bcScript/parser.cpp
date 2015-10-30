@@ -231,7 +231,7 @@ bcSymbol* bcParser::getSymbol(string fullid)
 	return &ast.symTab->at(fullid);
 }
 
-//shortid
+//shortid in a given scope
 bcSymbol* bcParser::getSymbol(string shortid, bcSymbol* sc)
 {
 	if (ast.symTab->find(getFullIdent(this, shortid, sc)) == ast.symTab->end())
@@ -516,7 +516,7 @@ void parse::parseDecFunc(bcParser* p_par)
 		}
 		else
 		{
-			//unknow error mandem, expected an type here
+			//unknow error mandem, expected a type here
 			return p_par->setError(ec_p_undeclaredsymbol, p_par->lexer->getToken()->data);
 		}
 		break;
@@ -540,24 +540,22 @@ void parse::parseDecFunc(bcParser* p_par)
 			p_par->addSymbol(sym.fullIdent, &sym);
 			//set our current scope to this function, using method signature
 			p_par->currentScope = p_par->getSymbol(sym.fullIdent);
-			//new stackframe
-			p_par->ast.stackFrames.push_back(std::vector<string>());
-			p_par->addChild(bcParseNode(pn_funcident, sym.fullIdent));
 		}
 		else if (sym.type == st_function)
 		{
 			//paramlist must be different or its a redefinition, make available the current paramlist
 			p_par->currentFunc = &p_par->ast.funcTab->at(sym.fullIdent);
 			p_par->currentScope = p_par->getSymbol(sym.fullIdent);
-			p_par->currentFunc->isOverloaded = true;
-			//new stackframe
-			p_par->ast.stackFrames.push_back(std::vector<string>());
-			p_par->addChild(bcParseNode(pn_funcident, sym.fullIdent));
+			p_par->currentFunc->isOverloaded = true;			
 		}
 		else
 		{
 			//redef - used elsewhere, not as a function name
 		}
+		//new stackframe
+		fi.sfOffset = p_par->ast.stackFrames.size(); //<<<<<not how this works, temporary parse-time stack.....FIXME
+		p_par->ast.stackFrames.push_back(std::vector<string>());
+		p_par->addChild(bcParseNode(pn_funcident, sym.fullIdent));
 		break;
 	default:
 		//error
@@ -916,7 +914,7 @@ bcSymbol parse::resolveIdent(bcParser* p_par, string shortid)
 	while (ind > 0)
 		switch (fullid[ind])
 	{
-		//two steps pack if we get two colons
+		//two steps back if we get two colons
 		case ':':
 			if (ind > 0 && fullid[ind - 1] == ':')
 				--ind;

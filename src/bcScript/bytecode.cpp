@@ -32,6 +32,7 @@ int bcStack::pop()
 	return ret;
 }
 
+//pops top stack element, updates top of stack register
 int bcStack::pop(bcExecContext* ec)
 {
 	int ret = cont[cont.size() - 1];
@@ -73,6 +74,42 @@ bcByteCode::bcByteCode()
 	arg1 = 0;
 	arg2 = 0;
 	op = oc_nop;
+}
+
+bc::vm::bcByteCode::bcByteCode(bcOpCode p_oc)
+{
+	op = p_oc;
+}
+
+bc::vm::bcByteCode::bcByteCode(bcOpCode p_oc, int p_arg1)
+{
+	op = p_oc;
+	arg1 = p_arg1;
+}
+
+bc::vm::bcByteCode::bcByteCode(bcOpCode p_oc, int p_arg1, int p_arg2)
+{
+	op = p_oc;
+	arg1 = p_arg1;
+	arg2 = p_arg2;
+}
+
+bc::vm::bcByteCode::bcByteCode(int p_oc)
+{
+	op = bcOpCode(p_oc);
+}
+
+bc::vm::bcByteCode::bcByteCode(int p_oc, int p_arg1)
+{
+	op = bcOpCode(p_oc);
+	arg1 = p_arg1;
+}
+
+bc::vm::bcByteCode::bcByteCode(int p_oc, int p_arg1, int p_arg2)
+{
+	op = bcOpCode(p_oc);
+	arg1 = p_arg1;
+	arg2 = p_arg2;
 }
 
 bcExecContext::bcExecContext()
@@ -181,32 +218,28 @@ int bcByteCodeGen::getError()
 
 bcExecContext* bcByteCodeGen::gen()
 {
-	bcExecContext* ec = new bcExecContext();
+	output = new bcExecContext();
 	bcByteCode bc;
 	istream = new std::vector < bcByteCode > ;
 	pi = ast->tree->begin();
 
 	//populate stackframes
-	genStackFrames(this, ec);
+	genStackFrames(this, output);
 
 	//push command line args
 
 	//push global stackframe variables
-	bc.op = oc_pushsf;
-	bc.arg1 = 0;
-	addByteCode(bc);
+	addByteCode(bcByteCode(oc_pushsf,0));
 
 	//gen script functions and global statements
 	while (pi != ast->tree->end())
 		genStatement(this);
 	
 	//push global stackframe variables
-	bc.op = oc_popsf;
-	bc.arg1 = 0;
-	addByteCode(bc);
+	addByteCode(bcByteCode(oc_popsf, 0));
 
-	ec->istream = *this->istream;
-	return ec;
+	output->istream = *this->istream;
+	return output;
 }
 
 void bc::vm::genStatement(bcByteCodeGen* bg)
@@ -265,7 +298,7 @@ void bc::vm::genDecFunc(bcByteCodeGen* bg)
 {
 	int fOffset;
 	tree<bcParseNode>::iterator oldpi;
-	bcFuncInfo fi;
+	bcFuncInfo* fi;
 	std::string paramString;
 	bg->inDecFunc = true;
 
@@ -273,30 +306,32 @@ void bc::vm::genDecFunc(bcByteCodeGen* bg)
 	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
-	{
-		case pn_funcident:
-			fi = bg->ast->funcTab->at(bg->pi.node->data.tokens.at(0).data);
-			++bg->pi;
-			break;
+		{
+			case pn_funcident:
+				fi = &bg->ast->funcTab->at(bg->pi.node->data.tokens.at(0).data);
+				++bg->pi;
+				break;
 
-		case pn_block:
-			oldpi = bg->pi;
-			bg->pi = fi.body[paramString];
-			fOffset = bg->istream->size();
-			genBlock(bg);
-			break;
+			case pn_block:
+				oldpi = bg->pi;
+				bg->pi = fi->body[paramString];
+				fi->gOffset = bg->istream->size();	
+				
+				bg->addByteCode(bcByteCode(oc_pushsf,fi->sfOffset));
+				genBlock(bg);
+				bg->addByteCode(bcByteCode(oc_popsf, fi->sfOffset));
+				break;
 
-		case pn_decparamlist:
-			paramString = bg->pi->tokens.at(0).data;
-			genDecParamList(bg);
-			//++bg->pi;
-			break;
+			case pn_decparamlist:
+				paramString = bg->pi->tokens.at(0).data;
+				genDecParamList(bg);
+				break;
 
-		case pn_type:
-		default:
-			++bg->pi;
-			break;
-	}
+			case pn_type:
+			default:
+				++bg->pi;
+				break;
+		}
 	bg->inDecFunc = false;
 }
 
@@ -320,17 +355,17 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 	++bg->pi;
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
-	{
-		case pn_exp:
-			genExp(bg);
-			hasExp = true;
-			break;
+		{
+			case pn_exp:
+				genExp(bg);
+				hasExp = true;
+				break;
 
-		case pn_type:
-		default:
-			++bg->pi;
-			break;
-	}
+			case pn_type:
+			default:
+				++bg->pi;
+				break;
+		}
 
 	//pop the result of the expression into eax
 	if (hasExp)
@@ -357,28 +392,29 @@ void bc::vm::genIf(bcByteCodeGen* bg)
 	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
-	{
-		case pn_exp:
-			genExp(bg);
-			bg->addByteCode(oc_popr, eax);
-			break;
+		{
+			case pn_exp:
+				genExp(bg);
+				bg->addByteCode(oc_popr, eax);
+				break;
 
-		case pn_if_trueblock:
-			genBlock(bg);
-			truejump = bg->addByteCode(oc_jmp);
-			break;
+			case pn_if_trueblock:
+				genBlock(bg);
+				truejump = bg->addByteCode(oc_jmp);
+				break;
 
-		case pn_if_elseblock:
-			genBlock(bg);
-			//point the jmp at the end of the true block past the else block
-			bg->getByteCode(truejump, bg->inDecFunc)->arg1 = elsejump = bg->istream->size();	break;
-		default:
-			bg->pi++;
-			break;
-	}
+			case pn_if_elseblock:
+				genBlock(bg);
+				//point the jmp at the end of the true block past the else block
+				bg->getByteCode(truejump, bg->inDecFunc)->arg1 = elsejump = bg->istream->size();	break;
+			default:
+				bg->pi++;
+				break;
+		}
 
 	//if this is the last statement, we need an address to land on after else
 	iend = bg->addByteCode(oc_nop);
+
 	//pop stack to expression result register	
 	//bg->addByteCode(oc_lrfs,eax);
 	//now that we know the instruction, edit all prior je/jne/jg/jge to the right block
@@ -647,6 +683,7 @@ void bc::vm::genStackFrames(bcByteCodeGen *bg,bcExecContext* p_ec)
 			sym.ident = bg->ast->stackFrames[t][u];
 			sym.offset = u;
 			sym.stackFrame = t;
+			p_ec->symTab.insert(make_pair(sym.ident, sym));
 			p_ec->stackFrames[t].push_back(0);	//push empty values for now TODO: init values go here
 		}
 	}

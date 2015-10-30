@@ -49,6 +49,12 @@ namespace bc
 		struct bcByteCode
 		{
 			bcByteCode();
+			bcByteCode(bcOpCode);
+			bcByteCode(bcOpCode, int);
+			bcByteCode(bcOpCode, int, int);
+			bcByteCode(int);
+			bcByteCode(int, int);
+			bcByteCode(int, int, int);
 			bcOpCode op;
 			int arg1,arg2;
 		};
@@ -101,6 +107,12 @@ namespace bc
 			std::unordered_map<int, std::vector<int>>		stackFrames;		//stackframe id to vector of stack values
 			std::unordered_map<int, bcStoredStackFrame>		storedFrames;		//stackframe data - maps stackframe id to storedStackFrames
 		};
+
+		struct bcByteCodeChunk
+		{
+			unsigned int start, end;
+			std::vector<bcByteCode>* istream;
+		};
 		
 		class bcByteCodeGen
 		{
@@ -119,6 +131,7 @@ namespace bc
 			tree<parse::bcParseNode>::iterator pi;	//parse index
 			parse::bcAST* ast;
 			std::vector<bcByteCode>* istream;
+			bcExecContext* output;
 			bool inDecFunc;
 			int ifJmpIndex;
 			int errorCode;

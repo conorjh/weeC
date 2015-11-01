@@ -7,6 +7,7 @@ using namespace bc::vm;
 
 bc::comp::bcCompiler::bcCompiler()
 {
+	startup();
 	output = nullptr;
 }
 

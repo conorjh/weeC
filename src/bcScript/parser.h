@@ -96,13 +96,18 @@ namespace bc
 			std::vector<std::string> params;	//fullIdent of type
 		};
 
+		struct bcStackFrameInfo
+		{
+			std::vector<std::string> paramVars, localVars;
+		};
+
 		struct bcFuncInfo
 		{
 			std::string ident,fullIdent,dataType;
 			bool isOverloaded;														//has overloaded method signatures
 			int gOffset,lOffset;													//global offset, and local offset for local vars
-			unsigned int sfOffset;													//stackframe index within bcExecContext.stackFrames
-			std::unordered_map<std::string,std::vector<std::string>> stackFrames;	//method signature to a vector of symbol fullIdents
+			unsigned int sfIndex;													//stackframe index within bcExecContext.stackFrames
+			std::unordered_map<std::string,bcStackFrameInfo> stackFrames;			//method signature to Stackframe info
 			std::unordered_map<std::string,tree<bcParseNode>::iterator> body;		//method signature to parsenode 
 			std::unordered_map<std::string,bcParamList>	sigs;						//method signature to paramlist (inc methodsig)
 		};																			//	if(!isOverloaded) sigs[0] is functions signature
@@ -110,7 +115,7 @@ namespace bc
 		struct bcAST
 		{
 			tree<bcParseNode>* tree;			
-			std::vector<std::vector<std::string>> stackFrames;		//working stackFrames stack
+			std::vector<bcStackFrameInfo> stackFrames;				//vector of all possible stackframes
 			std::unordered_map<std::string,bcSymbol>* symTab;		//fullIdent to bcSymbol
 			std::unordered_map<std::string,bcFuncInfo>* funcTab;	//fullIdent to funcinfo
 			std::unordered_map<std::string,vm::bcVal> constTab;		//fullIdent to constant bcVal
@@ -153,6 +158,7 @@ namespace bc
 			bcSymbol* currentScope;
 			bcFuncInfo* currentFunc;
 			bcParamList* currentParamList;
+			bcStackFrameInfo* currentStackFrame;
 			lex::bcLexer* lexer;
 			tree<bcParseNode>::iterator pindex;		//Current parse node we are working on	
 		};

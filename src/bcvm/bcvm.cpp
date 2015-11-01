@@ -20,17 +20,28 @@ namespace bc
 
 void bc::bcvm::execCmdLine()
 {
-	getData()->displaySourceCode = true;
 
 	//run a file if given one from command line
 	if (bcvm::getData()->runFile != "")
+	{
 		if (!bcvm::getData()->runFileIsTest)
 			if (!bcvm::getData()->runFileIsByteCode)
 				bcvm::getData()->vm.con = bc::imp::importScriptFromFile(bcvm::getData()->runFile);
 			else
 				bcvm::getData()->vm.con = bc::imp::importByteCodeFromFile(bcvm::getData()->runFile);
 		else
-			bcvm::getData()->vm.con = bcvm::importTest(bcvm::getData()->runFile);	
+			bcvm::getData()->vm.con = bcvm::importTest(bcvm::getData()->runFile);
+	}
+}
+
+void bc::bcvm::startup()
+{
+	getData()->displaySourceCode = true;
+	getData()->inputModeOn = false;
+	getData()->disableConsoleInput = false;
+	getData()->runFile = "";
+	getData()->runFileIsByteCode = false;
+	getData()->runFileIsTest = false;
 }
 
 //returns the new index
@@ -127,6 +138,22 @@ int bc::bcvm::consoleParseCmd(string p_in)
 	if (tokens.size() == 0)
 		return 0;
 
+	if (getData()->inputModeOn)
+	{
+		//add input to buffer
+		if (p_in != "exit")
+		{
+			getData()->inputModeBuffer.push_back(p_in);
+			return 1;
+		}
+
+		//exit command received, load the buffer into our source code buffer
+		getData()->src = getData()->inputModeBuffer;
+		getData()->inputModeBuffer.clear();
+		getData()->inputModeOn = false;
+		return 1;
+	}
+
 	if (tokens.at(0) == "run")
 	{
 		return consoleParseCmd_Run(tokens);
@@ -134,6 +161,10 @@ int bc::bcvm::consoleParseCmd(string p_in)
 	else if (tokens.at(0) == "runtest")
 	{
 		return consoleParseCmd_RunTest(tokens);
+	}
+	else if (tokens.at(0) == "input" && !getData()->inputModeOn)
+	{
+		return consoleParseCmd_Input(tokens);
 	}
 	else 
 	{
@@ -172,6 +203,12 @@ int bc::bcvm::consoleParseCmd_RunTest(vector<string> p_tok)
 	return 1;
 }
 
+int bc::bcvm::consoleParseCmd_Input(vector<string> p_tok)
+{
+	getData()->inputModeOn = true;
+	return 1;
+}
+
 int bc::bcvm::consoleLoop()
 {
 	//get input
@@ -181,9 +218,14 @@ int bc::bcvm::consoleLoop()
 	if (consoleParseCmd(in) < 0)
 		return 0;
 
-	//check file exists
 	bcvmData* d = bcvm::getData();
+
+	if (d->inputModeOn)
+		return 1;
+
+	//check file exists
 	if (d->runFile != "")
+	{
 		if (!d->runFileIsTest)
 			if (!d->runFileIsByteCode)
 				d->vm.con = imp::importScriptFromFile(d->runFile);
@@ -191,8 +233,20 @@ int bc::bcvm::consoleLoop()
 				d->vm.con = imp::importByteCodeFromFile(d->runFile);
 		else
 			d->vm.con = bcvm::importTest(d->runFile);
+	}
+	//no run file specified, but source code has been loaded from input mode
+	else if (d->src.size())
+	{
+		comp::bcCompiler c(&d->src);
+		if (d->vm.con)
+			delete d->vm.con;
+		d->vm.con = c.output;
+		d->src.clear();
+	}
 	else
+	{
 		return 1;
+	}
 
 	//print source
 	if (d->displaySourceCode == true)
@@ -220,7 +274,6 @@ bc::vm::bcExecContext* bc::bcvm::importTest(string p_t)
 	
 	//compile source to an execution context, check for errors
 	comp::bcCompiler c;
-	c.startup();
 	return c.compile(&bc::bcvm::getData()->src);
 }
 

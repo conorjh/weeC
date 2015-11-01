@@ -2,7 +2,9 @@
 #include "lexer.h"
 #include "util.h"
 #include <vector>
+#include <unordered_map>
 
+using namespace std;
 using namespace bc::lex;
 using namespace bc::vm;
 using namespace bc::parse;
@@ -229,7 +231,7 @@ bcExecContext* bcByteCodeGen::gen()
 	//push command line args
 
 	//push global stackframe variables
-	addByteCode(bcByteCode(oc_pushsf,0));
+	addByteCode(oc_pushsf,0);
 
 	//gen script functions and global statements
 	while (pi != ast->tree->end())
@@ -317,9 +319,9 @@ void bc::vm::genDecFunc(bcByteCodeGen* bg)
 				bg->pi = fi->body[paramString];
 				fi->gOffset = bg->istream->size();	
 				
-				bg->addByteCode(bcByteCode(oc_pushsf,fi->sfOffset));
+				bg->addByteCode(bcByteCode(oc_pushsf,fi->sfIndex));
 				genBlock(bg);
-				bg->addByteCode(bcByteCode(oc_popsf, fi->sfOffset));
+				bg->addByteCode(bcByteCode(oc_popsf, fi->sfIndex));
 				break;
 
 			case pn_decparamlist:
@@ -379,7 +381,7 @@ void bc::vm::genReturn(bcByteCodeGen* bg)
 	++bg->pi;
 
 	genExp(bg);
-	bg->addByteCode(oc_popr, eax);
+	bg->addByteCode(oc_popr, eax);		
 	bg->addByteCode(oc_mov, eax, ret);
 	
 }
@@ -674,17 +676,21 @@ void bc::vm::genNodeToByteCode(bcByteCodeGen* bg, bcParseNode* pn)
 //each function call or scope change. 
 void bc::vm::genStackFrames(bcByteCodeGen *bg,bcExecContext* p_ec)
 { 
+	unordered_map<string, int> identToId;
+	
 	for (int t = 0; t < bg->ast->stackFrames.size(); ++t)
 	{
+		int off = 0;
 		p_ec->stackFrames.insert(std::make_pair(t, std::vector<int>()));
-		for (int u = 0; u < bg->ast->stackFrames[t].size(); ++u)
+		for (int it = 0; it < bg->ast->stackFrames[t].localVars.size(); ++it)
 		{
 			bcVMSymbol sym;
-			sym.ident = bg->ast->stackFrames[t][u];
-			sym.offset = u;
+			sym.ident = bg->ast->stackFrames[t].localVars[it];
+			sym.offset = off;
 			sym.stackFrame = t;
 			p_ec->symTab.insert(make_pair(sym.ident, sym));
 			p_ec->stackFrames[t].push_back(0);	//push empty values for now TODO: init values go here
+			off++;	//todo: increase the offset based on data type size (int=1,float =2)
 		}
 	}
 }

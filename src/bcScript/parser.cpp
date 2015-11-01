@@ -127,13 +127,13 @@ void bcParser::startup()
 	currentFunc = nullptr;
 	currentScope = nullptr;
 	noDecVar = noDecFunc = noDecName = false;
-
+	
 	//tree
 	ast.tree = new tree<bcParseNode>(bcParseNode(pn_head));
 	pindex = ast.tree->begin();
 
 	//symbol table
-	ast.stackFrames.push_back(std::vector<string>());	//global stackframe
+	ast.stackFrames.push_back(*(currentStackFrame = new bcStackFrameInfo));	//global stackframe
 	ast.funcTab = new std::unordered_map<string, bcFuncInfo>();
 	ast.symTab = new std::unordered_map<string, bcSymbol>();
 
@@ -412,7 +412,7 @@ void parse::parseDecVar(bcParser* p_par)
 		//if(p_par->currentScope->type==st_namespace)
 		//p_par->currentScope->offset += getTypeSize(symi);
 		if (symi)
-			p_par->ast.stackFrames[p_par->ast.stackFrames.size() - 1].push_back(symi->fullIdent);
+			p_par->ast.stackFrames[p_par->ast.stackFrames.size() - 1].localVars.push_back(symi->fullIdent);
 		else
 			return;	//errors redef
 		p_par->addChild(bcParseNode(pn_ident, symi->fullIdent));
@@ -472,6 +472,7 @@ void parse::parseDecFunc(bcParser* p_par)
 	int oldOffset = p_par->sOffset;
 	p_par->sOffset = 0;
 	bcSymbol* oldScope = p_par->currentScope;
+	bcStackFrameInfo* oldSf = p_par->currentStackFrame;
 	bcSymbol sym;
 	bcFuncInfo fi;
 
@@ -538,23 +539,23 @@ void parse::parseDecFunc(bcParser* p_par)
 			sym.dataType = fi.dataType;
 			fi.ident = sym.ident; fi.fullIdent = sym.fullIdent;
 			p_par->addSymbol(sym.fullIdent, &sym);
-			//set our current scope to this function, using method signature
-			p_par->currentScope = p_par->getSymbol(sym.fullIdent);
 		}
 		else if (sym.type == st_function)
 		{
 			//paramlist must be different or its a redefinition, make available the current paramlist
 			p_par->currentFunc = &p_par->ast.funcTab->at(sym.fullIdent);
-			p_par->currentScope = p_par->getSymbol(sym.fullIdent);
 			p_par->currentFunc->isOverloaded = true;			
 		}
 		else
 		{
 			//redef - used elsewhere, not as a function name
 		}
+		//set our current scope to this function, using method signature
+		p_par->currentScope = p_par->getSymbol(sym.fullIdent);
+
 		//new stackframe
-		fi.sfOffset = p_par->ast.stackFrames.size(); //<<<<<not how this works, temporary parse-time stack.....FIXME
-		p_par->ast.stackFrames.push_back(std::vector<string>());
+		fi.sfIndex = p_par->ast.stackFrames.size();
+		p_par->ast.stackFrames.push_back(*(p_par->currentStackFrame = new bcStackFrameInfo));
 		p_par->addChild(bcParseNode(pn_funcident, sym.fullIdent));
 		break;
 	default:
@@ -587,12 +588,13 @@ void parse::parseDecFunc(bcParser* p_par)
 	default:
 		break;
 	}
-	//pop stack frame, adding it to the currentFunc info, using the current method signature
-	fi.stackFrames.insert(std::make_pair(getMethodStringSignature(p_par->currentParamList), p_par->ast.stackFrames[p_par->ast.stackFrames.size() - 1]));
-	p_par->ast.stackFrames.erase(p_par->ast.stackFrames.end() - 1);
+	//add stackframe the currentFunc info, using the current method signature
+	fi.stackFrames.insert(std::make_pair(getMethodStringSignature(p_par->currentParamList), *p_par->currentStackFrame));
 	p_par->ast.funcTab->insert(std::make_pair(sym.fullIdent, fi));
+
 	//change scopes back 
 	p_par->currentScope = oldScope;
+	p_par->currentStackFrame = oldSf;
 	p_par->currentFunc = nullptr;
 	p_par->currentParamList = nullptr;
 	p_par->sOffset = oldOffset;

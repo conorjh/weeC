@@ -8,6 +8,15 @@ using namespace bc::lex;
 using namespace bc::util;
 using namespace bc::parse;
 
+namespace bc
+{
+	namespace parse
+	{
+		bcSymbol parseDecVar_Type(bcParser*,bcParseNode* p_type, bcParseNode* p_ident);
+		int parseDecVar_Ident(bcParser* p_par, bcSymbol* p_type, bcSymbol* p_ident, int* p_identX, int* p_identY, bool* p_setToConst);
+		int parseDecVar_Exp(bcParser* p_par,bcSymbol* p_ident, int*,int*);
+	}
+}
 bcExpression::bcExpression()
 {
 	this->dataType = "";
@@ -123,6 +132,7 @@ void bcParser::startup()
 {
 	sOffset = parenCount = 0;
 	error = ec_null;
+	currentStackFrame = nullptr;
 	currentParamList = nullptr;
 	currentFunc = nullptr;
 	currentScope = nullptr;
@@ -155,6 +165,10 @@ void bcParser::shutdown()
 
 void bcParser::clear()
 {
+	currentFunc = nullptr;
+	currentParamList = nullptr;
+	currentStackFrame = nullptr;
+	currentScope = nullptr;
 	ast.symTab->clear();
 	ast.tree->clear();
 	ast.stackFrames.clear();
@@ -353,6 +367,134 @@ void parse::parseDecNamespace(bcParser* p_par)
 
 }
 
+bcSymbol parse::parseDecVar_Type(bcParser* p_par, bcParseNode* p_pnt, bcParseNode* p_pni)
+{
+	bcSymbol symt;
+	p_pnt->tokens.push_back(*p_par->lexer->getToken());
+
+	switch (p_par->lexer->getToken()->type)
+	{
+		//basic types
+	case tt_bool:	case tt_int:	case tt_float:	case tt_string:
+		p_par->addChild(bcParseNode(pn_type, *p_par->lexer->getToken()));
+		symt.dataType = p_par->getSymbol(p_par->lexer->getToken()->data)->ident;
+		symt.type = getTypeFromDataType(p_par, symt.dataType);
+		p_par->lexer->nextToken();
+		break;
+
+		//user defined type
+	case tt_ident:
+		//parse and save the ident
+		*p_pni = parseIdent(p_par);
+		symt = *p_par->getSymbol(p_pni->tokens.at(0).data);
+		
+		//if it ent a type, error!
+		if (symt.type != st_type)
+			return bcSymbol();
+		
+		//add the node
+		symt.dataType = symt.fullIdent;
+		p_par->addChild(*p_pnt = bcParseNode(pn_type, symt.fullIdent));
+		break;
+	
+	default:
+		//no cigar
+		return bcSymbol();
+	}
+
+	return symt;
+}
+
+int bc::parse::parseDecVar_Ident(bcParser* p_par,bcSymbol* p_type, bcSymbol* p_ident, int* p_identX, int* p_identY, bool* p_setToConst)
+{
+	switch (p_par->lexer->getToken()->type)
+	{
+	case tt_ident:
+		*p_identX = p_par->lexer->getToken()->x;
+		*p_identY = p_par->lexer->getToken()->y;	//for error reporting porpoises
+		p_ident = addIdentDec(p_par, st_var);	//add symbol
+
+		p_par->getSymbol(p_ident->fullIdent)->dataType = p_type->dataType;
+		p_par->getSymbol(p_ident->fullIdent)->isConst = *p_setToConst;
+
+		if (!(p_par->getSymbol(p_ident->fullIdent)->isArray = p_type->isArray))
+			p_par->getSymbol(p_ident->fullIdent)->size = 1;
+
+		if (p_ident)
+			p_par->currentStackFrame->localVars.push_back(p_ident->fullIdent);
+		else
+			return 0;	//errors redef
+		p_par->addChild(bcParseNode(pn_ident, p_ident->fullIdent));
+		break;
+
+	default:
+		p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data);
+		return 0;
+	}
+
+	//optional array subscript
+	if (p_par->lexer->getToken()->type == tt_obracket)
+	{
+		//consume opening bracket
+		p_par->lexer->nextToken();
+
+		//adjust symbol table entry
+		p_par->getSymbol(p_ident->fullIdent)->isArray = true;
+		
+		//parse expression; type must convert to int, and be const
+		bcExpression ex = parseFExp(p_par);
+		if (ex.dataType != "int")
+		{
+			p_par->setError(ec_p_nonintsubscript, *p_identX, *p_identY, "Array subscript must be of type \"int\"");
+			return 0;
+		}
+		else if (!ex.isConst)
+		{
+			p_par->setError(ec_p_expmustbeconst, *p_identX, *p_identY, ex.rpn);
+			return 0;
+		}
+
+		//evaluate as a const expression, compile time expressions 
+		//		p_par->ast.constTab.at(symi->fullIdent) = evalConstExp(p_par,ex);
+
+		//consume closing bracket
+		p_par->lexer->nextToken();
+	}
+
+	return 1;
+}
+
+int parse::parseDecVar_Exp(bcParser* p_par, bcSymbol* p_ident, int *p_identX, int *p_identY)
+{
+	bcExpression ex;
+
+	switch (p_par->lexer->getToken()->type)
+	{
+	case tt_scolon:
+		//variable declared with no initialising value;
+		parseSColon(p_par);
+		break;
+
+	case tt_assign:
+		//parse as an expression
+		p_par->lexer->rewind();	
+		ex = parseFExp(p_par);
+		if (p_ident->isArray && !ex.isArray)
+		{
+			p_par->setError(ec_p_expmustbearray, *p_identX, *p_identY, ex.rpn);
+			return 0;
+		}
+		//parse remaining semi colon
+		parseSColon(p_par);
+		break;
+
+	default:
+		p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data);
+		return 0;
+	}
+	return 1;
+}
+
 void parse::parseDecVar(bcParser* p_par)
 {
 	int ix, iy;
@@ -369,78 +511,13 @@ void parse::parseDecVar(bcParser* p_par)
 		p_par->lexer->nextToken();
 	}
 
-	//1. variable's type	(int, string etc)
-	pnt.tokens.push_back(*p_par->lexer->getToken());
-	switch (p_par->lexer->getToken()->type)
-	{
-		//basic types
-	case tt_bool:	case tt_int:	case tt_float:	case tt_string:
-		p_par->addChild(bcParseNode(pn_type, *p_par->lexer->getToken()));
-		symt.dataType = p_par->getSymbol(p_par->lexer->getToken()->data)->ident;
-		p_par->lexer->nextToken();
-		break;
-
-		//user type
-	case tt_ident:
-		//parse and save the ident
-		pni = parseIdent(p_par);
-		symt = *p_par->getSymbol(pni.tokens.at(0).data);
-		//if it ent a type, error!
-		if (symt.type != st_type)
-			return	p_par->setError(ec_p_invalidsymbol, pni.tokens.at(0).data);
-		//add the node
-		symt.dataType = symt.fullIdent;
-		p_par->addChild(pnt = bcParseNode(pn_type, symt.fullIdent));
-		break;
-	default:
-		//no cigar
-		return p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data);
-	}
-
-	//2. variable identifier	
-	switch (p_par->lexer->getToken()->type)
-	{
-	case tt_ident:
-		ix = p_par->lexer->getToken()->x;
-		iy = p_par->lexer->getToken()->y;	//for error reporting porpoises
-		//add symbol
-		symi = addIdentDec(p_par, st_var);
-		p_par->getSymbol(symi->fullIdent)->dataType = symt.dataType;
-		p_par->getSymbol(symi->fullIdent)->isConst = setToConst;
-		if (!(p_par->getSymbol(symi->fullIdent)->isArray = symt.isArray))
-			p_par->getSymbol(symi->fullIdent)->size = 1;
-		//if(p_par->currentScope->type==st_namespace)
-		//p_par->currentScope->offset += getTypeSize(symi);
-		if (symi)
-			p_par->ast.stackFrames[p_par->ast.stackFrames.size() - 1].localVars.push_back(symi->fullIdent);
-		else
-			return;	//errors redef
-		p_par->addChild(bcParseNode(pn_ident, symi->fullIdent));
-		break;
-	default:
-		return p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data);
-	}
-
-	//3. (optional) array subscripts
-	if (p_par->lexer->getToken()->type == tt_obracket)
-	{
-		//consume opening bracket
-		p_par->lexer->nextToken();
-
-		//adjust symbol table entry
-		p_par->getSymbol(symi->fullIdent)->isArray = true;
-		//parse expression; type must convert to int, and be const
-		ex = parseFExp(p_par);
-		if (ex.dataType != "int")
-			return p_par->setError(ec_p_nonintsubscript, ix, iy, "Array subscript must be of type \"int\"");
-		else if (!ex.isConst)
-			return p_par->setError(ec_p_expmustbeconst, ix, iy, ex.rpn);
-		//evaluate as a const expression, compile time expressions 
-		//		p_par->ast.constTab.at(symi->fullIdent) = evalConstExp(p_par,ex);
-
-		//consume closing bracket
-		p_par->lexer->nextToken();
-	}
+	//1. parse variables type
+	if ((symt = parseDecVar_Type(p_par,&pnt,&pni)).type == pn_null)
+		return;
+	
+	//2. variable identifier
+	if (!parseDecVar_Ident(p_par,&symt,symi,&ix,&iy,&setToConst))
+		return;
 
 	//now we know if its an array, make sure to adjust the stack offset 
 	//with the size of this variable
@@ -448,21 +525,9 @@ void parse::parseDecVar(bcParser* p_par)
 	p_par->sOffset += getTypeSize(pnt.tokens.at(0)) * p_par->getSymbol(symi->fullIdent)->size;
 
 	//3. semi colon, or assignment (optional)
-	switch (p_par->lexer->getToken()->type)
-	{
-	case tt_scolon:
-		parseSColon(p_par);
-		break;
-	case tt_assign:
-		p_par->lexer->rewind();	//parse as an expression
-		ex = parseFExp(p_par);
-		if (symi->isArray && !ex.isArray)
-			return p_par->setError(ec_p_expmustbearray, ix, iy, ex.rpn);
-		parseSColon(p_par);
-		break;
-	default:
-		return p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data);
-	}
+	if (!parseDecVar_Exp(p_par,symi,&ix,&iy))
+		return;
+
 	p_par->parent();
 }
 
@@ -1298,15 +1363,15 @@ bcSymbol* parse::addIdentDec(bcParser* p_par, bcSymbolType ty)
 	if (sym.type != st_null)
 		if (p_par->getSymbol(getFullIdent(p_par, sym.ident, p_par->currentScope))
 			&& p_par->getSymbol(getFullIdent(p_par, sym.ident, p_par->currentScope))->type != st_null)
-		{
-		//same identifier exists in this scope
-		p_par->setError(ec_p_redefinition, sym.ident);
-		return nullptr;	//redefinition
-		}
-		else
-		{
-			sym.fullIdent = getFullIdent(p_par, sym.ident, p_par->currentScope);
-		}
+			{
+				//same identifier exists in this scope
+				p_par->setError(ec_p_redefinition, sym.ident);
+				return nullptr;	//redefinition
+			}
+			else
+			{
+				sym.fullIdent = getFullIdent(p_par, sym.ident, p_par->currentScope);
+			}
 	//no ident of that name in current scope, declare variable
 	sym.type = ty;
 	p_par->addSymbol(&sym);
@@ -1381,6 +1446,15 @@ bool parse::checkOperandTypes(bcParser* p_par, bcToken oper1, bcToken op, bcToke
 	}
 
 	return false;
+}
+
+bcSymbolType bc::parse::getTypeFromDataType(bcParser *p_par, std::string p_dt)
+{
+	if (p_dt == "int")
+		return st_type;
+	if (p_par->getSymbol(p_dt) != nullptr)
+		return (p_par->getSymbol(p_dt)->type);
+	return bcSymbolType();
 }
 
 string parse::getDatatype(bcParser* p_par, bcToken tk)

@@ -319,6 +319,24 @@ string bc::bcvm::importTestAsString(string p_t)
 		"int b = 3; \n"
 		"int c = (a + b) * a + (b * b);\n"
 		"return c;";
+
+	else if (p_t == "8")
+		return
+		"func int func1()\n"
+		"{\n"
+		"\tint f1 = 2;\n"
+		"\treturn f1;\n"
+		"}\n"
+		"return func1();\n";
+	else if (p_t == "9")
+		return
+		"func int func1()\n"
+		"{\n"
+		"\tint f1 = 2;\n"
+		"\treturn f1;\n"
+		"}\n"
+		"int a=3;\n"
+		"return a + func1();\n";
 	else
 		return ";";
 

@@ -209,6 +209,7 @@ namespace bc
 		bool isIdentExplicit(bcParser*,std::string);
 		
 		//symbol ting
+		bcSymbolType getTypeFromDataType(bcParser*, std::string);
 		std::string getDatatype(bcParser*,lex::bcToken);
 		
 		//ident strings

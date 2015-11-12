@@ -131,6 +131,7 @@ namespace bc
 			tree<parse::bcParseNode>::iterator pi;	//parse index
 			parse::bcAST* ast;
 			std::vector<bcByteCode>* istream;
+			std::unordered_map<std::string,std::vector<bcByteCode>*> fistream;	//method string signature to functions istream
 			bcExecContext* output;
 			bool inDecFunc;
 			int ifJmpIndex;
@@ -151,7 +152,7 @@ namespace bc
 		void genRpnToByteCode(bcByteCodeGen*,std::vector<parse::bcParseNode*>*);
 		void genNodeToByteCode(bcByteCodeGen*,parse::bcParseNode*);
 		void genStackFrames(bcByteCodeGen*,bcExecContext*);
-	
+		void genFuncIstreams(bcByteCodeGen*,bcExecContext*);
 		bcValType getValType(parse::bcSymbol*);
 		int getValTypeSize(bcValType);
 		void adjustJumps(bcByteCodeGen*,int,int,int);

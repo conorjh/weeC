@@ -239,6 +239,10 @@ bcExecContext* bcByteCodeGen::gen()
 	
 	//push global stackframe variables
 	addByteCode(bcByteCode(oc_popsf, 0));
+	addByteCode(bcByteCode(oc_halt));
+
+	//add all functions below main;
+	genFuncIstreams(this,output);
 
 	output->istream = *this->istream;
 	return output;
@@ -303,6 +307,8 @@ void bc::vm::genDecFunc(bcByteCodeGen* bg)
 	bcFuncInfo* fi;
 	std::string paramString;
 	bg->inDecFunc = true;
+	vector<bcByteCode>* funcIstream;
+	vector<bcByteCode>* oldIstream;
 
 	//collect func dec info from current node
 	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
@@ -319,9 +325,16 @@ void bc::vm::genDecFunc(bcByteCodeGen* bg)
 				bg->pi = fi->body[paramString];
 				fi->gOffset = bg->istream->size();	
 				
+				//generate instructions into a seperate container from $global
+				oldIstream = bg->istream;
+				bg->istream = new vector<bcByteCode>();
 				bg->addByteCode(bcByteCode(oc_pushsf,fi->sfIndex));
 				genBlock(bg);
 				bg->addByteCode(bcByteCode(oc_popsf, fi->sfIndex));
+				funcIstream = bg->istream;	
+				bg->fistream.insert(make_pair(paramString, funcIstream));
+				bg->istream = oldIstream;
+
 				break;
 
 			case pn_decparamlist:
@@ -345,9 +358,24 @@ void bc::vm::genDecNamespace(bcByteCodeGen* bg)
 		genBlock(bg);
 }
 
-void bc::vm::genFuncCall(bcByteCodeGen *)
+void bc::vm::genFuncCall(bcByteCodeGen *bg)
 {
+	int olddepth = bg->ast->tree->depth(bg->pi);
+	++bg->pi;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+		switch (bg->pi->type)
+		{
+		case pn_exp:
+			genExp(bg);
+			break;
 
+		case pn_type:
+		default:
+			bg->pi->type;
+			++bg->pi;
+			break;
+		}
+	
 }
 
 void bc::vm::genDecVar(bcByteCodeGen* bg)
@@ -358,15 +386,15 @@ void bc::vm::genDecVar(bcByteCodeGen* bg)
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
 		{
-			case pn_exp:
-				genExp(bg);
-				hasExp = true;
-				break;
+		case pn_exp:
+			genExp(bg);
+			hasExp = true;
+			break;
 
-			case pn_type:
-			default:
-				++bg->pi;
-				break;
+		case pn_type:
+		default:
+			++bg->pi;
+			break;
 		}
 
 	//pop the result of the expression into eax
@@ -444,7 +472,7 @@ void bc::vm::genExp(bcByteCodeGen* bg)
 			break;
 
 			//variables
-		case pn_ident:	case pn_varident:	case pn_funcident:
+		case pn_ident:	case pn_varident:	case pn_funcident:	case pn_funccall:
 			out.push_back(&bg->pi.node->data);
 			break;
 
@@ -556,7 +584,8 @@ void bc::vm::genRpnToByteCode(bcByteCodeGen* bg, std::vector<bcParseNode*>* rpn)
 				bg->addByteCode(oc_pushfs, bcstoi(rpn->at(0)->tokens.at(1).data));	//push value from stack, using stackindex from tokens[1]
 			break;
 
-		case pn_funcident:
+		case pn_funcident: case pn_funccall:
+			bg->addByteCode(oc_call, bcstoi(rpn->at(0)->tokens.at(0).data));
 			break;
 
 			//operators
@@ -693,6 +722,13 @@ void bc::vm::genStackFrames(bcByteCodeGen *bg,bcExecContext* p_ec)
 			off++;	//todo: increase the offset based on data type size (int=1,float =2)
 		}
 	}
+}
+
+void bc::vm::genFuncIstreams(bcByteCodeGen *bg, bcExecContext *ec)
+{
+	for (auto t = bg->fistream.begin(); t != bg->fistream.end(); ++t)
+		for (auto y = 0; y < t->second->size() - 1; ++y)
+			ec->istream.push_back(t->second->at(y));
 }
 
 void bc::vm::adjustJumps(bcByteCodeGen* bg, int beg, int end, int add)

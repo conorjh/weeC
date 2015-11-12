@@ -13,8 +13,8 @@ namespace bc
 	namespace parse
 	{
 		bcSymbol parseDecVar_Type(bcParser*,bcParseNode* p_type, bcParseNode* p_ident);
-		int parseDecVar_Ident(bcParser* p_par, bcSymbol* p_type, bcSymbol* p_ident, int* p_identX, int* p_identY, bool* p_setToConst);
-		int parseDecVar_Exp(bcParser* p_par,bcSymbol* p_ident, int*,int*);
+		int parseDecVar_Ident(bcParser* p_par, bcSymbol* p_type, bcSymbol*& p_ident, int* p_identX, int* p_identY, bool* p_setToConst);
+		int parseDecVar_Exp(bcParser* p_par,bcSymbol*& p_ident, int*,int*);
 	}
 }
 bcExpression::bcExpression()
@@ -143,7 +143,8 @@ void bcParser::startup()
 	pindex = ast.tree->begin();
 
 	//symbol table
-	ast.stackFrames.push_back(*(currentStackFrame = new bcStackFrameInfo));	//global stackframe
+	ast.stackFrames.push_back(bcStackFrameInfo());	//global stackframe
+	currentStackFrame = &ast.stackFrames[0];
 	ast.funcTab = new std::unordered_map<string, bcFuncInfo>();
 	ast.symTab = new std::unordered_map<string, bcSymbol>();
 
@@ -405,7 +406,7 @@ bcSymbol parse::parseDecVar_Type(bcParser* p_par, bcParseNode* p_pnt, bcParseNod
 	return symt;
 }
 
-int bc::parse::parseDecVar_Ident(bcParser* p_par,bcSymbol* p_type, bcSymbol* p_ident, int* p_identX, int* p_identY, bool* p_setToConst)
+int bc::parse::parseDecVar_Ident(bcParser* p_par,bcSymbol* p_type, bcSymbol*& p_ident, int* p_identX, int* p_identY, bool* p_setToConst)
 {
 	switch (p_par->lexer->getToken()->type)
 	{
@@ -464,7 +465,7 @@ int bc::parse::parseDecVar_Ident(bcParser* p_par,bcSymbol* p_type, bcSymbol* p_i
 	return 1;
 }
 
-int parse::parseDecVar_Exp(bcParser* p_par, bcSymbol* p_ident, int *p_identX, int *p_identY)
+int parse::parseDecVar_Exp(bcParser* p_par, bcSymbol*& p_ident, int *p_identX, int *p_identY)
 {
 	bcExpression ex;
 
@@ -620,7 +621,8 @@ void parse::parseDecFunc(bcParser* p_par)
 
 		//new stackframe
 		fi.sfIndex = p_par->ast.stackFrames.size();
-		p_par->ast.stackFrames.push_back(*(p_par->currentStackFrame = new bcStackFrameInfo));
+		p_par->ast.stackFrames.push_back(bcStackFrameInfo());
+		p_par->currentStackFrame = &p_par->ast.stackFrames.at(p_par->ast.stackFrames.size() - 1);
 		p_par->addChild(bcParseNode(pn_funcident, sym.fullIdent));
 		break;
 	default:
@@ -699,6 +701,7 @@ void parse::parseParamListCall(bcParser* p_par, bcSymbol* id)
 	//check this signature exists within the given idents symbol table signatures
 	if (!checkForOverload(p_par, &cpl, id))
 		return p_par->setError(ec_p_badparams, p_par->lexer->getToken()->data);
+		
 
 	//consume cparen
 	p_par->lexer->nextToken();
@@ -1065,6 +1068,7 @@ void parse::parseFuncCall(bcParser* p_par, bcParseNode pn)
 
 	//semi colon
 	parseSColon(p_par);
+
 	p_par->parent();
 }
 

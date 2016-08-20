@@ -1,0 +1,790 @@
+#include "bytecode.h"
+#include "lexer.h"
+#include "util.h"
+#include <vector>
+#include <unordered_map>
+
+using namespace std;
+using namespace wc::lex;
+using namespace wc::vm;
+using namespace wc::parse;
+using namespace wc::util;
+
+wc::vm::wcStack::wcStack()
+{
+
+}
+
+void wc::vm::wcStack::clear()
+{
+	cont.clear();
+}
+
+void wc::vm::wcStack::clear(wcExecContext* ec)
+{
+	cont.clear();
+	if (ec)
+		ec->reg[tos] = 0;
+}
+
+int wc::vm::wcStack::pop()
+{
+	int ret = cont[cont.size() - 1];
+	cont.pop_back();
+	return ret;
+}
+
+//pops top stack element, updates top of stack register
+int wc::vm::wcStack::pop(wcExecContext* ec)
+{
+	int ret = 0;
+	if (cont.size())
+		ret = cont[cont.size() - 1];
+	else
+		return 0;
+
+	cont.pop_back();
+
+	//change top of stack register
+	if (ec)
+		ec->reg[tos]--;
+	return ret;
+}
+
+int* wc::vm::wcStack::at(int p_i)
+{
+	//if p_i is minus, treat as a relative index from top of stack
+	if (p_i < 0)
+		return &cont[cont.size() - 1 + p_i];
+	//otherwise, absolute reference
+	return &cont[p_i];
+}
+
+int wc::vm::wcStack::top()
+{
+	return cont[cont.size() - 1];
+}
+
+int wc::vm::wcStack::size()
+{
+	return cont.size();
+}
+
+void wc::vm::wcStack::push(int a)
+{
+	cont.push_back(a);
+}
+
+void wc::vm::wcStack::push(wcExecContext* ec, int a)
+{
+	cont.push_back(a);
+	if (ec)
+		ec->reg[tos]++;
+}
+
+wc::vm::wcByteCode::wcByteCode()
+{
+	arg1 = 0;
+	arg2 = 0;
+	op = oc_nop;
+}
+
+wc::vm::wcByteCode::wcByteCode(wcOpCode p_oc)
+{
+	op = p_oc;
+	arg1 = arg2 = 0;
+}
+
+wc::vm::wcByteCode::wcByteCode(wcOpCode p_oc, int p_arg1)
+{
+	op = p_oc;
+	arg1 = p_arg1;
+}
+
+wc::vm::wcByteCode::wcByteCode(wcOpCode p_oc, int p_arg1, int p_arg2)
+{
+	op = p_oc;
+	arg1 = p_arg1;
+	arg2 = p_arg2;
+}
+
+wc::vm::wcByteCode::wcByteCode(int p_oc)
+{
+	op = wcOpCode(p_oc);
+}
+
+wc::vm::wcByteCode::wcByteCode(int p_oc, int p_arg1)
+{
+	op = wcOpCode(p_oc);
+	arg1 = p_arg1;
+}
+
+wc::vm::wcByteCode::wcByteCode(int p_oc, int p_arg1, int p_arg2)
+{
+	op = wcOpCode(p_oc);
+	arg1 = p_arg1;
+	arg2 = p_arg2;
+}
+
+wc::vm::wcExecContext::wcExecContext()
+{
+	this->regFlags = 0;
+	for (int t = 0; t < wcMaxRegisters; t++)
+		reg[t] = 0;
+	halt = false;
+}
+
+void wc::vm::wcExecContext::clear()
+{
+	halt = false;
+	istream.clear();
+	newstore.clear();
+	stack.clear();
+	symTab.clear();
+	for (int t = 0; t < wcMaxRegisters; ++t)
+	{
+		reg[t] = 0;
+		regFlags[t] = 0;
+	}
+}
+
+int wc::vm::getValTypeSize(wcValType t)
+{
+	switch (t)
+	{
+	default:
+	case vt_bool:
+	case vt_string:
+	case vt_int:
+		return 1;
+	case vt_float:
+		return 2;
+	}
+}
+
+wcValType wc::vm::getValType(wcSymbol* sym)
+{
+	switch (sym->type)
+	{
+	case st_type:
+	case st_var:
+		if (sym->dataType == "int")
+			return vt_int;
+		else if (sym->dataType == "float")
+			return vt_float;
+		else if (sym->dataType == "string")
+			return vt_string;
+		else if (sym->dataType == "bool")
+			return vt_bool;
+		else
+			return vt_mem;
+		break;
+	}
+	return vt_null;
+}
+
+wc::vm::wcByteCodeGen::wcByteCodeGen()
+{
+	inDecFunc = false;
+}
+
+unsigned int wc::vm::wcByteCodeGen::addByteCode(wcByteCode wc)
+{
+	istream->push_back(wc);
+	return istream->size() - 1;
+}
+
+unsigned int wc::vm::wcByteCodeGen::addByteCode(wcOpCode oc)
+{
+	wcByteCode wc;
+	wc.op = oc;
+	return addByteCode(wc);
+}
+
+unsigned int wc::vm::wcByteCodeGen::addByteCode(wcOpCode oc, int a1)
+{
+	wcByteCode wc;
+	wc.op = oc;	wc.arg1 = a1;	wc.arg2 = 0;
+	return addByteCode(wc);
+}
+
+unsigned int wc::vm::wcByteCodeGen::addByteCode(wcOpCode oc, int a1, int a2)
+{
+	wcByteCode wc;
+	wc.op = oc;	wc.arg1 = a1;	wc.arg2 = a2;
+	return addByteCode(wc);
+}
+
+wcByteCode* wc::vm::wcByteCodeGen::getByteCode(unsigned int ind)
+{
+	return &istream->at(ind);
+}
+
+wcByteCode* wc::vm::wcByteCodeGen::getByteCode(unsigned int ind, bool isFunc)
+{
+	return &istream->at(ind);
+}
+
+int wc::vm::wcByteCodeGen::getError()
+{
+	return errorCode;
+}
+
+wcExecContext* wc::vm::wcByteCodeGen::gen()
+{
+	output = new wcExecContext();
+	wcByteCode wc;
+	istream = new std::vector<wcByteCode> ;
+	pi = ast->tree->begin();
+
+	//populate stackframes
+	//genStackFrames(this, output);
+
+	//push command line args
+
+	//push global stackframe variables
+	//addByteCode(oc_pushsf,0);
+
+	//gen script functions and global statements
+	while (pi != ast->tree->end())
+		genStatement(this);
+	
+	//push global stackframe variables
+	//addByteCode(wcByteCode(oc_popsf, 0));
+	addByteCode(wcByteCode(oc_halt));
+
+	//add all functions below main;
+	genFuncIstreams(this,output);
+
+	output->istream = *this->istream;
+	return output;
+}
+
+void wc::vm::genStatement(wcByteCodeGen* bg)
+{
+	int olddepth = bg->ast->tree->depth(bg->pi);
+	bg->pi++;
+
+	while (bg->pi != bg->ast->tree->end() && bg->ast->tree->depth(bg->pi) >= olddepth)
+		switch (bg->pi->type)
+	{
+		case pn_null:
+		case pn_head:
+		case pn_statement:
+			bg->pi++;
+			break;
+		
+		case pn_exp:
+			genExp(bg);
+			bg->addByteCode(oc_popr, eax);
+			break;
+		case pn_namespacedec:
+			genDecNamespace(bg);
+			break;
+		case pn_funcdec:
+			genDecFunc(bg);
+			break;
+		case pn_funccall:
+			genFuncCall(bg);
+			break;
+		case pn_vardec:
+			genDecVar(bg);
+			break;
+		case pn_block:
+			genBlock(bg);
+			break;
+		case pn_if:
+			genIf(bg);
+			break;
+		case pn_return:
+			genReturn(bg);
+			break;
+		default:
+			++bg->pi;
+	}
+}
+
+void wc::vm::genDecParamList(wcByteCodeGen* bg)
+{
+	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+		bg->pi++;
+}
+
+void wc::vm::genDecFunc(wcByteCodeGen* bg)
+{
+	int fOffset;
+	tree<wcParseNode>::iterator oldpi;
+	wcFuncInfo* fi=nullptr;
+	std::string paramString;
+	bg->inDecFunc = true;
+	vector<wcByteCode>* funcIstream;
+	vector<wcByteCode>* oldIstream;
+
+	//collect func dec info from current node
+	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+		switch (bg->pi->type)
+		{
+			case pn_funcident:
+				fi = &bg->ast->funcTab->at(bg->pi.node->data.tokens.at(0).data);
+				++bg->pi;
+				break;
+
+			case pn_block:
+				oldpi = bg->pi;
+				bg->pi = fi->body;
+				fi->gOffset = bg->istream->size();	
+				
+				//generate instructions into a seperate container from $global
+				oldIstream = bg->istream;
+				bg->istream = new vector<wcByteCode>();
+				bg->addByteCode(wcByteCode(oc_pushsf,fi->sfIndex));
+				genBlock(bg);
+				bg->addByteCode(wcByteCode(oc_popsf, fi->sfIndex));
+				funcIstream = bg->istream;	
+				bg->fistream.insert(make_pair(paramString, funcIstream));
+				bg->istream = oldIstream;
+				break;
+
+			case pn_decparamlist:
+				paramString = bg->pi->tokens.at(0).data;
+				genDecParamList(bg);
+				break;
+
+			case pn_type:
+			default:
+				++bg->pi;
+				break;
+		}
+	bg->inDecFunc = false;
+}
+
+void wc::vm::genDecNamespace(wcByteCodeGen* bg)
+{
+	//collect func dec info from current node
+	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+		genBlock(bg);
+}
+
+void wc::vm::genFuncCall(wcByteCodeGen *bg)
+{
+	std::string ident;
+	int olddepth = bg->ast->tree->depth(bg->pi);
+	++bg->pi;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+		switch (bg->pi->type)
+		{
+		case pn_exp:
+			genExp(bg);
+			break;
+
+		case pn_type:
+			break;
+		case pn_ident:
+			ident = bg->pi->tokens.at(0).data;
+			break;
+		default:
+			bg->pi->type;
+			++bg->pi;
+			break;
+		}
+	
+}
+
+void wc::vm::genDecVar(wcByteCodeGen* bg)
+{
+	bool hasExp = false;
+	int olddepth = bg->ast->tree->depth(bg->pi);
+	++bg->pi;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+		switch (bg->pi->type)
+		{
+		case pn_exp:
+			genExp(bg);
+			bg->addByteCode(oc_popr, eax);
+			hasExp = true;
+			break;
+
+		case pn_type:
+			for (int t = 0; t < getTypeSize(bg->pi->tokens.at(0)); ++t)
+				bg->addByteCode(oc_push, 0);	//reserve space for this variable
+			++bg->pi;
+			break;
+
+		default:
+			++bg->pi;
+			break;
+		}
+
+	//set the initial value from the expression we generated earlier
+	if (hasExp)
+	{
+		
+	}
+	
+	//pop variable onto stack from expression register, now 
+	//accesible to future code in this scope
+	//maybe not
+	//bg->addByteCode(oc_pushfr, eax);
+}
+
+void wc::vm::genReturn(wcByteCodeGen* bg)
+{
+	int olddepth = bg->ast->tree->depth(bg->pi);
+	++bg->pi;
+
+	genExp(bg);
+	bg->addByteCode(oc_popr, eax);
+	bg->addByteCode(oc_mov, eax, ret);
+}
+
+void wc::vm::genIf(wcByteCodeGen* bg)
+{
+	//collect func dec info from current node
+	unsigned int  truejump, elsejump, iend;
+	unsigned int ibegin = bg->istream->size() - 1;
+	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+		switch (bg->pi->type)
+		{
+			case pn_exp:
+				genExp(bg);
+				bg->addByteCode(oc_popr, eax);
+				break;
+
+			case pn_if_trueblock:
+				genBlock(bg);
+				truejump = bg->addByteCode(oc_jmp);
+				break;
+
+			case pn_if_elseblock:
+				genBlock(bg);
+				//point the jmp at the end of the true block past the else block
+				bg->getByteCode(truejump, bg->inDecFunc)->arg1 = elsejump = bg->istream->size();	break;
+			default:
+				bg->pi++;
+				break;
+		}
+
+	//if this is the last statement, we need an address to land on after else
+	iend = bg->addByteCode(oc_nop);
+
+	//pop stack to expression result register	
+	//bg->addByteCode(oc_lrfs,eax);
+	//now that we know the instruction, edit all prior je/jne/jg/jge to the right block
+	adjustJumps(bg, ibegin, iend, truejump + 1);
+}
+
+//initially generates parsenodes in RPN order, then 
+void wc::vm::genExp(wcByteCodeGen* bg)
+{
+	bool foundParen = false;
+	std::vector<wcParseNode*> out, stk;
+	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	{
+		switch (bg->pi->type)
+		{
+		case pn_exp:
+			genExp(bg);
+			break;
+
+			//literals
+		case pn_strlit:	case pn_fltlit:	case pn_intlit:
+		case pn_true:	case pn_false:
+			out.push_back(&bg->pi.node->data);
+			break;
+
+			//variables
+		case pn_ident:	case pn_varident:	case pn_funcident:	case pn_funccall:
+			out.push_back(&bg->pi.node->data);
+			//bg->pi.node->data
+			break;
+
+			//operators
+		case pn_logor:	case pn_logand:	case pn_equal:	case pn_notequal:	case pn_assign:
+		case pn_greater:case pn_less:	case pn_lessequal:	case pn_greaterequal:
+		case pn_mult:	case pn_div:	case pn_plus:	case pn_minus:	case pn_lognot:	case pn_expo:	case pn_mod:
+			while (
+				stk.size() > 0 && (getPrecedence(bg->pi.node->data.tokens[0]) == getPrecedence(stk[stk.size() - 1]->tokens.at(0)) && !getAssociativity(bg->pi.node->data.tokens[0]) ||
+				getAssociativity(bg->pi.node->data.tokens[0]) && getPrecedence(bg->pi.node->data.tokens[0]) < getPrecedence(stk[stk.size() - 1]->tokens.at(0)))
+				)
+			{
+				out.push_back(stk[stk.size() - 1]);
+				stk.erase(stk.end() - 1, stk.end());
+			}
+			stk.push_back(&bg->pi.node->data);
+			break;
+
+		case pn_oparen:
+			stk.push_back(&bg->pi.node->data);
+			break;
+
+		case pn_cparen:
+			foundParen = false;
+			//pop stack to ouput til we find a (, error if not
+			while (!foundParen && stk.size())
+				if (stk[stk.size() - 1]->type == pn_oparen)
+				{
+					foundParen = true;
+				}
+				else
+				{
+					out.push_back(stk[stk.size() - 1]);
+					stk.erase(stk.end() - 1, stk.end());
+				}
+
+			//mismatched params - error
+			if (!foundParen)
+				return;
+			stk.erase(stk.end() - 1, stk.end());
+
+			//func ident
+			if (stk.size() && stk[stk.size() - 1]->type == pn_funcident)
+			{
+				out.push_back(stk[stk.size() - 1]);
+				stk.erase(stk.end() - 1, stk.end());
+			}
+			break;
+
+		case pn_type:
+		default:
+			break;
+		}
+		++bg->pi;
+	}
+
+	//pop off remaining operators
+	while (stk.size() > 0)
+	{
+		out.push_back(stk[stk.size() - 1]);
+		stk.erase(stk.end() - 1, stk.end());
+	}
+	genRpnToByteCode(bg, &out);
+}
+
+void wc::vm::genBlock(wcByteCodeGen* bg)
+{
+	int olddepth = bg->ast->tree->depth(bg->pi); bg->pi++;
+	while (bg->ast->tree->depth(bg->pi) > olddepth)
+		genStatement(bg);
+
+}
+
+//rpn is provided as a vector of parsenodes
+void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
+{
+	wcParseNode* lastnode;
+	//	wcByteCode wc;
+	while (rpn->size())
+	{
+		switch (rpn->at(0)->type)
+		{
+		case pn_strlit:
+			//bg->addByteCode(oc_push,vt_string,wcstoi(rpn->at(0)->tokens.at(0).data));
+			break;
+		case pn_fltlit:
+			bg->addByteCode(oc_push, wcstof(rpn->at(0)->tokens.at(0).data));
+			break;
+		case pn_intlit:
+			bg->addByteCode(oc_push, wcstoi(rpn->at(0)->tokens.at(0).data));
+			break;
+		case pn_true:
+			bg->addByteCode(oc_push, 1);
+			break;
+		case pn_false:
+			bg->addByteCode(oc_push, 0);
+			break;
+
+			//variables
+		case pn_ident:
+		case pn_varident:
+			//if (rpn->at(0)->tokens.at(1).type == tt_lvalue)
+				//copy stored value from stack, to the top of stack 
+				bg->addByteCode(oc_pushfs, wcstoi(rpn->at(0)->tokens.at(1).data));	//push value from stack, using stackindex from tokens[1]
+			//else
+				//copy stackindex of variable, to the top of stack 
+				//bg->addByteCode(oc_push, wcstoi(rpn->at(0)->tokens.at(1).data));
+			break;
+
+		case pn_funcident: case pn_funccall:
+			bg->addByteCode(oc_call, wcstoi(rpn->at(0)->tokens.at(0).data));
+			break;
+
+			//operators
+		case pn_lognot:
+			bg->addByteCode(oc_not);break;
+		case pn_logor:
+			bg->addByteCode(oc_or);break;
+		case pn_logand:
+			bg->addByteCode(oc_and);break;
+		case pn_equal:
+			bg->addByteCode(oc_cmp);
+			bg->addByteCode(oc_jne, bg->istream->size() + 3);
+			bg->addByteCode(oc_push, 1);
+			bg->addByteCode(oc_jmp, bg->istream->size() + 2);
+			bg->addByteCode(oc_push, 0); break;
+		case pn_notequal:
+			bg->addByteCode(oc_cmp);
+			bg->addByteCode(oc_je, bg->istream->size() + 3);
+			bg->addByteCode(oc_push, 1);
+			bg->addByteCode(oc_jmp, bg->istream->size() + 2);
+			bg->addByteCode(oc_push, 0); break;
+		case pn_greater:
+			bg->addByteCode(oc_cmp);
+			bg->addByteCode(oc_jle, bg->istream->size() + 3);
+			bg->addByteCode(oc_push, 1);
+			bg->addByteCode(oc_jmp, bg->istream->size() + 2);
+			bg->addByteCode(oc_push, 0); break;
+		case pn_less:
+			bg->addByteCode(oc_cmp);
+			bg->addByteCode(oc_jge, bg->istream->size() + 3);
+			bg->addByteCode(oc_push, 1);
+			bg->addByteCode(oc_jmp, bg->istream->size() + 2);
+			bg->addByteCode(oc_push, 0); break;
+		case pn_lessequal:
+			bg->addByteCode(oc_cmp);
+			bg->addByteCode(oc_jg, bg->istream->size() + 3);
+			bg->addByteCode(oc_push, 1);
+			bg->addByteCode(oc_jmp, bg->istream->size() + 2);
+			bg->addByteCode(oc_push, 0); break;
+		case pn_greaterequal:
+			bg->addByteCode(oc_cmp);
+			bg->addByteCode(oc_jl, bg->istream->size() + 3);
+			bg->addByteCode(oc_push, 1);
+			bg->addByteCode(oc_jmp, bg->istream->size() + 2);
+			bg->addByteCode(oc_push, 0); break;
+		case pn_assign:
+			//if(wcstoi(rpn->at(0)->tokens.at(1).data)>0)
+				bg->addByteCode(oc_assign, wcstoi(rpn->at(0)->tokens.at(1).data));	break;
+		case pn_mult:
+			bg->addByteCode(oc_mult);break;
+		case pn_div:
+			bg->addByteCode(oc_div);break;
+		case pn_plus:
+			bg->addByteCode(oc_plus);break;
+		case pn_minus:
+			bg->addByteCode(oc_minus);break;
+		case pn_mod:
+			bg->addByteCode(oc_mod);break;
+		case pn_expo:
+			bg->addByteCode(oc_expo);break;
+
+			//case pn_ident:
+		case pn_type:
+		default:
+			break;
+		}
+		lastnode = rpn->at(0);
+		rpn->erase(rpn->begin());
+	}
+
+}
+
+void wc::vm::genNodeToByteCode(wcByteCodeGen* bg, wcParseNode* pn)
+{
+	switch (pn->type)
+	{
+	case pn_strlit:
+		bg->addByteCode(oc_push, vt_string, 0);	break;
+	case pn_fltlit:
+		bg->addByteCode(oc_push, vt_float, wcstoi(pn->tokens.at(0).data));	break;
+	case pn_intlit:
+		bg->addByteCode(oc_push, vt_int, wcstoi(pn->tokens.at(0).data));		break;
+	case pn_true:
+		bg->addByteCode(oc_push, vt_bool, 1);		break;
+	case pn_false:
+		bg->addByteCode(oc_push, vt_bool, 0);		break;
+
+		//variables
+	case pn_ident:
+	case pn_varident:
+	case pn_funcident:
+		break;
+
+		//operators
+	case pn_logor:
+		bg->addByteCode(oc_or);
+		break;
+	case pn_logand:
+		bg->addByteCode(oc_and);
+		break;
+	case pn_assign:
+		bg->addByteCode(oc_mov);
+		break;
+	case pn_equal:
+		bg->addByteCode(oc_jne);
+	case pn_notequal:
+		bg->addByteCode(oc_je);
+	case pn_greater:
+		bg->addByteCode(oc_jle);
+	case pn_less:
+		bg->addByteCode(oc_jge);
+	case pn_lessequal:
+		bg->addByteCode(oc_jg);
+	case pn_greaterequal:
+		bg->addByteCode(oc_jl);
+	case pn_mult:
+		bg->addByteCode(oc_mult);
+		break;
+	case pn_div:
+		bg->addByteCode(oc_div);
+		break;
+	case pn_minus:
+		bg->addByteCode(oc_minus);
+		break;
+	case pn_lognot:
+		bg->addByteCode(oc_not);
+		break;
+	case pn_plus:
+		bg->addByteCode(oc_plus);
+		break;
+	}
+}
+
+//create our stackframe records - used to populate the stack with parameters, local variables etc for
+//each function call or scope change. 
+void wc::vm::genStackFrames(wcByteCodeGen *bg,wcExecContext* p_ec)
+{ 
+	unordered_map<string, int> identToId;
+	
+	for (int t = 0; t < bg->ast->stackFrames.size(); ++t)
+	{
+		int off = 0;
+		p_ec->stackFrames.insert(std::make_pair(t, std::vector<int>()));
+		for (int it = 0; it < bg->ast->stackFrames[t].localVars.size(); ++it)
+		{
+			wcVMSymbol sym;
+			sym.ident = bg->ast->stackFrames[t].localVars[it];
+			sym.offset = off;
+			sym.stackFrame = t;
+			p_ec->symTab.insert(make_pair(sym.ident, sym));
+			p_ec->stackFrames[t].push_back(0);	//push empty values for now TODO: init values go here
+			off++;	//todo: increase the offset based on data type size (int=1,float =2)
+		}
+	}
+}
+
+void wc::vm::genFuncIstreams(wcByteCodeGen *bg, wcExecContext *ec)
+{
+	for (auto t = bg->fistream.begin(); t != bg->fistream.end(); ++t)
+		for (auto y = 0; y < t->second->size() - 1; ++y)
+			ec->istream.push_back(t->second->at(y));
+}
+
+void wc::vm::adjustJumps(wcByteCodeGen* bg, int beg, int end, int add)
+{
+	for (int t = beg; t <= end; t++)
+		switch (bg->istream->at(t).op)
+	{
+		case oc_je:	case oc_jne:
+		case oc_jl:	case oc_jle:
+		case oc_jg:	case oc_jge:
+			bg->istream->at(t).arg1 = add;
+			break;
+		default:
+			break;
+	}
+}

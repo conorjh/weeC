@@ -17,7 +17,8 @@ int main(int argc, const char* args[])
 	wc::wcvm::execCmdLine();
 
 	//splash
-	cout << "weec vm v" << wcvm::wcvmVer << std::endl;
+	cout << "weeC Virtual Machine	v" << wcvm::wcvmVer 
+	<< std::endl << "- - - - - -" << std::endl;
 
 	//console loop
 	if (!wcvm::getData()->disableConsoleInput)

@@ -1,6 +1,8 @@
 #include "lexer.h"
 
 using namespace std;
+using namespace wc;
+using namespace lex;
 
 namespace wc {
 namespace lex {
@@ -12,6 +14,8 @@ namespace lex {
 		wcToken* nextToken_lexStrlit(wcLexer* p_l, wcToken p_t);
 		wcToken* nextToken_lexDualStep(wcLexer* p_l, wcToken p_t);
 
+}		//namespace wc::lex
+}		//namespace wc
 
 wc::lex::wcLexer::wcLexer()
 {
@@ -361,6 +365,3 @@ vector<string> wc::lex::tokenizeString(string p_in)
 		out.push_back(l.data.tokens[t].data);
 	return out;
 }
-
-}		//namespace wc::lex
-}		//namespace wc

@@ -138,7 +138,6 @@ void wc::vm::wcExecContext::clear()
 {
 	halt = false;
 	istream.clear();
-	newstore.clear();
 	stack.clear();
 	symTab.clear();
 	for (int t = 0; t < wcMaxRegisters; ++t)
@@ -237,13 +236,8 @@ wcExecContext* wc::vm::wcByteCodeGen::gen()
 	istream = new std::vector<wcByteCode> ;
 	pi = ast->tree->begin();
 
-	//populate stackframes
-	//genStackFrames(this, output);
-
 	//push command line args
 
-	//push global stackframe variables
-	//addByteCode(oc_pushsf,0);
 
 	//gen script functions and global statements
 	while (pi != ast->tree->end())
@@ -254,7 +248,7 @@ wcExecContext* wc::vm::wcByteCodeGen::gen()
 	addByteCode(wcByteCode(oc_halt));
 
 	//add all functions below main;
-	genFuncIstreams(this,output);
+	genAppendFuncIstreams(this,istream);
 
 	output->istream = *this->istream;
 	return output;
@@ -318,7 +312,7 @@ void wc::vm::genDecFunc(wcByteCodeGen* bg)
 	wcFuncInfo* fi=nullptr;
 	std::string paramString;
 	bg->inDecFunc = true;
-	vector<wcByteCode>* funcIstream;
+	vector<wcByteCode> funcIstream;
 	vector<wcByteCode>* oldIstream;
 
 	//collect func dec info from current node
@@ -338,12 +332,9 @@ void wc::vm::genDecFunc(wcByteCodeGen* bg)
 				
 				//generate instructions into a seperate container from $global
 				oldIstream = bg->istream;
-				bg->istream = new vector<wcByteCode>();
-				bg->addByteCode(wcByteCode(oc_pushsf,fi->sfIndex));
+				bg->istream = &funcIstream;
 				genBlock(bg);
-				bg->addByteCode(wcByteCode(oc_popsf, fi->sfIndex));
-				funcIstream = bg->istream;	
-				bg->fistream.insert(make_pair(paramString, funcIstream));
+				bg->fistream.insert(make_pair(fi->fullIdent, funcIstream));
 				bg->istream = oldIstream;
 				break;
 
@@ -767,11 +758,11 @@ void wc::vm::genStackFrames(wcByteCodeGen *bg,wcExecContext* p_ec)
 	}
 }
 
-void wc::vm::genFuncIstreams(wcByteCodeGen *bg, wcExecContext *ec)
+void wc::vm::genAppendFuncIstreams(wcByteCodeGen *bg, std::vector<wcByteCode> *istream)
 {
 	for (auto t = bg->fistream.begin(); t != bg->fistream.end(); ++t)
-		for (auto y = 0; y < t->second->size() - 1; ++y)
-			ec->istream.push_back(t->second->at(y));
+		for (auto y = 0; y < t->second.size(); ++y)
+			istream->push_back(t->second.at(y));
 }
 
 void wc::vm::adjustJumps(wcByteCodeGen* bg, int beg, int end, int add)

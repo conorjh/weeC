@@ -14,6 +14,8 @@ namespace wc
 		int wcstoi(std::string in);
 		std::string wcftos(float in);
 		float wcstof(std::string in);
+		std::string wcbtos(bool);
+		bool wcstob(std::string);
 		std::string getFileExt(std::string);
 
 		//str format

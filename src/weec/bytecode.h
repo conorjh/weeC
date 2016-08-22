@@ -100,7 +100,6 @@ namespace wc
 			std::bitset<wcMaxRegisters>				regFlags;					//flags for each register
 			std::vector<wcByteCode>					istream;					//instruction stream
 			wcStack									stack;						//runtime stack
-			std::unordered_map<std::string, int>		newstore;					//dynamic memory
 			bool									halt;						//has execution halted
 
 																				//debug data
@@ -132,7 +131,8 @@ namespace wc
 			tree<parse::wcParseNode>::iterator pi;	//parse index
 			parse::wcAST* ast;
 			std::vector<wcByteCode>* istream;
-			std::unordered_map<std::string, std::vector<wcByteCode>*> fistream;	//method string signature to functions istream
+			std::unordered_map<std::string, std::vector<wcByteCode>> fistream;	//method string signature to functions istream
+			std::unordered_map<std::string, int> labelToLineNumber;				//convert a label to an instruction index in istream
 			wcExecContext* output;
 			bool inDecFunc;
 			int ifJmpIndex;
@@ -153,7 +153,7 @@ namespace wc
 		void genRpnToByteCode(wcByteCodeGen*, std::vector<parse::wcParseNode*>*);
 		void genNodeToByteCode(wcByteCodeGen*, parse::wcParseNode*);
 		void genStackFrames(wcByteCodeGen*, wcExecContext*);
-		void genFuncIstreams(wcByteCodeGen*, wcExecContext*);
+		void genAppendFuncIstreams(wcByteCodeGen*, std::vector<wcByteCode>*);
 		wcValType getValType(parse::wcSymbol*);
 		int getValTypeSize(wcValType);
 		void adjustJumps(wcByteCodeGen*, int, int, int);

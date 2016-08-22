@@ -34,7 +34,6 @@ string wc::util::wcftos(float in)
 	return out.str();
 }
 
-
 float wc::util::wcstof(string in)
 {
 	float retval;
@@ -45,6 +44,19 @@ float wc::util::wcstof(string in)
 		return retval;
 }
 
+std::string wc::util::wcbtos(bool p_in)
+{
+	if (p_in)
+		return "true";
+	return "false";
+}
+
+bool wc::util::wcstob(std:: string p_in)
+{
+	if (p_in == "true")
+		return true;
+	return false;
+}
 string wc::util::getFileExt(string p_filename)
 {
 	int index = p_filename.size() - 1;

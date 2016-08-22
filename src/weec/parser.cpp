@@ -38,6 +38,7 @@ wc::parse::wcSymbol::wcSymbol()
 {
 	ident = fullIdent = dataType = "";
 	type = st_null;
+	offset = size = 0;
 	isStatic = isConst = isArray = false;
 }
 
@@ -170,6 +171,7 @@ void wc::parse::createGlobal(wcParser* p_par)
 	p_par->currentScope = p_par->getSymbol("$global");			//point global scope pointer to global
 
 }
+
 void wc::parse::createBasicTypes(wcParser* p_par)
 {
 	wcSymbol sym;
@@ -357,15 +359,10 @@ void wc::parse::parseStatement(wcParser* p_par)
 		switch (sym.type)
 		{
 		case st_function:
-			parseFuncCall(p_par, pni);
-			break;
 		case st_var:
-			if (sym.isArray)
-				parseArrayIndex(p_par, &pni);
 			ex = parseFExp(p_par, pni);
 			parseSColon(p_par);
 			break;
-
 		case st_null:
 		default:
 			//unknown identifier
@@ -566,12 +563,13 @@ int wc::parse::parseDecVar_Exp(wcParser* p_par, wcSymbol*& p_ident, int *p_ident
 
 void wc::parse::parseDecFunc(wcParser* p_par)
 {
-	int oldOffset = p_par->sOffset;
-	p_par->sOffset = 0;
-	wcSymbol* oldScope = p_par->currentScope;
-	wcStackFrameInfo* oldSf = p_par->currentStackFrame;
 	wcSymbol sym;
 	wcFuncInfo fi;
+	//make a note of previous stackframe etc
+	wcSymbol* oldScope = p_par->currentScope;
+	wcStackFrameInfo* oldSf = p_par->currentStackFrame;
+	int oldOffset = p_par->sOffset;
+	p_par->sOffset = 0;
 
 	//0. function keyword
 	switch (p_par->lexer->getToken()->type)
@@ -752,8 +750,8 @@ void wc::parse::parseParamListCall(wcParser* p_par, wcSymbol* id)
 	}
 
 	//check this signature exists within the given idents symbol table signatures
-	if (!checkForOverload(p_par, &cpl, id))
-		return p_par->setError(ec_p_badparams, p_par->lexer->getToken()->data);
+	//if (!checkForOverload(p_par, &cpl, id))
+	//	return p_par->setError(ec_p_badparams, p_par->lexer->getToken()->data);
 
 	//consume cparen
 	p_par->lexer->nextToken();
@@ -981,20 +979,22 @@ string wc::parse::lexIdent(wcParser* p_par)
 	return id;
 }
 
-//get symbol, if any, consume ident in lexer
+//parses an identifier, including namespaces and members
 //returns the parsenode, doesnt add it to the tree
 wcParseNode wc::parse::parseIdent(wcParser* p_par)
 {
-	string p_sIdent;
-	wcSymbol sym = resolveIdent(p_par, p_sIdent = lexIdent(p_par));
+	//increment the lexer to the end of the ident
+	string p_sIdent = lexIdent(p_par);
+	wcSymbol sym = resolveIdent(p_par, p_sIdent);
 
+	//make note of the fullident and stack offset for the code generator
 	wcParseNode pn(sym.type);
-	pn.tokens.push_back(wcToken(tt_ident, sym.fullIdent));
+	pn.tokens.push_back(wcToken(tt_ident, sym.fullIdent));																
 	pn.tokens.push_back(wcToken(tt_intlit, wcitos(sym.offset)));
 
 	//parse array index or func call
-	if (sym.isArray)
-		parseArrayIndex(p_par, &pn);
+	//if (sym.isArray)
+	//	parseArrayIndex(p_par, &pn);
 
 	return pn;
 }
@@ -1010,7 +1010,7 @@ void wc::parse::parseArrayIndex(wcParser* p_par, wcParseNode* pn)
 		iy = p_par->lexer->getToken()->y;
 		p_par->lexer->nextToken();
 
-		//exoect to parse an expression, check for error, array ref must be const int
+		//expect to parse an expression, check for error, array ref must be const int
 		ex = parseFExp(p_par);
 		if (!ex.isConst)
 		{
@@ -1022,11 +1022,6 @@ void wc::parse::parseArrayIndex(wcParser* p_par, wcParseNode* pn)
 			p_par->setError(ec_p_nonintsubscript, ix, iy, ex.rpn);
 			return;
 		}
-
-		//just check for int now
-		//pn->tokens.push_back(*p_par->lexer->getToken());
-
-		//p_par->lexer->nextToken();
 
 		//consume closing bracket
 		p_par->lexer->nextToken();
@@ -1042,11 +1037,11 @@ void wc::parse::parseArrayIndex(wcParser* p_par, wcParseNode* pn)
 //cleanup the return object
 wcSymbol wc::parse::resolveIdent(wcParser* p_par, string shortid)
 {
+	string buff, fullid;
+	int ind;
 	//return a null type symbol if the shortident doesnt resolve at any scope
 	wcSymbol sym;	sym.type = st_null;	sym.ident = shortid;
 	sym.fullIdent = getFullIdent(p_par, shortid, p_par->currentScope);
-	string buff, fullid;
-	int ind;
 
 	//deal with explicit identifiers (with scope/member prefix)
 	if (isIdentExplicit(p_par, shortid))
@@ -1095,7 +1090,6 @@ string wc::parse::getFullIdent(wcParser* p_par, string p_sIdent, wcSymbol* p_sco
 		default:
 			return "";
 		}
-
 	return p_sIdent;//actually explicait
 }
 
@@ -1122,6 +1116,8 @@ bool wc::parse::isIdentExplicit(wcParser* p_par, string id)
 //creates a short ident (normally the variable/function name - "foo") from a full ident ("$global::main::foo")
 string wc::parse::getShortIdent(string p_fid)
 {
+	//work our way backwards from the end of the string
+	//until we find a : or .    (this wont work for member variables)
 	int i = p_fid.size() - 1;
 	while (i > 0)
 	{
@@ -1148,13 +1144,11 @@ void wc::parse::parseFuncCall(wcParser* p_par, wcParseNode pn)
 	string sfindexstr = wcitos(p_par->ast.funcTab->at(sym.fullIdent).sfIndex);	//string version
 	wcToken sfindextok(tt_intlit, sfindexstr);									//token version
 	pn.type = pn_funccall; pn.tokens.push_back(sfindextok);
+	p_par->addNode(pn);
 
 	//params
 	parseParamListCall(p_par, p_par->getSymbol(sym.fullIdent));
-
-	//semi colon
-	parseSColon(p_par);
-
+	
 	p_par->parent();
 }
 
@@ -1379,15 +1373,15 @@ wcToken wc::parse::parseFactor(wcParser* p_par, wcExpression* ex)
 		switch (sym.type)
 		{
 		case st_function:
-			parseFuncCall(p_par, pni);		//parse as func call, passing the free floating wcParseNode we made
-			if (!sym.isConst)	ex->isConst = false;
+			//parseFuncCall(p_par, pni);		//parse as func call, passing the free floating wcParseNode we made
+			if (!sym.isConst)	
+				ex->isConst = false;
 			break;
 		case st_var:
 			if (!sym.isConst)
 				ex->isConst = false;
 			if (sym.isArray)
 				parseArrayIndex(p_par, &pni);	//the [] subscript
-			p_par->lastIdent = p_par->addChild(pni);
 			break;
 		case st_namespace:
 			p_par->setError(ec_p_invalidsymbol, p_par->lexer->getToken()->data);
@@ -1397,6 +1391,8 @@ wcToken wc::parse::parseFactor(wcParser* p_par, wcExpression* ex)
 			return oper1;
 			break;
 		}
+		p_par->lastIdent = p_par->addChild(pni);
+		p_par->lexer->nextToken();
 		break;
 
 	case tt_intlit:
@@ -1404,7 +1400,6 @@ wcToken wc::parse::parseFactor(wcParser* p_par, wcExpression* ex)
 	case tt_fltlit:
 	case tt_true:
 	case tt_false:
-		//ex.isConst = true by default
 		pn = wcParseNode(oper1.type);
 		pn.tokens.push_back(oper1);
 		p_par->addChild(pn);

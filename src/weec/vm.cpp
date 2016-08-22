@@ -329,23 +329,13 @@ void wc::vm::ocJle(wcExecContext* ec)
 		ec->reg[pc] = ec->istream[ec->reg[pc]].arg1;
 }
 
-//pop top 2 stack items, assign stackindex at t1 to value at t2, if sti is set, t2 is also a stackindex
+//pop top 2 stack items, use stackindex at arg1 and set it to the first value off the stack
+//push back the new value of variable at stackindex arg1 
 void wc::vm::ocAssign(wcExecContext* ec)
 {
 	ec->reg[t2] = ec->stack.pop(ec); ec->stack.pop(ec);
 	ec->reg[t1] = ec->istream[ec->reg[pc]].arg1;//ec->stack.pop(ec);
-	
-	if (ec->regFlags[sti])
-	{
-		ec->regFlags[sti] = 0;
-		*ec->stack.at(ec->reg[t1]) = *ec->stack.at(ec->reg[t2]);
-		ec->stack.push(*ec->stack.at(ec->reg[t2]));
-
-	}
-	else
-	{
-		ec->stack.push((*ec->stack.at(ec->reg[t1]) = ec->reg[t2]));
-	}
+	ec->stack.push((*ec->stack.at(ec->reg[t1]) = ec->reg[t2]));
 }
 
 //pop top 2 stack items, add together, push back result to stack
@@ -456,7 +446,7 @@ void wc::vm::ocShfr(wcExecContext* ec)
 
 void wc::vm::ocCall(wcExecContext* ec)
 {
-	//ec->reg[pc] = ec->istream[ec->reg[pc]].arg1;
+	ec->reg[pc] = ec->istream[ec->reg[pc]].arg1;
 }
 
 void wc::vm::ocCallvm(wcExecContext* ec)

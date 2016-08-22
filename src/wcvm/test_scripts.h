@@ -62,13 +62,19 @@ std::vector<string> testScripts = {
 		"int b;\n"
 		"int c;\n"
 		"return c = b = a = 2;\n"},
-	
-	{	"int a =2; \n"
+	//function calls
+	{	"int a; \n"
 		"func int f1()\n"
 		"{\n"
 		"return 22;\n"
 		"}\n"
 		"return a;" },
+
+	{	"func int f1()\n"
+		"{\n"
+		"return 22;\n"
+		"}\n"
+		"return f1();" },
 
 	{	"int a = 2; \n"
 		"int b = 3;\n"

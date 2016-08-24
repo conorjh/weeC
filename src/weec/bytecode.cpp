@@ -243,8 +243,6 @@ wcExecContext* wc::vm::wcByteCodeGen::gen()
 	while (pi != ast->tree->end())
 		genStatement(this);
 	
-	//push global stackframe variables
-	//addByteCode(wcByteCode(oc_popsf, 0));
 	addByteCode(wcByteCode(oc_halt));
 
 	//add all functions below main;
@@ -307,8 +305,8 @@ void wc::vm::genDecParamList(wcByteCodeGen* bg)
 
 void wc::vm::genDecFunc(wcByteCodeGen* bg)
 {
-	int fOffset;
 	tree<wcParseNode>::iterator oldpi;
+	int oldStackOffset = bg->stackOffset;
 	wcFuncInfo* fi=nullptr;
 	std::string paramString;
 	bg->inDecFunc = true;
@@ -328,7 +326,7 @@ void wc::vm::genDecFunc(wcByteCodeGen* bg)
 			case pn_block:
 				oldpi = bg->pi;
 				bg->pi = fi->body;
-				fi->gOffset = bg->istream->size();	
+				bg->stackOffset = 0;
 				
 				//generate instructions into a seperate container from $global
 				oldIstream = bg->istream;
@@ -336,6 +334,7 @@ void wc::vm::genDecFunc(wcByteCodeGen* bg)
 				genBlock(bg);
 				bg->fistream.insert(make_pair(fi->fullIdent, funcIstream));
 				bg->istream = oldIstream;
+				bg->stackOffset = oldStackOffset;
 				break;
 
 			case pn_decparamlist:
@@ -381,12 +380,12 @@ void wc::vm::genFuncCall(wcByteCodeGen *bg)
 			++bg->pi;
 			break;
 		}
-	
 }
 
 void wc::vm::genDecVar(wcByteCodeGen* bg)
 {
 	bool hasExp = false;
+	int varOffset = 0;
 	int olddepth = bg->ast->tree->depth(bg->pi);
 	++bg->pi;
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
@@ -399,8 +398,18 @@ void wc::vm::genDecVar(wcByteCodeGen* bg)
 			break;
 
 		case pn_type:
-			for (int t = 0; t < getTypeSize(bg->pi->tokens.at(0)); ++t)
-				bg->addByteCode(oc_push, 0);	//reserve space for this variable
+			varOffset = bg->stackOffset;
+				for (int t = 0; t < getTypeSize(bg->pi->tokens.at(0)); ++t)
+				{
+					bg->addByteCode(oc_push, 0);	//reserve space for this variable
+					bg->stackOffset++;
+				}
+			++bg->pi;
+			break;
+
+		case pn_ident:
+			//set the offset of this symbol to the current local stack size, noted in bg->stackOffset
+			bg->ast->symTab->at(getTokenFromNode(tt_ident, &bg->pi.node->data).data).offset = varOffset;
 			++bg->pi;
 			break;
 
@@ -408,17 +417,6 @@ void wc::vm::genDecVar(wcByteCodeGen* bg)
 			++bg->pi;
 			break;
 		}
-
-	//set the initial value from the expression we generated earlier
-	if (hasExp)
-	{
-		
-	}
-	
-	//pop variable onto stack from expression register, now 
-	//accesible to future code in this scope
-	//maybe not
-	//bg->addByteCode(oc_pushfr, eax);
 }
 
 void wc::vm::genReturn(wcByteCodeGen* bg)
@@ -427,15 +425,16 @@ void wc::vm::genReturn(wcByteCodeGen* bg)
 	++bg->pi;
 
 	genExp(bg);
-	bg->addByteCode(oc_popr, eax);
-	bg->addByteCode(oc_mov, eax, ret);
+
+	bg->addByteCode(oc_popr, eax);		//set expression register with the result on the top of stack
+	bg->addByteCode(oc_mov, eax, ret);	//copy expression register to return register
 }
 
 void wc::vm::genIf(wcByteCodeGen* bg)
 {
 	//collect func dec info from current node
 	unsigned int  truejump, elsejump, iend;
-	unsigned int ibegin = bg->istream->size() - 1;
+	int ibegin = bg->istream->size() - 1;
 	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
 	while (bg->ast->tree->depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
@@ -459,6 +458,8 @@ void wc::vm::genIf(wcByteCodeGen* bg)
 				break;
 		}
 
+	if (ibegin < 0)
+		ibegin = 0;
 	//if this is the last statement, we need an address to land on after else
 	iend = bg->addByteCode(oc_nop);
 
@@ -594,7 +595,7 @@ void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 		case pn_varident:
 			//if (rpn->at(0)->tokens.at(1).type == tt_lvalue)
 				//copy stored value from stack, to the top of stack 
-				bg->addByteCode(oc_pushfs, wcstoi(rpn->at(0)->tokens.at(1).data));	//push value from stack, using stackindex from tokens[1]
+				bg->addByteCode(oc_pushfs, bg->ast->getSymbol(rpn->at(0)->tokens.at(0).data)->offset);	//push value from stack, using fullident from tokens[0]
 			//else
 				//copy stackindex of variable, to the top of stack 
 				//bg->addByteCode(oc_push, wcstoi(rpn->at(0)->tokens.at(1).data));
@@ -649,7 +650,7 @@ void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 			bg->addByteCode(oc_push, 0); break;
 		case pn_assign:
 			//if(wcstoi(rpn->at(0)->tokens.at(1).data)>0)
-				bg->addByteCode(oc_assign, wcstoi(rpn->at(0)->tokens.at(1).data));	break;
+				bg->addByteCode(oc_assign, bg->ast->getSymbol(rpn->at(0)->tokens.at(1).data)->offset );	break;
 		case pn_mult:
 			bg->addByteCode(oc_mult);break;
 		case pn_div:
@@ -735,29 +736,6 @@ void wc::vm::genNodeToByteCode(wcByteCodeGen* bg, wcParseNode* pn)
 	}
 }
 
-//create our stackframe records - used to populate the stack with parameters, local variables etc for
-//each function call or scope change. 
-void wc::vm::genStackFrames(wcByteCodeGen *bg,wcExecContext* p_ec)
-{ 
-	unordered_map<string, int> identToId;
-	
-	for (int t = 0; t < bg->ast->stackFrames.size(); ++t)
-	{
-		int off = 0;
-		p_ec->stackFrames.insert(std::make_pair(t, std::vector<int>()));
-		for (int it = 0; it < bg->ast->stackFrames[t].localVars.size(); ++it)
-		{
-			wcVMSymbol sym;
-			sym.ident = bg->ast->stackFrames[t].localVars[it];
-			sym.offset = off;
-			sym.stackFrame = t;
-			p_ec->symTab.insert(make_pair(sym.ident, sym));
-			p_ec->stackFrames[t].push_back(0);	//push empty values for now TODO: init values go here
-			off++;	//todo: increase the offset based on data type size (int=1,float =2)
-		}
-	}
-}
-
 void wc::vm::genAppendFuncIstreams(wcByteCodeGen *bg, std::vector<wcByteCode> *istream)
 {
 	for (auto t = bg->fistream.begin(); t != bg->fistream.end(); ++t)
@@ -778,4 +756,14 @@ void wc::vm::adjustJumps(wcByteCodeGen* bg, int beg, int end, int add)
 		default:
 			break;
 	}
+}
+
+//search all the tokens attached to a node for a given type, and return the wcToken
+//with that type, return a blank wcToken if it wasnt found
+wcToken wc::vm::getTokenFromNode(wc::lex::wcTokenType p_type, wcParseNode* p_node)
+{
+	for (auto t = p_node->tokens.begin(); t != p_node->tokens.end(); ++t)
+		if (t->type == p_type)
+			return *t;
+	return wcToken();
 }

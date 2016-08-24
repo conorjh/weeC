@@ -116,6 +116,12 @@ namespace wc
 
 		struct wcAST
 		{
+			//symbol table
+			wcSymbol* getSymbol(std::string);
+			wcSymbol* getSymbol(std::string, wcSymbol*);
+			bool addSymbol(wcSymbol*);
+			bool addSymbol(std::string, wcSymbol*);
+
 			tree<wcParseNode>* tree;
 			std::vector<wcStackFrameInfo> stackFrames;				//vector of all possible stackframes
 			std::unordered_map<std::string, wcSymbol>* symTab;		//wcSymbol.fullIdent to wcSymbol
@@ -139,12 +145,6 @@ namespace wc
 			tree<wcParseNode>::iterator addNode(wcParseNode);	//add node and point pindex to the new child node
 			tree<wcParseNode>::iterator addChild(wcParseNode);	//add node, but pindex remains on parent node
 			void parent();
-
-			//symbol table
-			wcSymbol* getSymbol(std::string);
-			wcSymbol* getSymbol(std::string, wcSymbol*);
-			bool addSymbol(wcSymbol*);
-			bool addSymbol(std::string, wcSymbol*);
 
 			//error
 			unsigned int getError();
@@ -211,14 +211,14 @@ namespace wc
 		wcSymbol resolveIdent(wcParser*, std::string);
 		std::string lexIdent(wcParser*);
 		wcSymbol* addIdentDec(wcParser*, wcSymbolType);
-		bool isIdentExplicit(wcParser*, std::string);
+		bool isIdentExplicit(std::string);
 
 		//symbol ting
 		wcSymbolType getTypeFromDataType(wcParser*, std::string);
 		std::string getDatatype(wcParser*, lex::wcToken);
 
 		//ident strings
-		std::string getFullIdent(wcParser* par, std::string ident, wcSymbol* scope);
+		std::string getFullIdent(std::string ident, wcSymbol* scope);
 		std::string getShortIdent(std::string);
 
 		//params

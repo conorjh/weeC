@@ -3,8 +3,16 @@ std::vector<string> testScripts = {
 	//push an int to the stack
 	{	"int a;" },
 	//push 2 ints to the stack
-	{	"int a;\n"
-		"int b;\n" },
+	{ "int a;\n"
+	"int b;\n" },
+	//push 2 ints to the stack
+	{	"int a = 11;\n"
+		"float b = 22;\n"
+		"int c = 33;\n"
+		"c = c + 1;\n"
+		"b = 23;\n"
+		"a = b;\n"
+		"return b;"},
 	//return a value
 	{	"return 666*666;" },
 	//simple arithmetic
@@ -44,11 +52,11 @@ std::vector<string> testScripts = {
 	{	"int a = 11;\n"
 		"int b = 2;\n"
 		"a = b + 100;\n"},
-	//push 2 ints, do a simple expression with them, set one to the other
+	//push 2 ints, do a simple expression with them, set one to the other whilst returning
 	{	"int a = 11;\n"
 		"int b = 2;\n"
 		"a = b + 100;\n"
-		"b = a;" },
+		"return b = a;" },
 	//push an int with a value, then return it
 	{	"int a = 2;\n"
 		"return a;" },
@@ -61,9 +69,17 @@ std::vector<string> testScripts = {
 	{	"int a;\n"
 		"int b;\n"
 		"int c;\n"
-		"return c = b = a = 2;\n"},
+		"return c = b = a = 66;\n"},
+	//array variable
+	{	"int a[5];\n"
+		"a[2] = 100;\n"
+		"return a[2];"},
+	//if statements
+	{	"if(2!=1)\n"
+		"return 22;\n"
+		"return 33;" },
 	//function calls
-	{	"int a; \n"
+	{	"int a = 33; \n"
 		"func int f1()\n"
 		"{\n"
 		"return 22;\n"

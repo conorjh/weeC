@@ -400,7 +400,7 @@ void wc::vm::ocInc(wcExecContext* ec)
 	ec->stack.push(ec, ec->reg[t1]++);
 }
 
-//pop top 2 stack items, do t1&&t2, push back result to stack
+//pop top 2 stack items, do t1 && t2, push back result to stack
 void wc::vm::ocAnd(wcExecContext* ec)
 {
 	ec->reg[t2] = ec->stack.pop(ec);

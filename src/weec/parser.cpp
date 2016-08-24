@@ -18,6 +18,9 @@ namespace parse{
 		void parseDecFunc_Ident(wcParser* p_par, wcFuncInfo* p_fi, wcSymbol* p_sym);
 		void parseDecFunc_ParamList(wcParser* p_par);
 
+		wcExpression parseFExp_OuterExpression(wcParser* p_par, wcParseNode p_id, wcExpression p_ex);
+		wcExpression parseExp_OuterExpression(wcParser* p_par, wcToken p_oper1, wcExpression p_ex);
+
 		void createGlobal(wcParser* p_par);
 		void createBasicTypes(wcParser* p_par);
 
@@ -167,21 +170,21 @@ void wc::parse::createGlobal(wcParser* p_par)
 	wcSymbol sym;	
 	sym.fullIdent = sym.ident = "$global";
 	sym.type = st_namespace;	
-	p_par->addSymbol(sym.ident, &sym); //add entry in symbol table
-	p_par->currentScope = p_par->getSymbol("$global");			//point global scope pointer to global
+	p_par->ast.addSymbol(sym.ident, &sym); //add entry in symbol table
+	p_par->currentScope = p_par->ast.getSymbol("$global");			//point global scope pointer to global
 
 }
 
 void wc::parse::createBasicTypes(wcParser* p_par)
 {
 	wcSymbol sym;
-	sym.dataType = sym.fullIdent = sym.ident = "int";		sym.type = st_type; 	p_par->addSymbol(sym.ident, &sym);
-	sym.dataType = sym.fullIdent = sym.ident = "flt";		sym.type = st_type; 	p_par->addSymbol(sym.ident, &sym);
-	sym.dataType = sym.fullIdent = sym.ident = "chr";		sym.type = st_type; 	p_par->addSymbol(sym.ident, &sym);
-	sym.dataType = sym.fullIdent = sym.ident = "str";		sym.type = st_type; 	p_par->addSymbol(sym.ident, &sym);
-	sym.dataType = sym.fullIdent = sym.ident = "bool";		sym.type = st_type;		p_par->addSymbol(sym.ident, &sym);
-	sym.dataType = sym.fullIdent = sym.ident = "obj";		sym.type = st_type;		p_par->addSymbol(sym.ident, &sym);
-	sym.dataType = sym.fullIdent = sym.ident = "var";		sym.type = st_type;		p_par->addSymbol(sym.ident, &sym);
+	sym.dataType = sym.fullIdent = sym.ident = "int";		sym.type = st_type; 	p_par->ast.addSymbol(sym.ident, &sym);
+	sym.dataType = sym.fullIdent = sym.ident = "flt";		sym.type = st_type; 	p_par->ast.addSymbol(sym.ident, &sym);
+	sym.dataType = sym.fullIdent = sym.ident = "chr";		sym.type = st_type; 	p_par->ast.addSymbol(sym.ident, &sym);
+	sym.dataType = sym.fullIdent = sym.ident = "str";		sym.type = st_type; 	p_par->ast.addSymbol(sym.ident, &sym);
+	sym.dataType = sym.fullIdent = sym.ident = "bool";		sym.type = st_type;		p_par->ast.addSymbol(sym.ident, &sym);
+	sym.dataType = sym.fullIdent = sym.ident = "obj";		sym.type = st_type;		p_par->ast.addSymbol(sym.ident, &sym);
+	sym.dataType = sym.fullIdent = sym.ident = "var";		sym.type = st_type;		p_par->ast.addSymbol(sym.ident, &sym);
 }
 
 void wc::parse::wcParser::shutdown()
@@ -255,35 +258,35 @@ void wc::parse::wcParser::parent()
 	pindex = ast.tree->parent(pindex);
 }
 
-bool wc::parse::wcParser::addSymbol(wcSymbol* sym)
+bool wc::parse::wcAST::addSymbol(wcSymbol* p_sym)
 {
-	return addSymbol(sym->fullIdent, sym);
+	return addSymbol(p_sym->fullIdent, p_sym);
 }
 
-bool wc::parse::wcParser::addSymbol(string id, wcSymbol* sym)
+bool wc::parse::wcAST::addSymbol(string p_id, wcSymbol* p_sym)
 {
-	if (ast.symTab->find(id) != ast.symTab->end())
+	if (symTab->find(p_id) != symTab->end())
 		return false;	//already exists
-	ast.symTab->insert(std::make_pair(id, *sym));
+	symTab->insert(make_pair(p_id, *p_sym));
 	return true;
 }
 
-wcSymbol* wc::parse::wcParser::getSymbol(string fullid)
+wcSymbol* wc::parse::wcAST::getSymbol(string p_fullid)
 {
 	//add global so coder doesnt have to
-	if (fullid.size() && fullid.substr(0, 9) != "$global::" && (fullid != "$global" && fullid != "int" && fullid != "flt" && fullid != "str" && fullid != "bool" && fullid != "var" && fullid != "obj"))
-		fullid = "$global::" + fullid;
-	if (ast.symTab->find(fullid) == ast.symTab->end())
+	if (p_fullid.size() && p_fullid.substr(0, 9) != "$global::" && (p_fullid != "$global" && p_fullid != "int" && p_fullid != "flt" && p_fullid != "str" && p_fullid != "bool" && p_fullid != "var" && p_fullid != "obj"))
+		p_fullid = "$global::" + p_fullid;
+	if (symTab->find(p_fullid) == symTab->end())
 		return nullptr;
-	return &ast.symTab->at(fullid);
+	return &symTab->at(p_fullid);
 }
 
 //shortid in a given scope
-wcSymbol* wc::parse::wcParser::getSymbol(string shortid, wcSymbol* sc)
+wcSymbol* wc::parse::wcAST::getSymbol(string p_shortid, wcSymbol* p_sym)
 {
-	if (ast.symTab->find(getFullIdent(this, shortid, sc)) == ast.symTab->end())
+	if (symTab->find(getFullIdent(p_shortid, p_sym)) == symTab->end())
 		return nullptr;
-	return &ast.symTab->at(getFullIdent(this, shortid, sc));
+	return &symTab->at(getFullIdent(p_shortid, p_sym));
 }
 
 int wc::parse::wcParser::parse()
@@ -354,8 +357,8 @@ void wc::parse::parseStatement(wcParser* p_par)
 		break;
 	case tt_ident:
 		pni = parseIdent(p_par);
-		if (p_par->getSymbol(pni.tokens.at(0).data))
-			sym = *p_par->getSymbol(pni.tokens.at(0).data);
+		if (p_par->ast.getSymbol(pni.tokens.at(0).data))
+			sym = *p_par->ast.getSymbol(pni.tokens.at(0).data);
 		switch (sym.type)
 		{
 		case st_function:
@@ -390,7 +393,7 @@ void wc::parse::parseDecNamespace(wcParser* p_par)
 	wcSymbol* oldScope = p_par->currentScope;
 
 	//block
-	p_par->currentScope = p_par->getSymbol(sym->fullIdent);
+	p_par->currentScope = p_par->ast.getSymbol(sym->fullIdent);
 	parseBlock(p_par);
 	p_par->currentScope = oldScope;
 
@@ -406,7 +409,7 @@ wcSymbol wc::parse::parseDecVar_Type(wcParser* p_par, wcParseNode* p_pnt, wcPars
 		//basic types
 	case tt_bool:	case tt_int:	case tt_float:	case tt_string:
 		p_par->addChild(wcParseNode(pn_type, *p_par->lexer->getToken()));
-		symt.dataType = p_par->getSymbol(p_par->lexer->getToken()->data)->ident;
+		symt.dataType = p_par->ast.getSymbol(p_par->lexer->getToken()->data)->ident;
 		symt.type = getTypeFromDataType(p_par, symt.dataType);
 		p_par->lexer->nextToken();
 		break;
@@ -415,7 +418,7 @@ wcSymbol wc::parse::parseDecVar_Type(wcParser* p_par, wcParseNode* p_pnt, wcPars
 	case tt_ident:
 		//parse and save the ident
 		*p_pni = parseIdent(p_par);
-		symt = *p_par->getSymbol(p_pni->tokens.at(0).data);
+		symt = *p_par->ast.getSymbol(p_pni->tokens.at(0).data);
 
 		//if it ent a type, error!
 		if (symt.type != st_type)
@@ -442,11 +445,11 @@ int wc::parse::parseDecVar_Ident(wcParser* p_par, wcSymbol* p_type, wcSymbol*& p
 		*p_identX = p_par->lexer->getToken()->x;
 		*p_identY = p_par->lexer->getToken()->y;	//for error reporting porpoises
 		p_ident = addIdentDec(p_par, st_var);	//add symbol
-		p_par->getSymbol(p_ident->fullIdent)->dataType = p_type->dataType;
-		p_par->getSymbol(p_ident->fullIdent)->isConst = *p_setToConst;
+		p_par->ast.getSymbol(p_ident->fullIdent)->dataType = p_type->dataType;
+		p_par->ast.getSymbol(p_ident->fullIdent)->isConst = *p_setToConst;
 
-		if (!(p_par->getSymbol(p_ident->fullIdent)->isArray = p_type->isArray))
-			p_par->getSymbol(p_ident->fullIdent)->size = 1;
+		if (!(p_par->ast.getSymbol(p_ident->fullIdent)->isArray = p_type->isArray))
+			p_par->ast.getSymbol(p_ident->fullIdent)->size = 1;
 
 		if (p_ident)
 			p_par->currentStackFrame->localVars.push_back(p_ident->fullIdent);
@@ -469,7 +472,7 @@ int wc::parse::parseDecVar_Ident(wcParser* p_par, wcSymbol* p_type, wcSymbol*& p
 		p_par->lexer->nextToken();
 
 		//adjust symbol table entry
-		p_par->getSymbol(p_ident->fullIdent)->isArray = true;
+		p_par->ast.getSymbol(p_ident->fullIdent)->isArray = true;
 
 		//parse expression; type must convert to int, and be const
 		wcExpression ex = parseFExp(p_par);
@@ -520,8 +523,7 @@ void wc::parse::parseDecVar(wcParser* p_par)
 
 	//now we know if its an array, make sure to adjust the stack offset 
 	//with the size of this variable
-	p_par->getSymbol(symi->fullIdent)->offset = p_par->sOffset;
-	//p_par->sOffset += getTypeSize(pnt.tokens.at(0)) * p_par->getSymbol(symi->fullIdent)->size;
+	//p_par->sOffset += getTypeSize(pnt.tokens.at(0)) * p_par->ast.getSymbol(symi->fullIdent)->size;
 
 	//3. semi colon, or assignment (optional)
 	if (!parseDecVar_Exp(p_par, symi, &ix, &iy))
@@ -636,14 +638,14 @@ void wc::parse::parseDecFunc_Type(wcParser* p_par, wcFuncInfo* p_fi,wcSymbol* p_
 	case tt_ident:
 		//check its a valid identifier
 		pni = parseIdent(p_par);
-		if (p_par->getSymbol(pni.tokens.at(0).data) == nullptr)
+		if (p_par->ast.getSymbol(pni.tokens.at(0).data) == nullptr)
 		{
 			//error unknown symbol
 			return p_par->setError(ec_p_undeclaredsymbol, p_par->lexer->getToken()->data);
 		}
 
 		//and check the identifier relates to a user defined type
-		p_sym = p_par->getSymbol(pni.tokens.at(0).data);
+		p_sym = p_par->ast.getSymbol(pni.tokens.at(0).data);
 		if (p_sym->type == st_type)
 		{
 			p_fi->dataType = p_sym->fullIdent;
@@ -675,7 +677,7 @@ void wc::parse::parseDecFunc_Ident(wcParser* p_par,wcFuncInfo* p_fi, wcSymbol* p
 			p_sym->dataType = p_fi->dataType;
 			p_fi->ident = p_sym->ident;
 			p_fi->fullIdent = p_sym->fullIdent;
-			p_par->addSymbol(p_sym->fullIdent, p_sym);
+			p_par->ast.addSymbol(p_sym->fullIdent, p_sym);
 			p_par->currentFunc->isOverloaded = false;
 		}
 		else if (p_sym->type == st_function)
@@ -690,7 +692,7 @@ void wc::parse::parseDecFunc_Ident(wcParser* p_par,wcFuncInfo* p_fi, wcSymbol* p
 		}
 
 		//set our current scope to this function, using method signature
-		p_par->currentScope = p_par->getSymbol(p_sym->fullIdent);
+		p_par->currentScope = p_par->ast.getSymbol(p_sym->fullIdent);
 
 		//new stackframe
 		p_fi->sfIndex = p_par->ast.stackFrames.size();
@@ -783,7 +785,7 @@ void wc::parse::parseParamListDec(wcParser* p_par)
 			switch (p_par->lexer->getToken()->type)
 			{
 			case tt_bool:	case tt_int:	case tt_string:	case tt_float:
-				symt = *p_par->getSymbol(p_par->lexer->getToken()->data);
+				symt = *p_par->ast.getSymbol(p_par->lexer->getToken()->data);
 				pl.params.push_back(symt.fullIdent);
 				p_par->addChild(pnt = wcParseNode(pn_type, *p_par->lexer->getToken()));
 				p_par->lexer->nextToken();
@@ -791,7 +793,7 @@ void wc::parse::parseParamListDec(wcParser* p_par)
 
 			case tt_ident:
 				pni = parseIdent(p_par);
-				symt = *p_par->getSymbol(pni.tokens.at(0).data);
+				symt = *p_par->ast.getSymbol(pni.tokens.at(0).data);
 				if (symt.type != st_type)
 					return p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data);	//must be a type
 				pl.params.push_back(symt.fullIdent);
@@ -806,14 +808,14 @@ void wc::parse::parseParamListDec(wcParser* p_par)
 			symi.dataType = symt.dataType;
 
 			//add parameters symbol
-			p_par->addSymbol(symi.fullIdent, &symi);
-			p_par->getSymbol(symi.fullIdent)->isConst = false;
-			if (!(p_par->getSymbol(symi.fullIdent)->isArray = symt.isArray))
-				p_par->getSymbol(symi.fullIdent)->size = 1;
+			p_par->ast.addSymbol(symi.fullIdent, &symi);
+			p_par->ast.getSymbol(symi.fullIdent)->isConst = false;
+			if (!(p_par->ast.getSymbol(symi.fullIdent)->isArray = symt.isArray))
+				p_par->ast.getSymbol(symi.fullIdent)->size = 1;
 
 			//make sure to adjust the stack offset with the size of this variable
-			p_par->getSymbol(symi.fullIdent)->offset = p_par->sOffset;
-			p_par->sOffset += getTypeSize(pnt.tokens.at(0))*p_par->getSymbol(symi.fullIdent)->size;
+			p_par->ast.getSymbol(symi.fullIdent)->offset = p_par->sOffset;
+			p_par->sOffset += getTypeSize(pnt.tokens.at(0))*p_par->ast.getSymbol(symi.fullIdent)->size;
 
 			p_par->addChild(wcParseNode(symi.type));
 		}
@@ -1041,18 +1043,18 @@ wcSymbol wc::parse::resolveIdent(wcParser* p_par, string shortid)
 	int ind;
 	//return a null type symbol if the shortident doesnt resolve at any scope
 	wcSymbol sym;	sym.type = st_null;	sym.ident = shortid;
-	sym.fullIdent = getFullIdent(p_par, shortid, p_par->currentScope);
+	sym.fullIdent = getFullIdent(shortid, p_par->currentScope);
 
 	//deal with explicit identifiers (with scope/member prefix)
-	if (isIdentExplicit(p_par, shortid))
+	if (isIdentExplicit(shortid))
 	{
-		if (p_par->getSymbol(shortid))
-			return *p_par->getSymbol(shortid);
+		if (p_par->ast.getSymbol(shortid))
+			return *p_par->ast.getSymbol(shortid);
 		return sym;
 	}
 	else
 	{
-		fullid = getFullIdent(p_par, shortid, p_par->currentScope);
+		fullid = getFullIdent(shortid, p_par->currentScope);
 		ind = fullid.size() - 1;
 	}
 
@@ -1067,9 +1069,9 @@ wcSymbol wc::parse::resolveIdent(wcParser* p_par, string shortid)
 				--ind;
 		case '.':	//member
 			--ind;
-			sc = *p_par->getSymbol(fullid.substr(0, ind + 1));	//get scope
-			if (p_par->getSymbol(getFullIdent(p_par, shortid, &sc)))
-				return *p_par->getSymbol(getFullIdent(p_par, shortid, &sc));
+			sc = *p_par->ast.getSymbol(fullid.substr(0, ind + 1));	//get scope
+			if (p_par->ast.getSymbol(getFullIdent(shortid, &sc)))
+				return *p_par->ast.getSymbol(getFullIdent(shortid, &sc));
 			break;
 		default:
 			--ind;
@@ -1078,9 +1080,9 @@ wcSymbol wc::parse::resolveIdent(wcParser* p_par, string shortid)
 }
 
 //make a fully qualified name as a string from a given shortident and scope
-string wc::parse::getFullIdent(wcParser* p_par, string p_sIdent, wcSymbol* p_scope)
+string wc::parse::getFullIdent(string p_sIdent, wcSymbol* p_scope)
 {
-	if (!isIdentExplicit(p_par, p_sIdent))
+	if (!isIdentExplicit(p_sIdent))
 		switch (p_scope->type)
 		{
 		case st_namespace:
@@ -1094,7 +1096,7 @@ string wc::parse::getFullIdent(wcParser* p_par, string p_sIdent, wcSymbol* p_sco
 }
 
 //check whether a given string contains any scope or members ie (main:arg1 or string)
-bool wc::parse::isIdentExplicit(wcParser* p_par, string id)
+bool wc::parse::isIdentExplicit(string id)
 {
 	string shortid;
 	wcSymbol sc;
@@ -1131,7 +1133,7 @@ string wc::parse::getShortIdent(string p_fid)
 void wc::parse::parseFuncCall(wcParser* p_par, wcParseNode pn)
 {
 	//ident must be a declared function symbol, add its fq symbol to the parsenode
-	wcSymbol sym = *p_par->getSymbol(pn.tokens.at(0).data);
+	wcSymbol sym = *p_par->ast.getSymbol(pn.tokens.at(0).data);
 
 	if (sym.type != st_function)
 		//probably the variable name was already used elswhere
@@ -1147,7 +1149,7 @@ void wc::parse::parseFuncCall(wcParser* p_par, wcParseNode pn)
 	p_par->addNode(pn);
 
 	//params
-	parseParamListCall(p_par, p_par->getSymbol(sym.fullIdent));
+	parseParamListCall(p_par, p_par->ast.getSymbol(sym.fullIdent));
 	
 	p_par->parent();
 }
@@ -1170,7 +1172,7 @@ void wc::parse::parseWhile(wcParser* p_par)
 void wc::parse::parseAssignment(wcParser* p_par, wcParseNode pn)
 {
 	//ident already parsed, assume its valid
-	wcSymbol sym = *p_par->getSymbol(pn.tokens.at(0).data);
+	wcSymbol sym = *p_par->ast.getSymbol(pn.tokens.at(0).data);
 	p_par->addNode(wcParseNode(pn_assignment));
 	p_par->lexer->rewind();
 
@@ -1192,26 +1194,10 @@ wcExpression wc::parse::parseFExp(wcParser* p_par)
 	return ex;
 }
 
-//for when weve already consumed the identifier with parseIdent(), copy code from parseSubExp
-wcExpression wc::parse::parseFExp(wcParser* p_par, wcParseNode id)
+wcExpression wc::parse::parseFExp_OuterExpression(wcParser* p_par, wcParseNode p_id, wcExpression p_ex)
 {
-	wcExpression ex; ex.isConst = true;
-	wcParseNode pn; wcToken op;
-	ex.node = p_par->addNode(wcParseNode(pn_exp));
-
-	//taken from parseFactor
-	wcSymbol sym = *p_par->getSymbol(id.tokens.at(0).data);
-	switch (sym.type)
-	{
-	case st_var: case st_function:
-		ex.dataType = sym.dataType;
-		break;
-	default:
-		p_par->setError(ec_p_invalidsymbol, p_par->lexer->getToken()->data);
-		return ex;
-	}
-	p_par->addChild(id);
-
+	wcToken op;
+	wcParseNode pn;
 	while (p_par->lexer->getToken())
 	{
 		op = *p_par->lexer->getToken();
@@ -1221,29 +1207,49 @@ wcExpression wc::parse::parseFExp(wcParser* p_par, wcParseNode id)
 		case tt_equal:	case tt_notequal:	case tt_logand:		case tt_logor:		case tt_assign:
 			pn = wcParseNode(op.type);
 			pn.tokens.push_back(op);
-			pn.tokens.push_back(wcitos(p_par->getSymbol(id.tokens.at(0).data)->offset));	//stack index of oper1
+			pn.tokens.push_back(p_par->ast.getSymbol(p_id.tokens.at(0).data)->fullIdent);	//fullident of oper1
 			pn.tokens.at(pn.tokens.size() - 1).type = tt_lvalue;	//denote that its an l-value
 			p_par->addChild(pn);
 			p_par->lexer->nextToken();
 			break;
 		default:
 			p_par->parent();
-			return ex;
+			return p_ex;
 		}
-		parseSubExp(p_par, &ex);
+		parseSubExp(p_par, &p_ex);
 	}
 	p_par->parent();
-	return ex;
+	return p_ex;
 }
 
-
-wcExpression wc::parse::parseExp(wcParser* p_par)
+//for when weve already consumed the identifier with parseIdent(), copy code from parseSubExp
+wcExpression wc::parse::parseFExp(wcParser* p_par, wcParseNode p_id)
 {
-	wcExpression ex; ex.isConst = true;
-	wcToken oper1, oper2, op, tok;
+	wcExpression ex; 
+	ex.isConst = true;
+	ex.node = p_par->addNode(wcParseNode(pn_exp));
+
+	//taken from parseFactor
+	wcSymbol sym = *p_par->ast.getSymbol(p_id.tokens.at(0).data);
+	switch (sym.type)
+	{
+	case st_var: case st_function:
+		ex.dataType = sym.dataType;
+		break;
+	default:
+		p_par->setError(ec_p_invalidsymbol, p_par->lexer->getToken()->data);
+		return ex;
+	}
+	p_par->addChild(p_id);
+
+	return parseFExp_OuterExpression(p_par, p_id, ex);
+}
+
+wcExpression wc::parse::parseExp_OuterExpression(wcParser* p_par, wcToken p_oper1, wcExpression p_ex)
+{
+	wcToken op, oper2, tok;
 	wcParseNode pn;
-	oper1 = parseSubExp(p_par, &ex);
-	ex.dataType = getDatatype(p_par, oper1);
+
 	while (p_par->lexer->getToken())
 	{
 		op = *p_par->lexer->getToken();
@@ -1254,22 +1260,32 @@ wcExpression wc::parse::parseExp(wcParser* p_par)
 			pn = wcParseNode(op.type);
 			pn.tokens.push_back(op);
 			//if our previous token was an identifier, make a note of it's stack location. used in ByteCode generation
-			if (oper1.type==tt_ident)
+			if (p_oper1.type == tt_ident)
 			{
-				tok = wcitos(p_par->getSymbol(p_par->lastIdent.node->data.tokens.at(0).data)->offset);
-				p_par->lastIdent.node->data.tokens.at(1).type = tt_lvalue; 
+				tok = p_par->ast.getSymbol(p_par->lastIdent.node->data.tokens.at(0).data)->fullIdent;
+				p_par->lastIdent.node->data.tokens.at(1).type = tt_lvalue;
 				pn.tokens.push_back(tok);
-			}			
+			}
 			p_par->addChild(pn);
 			p_par->lexer->nextToken();
 			break;
 		default:
 			//function call or one sided expression (ie not a boolean or assignment)
-			return ex;
+			return p_ex;
 		}
-		oper2 = parseSubExp(p_par, &ex);
+		oper2 = parseSubExp(p_par, &p_ex);
 	}
-	return ex;
+	return p_ex;
+}
+
+wcExpression wc::parse::parseExp(wcParser* p_par)
+{
+	wcExpression ex; ex.isConst = true;
+	wcToken oper1, oper2, op, tok;
+	wcParseNode pn;
+	oper1 = parseSubExp(p_par, &ex);
+	ex.dataType = getDatatype(p_par, oper1);
+	return parseExp_OuterExpression(p_par,oper1,ex);
 }
 
 lex::wcToken wc::parse::parseSubExp(wcParser* p_par, wcExpression* ex)
@@ -1337,8 +1353,7 @@ wcToken wc::parse::parseFactor(wcParser* p_par, wcExpression* ex)
 	}
 	switch (oper1.type)
 	{
-	case tt_oparen:
-		//opening parenthesis
+	case tt_oparen:	//opening parenthesis
 		p_par->parenCount++;
 		pn = wcParseNode(oper1.type);
 		pn.tokens.push_back(oper1);
@@ -1354,8 +1369,7 @@ wcToken wc::parse::parseFactor(wcParser* p_par, wcExpression* ex)
 			return oper1;	//error
 		}
 
-		//closing parenthesis
-		p_par->parenCount--;
+		p_par->parenCount--;//closing parenthesis
 		pn = wcParseNode(pn_cparen);
 		pn.tokens.push_back(*p_par->lexer->getToken());
 		p_par->addChild(pn);
@@ -1368,20 +1382,13 @@ wcToken wc::parse::parseFactor(wcParser* p_par, wcExpression* ex)
 
 	case tt_ident:
 		pni = parseIdent(p_par);
-		if (p_par->getSymbol(pni.tokens.at(0).data))
-			sym = *p_par->getSymbol(pni.tokens.at(0).data);
+		if (p_par->ast.getSymbol(pni.tokens.at(0).data))
+			sym = *p_par->ast.getSymbol(pni.tokens.at(0).data);
 		switch (sym.type)
 		{
 		case st_function:
-			//parseFuncCall(p_par, pni);		//parse as func call, passing the free floating wcParseNode we made
-			if (!sym.isConst)	
-				ex->isConst = false;
 			break;
 		case st_var:
-			if (!sym.isConst)
-				ex->isConst = false;
-			if (sym.isArray)
-				parseArrayIndex(p_par, &pni);	//the [] subscript
 			break;
 		case st_namespace:
 			p_par->setError(ec_p_invalidsymbol, p_par->lexer->getToken()->data);
@@ -1391,8 +1398,12 @@ wcToken wc::parse::parseFactor(wcParser* p_par, wcExpression* ex)
 			return oper1;
 			break;
 		}
+		if (!sym.isConst)
+			ex->isConst = false;
+		if (sym.isArray)
+			parseArrayIndex(p_par, &pni);	//the [] subscript
 		p_par->lastIdent = p_par->addChild(pni);
-		p_par->lexer->nextToken();
+		//p_par->lexer->nextToken();  //this broke assignments
 		break;
 
 	case tt_intlit:
@@ -1450,8 +1461,8 @@ wcSymbol* wc::parse::addIdentDec(wcParser* p_par, wcSymbolType ty)
 {
 	wcSymbol sym = resolveIdent(p_par, lexIdent(p_par));
 	if (sym.type != st_null)
-		if (p_par->getSymbol(getFullIdent(p_par, sym.ident, p_par->currentScope))
-			&& p_par->getSymbol(getFullIdent(p_par, sym.ident, p_par->currentScope))->type != st_null)
+		if (p_par->ast.getSymbol(getFullIdent(sym.ident, p_par->currentScope))
+			&& p_par->ast.getSymbol(getFullIdent(sym.ident, p_par->currentScope))->type != st_null)
 		{
 			//same identifier exists in this scope
 			p_par->setError(ec_p_redefinition, sym.ident);
@@ -1459,14 +1470,14 @@ wcSymbol* wc::parse::addIdentDec(wcParser* p_par, wcSymbolType ty)
 		}
 		else
 		{
-			sym.fullIdent = getFullIdent(p_par, sym.ident, p_par->currentScope);
+			sym.fullIdent = getFullIdent(sym.ident, p_par->currentScope);
 		}
 
 	//no ident of that name in current scope, declare variable
 	sym.type = ty;
-	p_par->addSymbol(&sym);
+	p_par->ast.addSymbol(&sym);
 	
-	return p_par->getSymbol(sym.fullIdent);
+	return p_par->ast.getSymbol(sym.fullIdent);
 }
 
 int wc::parse::getTypeSize(wcToken t)
@@ -1495,7 +1506,7 @@ bool wc::parse::checkOperandTypes(wcParser* p_par, wcToken oper1, wcToken op, wc
 	for (int t = 0; t < 2; ++t)
 		if (opers[t].type == tt_ident)
 		{
-			sym = *p_par->getSymbol(opers[t].data);
+			sym = *p_par->ast.getSymbol(opers[t].data);
 			switch (sym.type)
 			{
 			case st_var:	case st_function:
@@ -1512,9 +1523,9 @@ bool wc::parse::checkOperandTypes(wcParser* p_par, wcToken oper1, wcToken op, wc
 			switch (opers[t].type)
 			{
 			case tt_intlit:	case tt_strlit:	case tt_fltlit:
-				oper_dt[t] = p_par->getSymbol(opers[t].data)->dataType;	break;
+				oper_dt[t] = p_par->ast.getSymbol(opers[t].data)->dataType;	break;
 			case tt_true:	case tt_false:
-				oper_dt[t] = p_par->getSymbol("bool")->dataType;	break;
+				oper_dt[t] = p_par->ast.getSymbol("bool")->dataType;	break;
 			}
 		}
 
@@ -1543,8 +1554,8 @@ wcSymbolType wc::parse::getTypeFromDataType(wcParser *p_par, std::string p_dt)
 {
 	if (p_dt == "int")
 		return st_type;
-	if (p_par->getSymbol(p_dt) != nullptr)
-		return (p_par->getSymbol(p_dt)->type);
+	if (p_par->ast.getSymbol(p_dt) != nullptr)
+		return (p_par->ast.getSymbol(p_dt)->type);
 	return wcSymbolType();
 }
 
@@ -1553,17 +1564,17 @@ string wc::parse::getDatatype(wcParser* p_par, wcToken tk)
 	switch (tk.type)
 	{
 	case tt_intlit:
-		return p_par->getSymbol("int")->dataType;
+		return p_par->ast.getSymbol("int")->dataType;
 	case tt_strlit:
-		return p_par->getSymbol("string")->dataType;
+		return p_par->ast.getSymbol("string")->dataType;
 	case tt_fltlit:
-		return p_par->getSymbol("float")->dataType;
+		return p_par->ast.getSymbol("float")->dataType;
 	case tt_true:
 	case tt_false:
-		return p_par->getSymbol("bool")->dataType;
+		return p_par->ast.getSymbol("bool")->dataType;
 	case tt_ident:
-		if (p_par->getSymbol(getFullIdent(p_par, tk.data, p_par->currentScope)))
-			return p_par->getSymbol(getFullIdent(p_par, tk.data, p_par->currentScope))->dataType;
+		if (p_par->ast.getSymbol(getFullIdent(tk.data, p_par->currentScope)))
+			return p_par->ast.getSymbol(getFullIdent(tk.data, p_par->currentScope))->dataType;
 		return "";
 	default:
 		return "";

@@ -137,6 +137,7 @@ namespace wc
 			bool inDecFunc;
 			int ifJmpIndex;
 			int errorCode;
+			int stackOffset;
 		};
 
 		void genStatement(wcByteCodeGen*);
@@ -154,9 +155,11 @@ namespace wc
 		void genNodeToByteCode(wcByteCodeGen*, parse::wcParseNode*);
 		void genStackFrames(wcByteCodeGen*, wcExecContext*);
 		void genAppendFuncIstreams(wcByteCodeGen*, std::vector<wcByteCode>*);
+		
 		wcValType getValType(parse::wcSymbol*);
 		int getValTypeSize(wcValType);
 		void adjustJumps(wcByteCodeGen*, int, int, int);
+		lex::wcToken getTokenFromNode(lex::wcTokenType, parse::wcParseNode*);
 	}
 }
 #endif

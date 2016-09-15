@@ -3,16 +3,25 @@ std::vector<string> testScripts = {
 	//push an int to the stack
 	{	"int a;" },
 	//push 2 ints to the stack
-	{ "int a;\n"
-	"int b;\n" },
+	{	"int a;\n"
+		"int b;\n" },
+	//manipulate an array
+	{	"int a[3];\n"
+		"a[0] = 10;\n"
+		"a[1] = 20;\n"
+		"a[2] = 30;\n"
+		"a[0] = a[1] + a[2];\n"
+		"return a[0];" },
 	//push 2 ints to the stack
 	{	"int a = 11;\n"
-		"float b = 22;\n"
-		"int c = 33;\n"
+		"int b = 22;\n"
+		"flt c = 33;\n"
+		"int d = 44;\n"
 		"c = c + 1;\n"
 		"b = 23;\n"
 		"a = b;\n"
-		"return b;"},
+		"d = a + c;\n"
+		"return c;"},
 	//return a value
 	{	"return 666*666;" },
 	//simple arithmetic

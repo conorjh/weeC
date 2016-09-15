@@ -79,7 +79,7 @@ int wc::compileScript(wcScript *p_scr)
 {
 	wcCompiler c;
 	if (c.compile(&p_scr->src) < 0)
-		return -1;
+		return c.getError();
 	p_scr->con = c.output;
 	p_scr->isCompiled = true;
 	return 1;

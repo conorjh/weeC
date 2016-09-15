@@ -17,11 +17,15 @@ namespace wc
 			void startup(), shutdown();
 			vm::wcExecContext* compile(std::vector<std::string>*);	//opcodes from source code
 
+			int getError();
+
 			lex::wcLexer l;
 			parse::wcParser p;
 			vm::wcByteCodeGen g;
 			vm::wcExecContext* output;
 		};
+
+		std::string getCompilerErrorString(int);
 	}
 }
 

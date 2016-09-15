@@ -1,9 +1,16 @@
 #ifndef WEEC_PARSER_H
 #define WEEC_PARSER_H
+
 #include <unordered_map>
 #include "error.h" 
 #include "lexer.h"
 #include "include\tree.hh"
+
+#define CASE_BASIC_TYPES_TT case tt_bool: case tt_int: case tt_float: case tt_string: case tt_chr: case tt_object: case tt_var:
+#define CASE_ALL_LITERALS_TT case tt_intlit: case tt_strlit: case tt_fltlit: case tt_true: case tt_false:
+#define CASE_ALL_ARITHMETIC_TT case tt_assign: case tt_mult: case tt_div: case tt_plus: case tt_minus:
+#define CASE_ALL_OPERATORS_TT case tt_assign: case tt_logor: case tt_logand: case tt_equal: case tt_notequal: case tt_greater:case tt_less: case tt_lessequal: case tt_greaterequal: case tt_mult: case tt_div: case tt_plus: case tt_minus:	case tt_lognot:
+#define CASE_ALL_BOOLEAN_OPERATORS_TT case tt_less: case tt_greater: case tt_lessequal: case tt_greaterequal: case tt_equal: case tt_notequal: case tt_logand: case tt_logor:
 
 namespace wc
 {
@@ -121,11 +128,12 @@ namespace wc
 			wcSymbol* getSymbol(std::string, wcSymbol*);
 			bool addSymbol(wcSymbol*);
 			bool addSymbol(std::string, wcSymbol*);
+			void clear();
 
-			tree<wcParseNode>* tree;
+			tree<wcParseNode> tree;
 			std::vector<wcStackFrameInfo> stackFrames;				//vector of all possible stackframes
-			std::unordered_map<std::string, wcSymbol>* symTab;		//wcSymbol.fullIdent to wcSymbol
-			std::unordered_map<std::string, wcFuncInfo>* funcTab;	//wcFuncInfo.fullIdent to funcinfo
+			std::unordered_map<std::string, wcSymbol> symTab;		//wcSymbol.fullIdent to wcSymbol
+			std::unordered_map<std::string, wcFuncInfo> funcTab;	//wcFuncInfo.fullIdent to funcinfo
 			std::unordered_map<std::string, vm::wcVal> constTab;	//fullIdent to constant wcVal
 		};
 
@@ -205,7 +213,9 @@ namespace wc
 		bool checkOperandTypes(wcParser*, lex::wcToken oper1, lex::wcToken op, lex::wcToken oper2);
 		wcParseNodeType DeriveType(lex::wcToken);
 		//int getTypeSize(wcSymbol*);
+		//size
 		int getTypeSize(lex::wcToken);
+		int getSymbolStackSize(wcSymbol);
 
 		//identifier tings
 		wcSymbol resolveIdent(wcParser*, std::string);
@@ -226,7 +236,8 @@ namespace wc
 		bool checkForOverload(wcParser*, wcParamList* pl, wcSymbol* s);	//check a potential paramlist exists or not (wcSymbol.sigs[pl.StringMethodSignature])
 
 		//expression helpers
-		int evalConstExp(wcParser*, wcExpression);
+		int evalConstExp(wcParser* p_par, tree<wcParseNode>::iterator p_exp);
+		int evalConstExp(wcParser* p_par, tree<wcParseNode>::iterator p_exp, std::vector<wcParseNode*> out, std::vector<wcParseNode*> stk);
 		int getPrecedence(lex::wcToken);
 		int getAssociativity(lex::wcToken);
 		int isOperator(lex::wcToken);

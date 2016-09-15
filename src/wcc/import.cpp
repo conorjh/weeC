@@ -28,7 +28,7 @@ wcExecContext* wc::wcc::imp::importScriptFromFile(string p_fn)
 	}
 
 	wcCompiler c(source);
-	return nullptr;
+	return c.output;
 }
 
 wcExecContext* wc::wcc::imp::importByteCodeFromFile(string p_fn)

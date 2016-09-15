@@ -333,11 +333,11 @@ void test::printLexer(wc::lex::wcLexer* l)
 
 void test::printParser(wc::parse::wcParser* p)
 {
-	tree<wcParseNode>::iterator it = p->ast.tree->begin();
+	tree<wcParseNode>::iterator it = p->ast.tree.begin();
 	cout << "Parser" << endl;
-	while (it != p->ast.tree->end())
+	while (it != p->ast.tree.end())
 	{
-		for (int t = 0; t < p->ast.tree->depth(it); ++t)
+		for (int t = 0; t < p->ast.tree.depth(it); ++t)
 		{
 			cout << " ";
 		}

@@ -234,13 +234,13 @@ wcExecContext* wc::vm::wcByteCodeGen::gen()
 	output = new wcExecContext();
 	wcByteCode wc;
 	istream = new std::vector<wcByteCode> ;
-	pi = ast->tree->begin();
+	pi = ast->tree.begin();
 
 	//push command line args
 
 
 	//gen script functions and global statements
-	while (pi != ast->tree->end())
+	while (pi != ast->tree.end())
 		genStatement(this);
 	
 	addByteCode(wcByteCode(oc_halt));
@@ -254,10 +254,10 @@ wcExecContext* wc::vm::wcByteCodeGen::gen()
 
 void wc::vm::genStatement(wcByteCodeGen* bg)
 {
-	int olddepth = bg->ast->tree->depth(bg->pi);
+	int olddepth = bg->ast->tree.depth(bg->pi);
 	bg->pi++;
 
-	while (bg->pi != bg->ast->tree->end() && bg->ast->tree->depth(bg->pi) >= olddepth)
+	while (bg->pi != bg->ast->tree.end() && bg->ast->tree.depth(bg->pi) >= olddepth)
 		switch (bg->pi->type)
 	{
 		case pn_null:
@@ -298,8 +298,8 @@ void wc::vm::genStatement(wcByteCodeGen* bg)
 
 void wc::vm::genDecParamList(wcByteCodeGen* bg)
 {
-	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
-	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	int olddepth = bg->ast->tree.depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree.depth(bg->pi) > olddepth)
 		bg->pi++;
 }
 
@@ -314,12 +314,12 @@ void wc::vm::genDecFunc(wcByteCodeGen* bg)
 	vector<wcByteCode>* oldIstream;
 
 	//collect func dec info from current node
-	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
-	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	int olddepth = bg->ast->tree.depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree.depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
 		{
 			case pn_funcident:
-				fi = &bg->ast->funcTab->at(bg->pi.node->data.tokens.at(0).data);
+				fi = &bg->ast->funcTab.at(bg->pi.node->data.tokens.at(0).data);
 				++bg->pi;
 				break;
 
@@ -353,17 +353,17 @@ void wc::vm::genDecFunc(wcByteCodeGen* bg)
 void wc::vm::genDecNamespace(wcByteCodeGen* bg)
 {
 	//collect func dec info from current node
-	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
-	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	int olddepth = bg->ast->tree.depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree.depth(bg->pi) > olddepth)
 		genBlock(bg);
 }
 
 void wc::vm::genFuncCall(wcByteCodeGen *bg)
 {
 	std::string ident;
-	int olddepth = bg->ast->tree->depth(bg->pi);
+	int olddepth = bg->ast->tree.depth(bg->pi);
 	++bg->pi;
-	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	while (bg->ast->tree.depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
 		{
 		case pn_exp:
@@ -386,9 +386,10 @@ void wc::vm::genDecVar(wcByteCodeGen* bg)
 {
 	bool hasExp = false;
 	int varOffset = 0;
-	int olddepth = bg->ast->tree->depth(bg->pi);
+	int varSize = 0;
+	int olddepth = bg->ast->tree.depth(bg->pi);
 	++bg->pi;
-	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	while (bg->ast->tree.depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
 		{
 		case pn_exp:
@@ -398,18 +399,19 @@ void wc::vm::genDecVar(wcByteCodeGen* bg)
 			break;
 
 		case pn_type:
-			varOffset = bg->stackOffset;
-				for (int t = 0; t < getTypeSize(bg->pi->tokens.at(0)); ++t)
-				{
-					bg->addByteCode(oc_push, 0);	//reserve space for this variable
-					bg->stackOffset++;
-				}
 			++bg->pi;
 			break;
 
 		case pn_ident:
+			varOffset = bg->stackOffset;
+			varSize = bg->ast->getSymbol(bg->pi->tokens.at(0).data)->size;
+			for (int t = 0; t < varSize; ++t)
+			{
+				bg->addByteCode(oc_push, 0);	//reserve space for this variable
+				bg->stackOffset++;
+			}
 			//set the offset of this symbol to the current local stack size, noted in bg->stackOffset
-			bg->ast->symTab->at(getTokenFromNode(tt_ident, &bg->pi.node->data).data).offset = varOffset;
+			bg->ast->symTab.at(getTokenFromNode(tt_ident, &bg->pi.node->data).data).offset = varOffset;
 			++bg->pi;
 			break;
 
@@ -421,7 +423,7 @@ void wc::vm::genDecVar(wcByteCodeGen* bg)
 
 void wc::vm::genReturn(wcByteCodeGen* bg)
 {
-	int olddepth = bg->ast->tree->depth(bg->pi);
+	int olddepth = bg->ast->tree.depth(bg->pi);
 	++bg->pi;
 
 	genExp(bg);
@@ -435,8 +437,8 @@ void wc::vm::genIf(wcByteCodeGen* bg)
 	//collect func dec info from current node
 	unsigned int  truejump, elsejump, iend;
 	int ibegin = bg->istream->size() - 1;
-	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
-	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	int olddepth = bg->ast->tree.depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree.depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
 		{
 			case pn_exp:
@@ -474,8 +476,8 @@ void wc::vm::genExp(wcByteCodeGen* bg)
 {
 	bool foundParen = false;
 	std::vector<wcParseNode*> out, stk;
-	int olddepth = bg->ast->tree->depth(bg->pi);	++bg->pi;
-	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	int olddepth = bg->ast->tree.depth(bg->pi);	++bg->pi;
+	while (bg->ast->tree.depth(bg->pi) > olddepth)
 	{
 		switch (bg->pi->type)
 		{
@@ -559,8 +561,8 @@ void wc::vm::genExp(wcByteCodeGen* bg)
 
 void wc::vm::genBlock(wcByteCodeGen* bg)
 {
-	int olddepth = bg->ast->tree->depth(bg->pi); bg->pi++;
-	while (bg->ast->tree->depth(bg->pi) > olddepth)
+	int olddepth = bg->ast->tree.depth(bg->pi); bg->pi++;
+	while (bg->ast->tree.depth(bg->pi) > olddepth)
 		genStatement(bg);
 
 }
@@ -593,14 +595,8 @@ void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 			//variables
 		case pn_ident:
 		case pn_varident:
-			//if (rpn->at(0)->tokens.at(1).type == tt_lvalue)
-				//copy stored value from stack, to the top of stack 
 				bg->addByteCode(oc_pushfs, bg->ast->getSymbol(rpn->at(0)->tokens.at(0).data)->offset);	//push value from stack, using fullident from tokens[0]
-			//else
-				//copy stackindex of variable, to the top of stack 
-				//bg->addByteCode(oc_push, wcstoi(rpn->at(0)->tokens.at(1).data));
 			break;
-
 		case pn_funcident: case pn_funccall:
 			bg->addByteCode(oc_call, wcstoi(rpn->at(0)->tokens.at(0).data));
 			break;
@@ -675,66 +671,6 @@ void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 
 }
 
-void wc::vm::genNodeToByteCode(wcByteCodeGen* bg, wcParseNode* pn)
-{
-	switch (pn->type)
-	{
-	case pn_strlit:
-		bg->addByteCode(oc_push, vt_string, 0);	break;
-	case pn_fltlit:
-		bg->addByteCode(oc_push, vt_float, wcstoi(pn->tokens.at(0).data));	break;
-	case pn_intlit:
-		bg->addByteCode(oc_push, vt_int, wcstoi(pn->tokens.at(0).data));		break;
-	case pn_true:
-		bg->addByteCode(oc_push, vt_bool, 1);		break;
-	case pn_false:
-		bg->addByteCode(oc_push, vt_bool, 0);		break;
-
-		//variables
-	case pn_ident:
-	case pn_varident:
-	case pn_funcident:
-		break;
-
-		//operators
-	case pn_logor:
-		bg->addByteCode(oc_or);
-		break;
-	case pn_logand:
-		bg->addByteCode(oc_and);
-		break;
-	case pn_assign:
-		bg->addByteCode(oc_mov);
-		break;
-	case pn_equal:
-		bg->addByteCode(oc_jne);
-	case pn_notequal:
-		bg->addByteCode(oc_je);
-	case pn_greater:
-		bg->addByteCode(oc_jle);
-	case pn_less:
-		bg->addByteCode(oc_jge);
-	case pn_lessequal:
-		bg->addByteCode(oc_jg);
-	case pn_greaterequal:
-		bg->addByteCode(oc_jl);
-	case pn_mult:
-		bg->addByteCode(oc_mult);
-		break;
-	case pn_div:
-		bg->addByteCode(oc_div);
-		break;
-	case pn_minus:
-		bg->addByteCode(oc_minus);
-		break;
-	case pn_lognot:
-		bg->addByteCode(oc_not);
-		break;
-	case pn_plus:
-		bg->addByteCode(oc_plus);
-		break;
-	}
-}
 
 void wc::vm::genAppendFuncIstreams(wcByteCodeGen *bg, std::vector<wcByteCode> *istream)
 {

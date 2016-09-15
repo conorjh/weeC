@@ -29,6 +29,7 @@ namespace wc
 	{
 		void clear();
 
+		//load script source code into this object
 		int load(std::string);
 		int load(std::vector<std::string>*);
 		int loadFromFile(std::string);

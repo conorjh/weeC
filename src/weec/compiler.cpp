@@ -5,6 +5,15 @@ using namespace wc;
 using namespace wc::comp;
 using namespace wc::vm;
 
+namespace wc
+{
+	namespace comp
+	{
+		wcErrorCode convertParserToCompilerError(wcErrorCode);
+		wcErrorCode convertGenToCompilerError(wcErrorCode);
+	}
+}
+
 wc::comp::wcCompiler::wcCompiler()
 {
 	startup();
@@ -33,18 +42,47 @@ wcExecContext* wc::comp::wcCompiler::compile(vector<string>* p_sc)
 	//parse the code into an AST
 	l.data.source = p_sc;
 	p.parse();
+	
+	//handle parse errors
 	if (p.getError())
 	{
-		//handle parse errors
+		return nullptr;
 	}
 
 	//build AST into bytecode
 	g.ast = &p.ast;
 	output = g.gen();
+
 	if (g.getError())
 	{
 		return nullptr;
 	}
 
 	return output;
+}
+
+int wc::comp::wcCompiler::getError()
+{
+	if (p.getError())
+		return convertParserToCompilerError(wcErrorCode(p.getError()));
+	if (g.getError())
+		return convertGenToCompilerError(wcErrorCode(g.getError()));
+}
+
+std::string wc::comp::getCompilerErrorString(int p_ec)
+{
+
+	return "";
+}
+
+wcErrorCode wc::comp::convertParserToCompilerError(wcErrorCode p_ec)
+{
+	
+	return wcErrorCode(ec_null);
+}
+
+wcErrorCode wc::comp::convertGenToCompilerError(wcErrorCode p_ec)
+{
+
+	return wcErrorCode(ec_null);
 }

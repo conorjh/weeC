@@ -17,6 +17,8 @@ wcVM::wcVM()
 //instructions = 0, executes until error/halt signal or end of istream
 unsigned int wcVM::exec(unsigned int instructions)
 {
+	if (!con)
+		return 0;
 	bool loop = (instructions < 1);
 	int oldpc, *rpc;
 	while (con->istream.size() && !con->halt && (instructions>0 || loop))

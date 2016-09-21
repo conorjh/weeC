@@ -541,6 +541,8 @@ int wc::parse::parseDecVar_OBracket(wcParser* p_par, wcSymbol* p_ident, int p_id
 
 	//consume closing bracket
 	p_par->lexer->nextToken();
+
+	return 1;
 }
 
 int wc::parse::parseDecVar_Exp(wcParser* p_par, wcSymbol*& p_ident, wcParseNode* p_identPN, int *p_identX, int *p_identY)

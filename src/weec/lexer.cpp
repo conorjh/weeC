@@ -259,12 +259,14 @@ bool wc::lex::wcLexer::inc()
 {
 	if (data.done)
 		return false;
-	if (data.x + 1 <= data.source->at(data.y).size() - 1)
+
+	if (data.x + 1 <= int(data.source->at(data.y).size()) - 1)
 	{
 		data.x++;
 	}
 	else
 	{
+		//newline
 		data.x = 0, data.y++;
 		if (data.y > data.source->size() - 1)
 		{
@@ -363,5 +365,6 @@ vector<string> wc::lex::tokenizeString(string p_in)
 	vector<string> out;
 	for (int t = 0; t < l.data.tokens.size(); ++t)
 		out.push_back(l.data.tokens[t].data);
+	delete l.data.source;
 	return out;
 }

@@ -230,6 +230,28 @@ unsigned int wc::parse::wcParser::getError()
 	return error;
 }
 
+unsigned int wc::parse::wcParser::getErrorLine()
+{
+	return errorL;
+}
+
+unsigned int wc::parse::wcParser::getErrorCol()
+{
+	return errorC;
+}
+
+string wc::parse::wcParser::getErrorString()
+{
+	return errorS;
+}
+
+string getErrorCodeAsString(wcErrorCode p_ec)
+{
+	if (errorStrings.find(p_ec) != errorStrings.end())
+		return errorStrings.find(p_ec)->second;
+	return "";
+}
+
 tree<wcParseNode>::iterator wc::parse::wcParser::getNode()
 {
 	return pindex;
@@ -326,8 +348,7 @@ void wc::parse::parseStatement(wcParser* p_par)
 	case tt_scolon:
 		//empty statement
 		parseSColon(p_par);
-		break;
-	
+		break;	
 	case tt_const:	
 	CASE_BASIC_TYPES_TT
 		if (!p_par->noDecVar)
@@ -464,7 +485,7 @@ void wc::parse::parseDecVar(wcParser* p_par)
 	
 
 	//2. variable identifier
-	if (!parseDecVar_Ident(p_par, &symt, symi, &setToConst, &pni))
+	if (!parseDecVar_Ident(p_par, &symt, symi, setToConst, &pni))
 		return;
 
 	//now we know if its an array, make sure to adjust the stack offset 
@@ -491,11 +512,12 @@ int wc::parse::parseDecVar_Ident(wcParser* p_par, wcSymbol* p_type, wcSymbol*& p
 	p_identY = p_par->lexer->getToken()->y;	//for error reporting porpoises
 
 	p_ident = addIdentDec(p_par, st_var);	//add symbol
+	wcSymbol* thisIdentSymbol = p_par->ast.getSymbol(p_ident->fullIdent);
 	p_ident->dataType = p_type->dataType;
 	p_ident->isConst = p_setToConst;
 
-	if (!(p_par->ast.getSymbol(p_ident->fullIdent)->isArray = p_type->isArray))
-		p_par->ast.getSymbol(p_ident->fullIdent)->size = 1;
+	if (!(thisIdentSymbol->isArray = p_type->isArray))
+		thisIdentSymbol->size = 1;
 
 	if (p_ident)
 		p_par->currentStackFrame->localVars.push_back(p_ident->fullIdent);
@@ -565,7 +587,10 @@ int wc::parse::parseDecVar_Exp(wcParser* p_par, wcSymbol*& p_ident, wcParseNode*
 			p_par->setError(ec_p_expmustbeconst, *p_identX, *p_identY, ex.rpn);
 			return 0;
 		}
-		expResult = p_par->ast.constTab.at(p_ident->fullIdent).val = evalConstExp(p_par, ex.node);
+		//expResult = p_par->ast.constTab.at(p_ident->fullIdent).val = evalConstExp(p_par, ex.node);
+
+		//parse remaining semi colon
+		parseSColon(p_par);
 		break;
 
 	default:
@@ -573,8 +598,6 @@ int wc::parse::parseDecVar_Exp(wcParser* p_par, wcSymbol*& p_ident, wcParseNode*
 		return 0;
 	}
 
-	//parse remaining semi colon
-	parseSColon(p_par);
 
 	return 1;
 }
@@ -1188,6 +1211,7 @@ wcExpression wc::parse::parseFExp(wcParser* p_par)
 	return ex;
 }
 
+//we encountered an ident as the first part of the expression, this func parses the rest of the expression
 wcExpression wc::parse::parseFExp_OuterExpression(wcParser* p_par, wcParseNode p_id, wcExpression p_ex)
 {
 	wcToken op;
@@ -1636,7 +1660,6 @@ int wc::parse::isOperator(lex::wcToken tokin)
 	}
 	return false;
 }
-
 
 
 int wc::parse::evalConstExp(wcParser* p_par, tree<wcParseNode>::iterator p_exp)

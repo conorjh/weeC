@@ -21,7 +21,7 @@ std::vector<string> testScripts = {
 		"b = 23;\n"
 		"a = b;\n"
 		"d = a + c;\n"
-		"return c;"},
+		"return d;"},
 	//return a value
 	{	"return 666*666;" },
 	//simple arithmetic
@@ -80,13 +80,20 @@ std::vector<string> testScripts = {
 		"int c;\n"
 		"return c = b = a = 66;\n"},
 	//array variable
-	{	"int a[5];\n"
-		"a[2] = 100;\n"
-		"return a[2];"},
+	{	"//int a[5];\n"
+		"//a[2] = 100;\n"
+		"//return a[2];"},
 	//if statements
 	{	"if(2!=1)\n"
-		"return 22;\n"
+		"\treturn 22;\n"
 		"return 33;" },
+
+	{	"int a = 2;\n"
+		"int b = 150;\n"
+		"if(b=>b)\n"
+		"\treturn 1;\n"
+		"return 0;" },
+
 	//function calls
 	{	"int a = 33; \n"
 		"func int f1()\n"
@@ -148,5 +155,10 @@ std::vector<string> testScripts = {
 	" f1;\n"
 	"}\n"
 	"int a=3;\n"
-	" a + func1;\n" }
+	" a + func1;\n" },
+
+	//erroneous scripts
+	//undeclared ident
+	{	"int a = 2;\n"
+		"return a + b;"}
 };

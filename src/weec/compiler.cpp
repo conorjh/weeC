@@ -71,14 +71,12 @@ int wc::comp::wcCompiler::getError()
 
 std::string wc::comp::getCompilerErrorString(int p_ec)
 {
-
-	return "";
+	return parse::getErrorCodeAsString(wcErrorCode(p_ec));
 }
 
 wcErrorCode wc::comp::convertParserToCompilerError(wcErrorCode p_ec)
 {
-	
-	return wcErrorCode(ec_null);
+	return p_ec;
 }
 
 wcErrorCode wc::comp::convertGenToCompilerError(wcErrorCode p_ec)

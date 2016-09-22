@@ -144,7 +144,7 @@ int wc::wcvm::consoleParseCmd(string p_in)
 	if (getData()->inputModeOn)
 	{
 		//add input to buffer
-		if (p_in != "exit")
+		if (p_in != "#end")
 		{
 			getData()->inputModeBuffer.push_back(p_in);
 			return 1;
@@ -169,7 +169,7 @@ int wc::wcvm::consoleParseCmd(string p_in)
 	{
 		return consoleParseCmd_Help(tokens);
 	}
-	else if (tokens.at(0) == "input" && !getData()->inputModeOn)
+	else if (tokens.at(0) == "#start" && !getData()->inputModeOn)
 	{
 		return consoleParseCmd_Input(tokens);
 	}
@@ -240,6 +240,8 @@ int wc::wcvm::consoleParseCmd_Input(vector<string> p_tok)
 
 int wc::wcvm::consoleLoop()
 {
+	comp::wcCompiler c;
+
 	//get input
 	string in = consoleGetInput();
 	
@@ -266,7 +268,7 @@ int wc::wcvm::consoleLoop()
 	//no run file specified, but source code has been loaded from input mode
 	else if (d->src.size())
 	{
-		comp::wcCompiler c(&d->src);
+		c.compile(&d->src);
 		if (d->vm.con)
 			delete d->vm.con;
 		d->vm.con = c.output;
@@ -287,10 +289,18 @@ int wc::wcvm::consoleLoop()
 	run();
 
 	//display output
-	cout << "istream: " << d->vm.con->istream.size() << endl;
-	cout << "eax: " << d->vm.con->reg[wc::vm::wcReg::eax] << endl;
-	cout << "returns: " << d->vm.con->reg[wc::vm::wcReg::ret] << endl;
-	cout << endl;
+	
+	if (c.getError())
+	{
+		cout << "error code: " << c.getError() << " - " << comp::getCompilerErrorString(c.getError()) << endl;
+	}
+	else
+	{
+		cout << "istream: " << d->vm.con->istream.size() << endl;
+		cout << "eax: " << d->vm.con->reg[wc::vm::wcReg::eax] << endl;
+		cout << "returns: " << d->vm.con->reg[wc::vm::wcReg::ret] << endl;
+		cout << endl;
+	}
 
 	return 1;
 }

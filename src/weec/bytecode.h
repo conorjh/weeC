@@ -153,7 +153,6 @@ namespace wc
 		void genExp(wcByteCodeGen*);
 		void genRpnToByteCode(wcByteCodeGen*, std::vector<parse::wcParseNode*>*);
 		void genNodeToByteCode(wcByteCodeGen*, parse::wcParseNode*);
-		void genStackFrames(wcByteCodeGen*, wcExecContext*);
 		void genAppendFuncIstreams(wcByteCodeGen*, std::vector<wcByteCode>*);
 		
 		wcValType getValType(parse::wcSymbol*);

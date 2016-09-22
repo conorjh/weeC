@@ -87,8 +87,6 @@ namespace wc
 		void ocPause(wcExecContext*);
 		void ocHalt(wcExecContext*);
 		void ocRet(wcExecContext*);
-		void ocPushsf(wcExecContext*);
-		void ocPopsf(wcExecContext*);
 	}
 }
 

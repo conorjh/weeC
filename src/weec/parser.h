@@ -156,6 +156,9 @@ namespace wc
 
 			//error
 			unsigned int getError();
+			unsigned int getErrorLine();
+			unsigned int getErrorCol();
+			std::string getErrorString();
 			void setError(wcErrorCode, std::string);		//line and column from lexer->getToken()
 			void setError(wcErrorCode, int, int, std::string);
 
@@ -241,6 +244,9 @@ namespace wc
 		int getPrecedence(lex::wcToken);
 		int getAssociativity(lex::wcToken);
 		int isOperator(lex::wcToken);
+
+		//error
+		std::string getErrorCodeAsString(wcErrorCode);
 	}
 }
 

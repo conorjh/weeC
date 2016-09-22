@@ -435,7 +435,7 @@ void wc::vm::genReturn(wcByteCodeGen* bg)
 void wc::vm::genIf(wcByteCodeGen* bg)
 {
 	//collect func dec info from current node
-	unsigned int  truejump, elsejump, iend;
+	unsigned int truejump = 0; unsigned int elsejump, iend;
 	int ibegin = bg->istream->size() - 1;
 	int olddepth = bg->ast->tree.depth(bg->pi);	++bg->pi;
 	while (bg->ast->tree.depth(bg->pi) > olddepth)
@@ -448,13 +448,13 @@ void wc::vm::genIf(wcByteCodeGen* bg)
 
 			case pn_if_trueblock:
 				genBlock(bg);
-				truejump = bg->addByteCode(oc_jmp);
+				//truejump = bg->addByteCode(oc_jmp);
 				break;
 
 			case pn_if_elseblock:
 				genBlock(bg);
 				//point the jmp at the end of the true block past the else block
-				bg->getByteCode(truejump, bg->inDecFunc)->arg1 = elsejump = bg->istream->size();	break;
+				//bg->getByteCode(truejump, bg->inDecFunc)->arg1 = elsejump = bg->istream->size();	break;
 			default:
 				bg->pi++;
 				break;
@@ -465,8 +465,6 @@ void wc::vm::genIf(wcByteCodeGen* bg)
 	//if this is the last statement, we need an address to land on after else
 	iend = bg->addByteCode(oc_nop);
 
-	//pop stack to expression result register	
-	//bg->addByteCode(oc_lrfs,eax);
 	//now that we know the instruction, edit all prior je/jne/jg/jge to the right block
 	adjustJumps(bg, ibegin, iend, truejump + 1);
 }

@@ -3,6 +3,14 @@
 using namespace wc::vm;
 using wc::vm::wcReg;
 
+namespace wc
+{
+	namespace vm
+	{
+		bool incPC(wcExecContext* con, int* rpc, int oldpc);
+	}
+}
+
 wcVM::wcVM()
 {
 	//	con->stack.ec=con;
@@ -17,6 +25,7 @@ wcVM::wcVM()
 //instructions = 0, executes until error/halt signal or end of istream
 unsigned int wcVM::exec(unsigned int instructions)
 {
+	//make sure we're not passed an empty context, 
 	if (!con)
 		return 0;
 	bool loop = (instructions < 1);
@@ -147,12 +156,6 @@ unsigned int wcVM::exec(unsigned int instructions)
 		case oc_halt:
 			ocHalt(con);
 			break;
-		case oc_pushsf:
-			ocPushsf(con);
-			break;
-		case oc_popsf:
-			ocPopsf(con);
-			break;
 		case oc_nop:
 		default:
 			ocNop(con);
@@ -160,16 +163,22 @@ unsigned int wcVM::exec(unsigned int instructions)
 		}
 
 		//inc program counter if it hasnt been altered by an instruction
-		if (con->reg[pc] == oldpc)
-			(*rpc)++;
-		if (*rpc >= con->istream.size())
-		{
-			con->halt = true;
+		if (!incPC(con, rpc, oldpc))
 			break;
-		}
 		--instructions;
 	}
+	return true;
+}
 
+bool wc::vm::incPC(wcExecContext* con,int* rpc, int oldpc)
+{
+	if (con->reg[pc] == oldpc)
+		(*rpc)++;
+	if (*rpc >= con->istream.size())
+	{
+		con->halt = true;
+		return false;
+	}
 	return true;
 }
 
@@ -461,34 +470,9 @@ void wc::vm::ocRet(wcExecContext* ec)
 
 }
 
-//reserve space on the stack for a given stackframe
-void wc::vm::ocPushsf(wcExecContext *ec)
-{
-	for (int t = 0; t < ec->stackFrames[ec->istream[ec->reg[pc]].arg1].size(); ++t)
-		ec->stack.push(0);
-}
-
-//remove a given stackframe from the stack
-void wc::vm::ocPopsf(wcExecContext *ec)
-{
-	//stackframe index
-	int arg = ec->istream[ec->reg[pc]].arg1;
-
-	//create storage frame if there isnt one
-	if (ec->storedFrames.find(arg) == ec->storedFrames.end())
-	{
-		ec->storedFrames.insert(std::make_pair(arg, wcStoredStackFrame()));
-		for (int n = 0; n < ec->stackFrames[arg].size(); ++n)
-			ec->storedFrames[arg].data.push(0);
-	}
-
-	for (int t = ec->stackFrames[arg].size() - 1; t > -1; --t)
-		*(ec->storedFrames[arg].data.at(t)) = ec->stack.pop(0);
-}
-
 void wc::vm::ocHalt(wcExecContext* ec)
 {
-	ec->reg[hlt] = ec->istream[ec->reg[pc]].arg1;
+	ec->reg[hlt] = 1;//ec->istream[ec->reg[pc]].arg1;
 }
 
 void wc::vm::ocPause(wcExecContext* ec)

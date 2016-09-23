@@ -41,7 +41,7 @@ wcExecContext* wc::comp::wcCompiler::compile(vector<string>* p_sc)
 {
 	//parse the code into an AST
 	l.data.source = p_sc;
-	p.parse();
+ 	p.parse();
 	
 	//handle parse errors
 	if (p.getError())

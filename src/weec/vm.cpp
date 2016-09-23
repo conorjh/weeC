@@ -473,6 +473,7 @@ void wc::vm::ocRet(wcExecContext* ec)
 void wc::vm::ocHalt(wcExecContext* ec)
 {
 	ec->reg[hlt] = 1;//ec->istream[ec->reg[pc]].arg1;
+	ec->halt = true;
 }
 
 void wc::vm::ocPause(wcExecContext* ec)

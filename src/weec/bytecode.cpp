@@ -430,20 +430,26 @@ void wc::vm::genReturn(wcByteCodeGen* bg)
 
 	bg->addByteCode(oc_popr, eax);		//set expression register with the result on the top of stack
 	bg->addByteCode(oc_mov, eax, ret);	//copy expression register to return register
+	bg->addByteCode(oc_halt);			//TODO remove this after we get functions working
 }
 
 void wc::vm::genIf(wcByteCodeGen* bg)
 {
 	//collect func dec info from current node
-	unsigned int truejump = 0; unsigned int elsejump, iend;
-	int ibegin = bg->istream->size() - 1;
+	unsigned int truejump = 0; unsigned int elsejump, ifEnd;
+	unsigned int ifJump;
+	bool hasElse = false;
+	int ifBegin = bg->istream->size() - 1;
 	int olddepth = bg->ast->tree.depth(bg->pi);	++bg->pi;
 	while (bg->ast->tree.depth(bg->pi) > olddepth)
 		switch (bg->pi->type)
 		{
 			case pn_exp:
 				genExp(bg);
-				bg->addByteCode(oc_popr, eax);
+				//this bytecode is equivalent to if()
+				bg->addByteCode(oc_push, 1);
+				bg->addByteCode(oc_cmp);
+				ifJump = bg->addByteCode(oc_jne, 0);
 				break;
 
 			case pn_if_trueblock:
@@ -452,21 +458,31 @@ void wc::vm::genIf(wcByteCodeGen* bg)
 				break;
 
 			case pn_if_elseblock:
+				hasElse = true;
+				elsejump = bg->istream->size();
 				genBlock(bg);
 				//point the jmp at the end of the true block past the else block
-				//bg->getByteCode(truejump, bg->inDecFunc)->arg1 = elsejump = bg->istream->size();	break;
+				//bg->getByteCode(truejump, bg->inDecFunc)->arg1 = elsejump = bg->istream->size();	
+				break;
 			default:
 				bg->pi++;
 				break;
 		}
 
-	if (ibegin < 0)
-		ibegin = 0;
-	//if this is the last statement, we need an address to land on after else
-	iend = bg->addByteCode(oc_nop);
+	//special case - if this is the first line of code;
+	if (ifBegin < 0)
+		ifBegin = 0;
+	
+	//if this is the last statement, we need an address to jump to if the "if" statement was false
+	ifEnd = bg->addByteCode(oc_nop);
+	
+	//adjust the if statement jump - no else means jump past the whole bit of code we just generated,
+	//and if it has an else, jump to the else block instead
+	if(hasElse)
+		bg->getByteCode(ifJump)->arg1 = elsejump;
+	else
+		bg->getByteCode(ifJump)->arg1 = ifEnd;
 
-	//now that we know the instruction, edit all prior je/jne/jg/jge to the right block
-	adjustJumps(bg, ibegin, iend, truejump + 1);
 }
 
 //initially generates parsenodes in RPN order, then 

@@ -90,9 +90,23 @@ std::vector<string> testScripts = {
 
 	{	"int a = 2;\n"
 		"int b = 150;\n"
-		"if(b=>b)\n"
+		"if(a>=b)\n"
 		"\treturn 1;\n"
 		"return 0;" },
+
+	{	"if(22!=22)\n"
+		"   return 111;\n"
+		"else\n"
+		"   return 222;\n" },
+
+	{	"if(666==777)\n"
+		"{\n"
+		"   return 333;\n"
+		"}\n"
+		"else\n"
+		"{\n"
+		"   return 444;\n" 
+		"}"	},
 
 	//function calls
 	{	"int a = 33; \n"

@@ -54,7 +54,7 @@ namespace wc
 			std::string fullIdent;	//fully qualified name $global::varname
 			std::string dataType;	//same as the wcSymbol::ident of this vars type
 			wcSymbolType type;		//pointer to type symbol
-			unsigned int size;		//number of sequential copies in memory
+			unsigned int dataSize;	//how many ints this symbol occupies on the stack
 			int	offset;				//filled in by gen, local stack offset
 			bool	isConst,		//constant data, read only
 					isArray,		//simple c array []

@@ -16,7 +16,8 @@ namespace wc
 		ec_p_nonintsubscript,			//array[t]    t must be int
 		ec_p_expmustbeconst,			//an expression (usually array subscripts) should have consisted entirely of consts
 		ec_p_expmustbearray,			//an expression should have returned array 
-		ec_p_illegalidentcall			//lexIdent encountered an error
+		ec_p_illegalidentcall,			//lexIdent encountered an error
+		ec_p_undeclaredtype				//identifer is not a type - normally in from parsing a declaration (func, var etc)
 	};
 
 	const std::unordered_multimap<wcErrorCode, std::string> errorStrings =
@@ -30,7 +31,8 @@ namespace wc
 		{ ec_p_nonintsubscript,	"Array elements can only be addressed with an Integer" },
 		{ ec_p_expmustbeconst, "Expression must be const" },
 		{ ec_p_expmustbearray, "Expression must return an array" },
-		{ ec_p_illegalidentcall, "Illegal ident" }
+		{ ec_p_illegalidentcall, "Illegal ident" },
+		{ ec_p_undeclaredtype, "Symbol is not a type"}
 	};
 
 }

@@ -404,7 +404,7 @@ void wc::vm::genDecVar(wcByteCodeGen* bg)
 
 		case pn_ident:
 			varOffset = bg->stackOffset;
-			varSize = bg->ast->getSymbol(bg->pi->tokens.at(0).data)->size;
+			varSize = bg->ast->getSymbol(bg->pi->tokens.at(0).data)->dataSize;
 			for (int t = 0; t < varSize; ++t)
 			{
 				bg->addByteCode(oc_push, 0);	//reserve space for this variable
@@ -457,13 +457,13 @@ void wc::vm::genIf(wcByteCodeGen* bg)
 				//truejump = bg->addByteCode(oc_jmp);
 				break;
 
+
 			case pn_if_elseblock:
 				hasElse = true;
 				elsejump = bg->istream->size();
 				genBlock(bg);
-				//point the jmp at the end of the true block past the else block
-				//bg->getByteCode(truejump, bg->inDecFunc)->arg1 = elsejump = bg->istream->size();	
 				break;
+
 			default:
 				bg->pi++;
 				break;

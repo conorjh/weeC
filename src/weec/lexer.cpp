@@ -39,7 +39,7 @@ wcToken* wc::lex::wcLexer::getToken()
 	return &data.tokens[data.tokens.size() - 1 - data.offset];
 }
 
-//for when we parse an ident, but also need parseFExp to include it
+//for when we parse an ident, but also need parseFullExp to include it
 //remove last token, set x/y to old values
 void wc::lex::wcLexer::rewind()
 {

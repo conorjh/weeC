@@ -54,6 +54,7 @@ namespace wc
 			std::string fullIdent;	//fully qualified name $global::varname
 			std::string dataType;	//same as the wcSymbol::ident of this vars type
 			wcSymbolType type;		//pointer to type symbol
+			unsigned int size;		//denotes the array size (will be one if it isnt an array)
 			unsigned int dataSize;	//how many ints this symbol occupies on the stack
 			int	offset;				//filled in by gen, local stack offset
 			bool	isConst,		//constant data, read only
@@ -93,6 +94,7 @@ namespace wc
 			wcExpression();
 			std::string dataType, rpn;	//dataTypes fullIdent,reverse polish notation (postfix) conversion
 			tree<wcParseNode>::iterator node;
+			std::string stringRep;
 			bool	isConst,	//all operands are const
 					isBool,		//leftmost operand is bool
 					isFunc,		//leftmost operand is a function
@@ -193,8 +195,8 @@ namespace wc
 		void parseWhile(wcParser*);
 		void parseAssignment(wcParser*, wcParseNode);
 		void parseFuncCall(wcParser*, wcParseNode);
-		wcExpression parseFExp(wcParser*);
-		wcExpression parseFExp(wcParser*, wcParseNode);
+		wcExpression parseFullExp(wcParser*);
+		wcExpression parseFullExp(wcParser*, wcParseNode);
 
 		//level 3
 		wcParseNode parseIdent(wcParser*);
@@ -223,7 +225,7 @@ namespace wc
 		//identifier tings
 		wcSymbol resolveIdent(wcParser*, std::string);
 		std::string lexIdent(wcParser*);
-		wcSymbol* addIdentDec(wcParser*, wcSymbolType);
+		wcSymbol* parseIdentDeclaration(wcParser*, wcSymbolType);
 		bool isIdentExplicit(std::string);
 
 		//symbol ting

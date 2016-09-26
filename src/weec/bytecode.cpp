@@ -469,7 +469,7 @@ void wc::vm::genIf(wcByteCodeGen* bg)
 				break;
 		}
 
-	//special case - if this is the first line of code;
+	//special case - if this is the first line of code in istream;
 	if (ifBegin < 0)
 		ifBegin = 0;
 	

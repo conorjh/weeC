@@ -12,7 +12,8 @@ std::vector<string> testScripts = {
 		"a[2] = 30;\n"
 		"a[0] = a[1] + a[2];\n"
 		"return a[0];" },
-	//push 2 ints to the stack
+	//push 2 ints to the stack - tests the 
+	//local variables of different dataSizes
 	{	"int a = 11;\n"
 		"int b = 22;\n"
 		"flt c = 33;\n"

@@ -78,12 +78,16 @@ namespace wc
 			pn_paramlist, pn_decparamlist, pn_funccall, pn_if, pn_else, pn_if_trueblock, pn_if_elseblock, pn_while, pn_break,
 			pn_return, pn_continue,
 			pn_statement, pn_negate
-		};
+		};		
 
 		struct wcParseNode
 		{
-			wcParseNode(); wcParseNode(lex::wcTokenType t);
-			wcParseNode(wcSymbolType t); wcParseNode(wcParseNodeType t) { type = t; };
+			wcParseNode(); 
+			wcParseNode(lex::wcTokenType t);
+			wcParseNode(lex::wcTokenType t, lex::wcToken p_tok);
+			wcParseNode(lex::wcTokenType t, lex::wcToken p_tok1, lex::wcToken p_tok2);
+			wcParseNode(wcSymbolType t); 
+			wcParseNode(wcParseNodeType t) { type = t; };
 			wcParseNode(wcParseNodeType t, lex::wcToken tk) { type = t; tokens.push_back(tk); };
 			wcParseNodeType type;
 			std::vector<lex::wcToken> tokens;		//index of tokens in wcLexer.data

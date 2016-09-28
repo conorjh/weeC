@@ -5,6 +5,10 @@ std::vector<string> testScripts = {
 	//push 2 ints to the stack
 	{	"int a;\n"
 		"int b;\n" },
+	//push 2 ints, do some sum
+	{	"int a = 11;\n"
+		"int b = 2;\n"
+		"return a = b + 100;\n" },
 	//manipulate an array
 	{	"int a[3];\n"
 		"a[0] = 10;\n"
@@ -12,6 +16,17 @@ std::vector<string> testScripts = {
 		"a[2] = 30;\n"
 		"a[0] = a[1] + a[2];\n"
 		"return a[0];" },
+	//manipulate an array with ints also on the stack
+	{	"int a;\n"
+		"int b[3];\n"
+		"int c;\n"
+		"b[0] = 10;\n"
+		"b[1] = 20;\n"
+		"b[2] = 30;\n"
+		"b[0] = b[1] + b[2];\n"
+		"a = b[0] * 2;\n"
+		"c = a * b[0];\n"
+		"return c;" },
 	//push 2 ints to the stack - tests the 
 	//local variables of different dataSizes
 	{	"int a = 11;\n"

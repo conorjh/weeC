@@ -4,8 +4,10 @@ using namespace std;
 using namespace wc;
 using namespace lex;
 
-namespace wc {
-namespace lex {
+namespace wc 
+{
+	namespace lex 
+	{
 
 		//nextToken clarity methods
 		wcToken* nextToken_lexWS(wcLexer* p_l, wcToken p_t);
@@ -14,14 +16,15 @@ namespace lex {
 		wcToken* nextToken_lexStrlit(wcLexer* p_l, wcToken p_t);
 		wcToken* nextToken_lexDualStep(wcLexer* p_l, wcToken p_t);
 
-}		//namespace wc::lex
-}		//namespace wc
+	}	//namespace wc::lex
+}	//namespace wc
 
 wc::lex::wcLexer::wcLexer()
 {
 	this->clear();
 }
 
+	 
 //reset the lexer to an initial state
 void wc::lex::wcLexer::clear()
 {

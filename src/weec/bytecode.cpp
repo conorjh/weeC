@@ -185,6 +185,7 @@ wcValType wc::vm::getValType(wcSymbol* sym)
 wc::vm::wcByteCodeGen::wcByteCodeGen()
 {
 	inDecFunc = false;
+	errorCode = ec_null;
 }
 
 unsigned int wc::vm::wcByteCodeGen::addByteCode(wcByteCode wc)
@@ -404,7 +405,7 @@ void wc::vm::genDecVar(wcByteCodeGen* bg)
 
 		case pn_ident:
 			varOffset = bg->stackOffset;
-			varSize = bg->ast->getSymbol(bg->pi->tokens.at(0).data)->dataSize;
+			varSize = parse::getSymbolStackSize(*bg->ast->getSymbol(bg->pi->tokens.at(0).data));
 			for (int t = 0; t < varSize; ++t)
 			{
 				bg->addByteCode(oc_push, 0);	//reserve space for this variable
@@ -585,6 +586,7 @@ void wc::vm::genBlock(wcByteCodeGen* bg)
 void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 {
 	wcParseNode* lastnode;
+	wcSymbol* identSym;
 	//	wcByteCode wc;
 	while (rpn->size())
 	{
@@ -605,16 +607,20 @@ void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 		case pn_false:
 			bg->addByteCode(oc_push, 0);
 			break;
-
+			
 			//variables
 		case pn_ident:
 		case pn_varident:
+			identSym = bg->ast->getSymbol(rpn->at(0)->tokens.at(0).data);
+			if (identSym->isArray)
+				bg->addByteCode(oc_pushfs, bg->ast->getSymbol(rpn->at(0)->tokens.at(0).data)->offset + wcstoi(rpn->at(0)->tokens.at(2).data));
+			else
 				bg->addByteCode(oc_pushfs, bg->ast->getSymbol(rpn->at(0)->tokens.at(0).data)->offset);	//push value from stack, using fullident from tokens[0]
 			break;
+
 		case pn_funcident: case pn_funccall:
 			bg->addByteCode(oc_call, wcstoi(rpn->at(0)->tokens.at(0).data));
 			break;
-
 			//operators
 		case pn_lognot:
 			bg->addByteCode(oc_not);break;
@@ -659,8 +665,12 @@ void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 			bg->addByteCode(oc_jmp, bg->istream->size() + 2);
 			bg->addByteCode(oc_push, 0); break;
 		case pn_assign:
-			//if(wcstoi(rpn->at(0)->tokens.at(1).data)>0)
-				bg->addByteCode(oc_assign, bg->ast->getSymbol(rpn->at(0)->tokens.at(1).data)->offset );	break;
+			identSym = bg->ast->getSymbol(rpn->at(0)->tokens.at(1).data);
+			if (identSym->isArray)
+				bg->addByteCode(oc_assign, identSym->offset + wcstoi(rpn->at(0)->tokens.at(2).data));
+			else
+				bg->addByteCode(oc_assign, identSym->offset);
+			break;
 		case pn_mult:
 			bg->addByteCode(oc_mult);break;
 		case pn_div:
@@ -673,8 +683,6 @@ void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 			bg->addByteCode(oc_mod);break;
 		case pn_expo:
 			bg->addByteCode(oc_expo);break;
-
-			//case pn_ident:
 		case pn_type:
 		default:
 			break;

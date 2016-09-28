@@ -86,7 +86,8 @@ namespace wc
 			wcParseNode(lex::wcTokenType t);
 			wcParseNode(lex::wcTokenType t, lex::wcToken p_tok);
 			wcParseNode(lex::wcTokenType t, lex::wcToken p_tok1, lex::wcToken p_tok2);
-			wcParseNode(wcSymbolType t); 
+			wcParseNode(wcSymbolType t);
+			wcParseNode(wcSymbolType t, lex::wcToken p_tok1, lex::wcToken p_tok2);
 			wcParseNode(wcParseNodeType t) { type = t; };
 			wcParseNode(wcParseNodeType t, lex::wcToken tk) { type = t; tokens.push_back(tk); };
 			wcParseNodeType type;
@@ -197,14 +198,13 @@ namespace wc
 		void parseDecNamespace(wcParser*);
 		void parseIf(wcParser*);
 		void parseWhile(wcParser*);
-		void parseAssignment(wcParser*, wcParseNode);
 		void parseFuncCall(wcParser*, wcParseNode);
 		wcExpression parseFullExp(wcParser*);
 		wcExpression parseFullExp(wcParser*, wcParseNode);
 
 		//level 3
 		wcParseNode parseIdent(wcParser*);
-		void parseArrayIndex(wcParser*, wcParseNode*);
+		int parseArrayIndex(wcParser*, wcSymbol *);
 		void parseType(wcParser*);
 		void parseParamListCall(wcParser*, wcSymbol*);
 		void parseParamListDec(wcParser*);
@@ -220,9 +220,9 @@ namespace wc
 
 		//type compatability
 		bool checkOperandTypes(wcParser*, lex::wcToken oper1, lex::wcToken op, lex::wcToken oper2);
-		wcParseNodeType DeriveType(lex::wcToken);
-		//int getTypeSize(wcSymbol*);
+		
 		//size
+		//int getTypeSize(wcSymbol*);
 		int getTypeSize(lex::wcToken);
 		int getSymbolStackSize(wcSymbol);
 
@@ -250,6 +250,7 @@ namespace wc
 		int getPrecedence(lex::wcToken);
 		int getAssociativity(lex::wcToken);
 		int isOperator(lex::wcToken);
+		std::string createStringRep(wcParser* p_par, wcExpression p_ex);
 
 		//error
 		std::string getErrorCodeAsString(wcErrorCode);

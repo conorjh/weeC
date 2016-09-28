@@ -22,6 +22,7 @@ namespace wc
 			tt_tab, tt_ws, tt_eof
 		};
 		
+		
 		struct wcToken
 		{
 			wcToken() {};

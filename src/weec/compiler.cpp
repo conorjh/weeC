@@ -30,6 +30,7 @@ void wc::comp::wcCompiler::startup()
 {
 	p.lexer = &l;
 	p.startup();
+	this->g = wcByteCodeGen();
 }
 
 void wc::comp::wcCompiler::shutdown()
@@ -63,10 +64,11 @@ wcExecContext* wc::comp::wcCompiler::compile(vector<string>* p_sc)
 
 int wc::comp::wcCompiler::getError()
 {
+	//return 0;
 	if (p.getError())
 		return convertParserToCompilerError(wcErrorCode(p.getError()));
-	if (g.getError())
-		return convertGenToCompilerError(wcErrorCode(g.getError()));
+	//if (g.getError())
+	//	return convertGenToCompilerError(wcErrorCode(g.getError()));
 }
 
 std::string wc::comp::getCompilerErrorString(int p_ec)

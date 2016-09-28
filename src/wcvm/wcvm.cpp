@@ -161,7 +161,7 @@ int wc::wcvm::consoleParseCmd(string p_in)
 	{
 		return consoleParseCmd_Run(tokens);
 	}
-	else if (tokens.at(0) == "runtest")
+	else if (tokens.at(0) == "runtest" || tokens.at(0) == "rt")
 	{
 		return consoleParseCmd_RunTest(tokens);
 	}

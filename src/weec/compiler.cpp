@@ -45,30 +45,26 @@ wcExecContext* wc::comp::wcCompiler::compile(vector<string>* p_sc)
  	p.parse();
 	
 	//handle parse errors
-	if (p.getError())
-	{
-		return nullptr;
-	}
+	if (p.getError().code > 0)
+		return nullptr;	
 
 	//build AST into bytecode
 	g.ast = &p.ast;
 	output = g.gen();
 
-	if (g.getError())
-	{
+	if (g.getError().code > 0)
 		return nullptr;
-	}
-
+	
 	return output;
 }
 
-int wc::comp::wcCompiler::getError()
+wcError wc::comp::wcCompiler::getError()
 {
-	//return 0;
-	if (p.getError())
-		return convertParserToCompilerError(wcErrorCode(p.getError()));
-	//if (g.getError())
-	//	return convertGenToCompilerError(wcErrorCode(g.getError()));
+	//return wcError();	
+	if (p.getError().code > 0)
+		return p.getError();
+	if (g.getError().code > 0)
+		return g.getError();
 }
 
 std::string wc::comp::getCompilerErrorString(int p_ec)

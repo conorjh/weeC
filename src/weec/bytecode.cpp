@@ -1,10 +1,12 @@
 #include "bytecode.h"
 #include "lexer.h"
 #include "util.h"
+#include "error.h"
 #include <vector>
 #include <unordered_map>
 
 using namespace std;
+using namespace wc;
 using namespace wc::lex;
 using namespace wc::vm;
 using namespace wc::parse;
@@ -185,7 +187,7 @@ wcValType wc::vm::getValType(wcSymbol* sym)
 wc::vm::wcByteCodeGen::wcByteCodeGen()
 {
 	inDecFunc = false;
-	errorCode = ec_null;
+	error = wcError();
 }
 
 unsigned int wc::vm::wcByteCodeGen::addByteCode(wcByteCode wc)
@@ -225,9 +227,9 @@ wcByteCode* wc::vm::wcByteCodeGen::getByteCode(unsigned int ind, bool isFunc)
 	return &istream->at(ind);
 }
 
-int wc::vm::wcByteCodeGen::getError()
+wcError wc::vm::wcByteCodeGen::getError()
 {
-	return errorCode;
+	return error;
 }
 
 wcExecContext* wc::vm::wcByteCodeGen::gen()

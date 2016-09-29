@@ -31,7 +31,7 @@ void wc::wcvm::execCmdLine()
 			else
 				wcvm::getData()->vm.con = imp::importByteCodeFromFile(wcvm::getData()->runFile);
 		else
-			wcvm::getData()->vm.con = wcvm::importTest(wcvm::getData()->runFile);
+			wcvm::getData()->vm.con = wcvm::importTest(&comp::wcCompiler(), wcvm::getData()->runFile);
 	}
 }
 
@@ -263,14 +263,14 @@ int wc::wcvm::consoleLoop()
 			else
 				d->vm.con = imp::importByteCodeFromFile(d->runFile);
 		else
-			d->vm.con = wcvm::importTest(d->runFile);
+			d->vm.con = wcvm::importTest(&c, d->runFile);
 	}
 	//no run file specified, but source code has been loaded from input mode
 	else if (d->src.size())
-	{
-		c.compile(&d->src);
+	{		
 		if (d->vm.con)
 			delete d->vm.con;
+		c.compile(&d->src);
 		d->vm.con = c.output;
 		d->src.clear();
 	}
@@ -288,11 +288,11 @@ int wc::wcvm::consoleLoop()
 	//run
 	run();
 
-	//display output
-	
-	if (c.getError())
+	//display output	
+	wcError cErr = c.getError();
+	if (cErr.code > 0)
 	{
-		cout << "error code: " << c.getError() << " - " << comp::getCompilerErrorString(c.getError()) << endl;
+		cout << "Error "<< cErr.code << " @" << cErr.line << "," << cErr.column << "  " << comp::getCompilerErrorString(cErr.code) << " - " << cErr.msg << endl;
 	}
 	else
 	{
@@ -305,15 +305,14 @@ int wc::wcvm::consoleLoop()
 	return 1;
 }
 
-wc::vm::wcExecContext* wc::wcvm::importTest(string p_t)
+wc::vm::wcExecContext* wc::wcvm::importTest(comp::wcCompiler* p_con, string p_t)
 {
 	string script = importTestAsString(p_t);
 	getData()->src.clear(); 
 	getData()->src.push_back(script);
 	
 	//compile source to an execution context, check for errors
-	comp::wcCompiler c;
-	return c.compile(&wc::wcvm::getData()->src);
+	return p_con->compile(&wc::wcvm::getData()->src);
 }
 
 string wc::wcvm::importTestAsString(string p_t)

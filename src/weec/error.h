@@ -20,6 +20,14 @@ namespace wc
 		ec_p_undeclaredtype				//identifer is not a type - normally in from parsing a declaration (func, var etc)
 	};
 
+	struct wcError
+	{
+	public:
+		wcErrorCode code;
+		unsigned int line, column;
+		std::string msg;
+	};
+
 	const std::unordered_multimap<wcErrorCode, std::string> errorStrings =
 	{
 		{ ec_null, "No error" },

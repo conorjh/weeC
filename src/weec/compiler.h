@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "bytecode.h"
 #include "vm.h"
+#include "error.h"
 
 namespace wc
 {
@@ -17,7 +18,7 @@ namespace wc
 			void startup(), shutdown();
 			vm::wcExecContext* compile(std::vector<std::string>*);	//opcodes from source code
 
-			int getError();
+			wcError getError();
 
 			lex::wcLexer l;
 			parse::wcParser p;

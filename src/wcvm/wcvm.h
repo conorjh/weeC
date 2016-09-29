@@ -36,7 +36,7 @@ namespace wc
 		int consoleParseCmd_Help(std::vector<std::string>);
 		int consoleParseCmd_Input(std::vector<std::string>);
 
-		wc::vm::wcExecContext* importTest(std::string);
+		wc::vm::wcExecContext* importTest(comp::wcCompiler* p_con,std::string);
 		std::string importTestAsString(std::string);
 		std::vector<std::string> loadFileAsStrings(const char* p_f);
 		bool isRunning();

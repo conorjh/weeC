@@ -26,6 +26,7 @@ namespace wc
 		struct wcToken
 		{
 			wcToken() {};
+			wcToken(wcTokenType ty) { type = ty; };
 			wcToken(std::string data_) { type = tt_ident; data = data_; };
 			wcToken(wcTokenType ty, std::string data_) { type = ty; data = data_; };
 			std::string data;

@@ -24,7 +24,6 @@ wc::lex::wcLexer::wcLexer()
 	this->clear();
 }
 
-	 
 //reset the lexer to an initial state
 void wc::lex::wcLexer::clear()
 {
@@ -249,7 +248,7 @@ wcToken* wc::lex::wcLexer::nextToken()
 				this->inc();	
 				tok.data += this->getChar();
 			}
-
+		
 		tok.type = getTokenType(tok.data);
 		data.tokens.push_back(tok);
 		return getToken();
@@ -351,7 +350,6 @@ wcTokenType wc::lex::getTokenType(string p_s)
 {
 	return getTokenType(&wcLexer(), p_s);
 }
-
 
 //lexes the input into tokens, and returns the tokens as strings
 vector<string> wc::lex::tokenizeString(string p_in)

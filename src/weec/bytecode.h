@@ -119,7 +119,7 @@ namespace wc
 		public:
 			wcByteCodeGen();
 			wcExecContext* gen();
-			int getError();
+			wcError getError();
 
 			unsigned int addByteCode(wcByteCode);
 			unsigned int addByteCode(wcOpCode);
@@ -136,7 +136,7 @@ namespace wc
 			wcExecContext* output;
 			bool inDecFunc;
 			int ifJmpIndex;
-			int errorCode;
+			wcError error;
 			int stackOffset;
 		};
 

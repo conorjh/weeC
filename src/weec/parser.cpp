@@ -181,11 +181,10 @@ void wc::parse::wcParser::clear()
 	currentFunc = nullptr;
 	currentScope = nullptr;
 	noDecVar = noDecFunc = noDecName = false;	
+	done = false;
 	
 	//error
-	error = ec_null;
-	errorL = errorC = 0;
-	errorS = "";
+	error = wcError();
 
 	ast.clear();
 
@@ -194,36 +193,23 @@ void wc::parse::wcParser::clear()
 
 void wc::parse::wcParser::setError(wcErrorCode ec, int x, int y, string s)
 {
-	error = ec; errorL = y;
-	errorC = x; errorS = s;
+	error.code = ec;
+	error.line = y;
+	error.column = x;
+	error.msg = s;
 }
 
 void wc::parse::wcParser::setError(wcErrorCode ec, string s)
 {
-	error = ec;
-	errorL = lexer->getToken()->y;
-	errorC = lexer->getToken()->x;
-	errorS = s;
+	error.code = ec;
+	error.line = lexer->getToken()->y;
+	error.column = lexer->getToken()->x;
+	error.msg = s;
 }
 
-unsigned int wc::parse::wcParser::getError()
+wcError wc::parse::wcParser::getError()
 {
 	return error;
-}
-
-unsigned int wc::parse::wcParser::getErrorLine()
-{
-	return errorL;
-}
-
-unsigned int wc::parse::wcParser::getErrorCol()
-{
-	return errorC;
-}
-
-string wc::parse::wcParser::getErrorString()
-{
-	return errorS;
 }
 
 string getErrorCodeAsString(wcErrorCode p_ec)
@@ -309,11 +295,11 @@ int wc::parse::wcParser::parse()
 	lexer->nextToken();
 
 	//parse til we cant parse no mo
-	while (!lexer->data.done && !error)
+	while (!done && !error.code)
 		parseStatement(this);
 
 	//return any errors
-	return getError();
+	return getError().code;
 }
 
 void wc::parse::parseStatement(wcParser* p_par)
@@ -323,10 +309,11 @@ void wc::parse::parseStatement(wcParser* p_par)
 	wcSymbol sym;
 
 	p_par->addNode(wcParseNode(pn_statement));
-
+	
 	switch (p_par->lexer->getToken()->type)
 	{
 	case tt_eof:
+		p_par->done = true;
 		return;
 		break;
 	case tt_scolon:
@@ -380,13 +367,14 @@ void wc::parse::parseStatement(wcParser* p_par)
 		case st_null:
 		default:
 			//unknown identifier
-			return p_par->setError(ec_p_undeclaredsymbol, pni.tokens[0].y, pni.tokens[0].x, sym.fullIdent);
+			return p_par->setError(ec_p_undeclaredsymbol, pni.tokens[0].data);
 		}
 		break;
 	default:
 		return p_par->setError(ec_p_unexpectedtoken,p_par->lexer->getToken()->data);
 		break;
 	}
+
 	p_par->parent();
 }
 
@@ -421,13 +409,13 @@ wcSymbol wc::parse::parseDecVar_Type(wcParser* p_par, wcParseNode* p_pnType, wcP
 	
 	switch (typeToken.type)
 	{	
-		CASE_BASIC_TYPES_TT
+	CASE_BASIC_TYPES_TT
 		typeSymbol = *p_par->ast.getSymbol(typeToken.data);
 		p_par->addChild(wcParseNode(pn_type, typeToken));
 		p_par->lexer->nextToken();
 		break;
 
-		//TODO User defined types....
+	//TODO User defined types....
 	case tt_ident:
 		//parse and save the ident
 		*p_pnIdent = parseIdent(p_par);
@@ -540,7 +528,6 @@ int wc::parse::parseDecVar_OBracket(wcParser* p_par, wcSymbol* p_ident)
 int wc::parse::parseDecVar_Exp(wcParser* p_par, wcSymbol*& p_identSym, wcParseNode* p_identSymPN)
 {
 	wcExpression ex;
-	int expResult;
 
 	switch (p_par->lexer->getToken()->type)
 	{
@@ -850,9 +837,9 @@ void wc::parse::parseBlock(wcParser* p_par)
 		p_par->currentFunc->body = p_par->getNode();
 
 	//inner contents
-	while (!p_par->error && p_par->lexer->getToken()->type != tt_cbrace)
+	while (!p_par->getError().code && p_par->lexer->getToken()->type != tt_cbrace)
 		parseStatement(p_par);
-	if (p_par->error)	return;
+	if (p_par->getError().code > 0)	return;
 
 	//closing brace
 	p_par->lexer->nextToken();

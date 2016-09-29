@@ -162,10 +162,8 @@ namespace wc
 			void parent();
 
 			//error
-			unsigned int getError();
-			unsigned int getErrorLine();
-			unsigned int getErrorCol();
-			std::string getErrorString();
+			wcError getError();
+			void setError(wcError);
 			void setError(wcErrorCode, std::string);		//line and column from lexer->getToken()
 			void setError(wcErrorCode, int, int, std::string);
 
@@ -173,11 +171,9 @@ namespace wc
 			wcAST ast;
 			unsigned int parenCount;
 			int sOffset;
-			bool noDecVar, noDecFunc, noDecName;
+			bool noDecVar, noDecFunc, noDecName, done;
 			tree<wcParseNode>::iterator lastIdent;
-			wcErrorCode error;
-			int errorL, errorC;
-			std::string errorS;
+			wcError error;
 			wcSymbol* currentScope;
 			wcFuncInfo* currentFunc;
 			std::string currentMethodStringSig;

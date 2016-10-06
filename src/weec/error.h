@@ -9,6 +9,7 @@ namespace wc
 	{
 		ec_null,
 		ec_p_undeclaredsymbol,			//symbol is not in symbol table
+		ec_p_unexpectedeos,				//end of stream midway through parsing a statement
 		ec_p_redefinition,				//attempting to create a symbol with a fullIdent already in use
 		ec_p_unexpectedtoken,			//...
 		ec_p_invalidsymbol,				//symbol is declared, but cannot be accessed from here
@@ -22,6 +23,7 @@ namespace wc
 
 	struct wcError
 	{
+		wcError() { code = wcErrorCode(line = column = 0); msg = ""; };
 	public:
 		wcErrorCode code;
 		unsigned int line, column;
@@ -31,12 +33,13 @@ namespace wc
 	const std::unordered_multimap<wcErrorCode, std::string> errorStrings =
 	{
 		{ ec_null, "No error" },
+		{ ec_p_unexpectedeos, "Unexpected end of stream" },
 		{ ec_p_undeclaredsymbol, "Undeclared symbol" },		
 		{ ec_p_redefinition, "Symbol name already in use" },
-		{ ec_p_unexpectedtoken,	"Unexpected input" },
+		{ ec_p_unexpectedtoken,	"Unexpected token" },
 		{ ec_p_invalidsymbol, "Symbol cannot be accessed from this scope" },
 		{ ec_p_badparams, "The parameters are incorrect for this function" },
-		{ ec_p_nonintsubscript,	"Array elements can only be addressed with an Integer" },
+		{ ec_p_nonintsubscript,	"Array elements can only be addressed with an integer" },
 		{ ec_p_expmustbeconst, "Expression must be const" },
 		{ ec_p_expmustbearray, "Expression must return an array" },
 		{ ec_p_illegalidentcall, "Illegal ident" },

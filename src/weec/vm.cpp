@@ -16,21 +16,16 @@ wcVM::wcVM()
 	//	con->stack.ec=con;
 }
 
-/*void wcVM::load(wcByteCodeGen* g)
-{
-	con->istream = *g->istream;
-	con->fstream = *g->fstream;
-}*/
 
 //instructions = 0, executes until error/halt signal or end of istream
-unsigned int wcVM::exec(unsigned int instructions)
+unsigned int wcVM::exec()
 {
 	//make sure we're not passed an empty context, 
 	if (!con)
 		return 0;
-	bool loop = (instructions < 1);
+	
 	int oldpc, *rpc;
-	while (con->istream.size() && !con->halt && (instructions>0 || loop))
+	while (con->istream.size() && !con->halt)
 	{
 		oldpc = con->reg[pc];
 		rpc = &con->reg[pc];		//shorthand for the program counter
@@ -165,7 +160,6 @@ unsigned int wcVM::exec(unsigned int instructions)
 		//inc program counter if it hasnt been altered by an instruction
 		if (!incPC(con, rpc, oldpc))
 			break;
-		--instructions;
 	}
 	return true;
 }

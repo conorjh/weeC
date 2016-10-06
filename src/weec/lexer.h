@@ -19,7 +19,7 @@ namespace wc
 			tt_true, tt_false, tt_namespace, tt_function, tt_if, tt_else, tt_elseif, tt_while, tt_break, tt_return, tt_continue,
 			tt_varident, tt_funcident, tt_lvalue,
 
-			tt_tab, tt_ws, tt_eof
+			tt_tab, tt_ws, tt_eos
 		};
 		
 		
@@ -42,6 +42,7 @@ namespace wc
 			int oldx, oldy, x, y, offset;
 			const std::unordered_multimap<std::string, wcTokenType> tokenStrings =
 			{
+				{ "" , tt_null},
 				{ "\n" , tt_newline },{ " ", tt_ws },{ "0", tt_intlit },
 				{ "1", tt_intlit },{ "2", tt_intlit },{ "3", tt_intlit },
 				{ "4", tt_intlit },{ "5", tt_intlit },{ "6", tt_intlit },
@@ -94,6 +95,10 @@ namespace wc
 			wcToken* getToken();
 			wcToken* prevToken();
 			wcToken* peekToken();
+
+			bool loadSource(const char*);
+			bool loadSource(std::vector<std::string>*);
+
 			bool finished();
 
 			void rewind();

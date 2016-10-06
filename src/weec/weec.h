@@ -27,10 +27,11 @@ namespace wc
 
 	struct wcScript
 	{
+		wcScript();
+		wcScript(std::string input, bool isFile);
 		void clear();
 
-		//load script source code into this object
-		int load(std::string);
+		int load(std::string);		//load script source code into this object
 		int load(std::vector<std::string>*);
 		int loadFromFile(std::string);
 
@@ -55,6 +56,8 @@ namespace wc
 	//run
 	int run(wcContext*, wcScript*);
 	int run(wcContext*, vm::wcExecContext*);
+
+	//from file
 	int runScriptFromFile(wcContext*, std::string);
 
 	//symbol query

@@ -177,8 +177,8 @@ string wc::test::getTypeAsString(wcTokenType _t)
 		return "tab";
 	case tt_ws:
 		return "whitespace";
-	case tt_eof:
-		return "end of file";
+	case tt_eos:
+		return "end of stream";
 	}
 	return "null";
 }

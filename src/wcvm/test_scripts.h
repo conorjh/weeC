@@ -96,9 +96,9 @@ std::vector<string> testScripts = {
 		"int c;\n"
 		"return c = b = a = 66;\n"},
 	//array variable
-	{	"//int a[5];\n"
-		"//a[2] = 100;\n"
-		"//return a[2];"},
+	{	"int a[5];\n"
+		"a[2] = 100;\n"
+		"return a[2];"},
 	//if statements
 	{	"if(2!=1)\n"
 		"\treturn 22;\n"

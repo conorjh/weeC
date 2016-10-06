@@ -16,6 +16,17 @@ namespace wc
 	wcScript* loadScriptFromString(wcContext*, std::string);
 }
 
+wc::wcScript::wcScript()
+{
+}
+
+wc::wcScript::wcScript(std::string input, bool isFile)
+{
+	if (isFile)
+		loadFromFile(input);
+	load(input);
+}
+
 void wc::wcScript::clear()
 {
 	con->clear();
@@ -116,7 +127,7 @@ int wc::run(wcContext* p_con, wcScript* p_scr)
 
 	//run bytecode
 	p_con->vm.con = p_scr->con;
-	p_con->vm.exec(0);
+	p_con->vm.exec();
 	p_con->scr.isExecuted = true;
 
 	return 1;
@@ -126,7 +137,7 @@ int wc::run(wcContext *p_con, vm::wcExecContext *p_econ)
 {
 	//run given bytecode
 	p_con->vm.con = p_econ;
-	p_con->vm.exec(0);
+	p_con->vm.exec();
 	p_con->scr.isExecuted = true;
 
 	return 1;
@@ -140,7 +151,7 @@ int wc::runScriptFromFile(wcContext* p_c, std::string p_f)
 
 	//run bytecode
 	p_c->vm.con = p_c->scr.con;
-	p_c->vm.exec(0);
+	p_c->vm.exec();
 	p_c->scr.isExecuted = true;
 
 	return 0;

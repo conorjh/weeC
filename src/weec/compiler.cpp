@@ -41,7 +41,7 @@ void wc::comp::wcCompiler::shutdown()
 wcExecContext* wc::comp::wcCompiler::compile(vector<string>* p_sc)
 {
 	//parse the code into an AST
-	l.data.source = p_sc;
+	l.loadSource(p_sc);
  	p.parse();
 	
 	//handle parse errors
@@ -65,6 +65,7 @@ wcError wc::comp::wcCompiler::getError()
 		return p.getError();
 	if (g.getError().code > 0)
 		return g.getError();
+	return wcError();
 }
 
 std::string wc::comp::getCompilerErrorString(int p_ec)

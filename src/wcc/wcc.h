@@ -12,6 +12,7 @@ namespace wc
 		struct wccData
 		{
 			std::string origSource, compileTarget, exportDelimiter;
+			wc::comp::wcCompiler compiler;
 		};
 
 		void startup();

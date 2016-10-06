@@ -27,11 +27,11 @@ void wc::wcvm::execCmdLine()
 	{
 		if (!wcvm::getData()->runFileIsTest)
 			if (!wcvm::getData()->runFileIsByteCode)
-				wcvm::getData()->vm.con = imp::importScriptFromFile(wcvm::getData()->runFile);
+				wcvm::getData()->mainContext.vm.con = imp::importScriptFromFile(wcvm::getData()->runFile);
 			else
-				wcvm::getData()->vm.con = imp::importByteCodeFromFile(wcvm::getData()->runFile);
+				wcvm::getData()->mainContext.vm.con = imp::importByteCodeFromFile(wcvm::getData()->runFile);
 		else
-			wcvm::getData()->vm.con = wcvm::importTest(&comp::wcCompiler(), wcvm::getData()->runFile);
+			wcvm::getData()->mainContext.vm.con = wcvm::importTest(&comp::wcCompiler(), wcvm::getData()->runFile);
 	}
 }
 
@@ -240,7 +240,7 @@ int wc::wcvm::consoleParseCmd_Input(vector<string> p_tok)
 
 int wc::wcvm::consoleLoop()
 {
-	comp::wcCompiler c;
+	wc::comp::wcCompiler c;
 
 	//get input
 	string in = consoleGetInput();
@@ -259,20 +259,18 @@ int wc::wcvm::consoleLoop()
 	{
 		if (!d->runFileIsTest)
 			if (!d->runFileIsByteCode)
-				d->vm.con = imp::importScriptFromFile(d->runFile);
+				d->mainContext.vm.con = imp::importScriptFromFile(d->runFile);
 			else
-				d->vm.con = imp::importByteCodeFromFile(d->runFile);
+				d->mainContext.vm.con = imp::importByteCodeFromFile(d->runFile);
 		else
-			d->vm.con = wcvm::importTest(&c, d->runFile);
+			d->mainContext.vm.con = wcvm::importTest(&c, d->runFile);
 	}
 	//no run file specified, but source code has been loaded from input mode
 	else if (d->src.size())
 	{		
-		if (d->vm.con)
-			delete d->vm.con;
-		c.compile(&d->src);
-		d->vm.con = c.output;
-		d->src.clear();
+		if (d->mainContext.vm.con)
+			delete d->mainContext.vm.con;
+
 	}
 	else
 	{
@@ -280,11 +278,12 @@ int wc::wcvm::consoleLoop()
 	}
 
 	//print source
+	
 	if (d->displaySourceCode == true)
 		for (int t = 0; t < d->src.size(); ++t)
-			cout << d->src.at(t);
+			cout << d->src.at(t) << endl;
 	cout << endl;
-	
+		
 	//run
 	run();
 
@@ -296,20 +295,20 @@ int wc::wcvm::consoleLoop()
 	}
 	else
 	{
-		cout << "istream: " << d->vm.con->istream.size() << endl;
-		cout << "eax: " << d->vm.con->reg[wc::vm::wcReg::eax] << endl;
-		cout << "returns: " << d->vm.con->reg[wc::vm::wcReg::ret] << endl;
+		cout << "istream: " << d->mainContext.vm.con->istream.size() << endl;
+		cout << "eax: " << d->mainContext.vm.con->reg[wc::vm::wcReg::eax] << endl;
+		cout << "returns: " << d->mainContext.vm.con->reg[wc::vm::wcReg::ret] << endl;
 		cout << endl;
 	}
-
+	
 	return 1;
 }
 
+//load source code and also compile
 wc::vm::wcExecContext* wc::wcvm::importTest(comp::wcCompiler* p_con, string p_t)
 {
-	string script = importTestAsString(p_t);
 	getData()->src.clear(); 
-	getData()->src.push_back(script);
+	getData()->src.push_back(importTestAsString(p_t));
 	
 	//compile source to an execution context, check for errors
 	return p_con->compile(&wc::wcvm::getData()->src);
@@ -330,10 +329,10 @@ vector<string> wc::wcvm::loadFileAsStrings(const char* p_f)
 void wc::wcvm::run()
 {
 	//run script until halt
-	data.vm.exec(0);
+	data.mainContext.vm.exec();
 }
 
 bool wc::wcvm::isRunning()
 {
-	return (!data.vm.con->halt);
+	return (!data.mainContext.vm.con->halt);
 }

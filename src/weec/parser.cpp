@@ -191,17 +191,24 @@ void wc::parse::wcParser::clear()
 	lexer->clear();
 }
 
-void wc::parse::wcParser::setError(wcErrorCode ec, int x, int y, string s)
+void wc::parse::wcParser::setError(wcErrorCode p_ec, int x, int y, string s)
 {
-	error.code = ec;
+	error.code = p_ec;
 	error.line = y;
 	error.column = x;
 	error.msg = s;
 }
 
-void wc::parse::wcParser::setError(wcErrorCode ec, string s)
+void wc::parse::wcParser::setError(wcErrorCode p_ec)
 {
-	error.code = ec;
+	error.code = p_ec;
+	error.line = lexer->getToken()->y;
+	error.column = lexer->getToken()->x;
+	error.msg = "";
+}
+void wc::parse::wcParser::setError(wcErrorCode p_ec, string s)
+{
+	error.code = p_ec;
 	error.line = lexer->getToken()->y;
 	error.column = lexer->getToken()->x;
 	error.msg = s;
@@ -304,15 +311,12 @@ int wc::parse::wcParser::parse()
 
 void wc::parse::parseStatement(wcParser* p_par)
 {
-	wcExpression ex;
-	wcParseNode pni;
-	wcSymbol sym;
-
+	wcExpression ex;	wcParseNode pni;	wcSymbol sym;
 	p_par->addNode(wcParseNode(pn_statement));
 	
 	switch (p_par->lexer->getToken()->type)
 	{
-	case tt_eof:
+	case tt_eos:
 		p_par->done = true;
 		return;
 		break;
@@ -821,15 +825,22 @@ void wc::parse::parseSColon(wcParser* p_par)
 	//semi colon 
 	if (p_par->lexer->getToken()->type != tt_scolon)
 		return p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data + ", expected ;");
-	p_par->lexer->nextToken();
+	
+	if (!p_par->lexer->nextToken())
+		p_par->done = true;
 }
 
 void wc::parse::parseBlock(wcParser* p_par)
 {
 	//opening brace
 	if (p_par->lexer->getToken()->type != tt_obrace)
-		return p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data);
-	p_par->lexer->nextToken();
+		return p_par->setError(ec_p_unexpectedtoken, p_par->lexer->getToken()->data); 
+	if (!p_par->lexer->nextToken())
+	{
+		p_par->setError(ec_p_unexpectedeos);
+		p_par->done = true;
+		return;
+	}
 
 	//if were currently declaring a function, or (currentFunc!=nullptr), make a note of the body
 	p_par->addNode(wcParseNode(pn_block));
@@ -839,10 +850,12 @@ void wc::parse::parseBlock(wcParser* p_par)
 	//inner contents
 	while (!p_par->getError().code && p_par->lexer->getToken()->type != tt_cbrace)
 		parseStatement(p_par);
-	if (p_par->getError().code > 0)	return;
+	if (p_par->getError().code > 0)	
+		return;
 
 	//closing brace
-	p_par->lexer->nextToken();
+	if (!p_par->lexer->nextToken())
+		p_par->done = true;
 	p_par->parent();
 }
 
@@ -1251,9 +1264,9 @@ wcExpression wc::parse::parseFullExp_OuterExpression(wcParser* p_par, wcParseNod
 			pn.tokens.push_back(p_par->ast.getSymbol(p_id.tokens[0].data)->fullIdent);	//add the identifier to the parse node
 			if (p_par->ast.getSymbol(p_id.tokens[0].data)->isArray)
 				pn.tokens.push_back(p_id.tokens[2].data);	//push the array index if the ident was an array			
-			//falls through
+			//falls through 
 
-		CASE_ALL_BOOLEAN_OPERATORS_TT			
+		CASE_ALL_BOOLEAN_OPERATORS_TT	
 			p_par->addChild(pn);
 			p_par->lexer->nextToken();
 			break;
@@ -1270,13 +1283,14 @@ wcExpression wc::parse::parseFullExp_OuterExpression(wcParser* p_par, wcParseNod
 
 wcExpression wc::parse::parseExp_OuterExpression(wcParser* p_par, wcToken p_oper1, wcExpression p_ex)
 {
-	wcToken op, oper2, tok;
+	wcToken op, oper2;
 	wcParseNode pn;
 
 	while (p_par->lexer->getToken())
 	{
 		op = *p_par->lexer->getToken();
 		pn = wcParseNode(op.type, op);
+
 		switch (op.type)
 		{
 		case tt_assign:
@@ -1292,7 +1306,7 @@ wcExpression wc::parse::parseExp_OuterExpression(wcParser* p_par, wcToken p_oper
 				//error?
 
 			}
-			//falls through
+			//falls through 
 
 		CASE_ALL_BOOLEAN_OPERATORS_TT
 			p_par->addChild(pn);

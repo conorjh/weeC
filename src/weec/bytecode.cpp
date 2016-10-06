@@ -238,6 +238,7 @@ wcExecContext* wc::vm::wcByteCodeGen::gen()
 	wcByteCode wc;
 	istream = new std::vector<wcByteCode> ;
 	pi = ast->tree.begin();
+	stackOffset = 0;
 
 	//push command line args
 
@@ -457,10 +458,8 @@ void wc::vm::genIf(wcByteCodeGen* bg)
 
 			case pn_if_trueblock:
 				genBlock(bg);
-				//truejump = bg->addByteCode(oc_jmp);
 				break;
-
-
+				
 			case pn_if_elseblock:
 				hasElse = true;
 				elsejump = bg->istream->size();
@@ -502,24 +501,17 @@ void wc::vm::genExp(wcByteCodeGen* bg)
 			genExp(bg);
 			break;
 
-			//literals
-		case pn_strlit:	case pn_fltlit:	case pn_intlit:
-		case pn_true:	case pn_false:
+		CASE_ALL_LITERALS_PN
 			out.push_back(&bg->pi.node->data);
 			break;
 
-			//variables
 		case pn_ident:	case pn_varident:	case pn_funcident:	case pn_funccall:
 			out.push_back(&bg->pi.node->data);
 			//bg->pi.node->data
 			break;
 
-			//operators
-		case pn_logor:	case pn_logand:	case pn_equal:	case pn_notequal:	case pn_assign:
-		case pn_greater:case pn_less:	case pn_lessequal:	case pn_greaterequal:
-		case pn_mult:	case pn_div:	case pn_plus:	case pn_minus:	case pn_lognot:	case pn_expo:	case pn_mod:
-			while (
-				stk.size() > 0 && (getPrecedence(bg->pi.node->data.tokens[0]) == getPrecedence(stk[stk.size() - 1]->tokens.at(0)) && !getAssociativity(bg->pi.node->data.tokens[0]) ||
+		CASE_ALL_OPERATORS_PN
+			while (	stk.size() > 0 && (getPrecedence(bg->pi.node->data.tokens[0]) == getPrecedence(stk[stk.size() - 1]->tokens.at(0)) && !getAssociativity(bg->pi.node->data.tokens[0]) ||
 				getAssociativity(bg->pi.node->data.tokens[0]) && getPrecedence(bg->pi.node->data.tokens[0]) < getPrecedence(stk[stk.size() - 1]->tokens.at(0)))
 				)
 			{
@@ -622,6 +614,7 @@ void wc::vm::genRpnToByteCode(wcByteCodeGen* bg, std::vector<wcParseNode*>* rpn)
 
 		case pn_funcident: case pn_funccall:
 			bg->addByteCode(oc_call, wcstoi(rpn->at(0)->tokens.at(0).data));
+			bg->addByteCode(oc_pushfr, ret);
 			break;
 			//operators
 		case pn_lognot:

@@ -20,16 +20,15 @@ namespace wc
 wcExecContext* wc::imp::importScriptFromFile(string p_fn)
 {
 	//attempt to load it
-	vector<string>* source = new vector<string>();
-	if(util::readFile(p_fn.c_str(), source))
+	vector<string> source = vector<string>();
+	if(util::readFile(p_fn.c_str(), &source))
 	{
 		//error loading source 
 		return nullptr;
 	}
 
 	//compile it 
-	wcCompiler c(source);
-	delete source;
+	wcCompiler c(&source);
 
 	//return it
 	return c.output;

@@ -15,7 +15,13 @@ namespace wc
 
 void wc::wcc::startup()
 {
+	data.compiler.startup();
 	data.exportDelimiter = ",";
+}
+
+void wc::wcc::shutdown()
+{
+
 }
 
 wccData* wc::wcc::getData()
@@ -73,7 +79,7 @@ int wc::wcc::compile()
 	return 0;
 }
 
-//returns the new index
+//returns the new argument index
 int wc::wcc::parseCmdLineArg(const char * p_args[], int p_i)
 {
 	int index = p_i;

@@ -8,9 +8,11 @@
 
 #define CASE_BASIC_TYPES_TT case tt_bool: case tt_int: case tt_float: case tt_string: case tt_chr: case tt_object: case tt_var:
 #define CASE_ALL_LITERALS_TT case tt_intlit: case tt_strlit: case tt_fltlit: case tt_true: case tt_false:
+#define CASE_ALL_LITERALS_PN case pn_intlit: case pn_strlit: case pn_fltlit: case pn_true: case pn_false:
 #define CASE_ALL_ARITHMETIC_TT case tt_assign: case tt_mult: case tt_div: case tt_plus: case tt_minus:
 #define CASE_ALL_OPERATORS_TT case tt_assign: case tt_logor: case tt_logand: case tt_equal: case tt_notequal: case tt_greater:case tt_less: case tt_lessequal: case tt_greaterequal: case tt_mult: case tt_div: case tt_plus: case tt_minus:	case tt_lognot:
 #define CASE_ALL_BOOLEAN_OPERATORS_TT case tt_less: case tt_greater: case tt_lessequal: case tt_greaterequal: case tt_equal: case tt_notequal: case tt_logand: case tt_logor:
+#define CASE_ALL_OPERATORS_PN case pn_assign: case pn_logor: case pn_logand: case pn_equal: case pn_notequal: case pn_greater:case pn_less: case pn_lessequal: case pn_greaterequal: case pn_mult: case pn_div: case pn_plus: case pn_minus:	case pn_lognot:
 
 namespace wc
 {
@@ -164,6 +166,7 @@ namespace wc
 			//error
 			wcError getError();
 			void setError(wcError);
+			void setError(wcErrorCode);
 			void setError(wcErrorCode, std::string);		//line and column from lexer->getToken()
 			void setError(wcErrorCode, int, int, std::string);
 

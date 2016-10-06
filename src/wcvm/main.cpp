@@ -8,12 +8,10 @@ int main(int argc, const char* args[])
 {
 	wcvm::startup();
 
-	//inspect the command line
+	//inspect and execute the command line
 	int i = 0;
 	while (i<argc)
 		i = wc::wcvm::parseCmdLineArg(args, i);
-
-	//do the command line
 	wc::wcvm::execCmdLine();
 
 	//splash

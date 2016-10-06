@@ -40,7 +40,7 @@ namespace wc
 		{
 		public:
 			wcVM();
-			unsigned int exec(unsigned int instructions);
+			unsigned int exec();
 
 			wcExecContext* con;
 		};

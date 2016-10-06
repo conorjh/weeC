@@ -66,6 +66,37 @@ wcToken* wc::lex::wcLexer::prevToken()
 	return getToken();
 }
 
+//just sanitizes the p_inputVector param, doesnt create a new container
+//to hold the source code
+bool wc::lex::wcLexer::loadSource(vector<string>* p_inputVector)
+{
+	string lineBuffer = "";
+	vector<string> output;
+
+	//fill a vector with the input string, accounting for /n and new lines	
+	for (int v = 0; v < p_inputVector->size(); ++v)
+		for (int t = 0; t < p_inputVector->at(v).size(); ++t)
+			if (p_inputVector->at(v).substr(t, 1) == "\n")
+			{
+				output.push_back(lineBuffer);
+				lineBuffer = "";
+			}
+			else
+				lineBuffer += p_inputVector->at(v).substr(t,1);
+
+	//push the last line
+	output.push_back(lineBuffer);
+	*p_inputVector = output;
+	data.source = p_inputVector;
+
+	return true;
+}
+
+bool wc::lex::wcLexer::loadSource(const char * p_inputString)
+{
+	return loadSource(new vector<string>({ p_inputString }));
+}
+
 bool wc::lex::wcLexer::finished()
 {
 	return data.done;
@@ -115,7 +146,7 @@ wcToken* wc::lex::nextToken_lexDiv(wcLexer* p_l, wcToken p_t)
 					return p_l->nextToken();
 				}
 		}
-		//eof before end of comment error
+		//eos before end of comment error
 		return nullptr;
 	}
 	else 
@@ -167,14 +198,14 @@ wcToken* wc::lex::nextToken_lexStrlit(wcLexer* p_l, wcToken p_t)
 	p_t.data = "";	//data field is the string minus quotes
 	p_t.type = tt_strlit;
 	if (!p_l->inc())		
-		return nullptr;	//eof after first dquote		
+		return nullptr;	//eos after first dquote		
 
 	while (getTokenType(p_l->getChar()) != tt_dquote)
 	{
 		//collect the inner contents of the quote
 		p_t.data += p_l->getChar();
 		if (!p_l->inc())		
-			return nullptr;	//eof before last quote
+			return nullptr;	//eos before last quote
 	}
 
 	p_l->data.tokens.push_back(p_t);
@@ -211,7 +242,7 @@ wcToken* wc::lex::wcLexer::nextToken()
 	data.offset = 0;
 	data.oldx = data.x;	data.oldy = data.y;
 	if (!this->inc())
-		return nullptr;	//end of file
+		return nullptr;	//end of stream
 
 	wcToken tok;
 	tok.x = data.x;	tok.y = data.y;
@@ -222,6 +253,9 @@ wcToken* wc::lex::wcLexer::nextToken()
 	switch (tok.type)
 	{
 		//drop whitespace
+	case tt_null:
+		return nullptr;
+
 	case tt_ws:	case tt_tab:case tt_newline:
 		return nextToken_lexWS(this, tok);
 
@@ -239,6 +273,7 @@ wcToken* wc::lex::wcLexer::nextToken()
 	case tt_assign:	case tt_plus: case tt_minus:	
 	case tt_amper: case tt_pipe: case tt_colon:		
 		return nextToken_lexDualStep(this, tok);
+
 
 	default:	//otherwise, build token, check for delims	
 		if (!isDelim(tok.data))
@@ -273,7 +308,7 @@ bool wc::lex::wcLexer::inc()
 		if (data.y > data.source->size() - 1)
 		{
 			data.done = true;
-			return false;	//eof
+			return false;	//eos
 		}
 	}
 	return true;
@@ -339,6 +374,7 @@ bool lex::isDelim(string p_s)
 //returns the the token type of a given string
 wcTokenType wc::lex::getTokenType(wcLexer* p_l, string p_s)
 {
+	if (p_s == "")	return tt_null;
 	//std::unordered_multimap<const char *, wcTokenType>::const_iterator
 	auto result = p_l->data.tokenStrings.find(p_s.c_str());
 	if (result == p_l->data.tokenStrings.end())

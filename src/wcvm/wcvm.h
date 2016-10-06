@@ -13,14 +13,15 @@ namespace wc
 		{
 			std::string runFile;
 			bool runFileIsByteCode,displaySourceCode,runFileIsTest,disableConsoleInput,inputModeOn;
-			vm::wcVM vm;
 			std::vector<std::string> src;
 			std::vector<std::string> inputModeBuffer;
+			wcContext mainContext;
 		};
 
 		extern std::vector<std::string> testScripts; //script id to actual script code
 
 		void startup();
+		void shutdown();
 
 		int parseCmdLineArg(const char * args[], int p_i);
 		int parseCmdLineArg_Run(const char * args[], int p_i);
@@ -30,6 +31,7 @@ namespace wc
 		void run();
 		int consoleLoop();
 		std::string consoleGetInput();
+
 		int consoleParseCmd(std::string);
 		int consoleParseCmd_Run(std::vector<std::string>);
 		int consoleParseCmd_RunTest(std::vector<std::string>);

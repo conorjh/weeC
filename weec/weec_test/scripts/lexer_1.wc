@@ -1,0 +1,11 @@
+//This is a comment
+int a;
+
+/* This a multi line comment
+	Another line
+	and another
+	//this comment wont matter cos its in the middle
+*/
+
+return a + a;
+

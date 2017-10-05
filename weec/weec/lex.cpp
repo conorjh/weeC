@@ -199,7 +199,7 @@ string wc::lex::wcLexIndex::peekChar()
 //do we have a source loaded, and are there still character to read
 bool wc::lex::wcLexIndex::isValid()
 {
-	if(source != nullptr && line > -1 && column > -1 && index > -1 && (index < getSize()))
+	if(source != nullptr && line > -1 && column > -1 && index > -1 && (column < getSize()))
 		return true;
 	return false;
 }

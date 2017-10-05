@@ -327,7 +327,7 @@ bool wcc::parseCmdLine_Arg(CmdLineArg p_arg)
 				return false;
 			data.filenameSource = p_arg.params[0];
 		}
-		else if (p_arg.cmdlet == cmdlet_h)	//-h (hide display)
+		else if (p_arg.cmdlet == cmdlet_h)			//-h (hide display)
 		{
 			data.displayOutput = false;
 		}

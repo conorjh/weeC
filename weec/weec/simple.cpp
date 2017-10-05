@@ -59,7 +59,7 @@ wcScript wc::compile::wcSimpleCompiler::compile(vector<string> p_source)
 	wcSimpleBytecodeGen gen;
 	output.con = gen.gen(tree);
 	if (gen.getError().code)
-		return wcScript(parser.getError());
+		return wcScript(gen.getError());
 
 	//return what we've created
 	return output;

@@ -25,6 +25,11 @@ namespace wc
 
 	namespace codegen
 	{
+		int genSimpStatement(wc::parse::wcParseIndex&);
+		int genSimpExpression(wc::parse::wcParseIndex&);
+		int genSimpIf(wc::parse::wcParseIndex&);
+		int genSimpDecVar(wc::parse::wcParseIndex&);
+
 		class wcSimpleBytecodeGen : public wcBaseBytecodeGen
 		{
 		public:

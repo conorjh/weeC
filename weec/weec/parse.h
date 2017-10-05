@@ -127,6 +127,7 @@ namespace wc
 
 			void setNode(tree<wcParseNode>::iterator);
 			tree<wcParseNode>::iterator getNode();
+			tree<wcParseNode>::iterator nextNode();
 			tree<wcParseNode>::iterator prevNode();
 			tree<wcParseNode>::iterator backToParent();
 

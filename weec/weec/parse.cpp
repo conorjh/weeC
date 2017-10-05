@@ -454,6 +454,12 @@ tree<wcParseNode>::iterator wc::parse::wcParseIndex::getNode()
 	return node;
 }
 
+tree<wcParseNode>::iterator wc::parse::wcParseIndex::nextNode()
+{
+	return (node = node++);
+}
+
+
 tree<wcParseNode>::iterator wc::parse::wcParseIndex::backToParent()
 {
 	if(node.node->parent != nullptr)

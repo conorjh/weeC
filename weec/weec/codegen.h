@@ -7,6 +7,9 @@ namespace wc
 {
 	namespace codegen
 	{
+		int genStatement(wc::parse::wcParseIndex&);
+		int genExpression(wc::parse::wcParseIndex&);
+
 		class wcBaseBytecodeGen
 		{
 		public:
@@ -25,6 +28,7 @@ namespace wc
 			virtual bytecode::wcExecContext gen(parse::wcAST&);
 		};
 
+		
 		
 	}
 }

@@ -46,7 +46,7 @@ int wctest::parse::p_basic_2()
 }
 int wctest::parse::p_basic_3()
 {
-	return standardParseTest("2 + / 55 * 88 / 99;");
+	return standardParseTest("2 + 55 * 88 / 99;");
 }
 int wctest::parse::p_basic_4()
 {

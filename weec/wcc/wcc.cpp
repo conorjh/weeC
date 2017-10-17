@@ -130,6 +130,9 @@ vector<CmdLineArg> wcc::convertCmdLineArgs(int p_argc, char *p_argv[])
 
 void wcc::exec()
 {
+	if (data.filenameSource == "")
+		return;
+
 	//attempt to compile
 	CompilerOutput output = compile();
 	
@@ -139,12 +142,11 @@ void wcc::exec()
 
 CompilerOutput wcc::compile()
 {
+	//print info
 	displayPreCompileInfo();
 
 	//compile with the appropriate compiler
-	CompilerOutput output;
-	wcClassicCompiler* classicComp;
-	wcSimpleCompiler* simpleComp;
+	CompilerOutput output;	wcClassicCompiler* classicComp;	wcSimpleCompiler* simpleComp;
 	switch (data.target)
 	{
 	case wcct_bytecode:
@@ -153,15 +155,14 @@ CompilerOutput wcc::compile()
 		break;
 	case wcct_simple_bytecode:
 		output.compiler = simpleComp = static_cast<wcSimpleCompiler*>(&getTargetCompiler(data.target));
-		output.script = simpleComp->compile(importSource(data.filenameSource));
+		output.script = simpleComp->wcSimpleCompiler::compile(importSource(data.filenameSource));
 		break;
-	default:
-	case wcct_x86:
-	case wcct_ansi_c:
+	default:	case wcct_x86:	case wcct_ansi_c:
 		print("Currently unsupported Target Platform ("+targetStrings.find(data.target)->second+")");
 		return output;
 	}
 	
+	//display result/error etc
 	displayCompileResult(output);
 
 	return output;
@@ -248,13 +249,19 @@ string wcc::getExtensionFromTargetPlatform(CompileTarget p_target)
 string wcc::getFilenameExtension(string p_input)
 {
 	int index = p_input.size();
-	while (index > -1 && p_input[index] != '.')
+	while (index > 0 && p_input[index] != '.')
 		index--;
 	return p_input.substr(index);
 }
 
 void wcc::displayPreCompileInfo()
 {
+	if (data.filenameSource == "")
+	{
+		print("No source file specified");
+		return;	//no source file specified
+	}
+
 	print("Filename: " + data.filenameSource+ "\t(" 
 		+ sourceTypeStrings.find(deriveInputType(data.filenameSource))->second +")");
 	print("Target Platform: " + targetStrings.find(data.target)->second);

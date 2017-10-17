@@ -126,12 +126,16 @@ namespace wc
 			lex::wcToken decToken();
 
 			void setNode(tree<wcParseNode>::iterator);
+			void setNode(tree<wcParseNode>*, tree<wcParseNode>::iterator);
 			tree<wcParseNode>::iterator getNode();
 			tree<wcParseNode>::iterator nextNode();
 			tree<wcParseNode>::iterator prevNode();
 			tree<wcParseNode>::iterator backToParent();
+			int getCurrentNodeDepth();
+			int getNodeDepth(tree<wcParseNode>::iterator);
 
 		private:
+			tree<wcParseNode>* parseTree;
 			tree<wcParseNode>::iterator node;
 			std::vector<lex::wcToken>* tokens;
 			int tokenIndex;

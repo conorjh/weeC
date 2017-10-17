@@ -14,14 +14,31 @@ using namespace wc::codegen;
 int wc::codegen::genSimpExpression(wcParseIndex& p_index)
 {
 	//increment through nodes creating a RPN expression
+	int startingDepth = p_index.getNodeDepth(p_index.getNode());
 
 	//emit simpcode based on the RPN
+
+	return 1;
 }
 
 int wc::codegen::genSimpIf(wcParseIndex& p_index)
 {
 
-	return
+	return 1;
+}
+
+int wc::codegen::genSimpDecVar(wcParseIndex& p_index)
+{
+	//type
+
+
+	//identifier
+
+
+	//optional expression
+
+
+	return 1;
 }
 
 int wc::codegen::genSimpStatement(wcParseIndex& p_index)
@@ -44,6 +61,31 @@ int wc::codegen::genSimpStatement(wcParseIndex& p_index)
 		genSimpDecVar(p_index);
 		break;
 	}
+
+	return 1;
+}
+
+namespace wc
+{
+	namespace codegen
+	{
+		wcParseIndex gen_initParseIndex(wcParseIndex p_pi, wcAST& p_ast);
+	}
+}
+
+//increment past the head to the first statement
+wcParseIndex wc::codegen::gen_initParseIndex(wcParseIndex p_pi, wcAST& p_ast)
+{
+	p_pi.setNode(&p_ast.parseTree, p_ast.parseTree.begin());
+
+	if (p_pi.getNode()->type == pn_head)
+		p_pi.nextNode();
+	else
+		return p_pi;
+
+	while (p_pi.getNode()->type != pn_statement)
+		p_pi.nextNode();
+	return p_pi;
 }
 
 wcExecContext wc::codegen::wcSimpleBytecodeGen::gen(wcAST& p_ast)
@@ -51,8 +93,8 @@ wcExecContext wc::codegen::wcSimpleBytecodeGen::gen(wcAST& p_ast)
 	wcExecContext output;
 	output.target = ct_simple_bytecode;
 
-	wcParseIndex pindex;
-	pindex.setNode(p_ast.parseTree.begin());
+	wcParseIndex pindex = gen_initParseIndex(wcParseIndex(), p_ast);
+
 	while (pindex.getNode() != p_ast.parseTree.end())
 		genSimpStatement(pindex);
 

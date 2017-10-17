@@ -449,6 +449,13 @@ void wc::parse::wcParseIndex::setNode(tree<wcParseNode>::iterator p_it)
 	node = p_it;
 }
 
+void wc::parse::wcParseIndex::setNode(tree<wcParseNode>* p_tree, tree<wcParseNode>::iterator p_it)
+{
+	parseTree = p_tree;
+	node = p_it;
+}
+
+
 tree<wcParseNode>::iterator wc::parse::wcParseIndex::getNode()
 {
 	return node;
@@ -456,15 +463,27 @@ tree<wcParseNode>::iterator wc::parse::wcParseIndex::getNode()
 
 tree<wcParseNode>::iterator wc::parse::wcParseIndex::nextNode()
 {
-	return (node = node++);
+	node++;
+	return node;
 }
-
 
 tree<wcParseNode>::iterator wc::parse::wcParseIndex::backToParent()
 {
 	if(node.node->parent != nullptr)
 		return (node = node.node->parent);
 	return node;
+}
+
+int wc::parse::wcParseIndex::getNodeDepth(tree<wcParseNode>::iterator p_node)
+{
+	if (parseTree == nullptr)
+		return -1;
+	return parseTree->depth(p_node);
+}
+
+int wc::parse::wcParseIndex::getCurrentNodeDepth()
+{
+	return getNodeDepth(node);
 }
 
 wc::parse::wcParser::wcParser()
@@ -983,7 +1002,8 @@ int wc::parse::parseDecVar(wcParseParams params)
 
 	registerSymbol:
 	params.pIndex.backToParent();
-	wcSymbol newSymbol(st_var, identSymbol.ident, identSymbol.fullyQualifiedIdent, false, false, false, false, 1, typeSymbol->dataSize, typeSymbol);
+	wcSymbol newSymbol(st_var, identSymbol.ident, identSymbol.fullyQualifiedIdent, 
+		false, false, false, false, 1, typeSymbol->dataSize, typeSymbol);
 	params.pOutput.symTab.addSymbol(newSymbol);
 
 	return 1;

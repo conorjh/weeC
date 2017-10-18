@@ -7,6 +7,11 @@
 
 namespace wc
 {
+	namespace parse
+	{
+		struct wcSymbol;
+	}
+
 	namespace lex
 	{
 		const bool wc_lexer_dropWS = true;
@@ -88,6 +93,7 @@ namespace wc
 			wcToken(wcTokenType);
 			wcToken(wcTokenType, std::string);
 			wcToken(wcTokenType, std::string, int, int);
+			wcToken(wc::parse::wcSymbol);
 			wcToken(std::string);
 
 			bool operator==(const wcToken&) const;

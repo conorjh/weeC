@@ -18,6 +18,7 @@ int wc::codegen::genSimpExpression(wcParseIndex& p_index)
 
 	//emit simpcode based on the RPN
 
+
 	return 1;
 }
 
@@ -29,14 +30,34 @@ int wc::codegen::genSimpIf(wcParseIndex& p_index)
 
 int wc::codegen::genSimpDecVar(wcParseIndex& p_index)
 {
-	//type
+	wcToken typeToken,identToken;
+	
+	int startingDepth = p_index.getNodeDepth(p_index.getNode());
+	p_index.nextNode();
+	while (p_index.getCurrentNodeDepth() > startingDepth)
+	{
+		switch (p_index.getNode()->type)
+		{
+		case pn_type:
+			typeToken = p_index.getNode()->tokens[0];
+			break;
 
+		case pn_ident:
+			identToken = p_index.getNode()->tokens[0];
+			break;
 
-	//identifier
+		case pn_exp:
 
+			break;
 
-	//optional expression
+		default:
+			//error
+			return 0;
+		}
+		p_index.nextNode();
+	}
 
+	//generate instructions
 
 	return 1;
 }

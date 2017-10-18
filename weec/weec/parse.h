@@ -28,7 +28,8 @@ namespace wc
 			wcSymbol();
 			wcSymbol(lex::wcTokenType);
 			wcSymbol(std::string);
-			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace, bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, wcSymbol* dataType);
+			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace, 
+				bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, wcSymbol* dataType);
 
 			std::string ident, fullyQualifiedIdent;
 			bool isNamespace, isArray, isConst, isStatic;

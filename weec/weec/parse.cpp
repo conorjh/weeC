@@ -20,8 +20,7 @@ namespace wc
 		int parseIf(wcParseParams params);
 
 		//control statements
-		int parseWhile(wcParseParams params);
-		
+		int parseWhile(wcParseParams params);		
 		int parseBlock(wcParseParams params);
 
 		//function call
@@ -614,7 +613,12 @@ int wc::parse::parseIf(wcParseParams params)
 
 int wc::parse::parseExpression(wcParseParams params)
 {
+	params.pOutput.addNode(params.pIndex, wcParseNode(pn_exp));
+
 	wcExpression exp = parseExpressionFull(params);
+
+	params.pIndex.backToParent();
+
 	return 1;
 }
 
@@ -783,6 +787,8 @@ int wc::parse::parseType(wcParseParams params, wcSymbol*& p_typeSymbolOutput)
 	case tt_ident:
 		if ((p_typeSymbolOutput = tryParseKnownIdent(params,false,nullptr))!=nullptr)
 			return 0;
+		params.pOutput.addChild(params.pIndex, wcParseNode(pn_type, wcToken(*p_typeSymbolOutput)));
+		params.pIndex.nextToken();
 		break;
 
 	CASE_BASIC_TYPES_TT

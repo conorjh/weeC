@@ -1,10 +1,14 @@
+
+#include "parse.h"
 #include "lex.h"
 #include <sstream>
 
 #define CASE_TT_WS case tt_ws: case tt_newline: case tt_tab:
 
 using namespace std;
+using namespace wc;
 using namespace wc::lex;
+using namespace wc::parse;
 
 namespace wc
 {
@@ -99,18 +103,28 @@ bool wc::lex::isDelimDroppable(wcToken p_token)
 
 wc::lex::wcToken::wcToken()
 {
-	//type = tt_null;
-	//line = col = 0;
-	//data = "";
+	type = tt_null;
+	line = col = 0;
+	data = "";
+}
+
+
+wc::lex::wcToken::wcToken(wc::parse::wcSymbol p_sym)
+{
+	*this = wcToken();
+	type = tt_ident;
+	data = p_sym.fullyQualifiedIdent;
 }
 
 wc::lex::wcToken::wcToken(wcTokenType p_tt)
 {
+	*this = wcToken();
 	type = p_tt;
 }
 
 wc::lex::wcToken::wcToken(wcTokenType p_tt, string p_data)
 {
+	*this = wcToken();
 	type = p_tt;
 	data = p_data;
 }
@@ -125,6 +139,7 @@ wc::lex::wcToken::wcToken(wcTokenType p_tt, string p_data, int p_line, int p_col
 
 wc::lex::wcToken::wcToken(string p_data)
 {
+	*this = wcToken();
 	type = deriveTokenType(p_data);
 	data = p_data;
 }
@@ -199,7 +214,7 @@ string wc::lex::wcLexIndex::peekChar()
 //do we have a source loaded, and are there still character to read
 bool wc::lex::wcLexIndex::isValid()
 {
-	if(source != nullptr && line > -1 && column > -1 && index > -1 && (index < getSize()))
+	if(source != nullptr && line > -1 && column > -1 && index > -1 && (column < getSize()))
 		return true;
 	return false;
 }

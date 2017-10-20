@@ -20,8 +20,7 @@ namespace wc
 		int parseIf(wcParseParams params);
 
 		//control statements
-		int parseWhile(wcParseParams params);
-		
+		int parseWhile(wcParseParams params);		
 		int parseBlock(wcParseParams params);
 
 		//function call
@@ -82,6 +81,46 @@ namespace wc
 			{ tt_oparen , pn_oparen },{ tt_cparen , pn_cparen }
 		};
 	}
+}
+
+int wc::parse::getPrecedence(wcToken p_token)
+{
+	switch (p_token.type)
+	{
+	case tt_assign:
+		return 15;
+	case tt_logor:
+		return 14;
+	case tt_logand:
+		return 13;
+	case tt_equal:	case tt_notequal:
+		return 12;
+	case tt_greater:	case tt_less:	case tt_lessequal:	case tt_greaterequal:
+		return 10;
+	case tt_mod:	case tt_expo:
+		return 9;
+	case tt_mult:	case tt_div:
+		return 8;
+	case tt_plus:	case tt_minus:
+		return 6;
+	case tt_lognot:
+		return 4;
+	case tt_cparen:
+		return -1;
+	default:
+		return 0;
+	}
+}
+
+bool wc::parse::isRightAssociative(wcToken token)
+{
+	switch (token.type)
+	{
+	case tt_mod:
+	case tt_expo:
+		return true;
+	}
+	return false;
 }
 
 wcSymbol* wc::parse::setErrorReturnNullPtr(wcError& p_error, wcError p_newError)
@@ -449,8 +488,21 @@ void wc::parse::wcParseIndex::setNode(tree<wcParseNode>::iterator p_it)
 	node = p_it;
 }
 
+void wc::parse::wcParseIndex::setNode(tree<wcParseNode>* p_tree, tree<wcParseNode>::iterator p_it)
+{
+	parseTree = p_tree;
+	node = p_it;
+}
+
+
 tree<wcParseNode>::iterator wc::parse::wcParseIndex::getNode()
 {
+	return node;
+}
+
+tree<wcParseNode>::iterator wc::parse::wcParseIndex::nextNode()
+{
+	node++;
 	return node;
 }
 
@@ -459,6 +511,19 @@ tree<wcParseNode>::iterator wc::parse::wcParseIndex::backToParent()
 	if(node.node->parent != nullptr)
 		return (node = node.node->parent);
 	return node;
+}
+
+int wc::parse::wcParseIndex::getNodeDepth(tree<wcParseNode>::iterator p_node)
+{
+	if (parseTree == nullptr)
+		return -1;
+	return parseTree->depth(p_node);
+}
+
+int wc::parse::wcParseIndex::getCurrentNodeDepth()
+{
+	
+	return getNodeDepth(node);
 }
 
 wc::parse::wcParser::wcParser()
@@ -589,7 +654,12 @@ int wc::parse::parseIf(wcParseParams params)
 
 int wc::parse::parseExpression(wcParseParams params)
 {
+	params.pOutput.addNode(params.pIndex, wcParseNode(pn_exp));
+
 	wcExpression exp = parseExpressionFull(params);
+
+	params.pIndex.backToParent();
+
 	return 1;
 }
 
@@ -758,6 +828,8 @@ int wc::parse::parseType(wcParseParams params, wcSymbol*& p_typeSymbolOutput)
 	case tt_ident:
 		if ((p_typeSymbolOutput = tryParseKnownIdent(params,false,nullptr))!=nullptr)
 			return 0;
+		params.pOutput.addChild(params.pIndex, wcParseNode(pn_type, wcToken(*p_typeSymbolOutput)));
+		params.pIndex.nextToken();
 		break;
 
 	CASE_BASIC_TYPES_TT
@@ -977,7 +1049,8 @@ int wc::parse::parseDecVar(wcParseParams params)
 
 	registerSymbol:
 	params.pIndex.backToParent();
-	wcSymbol newSymbol(st_var, identSymbol.ident, identSymbol.fullyQualifiedIdent, false, false, false, false, 1, typeSymbol->dataSize, typeSymbol);
+	wcSymbol newSymbol(st_var, identSymbol.ident, identSymbol.fullyQualifiedIdent, 
+		false, false, false, false, 1, typeSymbol->dataSize, typeSymbol);
 	params.pOutput.symTab.addSymbol(newSymbol);
 
 	return 1;

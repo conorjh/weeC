@@ -22,12 +22,10 @@ int wctest::test_runall()
 	for (int t = 0; t < allLexTests.size(); ++t)
 	{
 		int testResult = allLexTests[t]();
-		
 		if(testResult)
 			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
 		else
 			cout << "\tTest #" << t + 1 << " passed" << endl;
-
 	}
 
 	//parse tests
@@ -36,9 +34,7 @@ int wctest::test_runall()
 	{
 		int testResult = allParseTests[t]();
 		if (testResult)
-		{
 			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
-		}
 		else
 			cout << "\tTest #" << t + 1 << " passed" << endl;
 

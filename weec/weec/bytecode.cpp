@@ -1,6 +1,5 @@
 #include "bytecode.h"
 
-
 wc::bytecode::wcExecContext::wcExecContext()
 {
 	contextID = pc = 0;

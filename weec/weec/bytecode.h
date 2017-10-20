@@ -29,7 +29,20 @@ namespace wc
 
 		struct wcInstruction
 		{
-			int opCode;
+		public:
+			unsigned short int opCode;
+		};
+
+		struct wcInstructionPlusOperand : wcInstruction
+		{
+		public:
+			int operand1;
+		};
+
+		struct wcInstructionPlusOperands : wcInstruction
+		{
+		public:
+			int operand1,operand2;
 		};
 
 		enum wcTargetPlatform

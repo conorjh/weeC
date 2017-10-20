@@ -28,7 +28,8 @@ namespace wc
 			wcSymbol();
 			wcSymbol(lex::wcTokenType);
 			wcSymbol(std::string);
-			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace, bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, wcSymbol* dataType);
+			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace, 
+				bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, wcSymbol* dataType);
 
 			std::string ident, fullyQualifiedIdent;
 			bool isNamespace, isArray, isConst, isStatic;
@@ -126,11 +127,16 @@ namespace wc
 			lex::wcToken decToken();
 
 			void setNode(tree<wcParseNode>::iterator);
+			void setNode(tree<wcParseNode>*, tree<wcParseNode>::iterator);
 			tree<wcParseNode>::iterator getNode();
+			tree<wcParseNode>::iterator nextNode();
 			tree<wcParseNode>::iterator prevNode();
 			tree<wcParseNode>::iterator backToParent();
+			int getCurrentNodeDepth();
+			int getNodeDepth(tree<wcParseNode>::iterator);
 
 		private:
+			tree<wcParseNode>* parseTree;
 			tree<wcParseNode>::iterator node;
 			std::vector<lex::wcToken>* tokens;
 			int tokenIndex;
@@ -193,10 +199,8 @@ namespace wc
 			friend class wcParser;
 		};
 
-
-
-		
-
+		int getPrecedence(lex::wcToken);
+		bool isRightAssociative(lex::wcToken);
 
 	}
 }

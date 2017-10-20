@@ -29,7 +29,11 @@ namespace wc
 	namespace codegen
 	{
 		int genSimpStatement(wc::parse::wcParseIndex&);
+<<<<<<< HEAD
 		std::vector<bytecode::wcInstruction> genSimpExpression(wc::parse::wcParseIndex&, std::vector<lex::wcToken>* rpnOutput);
+=======
+		int genSimpExpression(wc::parse::wcParseIndex&);
+>>>>>>> origin/master
 		int genSimpIf(wc::parse::wcParseIndex&);
 		int genSimpDecVar(wc::parse::wcParseIndex&);
 

@@ -206,6 +206,104 @@ wcParseIndex wc::codegen::gen_initParseIndex(wcParseIndex p_pi, wcAST& p_ast)
 	return p_pi;
 }
 
+int wc::codegen::genSimpExpression(wcParseIndex& p_index)
+{
+	//increment through nodes creating a RPN expression
+	int startingDepth = p_index.getNodeDepth(p_index.getNode());
+
+	//emit simpcode based on the RPN
+
+
+	return 1;
+}
+
+int wc::codegen::genSimpIf(wcParseIndex& p_index)
+{
+
+	return 1;
+}
+
+int wc::codegen::genSimpDecVar(wcParseIndex& p_index)
+{
+	wcToken typeToken,identToken;
+	
+	int startingDepth = p_index.getNodeDepth(p_index.getNode());
+	p_index.nextNode();
+	while (p_index.getCurrentNodeDepth() > startingDepth)
+	{
+		switch (p_index.getNode()->type)
+		{
+		case pn_type:
+			typeToken = p_index.getNode()->tokens[0];
+			break;
+
+		case pn_ident:
+			identToken = p_index.getNode()->tokens[0];
+			break;
+
+		case pn_exp:
+
+			break;
+
+		default:
+			//error
+			return 0;
+		}
+		p_index.nextNode();
+	}
+
+	//generate instructions
+
+	return 1;
+}
+
+int wc::codegen::genSimpStatement(wcParseIndex& p_index)
+{
+	if (p_index.getNode()->type != pn_statement)
+		return 0;
+	p_index.nextNode();
+
+	switch (p_index.getNode()->type)
+	{
+	case pn_exp:
+		genSimpExpression(p_index);
+		break;
+
+	case pn_if:
+		genSimpIf(p_index);
+		break;
+
+	case pn_decvar:
+		genSimpDecVar(p_index);
+		break;
+	}
+
+	return 1;
+}
+
+namespace wc
+{
+	namespace codegen
+	{
+		wcParseIndex gen_initParseIndex(wcParseIndex p_pi, wcAST& p_ast);
+	}
+}
+
+//increment past the head to the first statement
+wcParseIndex wc::codegen::gen_initParseIndex(wcParseIndex p_pi, wcAST& p_ast)
+{
+	p_pi.setNode(&p_ast.parseTree, p_ast.parseTree.begin());
+
+	if (p_pi.getNode()->type == pn_head)
+		p_pi.nextNode();
+	else
+		return p_pi;
+
+	while (p_pi.getNode()->type != pn_statement)
+		p_pi.nextNode();
+	return p_pi;
+}
+
 wcExecContext wc::codegen::wcSimpleBytecodeGen::gen(wcAST& p_ast)
 {
 	wcExecContext output;

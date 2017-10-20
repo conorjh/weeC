@@ -522,7 +522,10 @@ int wc::parse::wcParseIndex::getNodeDepth(tree<wcParseNode>::iterator p_node)
 
 int wc::parse::wcParseIndex::getCurrentNodeDepth()
 {
+<<<<<<< HEAD
 	
+=======
+>>>>>>> origin/master
 	return getNodeDepth(node);
 }
 

@@ -10,6 +10,7 @@ namespace wc
 		 std::vector<std::string> loadFileAsText(std::string filename);
 		 bool fileExists(std::string filename);
 		 int randomInt();
+		 unsigned int randomUInt();
 		 std::string itos(int);
 	}
 }

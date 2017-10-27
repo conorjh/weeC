@@ -1,6 +1,8 @@
 #ifndef WC_BYTECODE_H
 #define WC_BYTECODE_H
 #include <vector>
+#include <unordered_map>
+#include "debug.h"
 
 namespace wc
 {
@@ -29,18 +31,24 @@ namespace wc
 
 		struct wcInstruction
 		{
+			wcInstruction();
+			wcInstruction(unsigned short int);
 		public:
-			unsigned short int opCode;
+			unsigned short int opcode;
 		};
 
 		struct wcInstructionPlusOperand : wcInstruction
 		{
+			wcInstructionPlusOperand();
+			wcInstructionPlusOperand(unsigned short int,int);
 		public:
 			int operand1;
 		};
 
 		struct wcInstructionPlusOperands : wcInstruction
 		{
+			wcInstructionPlusOperands();
+			wcInstructionPlusOperands(unsigned short int, int, int);
 		public:
 			int operand1,operand2;
 		};
@@ -50,20 +58,50 @@ namespace wc
 			ct_bytecode, ct_simple_bytecode, ct_hosted_exe, ct_ansi_c, ct_x86
 		};
 
+		struct wcExecContextRegisters
+		{
+			int pc,t1,t2,cmp;
+			bool halt;
+		}; 
+
+		struct wcStringTable
+		{
+			std::string getString(unsigned int); 
+			unsigned int getIndex(std::string);
+			bool doesIndexExist(unsigned int);
+			bool doesStringExist(std::string);
+			unsigned int addEntry(std::string);
+
+			std::unordered_multimap<std::string, unsigned int> strTable;
+			std::unordered_multimap<unsigned int, std::string> intTable;
+		};
+
+		struct wcStack
+		{
+			void push(int);
+			int pop();
+			int peek(int);
+			int top();
+			int size();
+			void clear();
+
+			std::vector<int> container;
+		};
+
 		struct wcExecContext
 		{
 			wcExecContext();
 
-			wcInstruction getInstr()
-				{return iStream[pc];};
-			bool execStopped()
-				{return halt;};
+			wcInstruction getInstr()	{return instructions[registers.pc];};
+			bool execStopped()			{return registers.halt;};
 
 			int contextID;
-			int pc;
-			bool halt;
-			std::vector<wcInstruction> iStream;
-			wcTargetPlatform target;
+			std::vector<wcInstruction> instructions;
+			wcStack stack;
+			wcExecContextRegisters registers;
+			wcTargetPlatform targetPlatform;
+			wcStringTable stringTable;
+			debug::wcDebugSymbolTable debugSymbolTable;
 		};
 
 

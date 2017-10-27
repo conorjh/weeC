@@ -44,8 +44,8 @@ namespace wc
 		wcToken parseSubExpression(wcParseParams params);
 		wcToken parseTerm(wcParseParams params);
 		wcToken parseFactor(wcParseParams params);
-		bool parseFactor_oparen(wcParseParams params, wcToken& operandLeft, wcExpression& expression);
-		bool parseFactor_ident(wcParseParams params, wcToken& operandLeft, wcExpression& expression);
+		inline bool parseFactor_oparen(wcParseParams params, wcToken& operandLeft, wcExpression& expression);
+		inline bool parseFactor_ident(wcParseParams params, wcToken& operandLeft, wcExpression& expression);
 		
 		//derivers
 		wcParseNodeType deriveParseNodeType(wcToken);
@@ -522,10 +522,7 @@ int wc::parse::wcParseIndex::getNodeDepth(tree<wcParseNode>::iterator p_node)
 
 int wc::parse::wcParseIndex::getCurrentNodeDepth()
 {
-<<<<<<< HEAD
 	
-=======
->>>>>>> origin/master
 	return getNodeDepth(node);
 }
 

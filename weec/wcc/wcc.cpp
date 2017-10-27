@@ -167,10 +167,12 @@ CompilerOutput wcc::compile()
 
 	return output;
 }
+
 void wcc::print()
 {
 	print("");
 }
+
 void wcc::print(string p_input)
 {
 	if (!data.displayOutput)
@@ -182,6 +184,7 @@ void wcc::print(string p_input)
 	else if(!p_input.size())
 		cout << "\n";
 }
+
 void wcc::splash()
 {
 	print("WeeC Compiler");

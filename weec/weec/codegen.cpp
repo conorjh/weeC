@@ -22,7 +22,8 @@ wcError wc::codegen::wcBaseBytecodeGen::getError()
 wcExecContext wc::codegen::wcClassicBytecodeGen::gen(wcAST& p_ast)
 {
 	wcExecContext output;
-	output.target = ct_bytecode;
+	output.targetPlatform = ct_bytecode;
 
-	return wcExecContext();
+	return output;
 }
+

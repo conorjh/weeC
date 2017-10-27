@@ -61,5 +61,5 @@ int wctest::parse::p_basic_5()
 int wctest::parse::p_basic_6()
 {
 	return standardParseTest("int a = 22 + 22;"
-		"a = 22 + + a;");
+		"a = 22 +a;");
 }

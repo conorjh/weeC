@@ -6,6 +6,10 @@
 
 namespace wc
 {
+	namespace vm
+	{
+	}
+
 	namespace bytecode
 	{
 		enum wcOpcode
@@ -60,7 +64,7 @@ namespace wc
 
 		struct wcExecContextRegisters
 		{
-			int pc,t1,t2,cmp;
+			int pc,t1,t2,cmp,instr;
 			bool halt;
 		}; 
 
@@ -76,28 +80,70 @@ namespace wc
 			std::unordered_multimap<unsigned int, std::string> intTable;
 		};
 
-		struct wcStack
+		struct wcChunk
 		{
-			void push(int);
-			int pop();
-			int peek(int);
-			int top();
+			wcChunk();
+			virtual int i();
+			virtual float f();
+			virtual std::string s();
+		};
+
+		struct wcChunki : public wcChunk
+		{
+			wcChunki(int);
+			virtual int i();
+			virtual float f();
+			virtual std::string s();
+			int _i;
+		};
+
+		struct wcChunkf : public wcChunk
+		{
+			wcChunkf(float);
+			virtual int i();
+			virtual float f();
+			virtual std::string s();
+			float _f;
+		};
+
+		struct wcChunks : public wcChunk
+		{
+			wcChunks(std::string);
+			virtual int i();
+			virtual float f();
+			virtual std::string s();
+			std::string _s;
+		};
+
+		struct wcExecStack
+		{
+			void push(wcChunk);
+			wcChunk pop();
+			wcChunk peek(int);
+			wcChunk top();
 			int size();
 			void clear();
 
-			std::vector<int> container;
+			std::vector<wcChunk> container;
 		};
+
+		struct wcStackFrame
+		{
+			unsigned int id;
+			std::string fullyQualifiedIdent;
+			std::unordered_map<int, wcChunk> symbols;
+		};
+
 
 		struct wcExecContext
 		{
 			wcExecContext();
-
 			wcInstruction getInstr()	{return instructions[registers.pc];};
 			bool execStopped()			{return registers.halt;};
 
 			int contextID;
 			std::vector<wcInstruction> instructions;
-			wcStack stack;
+			wcExecStack stack;
 			wcExecContextRegisters registers;
 			wcTargetPlatform targetPlatform;
 			wcStringTable stringTable;

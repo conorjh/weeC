@@ -49,3 +49,12 @@ string wc::util::itos(int p_in)
 	ss << p_in;
 	return ss.str();
 }
+
+std::string wc::util::ftos(float p_f)
+{
+	int nd = 2;
+	ostringstream ostr;
+	int tens = stoi("1" + string(nd, '0'));
+	ostr << round(p_f*tens) / tens;
+	return ostr.str();
+}

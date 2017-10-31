@@ -1,6 +1,11 @@
 #include "bytecode.h"
+#include "vm.h"
 #include "util.h"
 
+using namespace std;
+using namespace wc::util;
+using namespace wc::vm;
+using namespace wc::bytecode;
 using namespace wc::util;
 
 wc::bytecode::wcExecContext::wcExecContext()
@@ -41,36 +46,36 @@ wc::bytecode::wcInstructionPlusOperands::wcInstructionPlusOperands(unsigned shor
 	operand2 = p_op2;
 }
 
-void wc::bytecode::wcStack::push(int p_value)
+void wc::bytecode::wcExecStack::push(wcChunk p_value)
 {
 	container.push_back(p_value);
 }
 
-int wc::bytecode::wcStack::pop()
+wcChunk wc::bytecode::wcExecStack::pop()
 {
-	int returnValue = container[container.size() - 1];
+	wcChunk returnValue = container[container.size() - 1];
 	container.erase(container.end() - 1);
 	return returnValue;
 }
 
-int wc::bytecode::wcStack::peek(int p_index)
+wcChunk wc::bytecode::wcExecStack::peek(int p_index)
 {
 	return container[p_index];
 }
 
-int wc::bytecode::wcStack::top()
+wcChunk wc::bytecode::wcExecStack::top()
 {
 	if (!container.size())
-		return 0;
+		return wcChunk();
 	return container[container.size()-1];
 }
 
-int wc::bytecode::wcStack::size()
+int wc::bytecode::wcExecStack::size()
 {
 	return container.size();
 }
 
-void wc::bytecode::wcStack::clear()
+void wc::bytecode::wcExecStack::clear()
 {
 	container.clear();
 }
@@ -113,4 +118,86 @@ unsigned int wc::bytecode::wcStringTable::addEntry(std::string p_str)
 	strTable.insert(std::make_pair(p_str, newIndex));
 
 	return newIndex;
+}
+
+wc::bytecode::wcChunk::wcChunk()
+{
+
+}
+
+int wc::bytecode::wcChunk::i()
+{
+	return 0;
+}
+
+float wc::bytecode::wcChunk::f()
+{
+	return 0.0f;
+}
+
+std::string wc::bytecode::wcChunk::s()
+{
+	return std::string();
+}
+
+wc::bytecode::wcChunki::wcChunki(int p_i)
+{
+	_i = p_i;
+}
+
+int wc::bytecode::wcChunki::i()
+{
+	return _i;
+}
+
+float wc::bytecode::wcChunki::f()
+{
+	if (_i >= 0)
+		return int(_i + 0.5);
+	return int(_i - 0.5);
+}
+
+std::string wc::bytecode::wcChunki::s()
+{
+	return itos(_i);
+}
+
+wc::bytecode::wcChunkf::wcChunkf(float p_f)
+{
+	_f = p_f;
+}
+
+int wc::bytecode::wcChunkf::i()
+{
+	return _f;
+}
+
+float wc::bytecode::wcChunkf::f()
+{
+	return _f;
+}
+
+std::string wc::bytecode::wcChunkf::s()
+{
+	return util::ftos(_f);
+}
+
+wc::bytecode::wcChunks::wcChunks(string p_s)
+{
+	_s = p_s;
+}
+
+int wc::bytecode::wcChunks::i()
+{
+	return stoi(_s);
+}
+
+float wc::bytecode::wcChunks::f()
+{
+	return stof(_s);
+}
+
+std::string wc::bytecode::wcChunks::s()
+{
+	return _s;
 }

@@ -12,6 +12,7 @@ namespace wc
 		 int randomInt();
 		 unsigned int randomUInt();
 		 std::string itos(int);
+		 std::string ftos(float);
 	}
 }
 

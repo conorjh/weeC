@@ -21,7 +21,7 @@ wc::bytecode::wcInstruction::wcInstruction()
 
 wc::bytecode::wcInstruction::wcInstruction(unsigned short int p_opcode)
 {
-	opcode = p_opcode;
+	opcode = (wcOpcode)p_opcode;
 }
 
 wc::bytecode::wcInstructionPlusOperand::wcInstructionPlusOperand()
@@ -31,7 +31,7 @@ wc::bytecode::wcInstructionPlusOperand::wcInstructionPlusOperand()
 
 wc::bytecode::wcInstructionPlusOperand::wcInstructionPlusOperand(unsigned short int p_opcode, int p_op1)
 {
-	opcode = p_opcode;
+	opcode = (wcOpcode)p_opcode;
 	operand1 = p_op1;
 }
 
@@ -41,7 +41,7 @@ wc::bytecode::wcInstructionPlusOperands::wcInstructionPlusOperands()
 
 wc::bytecode::wcInstructionPlusOperands::wcInstructionPlusOperands(unsigned short int p_opcode, int p_op1, int p_op2)
 {
-	opcode = p_opcode;
+	opcode = (wcOpcode)p_opcode;
 	operand1 = p_op1;
 	operand2 = p_op2;
 }
@@ -58,7 +58,7 @@ wcChunk wc::bytecode::wcExecStack::pop()
 	return returnValue;
 }
 
-wcChunk wc::bytecode::wcExecStack::peek(int p_index)
+wcChunk& wc::bytecode::wcExecStack::peek(int p_index)
 {
 	return container[p_index];
 }
@@ -68,6 +68,11 @@ wcChunk wc::bytecode::wcExecStack::top()
 	if (!container.size())
 		return wcChunk();
 	return container[container.size()-1];
+}
+
+void wc::bytecode::wcExecStack::set(int index, wcChunk value)
+{
+	container[index] = value;
 }
 
 int wc::bytecode::wcExecStack::size()
@@ -200,4 +205,25 @@ float wc::bytecode::wcChunks::f()
 std::string wc::bytecode::wcChunks::s()
 {
 	return _s;
+}
+
+int wc::bytecode::wcExecContextRegisters::operator[](int p_int)
+{
+	switch (p_int)
+	{
+	case 1:
+		return pc;
+	case 2:
+		return t1;
+	case 3:
+		return t2;
+	case 4:
+		return cmp;
+	case 5:
+		return instr;
+	case 6:
+		return halt;
+	default:
+		return 0;
+	}
 }

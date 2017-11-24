@@ -16,13 +16,16 @@ namespace wc
 
 		struct wcSimpleExecContext : public wcExecContext
 		{
-
+			wcSimpleExecContext();
+			wcSimpleExecContext(wcExecContext&&);
+			//int a;
 		};
 
 		enum wcSimpleOpcode
 		{
-			//stack
-			soc_nop, soc_push, soc_pop,
+			soc_nop,
+			//stack 
+			soc_push, soc_pop, soc_pushstk, soc_pushr, soc_popstk, soc_popr,
 			//conditional jumps
 			soc_cmp, soc_jmp, soc_je, soc_jne, soc_jg, soc_jl, soc_jge, soc_jle,
 			//stack math/logical operations
@@ -42,15 +45,15 @@ namespace wc
 
 	namespace codegen
 	{
-		int genSimpStatement(wc::parse::wcParseIndex&, bytecode::wcExecContext& output);
-		std::vector<bytecode::wcInstruction> genSimpExpression(wc::parse::wcParseIndex&, bytecode::wcExecContext& output, std::vector<parse::wcParseNode>* rpnOutput);
-		int genSimpIf(wc::parse::wcParseIndex&, bytecode::wcExecContext& output);
-		int genSimpDecVar(wc::parse::wcParseIndex&, bytecode::wcExecContext& output);
+		int genSimpStatement(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
+		std::vector<bytecode::wcInstruction> genSimpExpression(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output, std::vector<parse::wcParseNode>* rpnOutput);
+		int genSimpIf(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
+		int genSimpDecVar(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
 
 		class wcSimpleBytecodeGen : public wcBaseBytecodeGen
 		{
 		public:
-			virtual bytecode::wcExecContext gen(parse::wcAST&);
+			virtual bytecode::wcSimpleExecContext genSimple(parse::wcAST&);
 		};
 	}
 
@@ -59,38 +62,42 @@ namespace wc
 		class wcSimpleVM : wcBaseVM
 		{
 			wcSimpleVM();
-			virtual int execInstruction(bytecode::wcExecContext& context, bytecode::wcInstruction instr);
+			virtual int execInstruction(bytecode::wcSimpleExecContext& context, bytecode::wcInstruction instr);
 
 		private:
 		};
 
 		//simple bytecode execution methods
-		inline void exec_s_push(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_pop(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_cmp(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_jmp(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_je(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_jne(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_jg(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_jl(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_jge(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_jle(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_assign(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
-		inline void exec_s_plus(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_minus(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_mult(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_div(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_expo(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_mod(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_inc(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_dec(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_and(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_or(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_xor(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_not(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_shfl(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_shfr(bytecode::wcExecContext&, bytecode::wcInstruction);
-		inline void exec_s_halt(bytecode::wcExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_push(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_pop(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_pushstk(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_pushr(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_popstk(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_popr(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_cmp(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_jmp(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_je(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_jne(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_jg(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_jl(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_jge(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_jle(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_assign(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_plus(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_minus(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_mult(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_div(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_expo(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_mod(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_inc(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_dec(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_and(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_or(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_xor(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_not(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_shfl(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_shfr(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
+		inline void exec_s_halt(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
 	}
 
 	namespace compile

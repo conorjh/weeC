@@ -12,33 +12,36 @@ namespace wc
 
 	namespace bytecode
 	{
-		enum wcOpcode
+		enum wcOpcode : unsigned short int
 		{
 			oc_nop,
-			//load memory
-			oc_mov, oc_lr, oc_lrfs, oc_ls, oc_lsfr,
-			//flags
-			oc_setflag, oc_readflag,
-			//stack io
-			oc_push, oc_pushfs, oc_pushfr, oc_pop, oc_popr,
+			oc_nop, oc_push, oc_pop, oc_pushstk, oc_pushr, oc_popstk, oc_popr,
 			//conditional jumps
 			oc_cmp, oc_jmp, oc_je, oc_jne, oc_jg, oc_jl, oc_jge, oc_jle,
 			//stack math/logical operations
 			oc_assign, oc_plus, oc_minus, oc_mult, oc_div, oc_expo, oc_mod, oc_inc, oc_dec,
 			oc_and, oc_or, oc_xor, oc_not, oc_shfl, oc_shfr,
 			//function calls
-			oc_call, oc_ret, oc_callvm,
+			oc_halt, oc_call, oc_ret, oc_callvm,
+
+			//load memory
+			oc_mov, oc_lr, oc_lrfs, oc_ls, oc_lsfr,
+			//flags
+			oc_setflag, oc_readflag,
+			//stack io
+			oc_pushfs, oc_pushfr,  oc_popr,
 			//stackframes 
 			oc_pushsf, oc_popsf,
-			oc_pause, oc_halt
+			oc_pause
 		};
+
 
 		struct wcInstruction
 		{
 			wcInstruction();
 			wcInstruction(unsigned short int);
 		public:
-			unsigned short int opcode;
+			wcOpcode opcode;
 		};
 
 		struct wcInstructionPlusOperand : wcInstruction
@@ -64,6 +67,7 @@ namespace wc
 
 		struct wcExecContextRegisters
 		{
+			int operator[](int);
 			int pc,t1,t2,cmp,instr;
 			bool halt;
 		}; 
@@ -119,8 +123,9 @@ namespace wc
 		{
 			void push(wcChunk);
 			wcChunk pop();
-			wcChunk peek(int);
+			wcChunk& peek(int);
 			wcChunk top();
+			void set(int index, wcChunk value);
 			int size();
 			void clear();
 
@@ -133,7 +138,6 @@ namespace wc
 			std::string fullyQualifiedIdent;
 			std::unordered_map<int, wcChunk> symbols;
 		};
-
 
 		struct wcExecContext
 		{

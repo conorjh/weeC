@@ -1,5 +1,6 @@
 #include "tests.h"
 #include "parse.h"
+#include "simple.h"
 
 using namespace wc;
 using namespace wc::lex;

@@ -6,6 +6,7 @@
 using namespace std;
 using namespace wctest::lex;
 using namespace wctest::parse;
+using namespace wctest::gen;
 
 namespace wctest
 {
@@ -33,6 +34,18 @@ int wctest::test_runall()
 	for (int t = 0; t < allParseTests.size(); ++t)
 	{
 		int testResult = allParseTests[t]();
+		if (testResult)
+			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
+		else
+			cout << "\tTest #" << t + 1 << " passed" << endl;
+
+	}
+
+	//bytecode generation tests
+	cout << "Running bytecode generation tests..." << endl;
+	for (int t = 0; t < allGenTests.size(); ++t)
+	{
+		int testResult = allGenTests[t]();
 		if (testResult)
 			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
 		else

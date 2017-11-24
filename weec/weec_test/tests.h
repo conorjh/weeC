@@ -26,8 +26,15 @@ namespace wctest
 		int p_basic_4();
 		int p_basic_5();
 		int p_basic_6();
-		
+
 		const std::vector<int(*)()> allParseTests = { &p_basic_1,&p_basic_2,&p_basic_3,&p_basic_4 ,&p_basic_5, &p_basic_6 };
+	}
+
+	namespace gen
+	{
+		int g_basic_1();
+		
+		const std::vector<int(*)()> allGenTests = { &g_basic_1 };
 	}
 
 	namespace api

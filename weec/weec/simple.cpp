@@ -267,10 +267,12 @@ int wc::codegen::genSimpStatement(wcParseIndex& p_index, wcSimpleExecContext& ou
 		return 0;
 	p_index.nextNode();
 
+	vector<wcInstruction> expInstructions;
 	switch (p_index.getNode()->type)
 	{
 	case pn_exp:
-		genSimpExpression(p_index, output);
+		expInstructions = genSimpExpression(p_index, output);
+		output.instructions.insert(output.instructions.end(), expInstructions.begin(), expInstructions.end());
 		break;
 
 	case pn_if:
@@ -324,6 +326,19 @@ wcSimpleExecContext wc::codegen::wcSimpleBytecodeGen::genSimple(wcAST& p_ast)
 wc::vm::wcSimpleVM::wcSimpleVM()
 {
 
+}
+
+int wc::vm::wcSimpleVM::exec(int p_handle)
+{
+	if (!handleExists(p_handle))
+		return -1;
+
+	wcSimpleExecContext& con = static_cast<wcSimpleExecContext&>(conPool[p_handle]);
+
+	while (!con.execStopped())
+		execInstruction(con, con.getInstr());
+
+	return 0;
 }
 
 int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, wcInstruction p_instruction)
@@ -412,6 +427,9 @@ int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, wcInstru
 			break;
 
 	}
+	
+	p_context.registers.pc++;
+
 	return 1;
 }
 
@@ -475,7 +493,7 @@ void wc::vm::exec_s_popstk(wcSimpleExecContext &p_context, wcInstructionPlusOper
 
 void wc::vm::exec_s_popr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.registers[p_instr.operand1] = p_context.stack.pop();
+	p_context.registers[p_instr.operand1] = p_context.stack.pop().i();
 }
 
 inline void wc::vm::exec_s_cmp(wcSimpleExecContext &p_context, wcInstruction p_instr)

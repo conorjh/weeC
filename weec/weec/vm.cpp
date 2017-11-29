@@ -12,6 +12,11 @@ int wc::vm::wcBaseVM::execInstruction(bytecode::wcExecContext& context, bytecode
 	return 0;
 }
 
+wc::vm::wcBaseVM::wcBaseVM()
+{
+
+}
+
 int wc::vm::wcBaseVM::exec(int p_handle)
 {
 	if (!handleExists(p_handle))
@@ -50,9 +55,9 @@ bool wc::vm::wcBaseVM::remove(int p_handle)
 
 int wc::vm::wcBaseVM::newHandle()
 {
-	int possNewHandle = randomInt();
+	int possNewHandle = randomUInt();
 	while (handleExists(possNewHandle))
-		possNewHandle = randomInt();
+		possNewHandle = randomUInt();
 	return possNewHandle;
 }
 bool wc::vm::wcBaseVM::handleExists(int p_handle)

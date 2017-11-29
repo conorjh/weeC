@@ -59,9 +59,11 @@ namespace wc
 
 	namespace vm
 	{
-		class wcSimpleVM : wcBaseVM
+		class wcSimpleVM : public wcBaseVM
 		{
+		public:
 			wcSimpleVM();
+			virtual int exec(int handle);
 			virtual int execInstruction(bytecode::wcSimpleExecContext& context, bytecode::wcInstruction instr);
 
 		private:

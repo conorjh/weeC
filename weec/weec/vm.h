@@ -10,12 +10,13 @@ namespace wc
 		class wcBaseVM
 		{
 		public:
+			wcBaseVM();
 			int exec(int handle);
 			int load(bytecode::wcExecContext&);
 			bool remove(int handle);
 
 			virtual int execInstruction(bytecode::wcExecContext& context, bytecode::wcInstruction instr);
-		private:
+		protected:
 			int newHandle();
 			bool handleExists(int);
 			void removeHandle(int);
@@ -25,6 +26,7 @@ namespace wc
 
 		class wcClassicVM : wcBaseVM
 		{
+		public:
 			wcClassicVM();
 			virtual int execInstruction(bytecode::wcExecContext& context, bytecode::wcInstruction instr);
 		};

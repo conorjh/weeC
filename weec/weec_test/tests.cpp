@@ -7,6 +7,7 @@ using namespace std;
 using namespace wctest::lex;
 using namespace wctest::parse;
 using namespace wctest::gen;
+using namespace wctest::vm;
 
 namespace wctest
 {
@@ -50,7 +51,17 @@ int wctest::test_runall()
 			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
 		else
 			cout << "\tTest #" << t + 1 << " passed" << endl;
+	}
 
+	//vn tests
+	cout << "Running VM tests..." << endl;
+	for (int t = 0; t < allVMTests.size(); ++t)
+	{
+		int testResult = allVMTests[t]();
+		if (testResult)
+			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
+		else
+			cout << "\tTest #" << t + 1 << " passed" << endl;
 	}
 
 	//compiler tests

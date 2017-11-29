@@ -2,19 +2,20 @@
 #define WC_BYTECODE_H
 #include <vector>
 #include <unordered_map>
+#include <memory>
 #include "debug.h"
 
 namespace wc
 {
 	namespace vm
 	{
+
 	}
 
 	namespace bytecode
 	{
 		enum wcOpcode : unsigned short int
 		{
-			oc_nop,
 			oc_nop, oc_push, oc_pop, oc_pushstk, oc_pushr, oc_popstk, oc_popr,
 			//conditional jumps
 			oc_cmp, oc_jmp, oc_je, oc_jne, oc_jg, oc_jl, oc_jge, oc_jle,
@@ -29,7 +30,7 @@ namespace wc
 			//flags
 			oc_setflag, oc_readflag,
 			//stack io
-			oc_pushfs, oc_pushfr,  oc_popr,
+			oc_pushfs, oc_pushfr,  
 			//stackframes 
 			oc_pushsf, oc_popsf,
 			oc_pause
@@ -38,25 +39,25 @@ namespace wc
 
 		struct wcInstruction
 		{
+		public:
 			wcInstruction();
 			wcInstruction(unsigned short int);
-		public:
 			wcOpcode opcode;
 		};
 
 		struct wcInstructionPlusOperand : wcInstruction
 		{
+		public:
 			wcInstructionPlusOperand();
 			wcInstructionPlusOperand(unsigned short int,int);
-		public:
 			int operand1;
 		};
 
 		struct wcInstructionPlusOperands : wcInstruction
 		{
+		public:
 			wcInstructionPlusOperands();
 			wcInstructionPlusOperands(unsigned short int, int, int);
-		public:
 			int operand1,operand2;
 		};
 
@@ -67,9 +68,8 @@ namespace wc
 
 		struct wcExecContextRegisters
 		{
-			int operator[](int);
-			int pc,t1,t2,cmp,instr;
-			bool halt;
+			int& operator[](int);
+			int pc,t1,t2,cmp,instr, halt;
 		}; 
 
 		struct wcStringTable

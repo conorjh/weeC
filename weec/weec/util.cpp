@@ -33,14 +33,14 @@ int wc::util::randomInt()
 {
 	int min = INT_MIN;
 	int max = INT_MAX;
-	return min + (rand() % static_cast<int>(max - min + 1));
+	return min + rand() % (static_cast<int>(max - min));
 }
 
 unsigned int wc::util::randomUInt()
 {
 	unsigned int min = 0;
 	unsigned int max = UINT_MAX;
-	return min + (rand() % static_cast<unsigned int>(max - min + 1));
+	return min + (rand() % static_cast<unsigned int>(max - min));
 }
 
 string wc::util::itos(int p_in)

@@ -11,13 +11,13 @@ using namespace wc::vm;
 
 namespace wctest
 {
-	namespace gen
+	namespace vm
 	{
-		int standardGenTest(const char*);
+		int standardVMTest(const char*);
 	}
 }
 
-int wctest::gen::standardGenTest(const char * p_source)
+int wctest::vm::standardVMTest(const char * p_source)
 {
 	wcLexer lexer;
 	wcParser parser;
@@ -29,10 +29,13 @@ int wctest::gen::standardGenTest(const char * p_source)
 	if (parser.getError().code)
 		return parser.getError().code;
 
+	wcSimpleVM vm;
+	vm.exec(vm.load(testOutput));
+
 	return 0;
 }
 
-int wctest::gen::g_basic_1()
+int wctest::vm::vm_basic_1()
 {
-	return standardGenTest("2 + 55 * 88 / 99;");
+	return standardVMTest("2 + 55 * 88 / 99;");
 }

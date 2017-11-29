@@ -207,7 +207,7 @@ std::string wc::bytecode::wcChunks::s()
 	return _s;
 }
 
-int wc::bytecode::wcExecContextRegisters::operator[](int p_int)
+int& wc::bytecode::wcExecContextRegisters::operator[](int p_int)
 {
 	switch (p_int)
 	{
@@ -221,9 +221,8 @@ int wc::bytecode::wcExecContextRegisters::operator[](int p_int)
 		return cmp;
 	case 5:
 		return instr;
+	default:
 	case 6:
 		return halt;
-	default:
-		return 0;
 	}
 }

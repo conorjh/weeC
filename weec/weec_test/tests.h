@@ -33,8 +33,15 @@ namespace wctest
 	namespace gen
 	{
 		int g_basic_1();
-		
+
 		const std::vector<int(*)()> allGenTests = { &g_basic_1 };
+	}
+
+	namespace vm
+	{
+		int vm_basic_1();
+
+		const std::vector<int(*)()> allVMTests = { &vm_basic_1 };
 	}
 
 	namespace api

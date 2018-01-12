@@ -40,6 +40,7 @@ namespace wc
 		struct wcInstruction
 		{
 		public:
+			~wcInstruction();
 			wcInstruction();
 			wcInstruction(unsigned short int);
 			wcOpcode opcode;
@@ -48,6 +49,7 @@ namespace wc
 		struct wcInstructionPlusOperand : wcInstruction
 		{
 		public:
+			~wcInstructionPlusOperand();
 			wcInstructionPlusOperand();
 			wcInstructionPlusOperand(unsigned short int,int);
 			int operand1;
@@ -56,6 +58,7 @@ namespace wc
 		struct wcInstructionPlusOperands : wcInstruction
 		{
 		public:
+			~wcInstructionPlusOperands();
 			wcInstructionPlusOperands();
 			wcInstructionPlusOperands(unsigned short int, int, int);
 			int operand1,operand2;
@@ -129,7 +132,7 @@ namespace wc
 			int size();
 			void clear();
 
-			std::vector<wcChunk> container;
+			std::vector<std::shared_ptr<wcChunk>> container;
 		};
 
 		struct wcStackFrame
@@ -142,11 +145,11 @@ namespace wc
 		struct wcExecContext
 		{
 			wcExecContext();
-			wcInstruction getInstr()	{return instructions[registers.pc];};
+			std::shared_ptr<wcInstruction> getInstr()	{return instructions[registers.pc];};
 			bool execStopped()			{return registers.halt;};
 
 			int contextID;
-			std::vector<wcInstruction> instructions;
+			std::vector<std::shared_ptr<wcInstruction>> instructions;
 			wcExecStack stack;
 			wcExecContextRegisters registers;
 			wcTargetPlatform targetPlatform;

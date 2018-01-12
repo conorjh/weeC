@@ -6,6 +6,7 @@ using namespace wc;
 using namespace wc::bytecode;
 using namespace wc::vm;
 using namespace wc::util;
+
 int wc::vm::wcBaseVM::execInstruction(bytecode::wcExecContext& context, bytecode::wcInstruction instr)
 {
 
@@ -25,7 +26,7 @@ int wc::vm::wcBaseVM::exec(int p_handle)
 	wcExecContext& con = conPool[p_handle];
 
 	while (!con.execStopped())
-		execInstruction(con, con.getInstr());
+		execInstruction(con, *con.getInstr());
 
 	return 0;
 }

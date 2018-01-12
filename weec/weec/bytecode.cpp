@@ -15,6 +15,10 @@ wc::bytecode::wcExecContext::wcExecContext()
 	targetPlatform = wcTargetPlatform::ct_bytecode;
 }
 
+wc::bytecode::wcInstruction::~wcInstruction()
+{
+}
+
 wc::bytecode::wcInstruction::wcInstruction()
 {
 }
@@ -22,6 +26,10 @@ wc::bytecode::wcInstruction::wcInstruction()
 wc::bytecode::wcInstruction::wcInstruction(unsigned short int p_opcode)
 {
 	opcode = (wcOpcode)p_opcode;
+}
+
+wc::bytecode::wcInstructionPlusOperand::~wcInstructionPlusOperand()
+{
 }
 
 wc::bytecode::wcInstructionPlusOperand::wcInstructionPlusOperand()
@@ -33,6 +41,10 @@ wc::bytecode::wcInstructionPlusOperand::wcInstructionPlusOperand(unsigned short 
 {
 	opcode = (wcOpcode)p_opcode;
 	operand1 = p_op1;
+}
+
+wc::bytecode::wcInstructionPlusOperands::~wcInstructionPlusOperands()
+{
 }
 
 wc::bytecode::wcInstructionPlusOperands::wcInstructionPlusOperands()
@@ -48,31 +60,31 @@ wc::bytecode::wcInstructionPlusOperands::wcInstructionPlusOperands(unsigned shor
 
 void wc::bytecode::wcExecStack::push(wcChunk p_value)
 {
-	container.push_back(p_value);
+	container.push_back(make_unique<wcChunk>(p_value));
 }
 
 wcChunk wc::bytecode::wcExecStack::pop()
 {
-	wcChunk returnValue = container[container.size() - 1];
-	container.erase(container.end() - 1);
+	wcChunk returnValue = *container[container.size() - 1];
+	//container.erase(container.end() - 1);
 	return returnValue;
 }
 
 wcChunk& wc::bytecode::wcExecStack::peek(int p_index)
 {
-	return container[p_index];
+	return *container[p_index];
 }
 
 wcChunk wc::bytecode::wcExecStack::top()
 {
 	if (!container.size())
 		return wcChunk();
-	return container[container.size()-1];
+	return *container[container.size()-1];
 }
 
 void wc::bytecode::wcExecStack::set(int index, wcChunk value)
 {
-	container[index] = value;
+	*container[index] = value;
 }
 
 int wc::bytecode::wcExecStack::size()

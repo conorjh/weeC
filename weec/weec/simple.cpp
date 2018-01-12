@@ -19,14 +19,14 @@ namespace wc
 	namespace codegen
 	{
 		inline vector<wcParseNode> genSimpExpression_genRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, int startingDepth, vector<wcParseNode>* rpnOutput);
-		inline vector<wcInstruction> genSimpExpression_genInstructionsFromRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput);
+		inline vector<shared_ptr<wcInstruction>> genSimpExpression_genInstructionsFromRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput);
 	}
 }
 
-vector<wcInstruction> wc::codegen::genSimpExpression(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput = nullptr)
+vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput = nullptr)
 {
 	if (p_index.getNode()->type != pn_exp)
-		return vector<wcInstruction>();
+		return vector<shared_ptr<wcInstruction>>();
 	if (rpnOutput == nullptr)
 		rpnOutput = &vector<wcParseNode>();	
 
@@ -37,7 +37,7 @@ vector<wcInstruction> wc::codegen::genSimpExpression(wcParseIndex& p_index, byte
 	genSimpExpression_genRPN(p_index, output, startingDepth, rpnOutput);
 
 	//emit simpcode based on the RPN
-	vector<wcInstruction> instructionOutput = genSimpExpression_genInstructionsFromRPN(p_index, output, rpnOutput);
+	vector<shared_ptr<wcInstruction>> instructionOutput = genSimpExpression_genInstructionsFromRPN(p_index, output, rpnOutput);
 
 	return instructionOutput;
 }
@@ -116,9 +116,9 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcParseIndex& p_index,
 	return *rpnOutput;
 }
 
-vector<wcInstruction> wc::codegen::genSimpExpression_genInstructionsFromRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput)
+vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructionsFromRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput)
 {
-	vector<wcInstruction> instructionOutput;
+	vector<shared_ptr<wcInstruction>> instructionOutput;
 	int operand1,operand2; 
 	string stringLiteral;
 
@@ -132,23 +132,24 @@ vector<wcInstruction> wc::codegen::genSimpExpression_genInstructionsFromRPN(wcPa
 				operand1 = output.stringTable.addEntry(stringLiteral);	//add to string table if it's the first occurence
 			else
 				operand1 = output.stringTable.getIndex(stringLiteral);	//we've seen this before, retrieve index from string table
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, operand1));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, operand1)));
+
 			break;
 
 		case pn_intlit:
 			operand1 = stoi(rpnOutput->at(i).tokens[0].data);
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, operand1));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, operand1)));
 			break;
 
 		case pn_fltlit:
 			break;
 
 		case pn_true:
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 1));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 1)));
 			break;
 			
 		case pn_false:
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 0));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 0)));
 			break;
 
 		//variables
@@ -160,61 +161,61 @@ vector<wcInstruction> wc::codegen::genSimpExpression_genInstructionsFromRPN(wcPa
 
 		//operators
 		case pn_lognot:
-			instructionOutput.push_back(wcInstruction(soc_not));	
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_not)));
 			break;
 		case pn_logand:
-			instructionOutput.push_back(wcInstruction(soc_and));	
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_and)));
 			break;
 		case pn_logor:
-			instructionOutput.push_back(wcInstruction(soc_or));		
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_or)));
 			break;
 		case pn_equal:
-			instructionOutput.push_back(wcInstruction(soc_cmp));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_jne, instructionOutput.size() + 3));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 1));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_jmp, instructionOutput.size() + 2));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 0));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_cmp)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_jne, instructionOutput.size() + 3)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 1)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_jmp, instructionOutput.size() + 2)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 0)));
 			break;
 		case pn_notequal:
-			instructionOutput.push_back(wcInstruction(soc_cmp));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_je, instructionOutput.size() + 3));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 1));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_jmp, instructionOutput.size() + 2));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 0));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_cmp)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_je, instructionOutput.size() + 3)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 1)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_jmp, instructionOutput.size() + 2)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 0)));
 			break;
 		case pn_greater:
-			instructionOutput.push_back(wcInstruction(soc_cmp));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_jle, instructionOutput.size() + 3));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 1));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_jmp, instructionOutput.size() + 2));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 0));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_cmp)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_jle, instructionOutput.size() + 3)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 1)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_jmp, instructionOutput.size() + 2)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 0)));
 			break;
 		case pn_greaterequal:
-			instructionOutput.push_back(wcInstruction(soc_cmp));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_jl, instructionOutput.size() + 3));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 1));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_jmp, instructionOutput.size() + 2));
-			instructionOutput.push_back(wcInstructionPlusOperand(soc_push, 0));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_cmp)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_jl, instructionOutput.size() + 3)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 1)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_jmp, instructionOutput.size() + 2)));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, 0)));
 			break;
 
 		case pn_assign:
 		case pn_mult:
-			instructionOutput.push_back(wcInstruction(soc_mult));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_mult)));
 			break;
 		case pn_div:
-			instructionOutput.push_back(wcInstruction(soc_div));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_div)));
 			break;
 		case pn_plus:
-			instructionOutput.push_back(wcInstruction(soc_plus));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_plus)));
 			break;
 		case pn_minus:
-			instructionOutput.push_back(wcInstruction(soc_minus));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_minus)));
 			break;
 		case pn_mod:
-			instructionOutput.push_back(wcInstruction(soc_mod));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_mod)));
 			break;
 		case pn_expo:
-			instructionOutput.push_back(wcInstruction(soc_expo));
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_expo)));
 			break;
 		default:
 			break;
@@ -232,7 +233,7 @@ int wc::codegen::genSimpIf(wcParseIndex& p_index, bytecode::wcSimpleExecContext&
 int wc::codegen::genSimpDecVar(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output)
 {
 	wcToken typeToken,identToken;
-	vector<wcInstruction> expressionInstructions;
+	vector<shared_ptr<wcInstruction>> expressionInstructions;
 	int startingDepth = p_index.getNodeDepth(p_index.getNode());
 	p_index.nextNode();
 
@@ -267,7 +268,7 @@ int wc::codegen::genSimpStatement(wcParseIndex& p_index, wcSimpleExecContext& ou
 		return 0;
 	p_index.nextNode();
 
-	vector<wcInstruction> expInstructions;
+	vector<shared_ptr<wcInstruction>> expInstructions;
 	switch (p_index.getNode()->type)
 	{
 	case pn_exp:
@@ -328,6 +329,13 @@ wc::vm::wcSimpleVM::wcSimpleVM()
 
 }
 
+int wc::bytecode::getSimpOpCount(wcSimpleOpcode p_oc)
+{
+	if (wcSimpleOpcodeOperandCounts.find(p_oc) == wcSimpleOpcodeOperandCounts.end())
+		return 0;
+	return wcSimpleOpcodeOperandCounts.find(p_oc)->second;
+}
+
 int wc::vm::wcSimpleVM::exec(int p_handle)
 {
 	if (!handleExists(p_handle))
@@ -336,94 +344,94 @@ int wc::vm::wcSimpleVM::exec(int p_handle)
 	wcSimpleExecContext& con = static_cast<wcSimpleExecContext&>(conPool[p_handle]);
 
 	while (!con.execStopped())
-		execInstruction(con, con.getInstr());
+			execInstruction(con, con.getInstr());
 
 	return 0;
 }
 
-int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, wcInstruction p_instruction)
+int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, shared_ptr<wcInstruction> p_instruction)
 {
-	switch (p_instruction.opcode)
+	switch (p_instruction->opcode)
 	{
 		case soc_nop:
 			break;
 		case soc_push:
-			exec_s_push(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_push(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_pop:
-			exec_s_pop(p_context,p_instruction);
+			exec_s_pop(p_context, *p_instruction);
 			break;
 		case soc_cmp: 
-			exec_s_cmp(p_context, p_instruction);
+			exec_s_cmp(p_context, *p_instruction);
 			break;
 		case soc_jmp:
-			exec_s_jmp(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_jmp(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_je:
-			exec_s_je(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_je(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_jne: 
-			exec_s_jne(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_jne(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_jg:
-			exec_s_jg(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_jg(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_jl:
-			exec_s_jl(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_jl(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_jge:
-			exec_s_jge(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_jge(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_jle:
-			exec_s_jle(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_jle(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_assign:
-			exec_s_assign(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_assign(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_plus:
-			exec_s_plus(p_context, p_instruction);
+			exec_s_plus(p_context, *p_instruction);
 			break;
 		case soc_minus:
-			exec_s_minus(p_context, p_instruction);
+			exec_s_minus(p_context, *p_instruction);
 			break;
 		case soc_mult: 
-			exec_s_mult(p_context, p_instruction);
+			exec_s_mult(p_context, *p_instruction);
 			break;
 		case soc_div: 
-			exec_s_div(p_context, p_instruction);
+			exec_s_div(p_context, *p_instruction);
 			break;
 		case soc_expo: 
-			exec_s_expo(p_context, p_instruction);
+			exec_s_expo(p_context, *p_instruction);
 			break;
 		case soc_mod: 
-			exec_s_mod(p_context, p_instruction);
+			exec_s_mod(p_context, *p_instruction);
 			break;
 		case soc_inc:
-			exec_s_inc(p_context, p_instruction);
+			exec_s_inc(p_context, *p_instruction);
 			break;
 		case soc_dec:
-			exec_s_dec(p_context, p_instruction);
+			exec_s_dec(p_context, *p_instruction);
 			break;
 		case soc_and:
-			exec_s_and(p_context, p_instruction);
+			exec_s_and(p_context, *p_instruction);
 			break;
 		case soc_or:
-			exec_s_or(p_context, p_instruction);
+			exec_s_or(p_context, *p_instruction);
 			break;
 		case soc_xor:
-			exec_s_xor(p_context, p_instruction);
+			exec_s_xor(p_context, *p_instruction);
 			break;
 		case soc_not:
-			exec_s_not(p_context, p_instruction);
+			exec_s_not(p_context, *p_instruction);
 			break;
 		case soc_shfl:
-			exec_s_shfl(p_context, p_instruction);
+			exec_s_shfl(p_context, *p_instruction);
 			break;
 		case soc_shfr:
-			exec_s_shfr(p_context, p_instruction);
+			exec_s_shfr(p_context, *p_instruction);
 			break;
 		case soc_halt:
-			exec_s_halt(p_context, static_cast<wcInstructionPlusOperand&>(p_instruction));
+			exec_s_halt(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 
 	}

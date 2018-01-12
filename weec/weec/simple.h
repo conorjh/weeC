@@ -1,6 +1,7 @@
 #ifndef WC_SIMPLE_H
 #define WC_SIMPLE_H
 #include <unordered_map>
+#include <xmemory>
 #include "vm.h"
 #include "bytecode.h"
 #include "compiler.h"
@@ -41,12 +42,14 @@ namespace wc
 			{soc_assign,0}, {soc_plus,0}, {soc_minus,0}, {soc_mult,0}, {soc_div,0}, {soc_expo,0}, {soc_mod,0}, {soc_inc,0}, {soc_dec,0},
 			{soc_and,0}, {soc_or,0}, {soc_xor,0}, {soc_not,0}, {soc_shfl,0}, {soc_shfr,0},{soc_call,0}, {soc_ret,0}, {soc_callvm,0}, {soc_halt,1},
 		};
+
+		int getSimpOpCount(wcSimpleOpcode);
 	}
 
 	namespace codegen
 	{
 		int genSimpStatement(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
-		std::vector<bytecode::wcInstruction> genSimpExpression(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output, std::vector<parse::wcParseNode>* rpnOutput);
+		std::vector<std::shared_ptr<bytecode::wcInstruction>> genSimpExpression(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output, std::vector<parse::wcParseNode>* rpnOutput);
 		int genSimpIf(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
 		int genSimpDecVar(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
 
@@ -64,7 +67,7 @@ namespace wc
 		public:
 			wcSimpleVM();
 			virtual int exec(int handle);
-			virtual int execInstruction(bytecode::wcSimpleExecContext& context, bytecode::wcInstruction instr);
+			virtual int execInstruction(bytecode::wcSimpleExecContext& context, std::shared_ptr<bytecode::wcInstruction> instr);
 
 		private:
 		};

@@ -121,6 +121,8 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 	vector<shared_ptr<wcInstruction>> instructionOutput;
 	int operand1,operand2; 
 	string stringLiteral;
+	wcInstructionPlusOperand s;
+	shared_ptr<wcInstructionPlusOperand> p;
 
 	for (int i = 0; i < rpnOutput->size(); ++i)
 		switch(rpnOutput->at(i).type)
@@ -133,12 +135,12 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 			else
 				operand1 = output.stringTable.getIndex(stringLiteral);	//we've seen this before, retrieve index from string table
 			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, operand1)));
-
 			break;
 
 		case pn_intlit:
 			operand1 = stoi(rpnOutput->at(i).tokens[0].data);
-			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, operand1)));
+			instructionOutput.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_push, operand1)));
+			s = *static_pointer_cast<wcInstructionPlusOperand>(instructionOutput.at(0));
 			break;
 
 		case pn_fltlit:
@@ -301,10 +303,10 @@ wcParseIndex wc::codegen::gen_initParseIndex(wcParseIndex p_pi, wcAST& p_ast)
 {
 	p_pi.setNode(&p_ast.parseTree, p_ast.parseTree.begin());
 
-	if (p_pi.getNode()->type == pn_head)
-		p_pi.nextNode();
-	else
+	if (!p_pi.getNode()->type == pn_head)
 		return p_pi;
+	
+	p_pi.nextNode();
 
 	while (p_pi.getNode()->type != pn_statement)
 		p_pi.nextNode();
@@ -484,30 +486,30 @@ inline void wc::vm::exec_s_pop(wcSimpleExecContext &p_context, wcInstruction p_i
 
 void wc::vm::exec_s_pushstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	wcChunki stackValue = p_context.stack.peek(p_instr.operand1).i();
+	wcChunki stackValue = *p_context.stack.peeki(p_instr.operand1);
 	p_context.stack.push(stackValue);
 }
 
 void wc::vm::exec_s_pushr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	wcChunki stackValue = p_context.stack.peek(p_instr.operand1).i();
+	wcChunki stackValue = *p_context.stack.peeki(p_instr.operand1);
 	p_context.stack.push(stackValue);
 }
 
 void wc::vm::exec_s_popstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.stack.set(p_instr.operand1, p_context.stack.pop());
+	p_context.stack.set(p_instr.operand1, *p_context.stack.pop());
 }
 
 void wc::vm::exec_s_popr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.registers[p_instr.operand1] = p_context.stack.pop().i();
+	p_context.registers[p_instr.operand1] = p_context.stack.popi()->i();
 }
 
 inline void wc::vm::exec_s_cmp(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.registers.cmp = p_context.registers.t1 - p_context.registers.t2;
 }
 
@@ -554,76 +556,76 @@ inline void wc::vm::exec_s_jle(wcSimpleExecContext &p_context, wcInstructionPlus
 
 inline void wc::vm::exec_s_assign(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.registers.t1 = p_context.stack.pop().i();
-	p_context.stack.pop().i(); //contained the last stack value for the stack index at operand1
+	p_context.registers.t1 = p_context.stack.popi()->i();
+	p_context.stack.popi()->i(); //contained the last stack value for the stack index at operand1
 	p_context.registers.t2 = p_instr.operand1;	//stackindex
 }
 
 inline void wc::vm::exec_s_plus(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 + p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_minus(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 - p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_mult(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 * p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_div(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 / p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_expo(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 ^ p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_mod(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 % p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_inc(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1++));
 }
 
 inline void wc::vm::exec_s_dec(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1--));
 }
 
 inline void wc::vm::exec_s_and(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 && p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_or(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 || p_context.registers.t2));
 }
 
@@ -634,21 +636,21 @@ inline void wc::vm::exec_s_xor(wcSimpleExecContext &p_context, wcInstruction p_i
 
 inline void wc::vm::exec_s_not(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(!p_context.registers.t1));
 }
 
 inline void wc::vm::exec_s_shfl(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 << p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_shfr(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
-	p_context.registers.t2 = p_context.stack.pop().i();
-	p_context.registers.t1 = p_context.stack.pop().i();
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
 	p_context.stack.push(wcChunki(p_context.registers.t1 >> p_context.registers.t2));
 }
 

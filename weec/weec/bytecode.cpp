@@ -60,26 +60,86 @@ wc::bytecode::wcInstructionPlusOperands::wcInstructionPlusOperands(unsigned shor
 
 void wc::bytecode::wcExecStack::push(wcChunk p_value)
 {
-	container.push_back(make_unique<wcChunk>(p_value));
+	container.push_back(make_shared<wcChunk>(p_value));
 }
 
-wcChunk wc::bytecode::wcExecStack::pop()
+void wc::bytecode::wcExecStack::push(wcChunki p_value)
 {
-	wcChunk returnValue = *container[container.size() - 1];
-	//container.erase(container.end() - 1);
+	container.push_back(make_shared<wcChunki>(p_value));
+}
+
+void wc::bytecode::wcExecStack::push(wcChunkf p_value)
+{
+	container.push_back(make_shared<wcChunkf>(p_value));
+}
+
+void wc::bytecode::wcExecStack::push(wcChunks p_value)
+{
+	container.push_back(make_shared<wcChunks>(p_value));
+}
+
+shared_ptr<wcChunk> wc::bytecode::wcExecStack::pop()
+{
+	auto returnValue = container[container.size() - 1];
+	container.erase(container.end() - 1);
 	return returnValue;
 }
 
-wcChunk& wc::bytecode::wcExecStack::peek(int p_index)
+std::shared_ptr<wcChunki> wc::bytecode::wcExecStack::popi()
 {
-	return *container[p_index];
+	return static_pointer_cast<wcChunki>(pop());
 }
 
-wcChunk wc::bytecode::wcExecStack::top()
+std::shared_ptr<wcChunkf> wc::bytecode::wcExecStack::popf()
+{
+	return static_pointer_cast<wcChunkf>(pop());
+}
+
+std::shared_ptr<wcChunks> wc::bytecode::wcExecStack::pops()
+{
+	return static_pointer_cast<wcChunks>(pop());
+}
+
+shared_ptr<wcChunk> wc::bytecode::wcExecStack::peek(int p_index)
+{
+	return container[p_index];
+}
+
+std::shared_ptr<wcChunki> wc::bytecode::wcExecStack::peeki(int p_index)
+{
+	return static_pointer_cast<wcChunki>(peek(p_index));
+}
+
+std::shared_ptr<wcChunkf> wc::bytecode::wcExecStack::peekf(int p_index)
+{
+	return static_pointer_cast<wcChunkf>(peek(p_index));
+}
+
+std::shared_ptr<wcChunks> wc::bytecode::wcExecStack::peeks(int p_index)
+{
+	return static_pointer_cast<wcChunks>(peek(p_index));
+}
+
+shared_ptr<wcChunk> wc::bytecode::wcExecStack::top()
 {
 	if (!container.size())
-		return wcChunk();
-	return *container[container.size()-1];
+		return shared_ptr<wcChunk>();
+	return container[container.size()-1];
+}
+
+std::shared_ptr<wcChunki> wc::bytecode::wcExecStack::topi()
+{
+	return static_pointer_cast<wcChunki>(top());
+}
+
+std::shared_ptr<wcChunkf> wc::bytecode::wcExecStack::topf()
+{
+	return static_pointer_cast<wcChunkf>(top());
+}
+
+std::shared_ptr<wcChunks> wc::bytecode::wcExecStack::tops()
+{
+	return static_pointer_cast<wcChunks>(top());
 }
 
 void wc::bytecode::wcExecStack::set(int index, wcChunk value)

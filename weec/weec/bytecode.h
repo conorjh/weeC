@@ -93,6 +93,7 @@ namespace wc
 			virtual int i();
 			virtual float f();
 			virtual std::string s();
+			std::shared_ptr<wcChunk> self;
 		};
 
 		struct wcChunki : public wcChunk
@@ -124,10 +125,24 @@ namespace wc
 
 		struct wcExecStack
 		{
-			void push(wcChunk);
-			wcChunk pop();
-			wcChunk& peek(int);
-			wcChunk top();
+			void push(wcChunk);		void push(wcChunki);
+			void push(wcChunkf);	void push(wcChunks);
+
+			std::shared_ptr<wcChunk> pop();
+			std::shared_ptr<wcChunki> popi();
+			std::shared_ptr<wcChunkf> popf();
+			std::shared_ptr<wcChunks> pops();
+
+			std::shared_ptr<wcChunk> peek(int);
+			std::shared_ptr<wcChunki> peeki(int);
+			std::shared_ptr<wcChunkf> peekf(int);
+			std::shared_ptr<wcChunks> peeks(int);
+
+			std::shared_ptr<wcChunk> top();
+			std::shared_ptr<wcChunki> topi();
+			std::shared_ptr<wcChunkf> topf();
+			std::shared_ptr<wcChunks> tops();
+
 			void set(int index, wcChunk value);
 			int size();
 			void clear();

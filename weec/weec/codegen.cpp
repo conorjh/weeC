@@ -27,3 +27,8 @@ wcExecContext wc::codegen::wcClassicBytecodeGen::gen(wcAST& p_ast)
 	return output;
 }
 
+wc::codegen::wcGenParams::wcGenParams(wc::parse::wcParseIndex &p_index, wc::parse::wcAST &p_ast, bytecode::wcExecContext &p_output) :
+	pindex(p_index) ,ast(p_ast), output(p_output)
+{
+
+}

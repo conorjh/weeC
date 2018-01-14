@@ -38,7 +38,8 @@ namespace wc
 
 		const std::unordered_multimap<wcSimpleOpcode, int> wcSimpleOpcodeOperandCounts=
 		{
-			{soc_nop,0},{ soc_push,1 },{ soc_pop,0 },{soc_cmp,0}, {soc_jmp,1}, {soc_je,1}, {soc_jne,1}, {soc_jg,1}, {soc_jl,1}, {soc_jge,1}, {soc_jle,1},
+			{soc_nop,0},{ soc_push,1 },{ soc_pop,0 }, {soc_pushstk,1} , {soc_pushr,1}, {soc_popstk,1}, {soc_popr,1},
+			{soc_cmp,0}, {soc_jmp,1}, {soc_je,1}, {soc_jne,1}, {soc_jg,1}, {soc_jl,1}, {soc_jge,1}, {soc_jle,1},
 			{soc_assign,0}, {soc_plus,0}, {soc_minus,0}, {soc_mult,0}, {soc_div,0}, {soc_expo,0}, {soc_mod,0}, {soc_inc,0}, {soc_dec,0},
 			{soc_and,0}, {soc_or,0}, {soc_xor,0}, {soc_not,0}, {soc_shfl,0}, {soc_shfr,0},{soc_call,0}, {soc_ret,0}, {soc_callvm,0}, {soc_halt,1},
 		};
@@ -48,10 +49,10 @@ namespace wc
 
 	namespace codegen
 	{
-		int genSimpStatement(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
-		std::vector<std::shared_ptr<bytecode::wcInstruction>> genSimpExpression(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output, std::vector<parse::wcParseNode>* rpnOutput);
-		int genSimpIf(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
-		int genSimpDecVar(wc::parse::wcParseIndex&, bytecode::wcSimpleExecContext& output);
+		int genSimpStatement(wc::codegen::wcGenParams);
+		std::vector<std::shared_ptr<bytecode::wcInstruction>> genSimpExpression(wc::codegen::wcGenParams, std::vector<parse::wcParseNode>* rpnOutput);
+		int genSimpIf(wc::codegen::wcGenParams);
+		int genSimpDecVar(wc::codegen::wcGenParams);
 
 		class wcSimpleBytecodeGen : public wcBaseBytecodeGen
 		{
@@ -68,6 +69,7 @@ namespace wc
 			wcSimpleVM();
 			virtual int exec(int handle);
 			virtual int execInstruction(bytecode::wcSimpleExecContext& context, std::shared_ptr<bytecode::wcInstruction> instr);
+			bytecode::wcSimpleExecContext& getContext(int handle);
 
 		private:
 		};

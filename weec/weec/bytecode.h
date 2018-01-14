@@ -16,7 +16,9 @@ namespace wc
 	{
 		enum wcOpcode : unsigned short int
 		{
-			oc_nop, oc_push, oc_pop, oc_pushstk, oc_pushr, oc_popstk, oc_popr,
+			oc_nop,
+			//stack 
+			oc_push, oc_pop, oc_pushstk, oc_pushr, oc_popstk, oc_popr,
 			//conditional jumps
 			oc_cmp, oc_jmp, oc_je, oc_jne, oc_jg, oc_jl, oc_jge, oc_jle,
 			//stack math/logical operations
@@ -24,16 +26,6 @@ namespace wc
 			oc_and, oc_or, oc_xor, oc_not, oc_shfl, oc_shfr,
 			//function calls
 			oc_halt, oc_call, oc_ret, oc_callvm,
-
-			//load memory
-			oc_mov, oc_lr, oc_lrfs, oc_ls, oc_lsfr,
-			//flags
-			oc_setflag, oc_readflag,
-			//stack io
-			oc_pushfs, oc_pushfr,  
-			//stackframes 
-			oc_pushsf, oc_popsf,
-			oc_pause
 		};
 
 
@@ -69,10 +61,15 @@ namespace wc
 			ct_bytecode, ct_simple_bytecode, ct_hosted_exe, ct_ansi_c, ct_x86
 		};
 
+		enum wcRegisterTitles
+		{
+			pc, t1, t2, cmp, eax, instr, halt
+		};
+
 		struct wcExecContextRegisters
 		{
 			int& operator[](int);
-			int pc,t1,t2,cmp,instr, halt;
+			int pc,t1,t2,cmp,eax,instr,halt;
 		}; 
 
 		struct wcStringTable
@@ -93,7 +90,6 @@ namespace wc
 			virtual int i();
 			virtual float f();
 			virtual std::string s();
-			std::shared_ptr<wcChunk> self;
 		};
 
 		struct wcChunki : public wcChunk
@@ -144,6 +140,10 @@ namespace wc
 			std::shared_ptr<wcChunks> tops();
 
 			void set(int index, wcChunk value);
+			void set(int index, wcChunki value);
+			void set(int index, wcChunkf value);
+			void set(int index, wcChunks value);
+
 			int size();
 			void clear();
 

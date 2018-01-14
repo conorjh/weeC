@@ -187,16 +187,24 @@ wcSymbol* wc::parse::wcSymbolTable::getSymbol(string p_fullyQualifiedIdent)
 	return &ident2Symbol.find(p_fullyQualifiedIdent)->second;
 }
 
-wcSymbol* wc::parse::wcSymbolTable::getSymbol(string p_scopeIdent, string p_fullyQualifiedIdent)
+wcSymbol* wc::parse::wcSymbolTable::getSymbol(string p_scopeIdent, string p_shortIdent)
 {
-	return getSymbol(createFullyQualifiedIdent(p_scopeIdent, p_fullyQualifiedIdent));
+	return getSymbol(createFullyQualifiedIdent(p_scopeIdent, p_shortIdent));
 }
 
+//returns a symbol wit matcing ident only if it's valid in given scope
 wcSymbol* wc::parse::wcSymbolTable::getSymbol(wcSymbol* p_scope, string p_ident)
 {
 	if (getSymbol(p_ident) != nullptr && isSymbolInScope(p_scope, getSymbol(p_ident)))
 		return getSymbol(p_ident);
 	return nullptr;
+}
+
+//returns a symbol wit matcing ident only if it's valid in given scope
+wcSymbol* wc::parse::wcSymbolTable::getSymbolFromShortIdent(string p_ident)
+{
+	//search open scopes to see if the given ident is valid
+
 }
 
 int wc::parse::wcSymbolTable::addSymbol(wcSymbol p_sym)
@@ -357,6 +365,13 @@ wc::parse::wcParseNode::wcParseNode(wcParseNodeType p_type, wcToken p_token)
 	tokens.push_back(p_token);
 }
 
+wc::parse::wcParseNode::wcParseNode(wcParseNodeType p_type, wcToken p_token1, wcToken p_token2)
+{
+	type = p_type;
+	tokens.push_back(p_token1);
+	tokens.push_back(p_token2);
+}
+
 wc::parse::wcParseNode::wcParseNode(wcSymbol p_sym, string p_identifierAsSeen)
 {
 	type = pn_ident;
@@ -367,6 +382,7 @@ wc::parse::wcParseNode::wcParseNode(wcSymbol p_sym, string p_identifierAsSeen)
 wc::parse::wcParseData::wcParseData()
 {
 	parenCount = 0;
+	currentStackIndex = -1;
 }
 
 wc::parse::wcParseParams::wcParseParams(wcParseIndex& p_pindex, wcAST& p_output, wcError& p_error, wcParseData& p_data)
@@ -667,6 +683,7 @@ wcExpression wc::parse::parseExpressionFull(wcParseParams params)
 {
 	wcExpression exp = wcExpression();
 	wcToken operatorToken, operandRight, operandLeft = parseSubExpression(params);
+	string fqOperandLeft;
 
 	while (params.pIndex.isLexIndexValid() && !params.pError.code)
 	{
@@ -675,7 +692,8 @@ wcExpression wc::parse::parseExpressionFull(wcParseParams params)
 		{
 		case tt_assign:
 		CASE_ALL_BOOLEAN_OPERATORS_TT
-			params.pOutput.addChild(params.pIndex, wcParseNode(operatorToken));
+			fqOperandLeft = params.pOutput.symTab.getSymbol(operandLeft.data)->fullyQualifiedIdent;//get fully qualified ident for left operand, code generators need it to get correct stackindex;
+			params.pOutput.addChild(params.pIndex, wcParseNode(pn_assign, operatorToken, fqOperandLeft));
 			params.pIndex.nextToken();
 			break;
 

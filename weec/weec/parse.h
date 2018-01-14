@@ -46,6 +46,7 @@ namespace wc
 			wcSymbol* getSymbol(std::string p_fullyQualifiedIdent);
 			wcSymbol* getSymbol(std::string p_fullyQualifiedScopeIdent, std::string p_ident);
 			wcSymbol* getSymbol(wcSymbol* p_scope, std::string p_ident);
+			wcSymbol* getSymbolFromShortIdent(std::string p_ident);
 
 			int addSymbol(wcSymbol p_sym);
 			bool isSymbolInScope(wcSymbol* p_scope, wcSymbol* p_symbol);
@@ -109,6 +110,7 @@ namespace wc
 			wcParseNode(wcParseNodeType);
 			wcParseNode(lex::wcToken);
 			wcParseNode(wcParseNodeType, lex::wcToken);
+			wcParseNode(wcParseNodeType, lex::wcToken, lex::wcToken);
 			wcParseNode(wcSymbol, std::string);
 			std::vector<lex::wcToken> tokens;
 			wcParseNodeType type;
@@ -134,7 +136,7 @@ namespace wc
 			tree<wcParseNode>::iterator backToParent();
 			int getCurrentNodeDepth();
 			int getNodeDepth(tree<wcParseNode>::iterator);
-
+			tree<wcParseNode>* getTree();
 		private:
 			tree<wcParseNode>* parseTree;
 			tree<wcParseNode>::iterator node;
@@ -168,7 +170,7 @@ namespace wc
 			wcParseData();
 			wcParseData(int);
 			wcSymbol* currentScope;
-			int parenCount;
+			int parenCount, currentStackIndex;
 		};
 
 		class wcParser

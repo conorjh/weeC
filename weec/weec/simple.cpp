@@ -18,49 +18,49 @@ namespace wc
 {
 	namespace codegen
 	{
-		inline vector<wcParseNode> genSimpExpression_genRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, int startingDepth, vector<wcParseNode>* rpnOutput);
-		inline vector<shared_ptr<wcInstruction>> genSimpExpression_genInstructionsFromRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput);
+		inline vector<wcParseNode> genSimpExpression_genRPN(wcGenParams params, int startingDepth, vector<wcParseNode>* rpnOutput);
+		inline vector<shared_ptr<wcInstruction>> genSimpExpression_genInstructionsFromRPN(wcGenParams params, vector<wcParseNode>* rpnOutput);
 	}
 }
 
-vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput = nullptr)
+vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression(wcGenParams params, vector<wcParseNode>* rpnOutput = nullptr)
 {
-	if (p_index.getNode()->type != pn_exp)
+	if (params.pindex.getNode()->type != pn_exp)
 		return vector<shared_ptr<wcInstruction>>();
 	if (rpnOutput == nullptr)
 		rpnOutput = &vector<wcParseNode>();	
 
-	int startingDepth = p_index.getNodeDepth(p_index.getNode());
-	p_index.nextNode();
+	int startingDepth = params.pindex.getNodeDepth(params.pindex.getNode());
+	params.pindex.nextNode();
 
 	//output rpn to rpnOutput
-	genSimpExpression_genRPN(p_index, output, startingDepth, rpnOutput);
+	genSimpExpression_genRPN(params, startingDepth, rpnOutput);
 
 	//emit simpcode based on the RPN
-	vector<shared_ptr<wcInstruction>> instructionOutput = genSimpExpression_genInstructionsFromRPN(p_index, output, rpnOutput);
+	vector<shared_ptr<wcInstruction>> instructionOutput = genSimpExpression_genInstructionsFromRPN(params, rpnOutput);
 
 	return instructionOutput;
 }
 
-vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, int startingDepth, vector<wcParseNode>* rpnOutput)
+vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcGenParams params, int startingDepth, vector<wcParseNode>* rpnOutput)
 {
 	vector<wcParseNode> stack;
 	wcToken currentToken,topOfStack;
 	bool foundParen = false;
 
 	//increment through nodes creating a RPN expression
-	while (p_index.getCurrentNodeDepth() > startingDepth)
+	while (params.pindex.getCurrentNodeDepth() > startingDepth)
 	{
-		currentToken = p_index.getNode()->tokens[0];	
-		switch (p_index.getNode()->type)
+		currentToken = params.pindex.getNode()->tokens[0];	
+		switch (params.pindex.getNode()->type)
 		{
 		case pn_exp:
-			genSimpExpression(p_index, output, rpnOutput);
+			genSimpExpression(params, rpnOutput);
 			break;
 
 		case pn_ident:	case pn_varident:	case pn_funcident:	case pn_funccall:
 		CASE_ALL_LITERALS_PN
-			rpnOutput->push_back(p_index.getNode().node->data);
+			rpnOutput->push_back(params.pindex.getNode().node->data);
 			break;
 
 		CASE_ALL_OPERATORS_PN
@@ -70,11 +70,11 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcParseIndex& p_index,
 				rpnOutput->push_back(stack[stack.size() - 1]);
 				stack.pop_back();
 			}
-			stack.push_back(p_index.getNode().node->data);
+			stack.push_back(params.pindex.getNode().node->data);
 			break;
 
 		case pn_oparen:
-			stack.push_back(p_index.getNode().node->data);
+			stack.push_back(params.pindex.getNode().node->data);
 			break;
 
 		case pn_cparen:
@@ -103,7 +103,7 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcParseIndex& p_index,
 
 			break;
 		}
-		p_index.nextNode();
+		params.pindex.nextNode();
 	}
 
 	//pop off remaining operators
@@ -116,10 +116,10 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcParseIndex& p_index,
 	return *rpnOutput;
 }
 
-vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructionsFromRPN(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output, vector<wcParseNode>* rpnOutput)
+vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructionsFromRPN(wcGenParams params, vector<wcParseNode>* rpnOutput)
 {
 	vector<shared_ptr<wcInstruction>> instructionOutput;
-	int operand1,operand2; 
+	int operand1,operand2,stackIndex; 
 	string stringLiteral;
 	wcInstructionPlusOperand s;
 	shared_ptr<wcInstructionPlusOperand> p;
@@ -130,17 +130,16 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 		//literals
 		case pn_strlit:
 			stringLiteral = rpnOutput->at(i).tokens[0].data;
-			if (!output.stringTable.doesStringExist(stringLiteral))
-				operand1 = output.stringTable.addEntry(stringLiteral);	//add to string table if it's the first occurence
+			if (!params.output.stringTable.doesStringExist(stringLiteral))
+				operand1 = params.output.stringTable.addEntry(stringLiteral);	//add to string table if it's the first occurence
 			else
-				operand1 = output.stringTable.getIndex(stringLiteral);	//we've seen this before, retrieve index from string table
+				operand1 = params.output.stringTable.getIndex(stringLiteral);	//we've seen this before, retrieve index from string table
 			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_push, operand1)));
 			break;
 
 		case pn_intlit:
 			operand1 = stoi(rpnOutput->at(i).tokens[0].data);
 			instructionOutput.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_push, operand1)));
-			s = *static_pointer_cast<wcInstructionPlusOperand>(instructionOutput.at(0));
 			break;
 
 		case pn_fltlit:
@@ -201,6 +200,8 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 			break;
 
 		case pn_assign:
+			stackIndex = params.ast.symTab.getSymbol(rpnOutput->at(i).tokens[1].data)->stackOffset;
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_assign, stackIndex)));
 		case pn_mult:
 			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_mult)));
 			break;
@@ -226,34 +227,34 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 	return instructionOutput;
 }
 
-int wc::codegen::genSimpIf(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output)
+int wc::codegen::genSimpIf(wcGenParams params)
 {
 
 	return 1;
 }
 
-int wc::codegen::genSimpDecVar(wcParseIndex& p_index, bytecode::wcSimpleExecContext& output)
+int wc::codegen::genSimpDecVar(wcGenParams params)
 {
 	wcToken typeToken,identToken;
-	vector<shared_ptr<wcInstruction>> expressionInstructions;
-	int startingDepth = p_index.getNodeDepth(p_index.getNode());
-	p_index.nextNode();
+	vector<shared_ptr<wcInstruction>> expInstructions;
+	int startingDepth = params.pindex.getNodeDepth(params.pindex.getNode());
+	params.pindex.nextNode();
 
-	while (p_index.getCurrentNodeDepth() > startingDepth)
-		switch (p_index.getNode()->type)
+	while (params.pindex.getCurrentNodeDepth() > startingDepth)
+		switch (params.pindex.getNode()->type)
 		{
 		case pn_type:
-			typeToken = p_index.getNode()->tokens[0];
-			p_index.nextNode();
+			typeToken = params.pindex.getNode()->tokens[0];
+			params.pindex.nextNode();
 			break;
 
 		case pn_ident:
-			identToken = p_index.getNode()->tokens[0];
-			p_index.nextNode();
+			identToken = params.pindex.getNode()->tokens[0];
+			params.pindex.nextNode();
 			break;
 
 		case pn_exp:
-			expressionInstructions = genSimpExpression(p_index, output);
+			expInstructions = genSimpExpression(params);
 			break;
 
 		default:
@@ -261,29 +262,40 @@ int wc::codegen::genSimpDecVar(wcParseIndex& p_index, bytecode::wcSimpleExecCont
 			return 0;
 		}
 
+	//push space for variable
+	int varStackIndex = 0;
+	params.output.instructions.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_push, 0)));
+	//push initialising expression (if any)
+	params.output.instructions.insert(params.output.instructions.end(), expInstructions.begin(), expInstructions.end());
+	//push result back to variable
+	params.output.instructions.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_pushstk, varStackIndex)));
+	//pop expression result off stack to eax register
+	params.output.instructions.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_popr, wcRegisterTitles::eax)));
+
 	return 1;
 }
 
-int wc::codegen::genSimpStatement(wcParseIndex& p_index, wcSimpleExecContext& output)
+int wc::codegen::genSimpStatement(wcGenParams params)
 {
-	if (p_index.getNode()->type != pn_statement)
+	if (params.pindex.getNode()->type != pn_statement)
 		return 0;
-	p_index.nextNode();
+	params.pindex.nextNode();
 
 	vector<shared_ptr<wcInstruction>> expInstructions;
-	switch (p_index.getNode()->type)
+	switch (params.pindex.getNode()->type)
 	{
 	case pn_exp:
-		expInstructions = genSimpExpression(p_index, output);
-		output.instructions.insert(output.instructions.end(), expInstructions.begin(), expInstructions.end());
+		expInstructions = genSimpExpression(params);
+		params.output.instructions.insert(params.output.instructions.end(), expInstructions.begin(), expInstructions.end());
+		params.output.instructions.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_popr, wcRegisterTitles::eax)));
 		break;
 
 	case pn_if:
-		genSimpIf(p_index, output);
+		genSimpIf(params);
 		break;
 
 	case pn_decvar:
-		genSimpDecVar(p_index, output);
+		genSimpDecVar(params);
 		break;
 	}
 
@@ -319,9 +331,10 @@ wcSimpleExecContext wc::codegen::wcSimpleBytecodeGen::genSimple(wcAST& p_ast)
 	output.targetPlatform = ct_simple_bytecode;
 
 	wcParseIndex pindex = gen_initParseIndex(wcParseIndex(), p_ast);
+	wcGenParams params(pindex, p_ast, output);
 
 	while (pindex.getNode() != p_ast.parseTree.end())
-		genSimpStatement(pindex,output);
+		genSimpStatement(params);
 
 	return output;
 }
@@ -360,8 +373,20 @@ int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, shared_p
 		case soc_push:
 			exec_s_push(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
+		case soc_pushr:
+			exec_s_pushr(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
+			break;
+		case soc_pushstk:
+			exec_s_pushstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
+			break;
 		case soc_pop:
 			exec_s_pop(p_context, *p_instruction);
+			break;
+		case soc_popr:
+			exec_s_popr(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
+			break;
+		case soc_popstk:
+			exec_s_popstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
 		case soc_cmp: 
 			exec_s_cmp(p_context, *p_instruction);
@@ -435,12 +460,18 @@ int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, shared_p
 		case soc_halt:
 			exec_s_halt(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
-
 	}
 	
 	p_context.registers.pc++;
-
+	if (p_context.registers.pc >= p_context.instructions.size())
+		p_context.registers.halt = true;
 	return 1;
+}
+
+wcSimpleExecContext& wc::vm::wcSimpleVM::getContext(int handle)
+{
+	wcSimpleExecContext& con = static_cast<wcSimpleExecContext&>(conPool[handle]);
+	return con;
 }
 
 wc::compile::wcSimpleCompiler::wcSimpleCompiler()
@@ -474,28 +505,31 @@ wcScript wc::compile::wcSimpleCompiler::compile(vector<string> p_source)
 	return output;
 }
 
+//push operand1 to top of stack
 inline void wc::vm::exec_s_push(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.stack.push(wcChunki(p_instr.operand1));
 }
 
+//remove top element from stack
 inline void wc::vm::exec_s_pop(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.stack.pop();
 }
 
+//take the top stack element and copy it to stack element at operand1
 void wc::vm::exec_s_pushstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	wcChunki stackValue = *p_context.stack.peeki(p_instr.operand1);
-	p_context.stack.push(stackValue);
+	p_context.stack.set(p_instr.operand1,*p_context.stack.topi());
 }
 
+//take the element at top of stack and copy it to register at operand1
 void wc::vm::exec_s_pushr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	wcChunki stackValue = *p_context.stack.peeki(p_instr.operand1);
-	p_context.stack.push(stackValue);
+	p_context.registers[p_instr.operand1] = p_context.stack.topi()->i();
 }
 
+//remove the top element from the stack, and place it at the stack index operand1
 void wc::vm::exec_s_popstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.stack.set(p_instr.operand1, *p_context.stack.pop());
@@ -554,11 +588,10 @@ inline void wc::vm::exec_s_jle(wcSimpleExecContext &p_context, wcInstructionPlus
 		p_context.registers.pc = p_instr.operand1;
 }
 
+//pop value from top of stack and copy to stack element at operand1
 inline void wc::vm::exec_s_assign(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.popi()->i(); //contained the last stack value for the stack index at operand1
-	p_context.registers.t2 = p_instr.operand1;	//stackindex
+	p_context.stack.set(p_instr.operand1, *p_context.stack.popi());
 }
 
 inline void wc::vm::exec_s_plus(wcSimpleExecContext &p_context, wcInstruction p_instr)

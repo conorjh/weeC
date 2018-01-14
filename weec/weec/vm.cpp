@@ -35,8 +35,6 @@ int wc::vm::wcBaseVM::load(wcExecContext& p_input)
 {
 	//look for new handle
 	int possNewHandle = newHandle();
-	if (possNewHandle < 0)
-		return -1;
 
 	//add to pool
 	conPool.insert(make_pair(possNewHandle, p_input));
@@ -52,6 +50,11 @@ bool wc::vm::wcBaseVM::remove(int p_handle)
 
 	conPool.erase(p_handle);
 	return true;
+}
+
+wcExecContext& wc::vm::wcBaseVM::getContext(int p_andle)
+{
+	return conPool[p_andle];
 }
 
 int wc::vm::wcBaseVM::newHandle()

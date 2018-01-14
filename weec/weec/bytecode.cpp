@@ -144,7 +144,22 @@ std::shared_ptr<wcChunks> wc::bytecode::wcExecStack::tops()
 
 void wc::bytecode::wcExecStack::set(int index, wcChunk value)
 {
-	*container[index] = value;
+	*peek(index) = value;
+}
+
+void wc::bytecode::wcExecStack::set(int index, wcChunki value)
+{
+	*peeki(index) = value;
+}
+
+void wc::bytecode::wcExecStack::set(int index, wcChunkf value)
+{
+	*peekf(index) = value;
+}
+
+void wc::bytecode::wcExecStack::set(int index, wcChunks value)
+{
+	*peeks(index) = value;
 }
 
 int wc::bytecode::wcExecStack::size()
@@ -283,18 +298,20 @@ int& wc::bytecode::wcExecContextRegisters::operator[](int p_int)
 {
 	switch (p_int)
 	{
-	case 1:
+	case wcRegisterTitles::pc:
 		return pc;
-	case 2:
+	case wcRegisterTitles::t1:
 		return t1;
-	case 3:
+	case wcRegisterTitles::t2:
 		return t2;
-	case 4:
+	case wcRegisterTitles::cmp:
 		return cmp;
-	case 5:
+	case wcRegisterTitles::eax:
+		return eax;
+	case wcRegisterTitles::instr:
 		return instr;
 	default:
-	case 6:
+	case wcRegisterTitles::halt:
 		return halt;
 	}
 }

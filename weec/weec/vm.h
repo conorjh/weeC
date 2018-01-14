@@ -14,6 +14,7 @@ namespace wc
 			int exec(int handle);
 			int load(bytecode::wcExecContext&);
 			bool remove(int handle);
+			bytecode::wcExecContext& getContext(int);
 
 			virtual int execInstruction(bytecode::wcExecContext& context, bytecode::wcInstruction instr);
 		protected:

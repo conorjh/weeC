@@ -11,6 +11,14 @@ namespace wc
 	{
 		int genStatement(wc::parse::wcParseIndex&);
 		int genExpression(wc::parse::wcParseIndex&);
+		
+		struct wcGenParams
+		{
+			wcGenParams(wc::parse::wcParseIndex&, wc::parse::wcAST&, bytecode::wcExecContext&);
+			wc::parse::wcParseIndex& pindex;
+			wc::parse::wcAST& ast;
+			bytecode::wcExecContext& output;
+		};
 
 		class wcBaseBytecodeGen
 		{

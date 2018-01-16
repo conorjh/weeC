@@ -46,7 +46,7 @@ namespace wc
 			wcSymbol* getSymbol(std::string p_fullyQualifiedIdent);
 			wcSymbol* getSymbol(std::string p_fullyQualifiedScopeIdent, std::string p_ident);
 			wcSymbol* getSymbol(wcSymbol* p_scope, std::string p_ident);
-			wcSymbol* getSymbolFromShortIdent(std::string p_ident);
+			wcSymbol* getSymbolFromShortIdent(std::string p_ident, std::vector<wcSymbol> p_openScopes);
 
 			int addSymbol(wcSymbol p_sym);
 			bool isSymbolInScope(wcSymbol* p_scope, wcSymbol* p_symbol);

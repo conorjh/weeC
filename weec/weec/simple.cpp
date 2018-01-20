@@ -155,6 +155,9 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 
 		//variables
 		case pn_ident:
+			stackIndex = params.ast.symTab.getSymbol(rpnOutput->at(i).tokens[0].data)->stackOffset;
+			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_pushstk, stackIndex))); 
+			break;
 		case pn_varident:
 		case pn_funcident:
 		case pn_funccall:
@@ -202,6 +205,7 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 		case pn_assign:
 			stackIndex = params.ast.symTab.getSymbol(rpnOutput->at(i).tokens[1].data)->stackOffset;
 			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_assign, stackIndex)));
+			break;
 		case pn_mult:
 			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_mult)));
 			break;
@@ -520,7 +524,7 @@ inline void wc::vm::exec_s_pop(wcSimpleExecContext &p_context, wcInstruction p_i
 //take the top stack element and copy it to stack element at operand1
 void wc::vm::exec_s_pushstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.stack.set(p_instr.operand1,*p_context.stack.topi());
+	p_context.stack.set(p_instr.operand1,*p_context.stack.topi());	//TODO FIXME p_instr.operand1 is garbage
 }
 
 //take the element at top of stack and copy it to register at operand1

@@ -29,7 +29,7 @@ namespace wc
 			wcSymbol(lex::wcTokenType);
 			wcSymbol(std::string);
 			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace, 
-				bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, wcSymbol* dataType);
+				bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, int stackOffset, wcSymbol* dataType);
 
 			std::string ident, fullyQualifiedIdent;
 			bool isNamespace, isArray, isConst, isStatic;
@@ -66,7 +66,7 @@ namespace wc
 			pn_logand, pn_logor, pn_lognot, pn_intlit, pn_strlit, pn_fltlit, pn_ident, pn_comment,
 			pn_arrayindex, pn_varident, pn_funcident, pn_namespaceident,
 			pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr, pn_plusassign, pn_minusassign,
-			pn_multassign, pn_divassign, pn_assignment, pn_block, pn_decvar, pn_paramdec, pn_funcdec, pn_namespacedec,
+			pn_multassign, pn_divassign, pn_assignment, pn_body, pn_decvar, pn_paramdec, pn_funcdec, pn_namespacedec,
 			pn_paramlist, pn_decparamlist, pn_funccall, pn_if, pn_else, pn_if_trueblock, pn_if_elseblock, pn_while, pn_break,
 			pn_return, pn_continue,
 			 pn_negate
@@ -96,7 +96,7 @@ namespace wc
 			{ pn_false ,"pn_false" },			{ pn_function ,"pn_function" },			{ pn_incr ,"pn_incr" },
 			{ pn_decr ,"pn_decr" },				{ pn_plusassign ,"pn_plusassign" },			{ pn_minusassign ,"pn_minusassign" },
 			{ pn_multassign ,"pn_multassign" },	{ pn_divassign ,"pn_divassign" },			{ pn_assignment ,"pn_assignment" },
-			{ pn_block ,"pn_block" },			{ pn_decvar ,"pn_decvar" },			{ pn_paramdec ,"pn_paramdec" },
+			{ pn_body ,"pn_body" },			{ pn_decvar ,"pn_decvar" },			{ pn_paramdec ,"pn_paramdec" },
 			{ pn_funcdec ,"pn_funcdec" },		{ pn_namespacedec ,"pn_namespacedec" },			{ pn_paramlist ,"pn_paramlist" },
 			{ pn_decparamlist ,"pn_decparamlist" },			{ pn_funccall ,"pn_funccall" },			{ pn_if ,"pn_if" },
 			{ pn_else ,"pn_else" },				{ pn_if_trueblock ,"pn_if_trueblock" },			{ pn_if_elseblock ,"pn_if_elseblock" },
@@ -146,7 +146,8 @@ namespace wc
 
 		struct wcStackframe
 		{
-
+			wcSymbol* owner;
+			std::vector<wcSymbol*> local;
 		};
 
 		struct wcExpression
@@ -169,7 +170,8 @@ namespace wc
 		{
 			wcParseData();
 			wcParseData(int);
-			wcSymbol* currentScope;
+			wcSymbol* currentScope, currentStackFrame;
+			std::vector<wcStackframe> stackframes;
 			int parenCount, currentStackIndex;
 		};
 

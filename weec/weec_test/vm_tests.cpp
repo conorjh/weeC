@@ -30,9 +30,9 @@ int wctest::vm::standardVMTest(const char * p_source)
 		return parser.getError().code;
 
 	wcSimpleVM vm;
-	int andle = vm.load(testOutput);
-	vm.exec(andle);
-	testOutput = vm.getContext(andle);
+	int handle = vm.load(testOutput);
+	vm.exec(handle);
+	testOutput = vm.getContext(handle);
 	if (testOutput.registers.eax == 0)
 		return 0;
 	return 1;

@@ -19,6 +19,7 @@ namespace wc
 			oc_nop,
 			//stack 
 			oc_push, oc_pop, oc_pushstk, oc_pushr, oc_popstk, oc_popr,
+			oc_setstk,
 			//conditional jumps
 			oc_cmp, oc_jmp, oc_je, oc_jne, oc_jg, oc_jl, oc_jge, oc_jle,
 			//stack math/logical operations

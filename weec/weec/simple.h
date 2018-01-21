@@ -27,6 +27,7 @@ namespace wc
 			soc_nop,
 			//stack 
 			soc_push, soc_pop, soc_pushstk, soc_pushr, soc_popstk, soc_popr,
+			soc_setstk,
 			//conditional jumps
 			soc_cmp, soc_jmp, soc_je, soc_jne, soc_jg, soc_jl, soc_jge, soc_jle,
 			//stack math/logical operations
@@ -38,7 +39,7 @@ namespace wc
 
 		const std::unordered_multimap<wcSimpleOpcode, int> wcSimpleOpcodeOperandCounts=
 		{
-			{soc_nop,0},{ soc_push,1 },{ soc_pop,0 }, {soc_pushstk,1} , {soc_pushr,1}, {soc_popstk,1}, {soc_popr,1},
+			{soc_nop,0},{ soc_push,1 },{ soc_pop,0 }, {soc_pushstk,1} , {soc_pushr,1}, {soc_popstk,1},{ soc_popr,1 },{ soc_setstk,1 },
 			{soc_cmp,0}, {soc_jmp,1}, {soc_je,1}, {soc_jne,1}, {soc_jg,1}, {soc_jl,1}, {soc_jge,1}, {soc_jle,1},
 			{soc_assign,0}, {soc_plus,0}, {soc_minus,0}, {soc_mult,0}, {soc_div,0}, {soc_expo,0}, {soc_mod,0}, {soc_inc,0}, {soc_dec,0},
 			{soc_and,0}, {soc_or,0}, {soc_xor,0}, {soc_not,0}, {soc_shfl,0}, {soc_shfr,0},{soc_call,0}, {soc_ret,0}, {soc_callvm,0}, {soc_halt,1},
@@ -81,6 +82,7 @@ namespace wc
 		inline void exec_s_pushr(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
 		inline void exec_s_popstk(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
 		inline void exec_s_popr(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
+		inline void exec_s_setstk(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
 		inline void exec_s_cmp(bytecode::wcSimpleExecContext&, bytecode::wcInstruction);
 		inline void exec_s_jmp(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);
 		inline void exec_s_je(bytecode::wcSimpleExecContext&, bytecode::wcInstructionPlusOperand);

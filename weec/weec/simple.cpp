@@ -156,7 +156,8 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 		//variables
 		case pn_ident:
 			stackIndex = params.ast.symTab.getSymbol(rpnOutput->at(i).tokens[0].data)->stackOffset;
-			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_pushstk, stackIndex))); 
+			instructionOutput.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_pushstk, stackIndex)));
+			//p = static_pointer_cast<wcInstructionPlusOperand>(instructionOutput[instructionOutput.size() - 1]);
 			break;
 		case pn_varident:
 		case pn_funcident:
@@ -204,7 +205,7 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 
 		case pn_assign:
 			stackIndex = params.ast.symTab.getSymbol(rpnOutput->at(i).tokens[1].data)->stackOffset;
-			instructionOutput.push_back(make_shared<wcInstruction>(wcInstructionPlusOperand(soc_assign, stackIndex)));
+			instructionOutput.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_assign, stackIndex)));
 			break;
 		case pn_mult:
 			instructionOutput.push_back(make_shared<wcInstruction>(wcInstruction(soc_mult)));
@@ -267,12 +268,15 @@ int wc::codegen::genSimpDecVar(wcGenParams params)
 		}
 
 	//push space for variable
-	int varStackIndex = 0;
+	int varStackIndex = params.ast.symTab.getSymbol(identToken.data)->stackOffset;
 	params.output.instructions.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_push, 0)));
+	if (!expInstructions.size())
+		return 1;
+
 	//push initialising expression (if any)
 	params.output.instructions.insert(params.output.instructions.end(), expInstructions.begin(), expInstructions.end());
 	//push result back to variable
-	params.output.instructions.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_pushstk, varStackIndex)));
+	params.output.instructions.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_setstk, varStackIndex)));
 	//pop expression result off stack to eax register
 	params.output.instructions.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_popr, wcRegisterTitles::eax)));
 
@@ -392,6 +396,9 @@ int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, shared_p
 		case soc_popstk:
 			exec_s_popstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
+		case soc_setstk:
+			exec_s_setstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
+			break;
 		case soc_cmp: 
 			exec_s_cmp(p_context, *p_instruction);
 			break;
@@ -464,6 +471,9 @@ int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, shared_p
 		case soc_halt:
 			exec_s_halt(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
 			break;
+		default:
+			//unrecognised opcode
+			break;
 	}
 	
 	p_context.registers.pc++;
@@ -521,10 +531,10 @@ inline void wc::vm::exec_s_pop(wcSimpleExecContext &p_context, wcInstruction p_i
 	p_context.stack.pop();
 }
 
-//take the top stack element and copy it to stack element at operand1
+//take the stack element at operand1 and push it to the top of the stack
 void wc::vm::exec_s_pushstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.stack.set(p_instr.operand1,*p_context.stack.topi());	//TODO FIXME p_instr.operand1 is garbage
+	p_context.stack.push(*p_context.stack.peeki(p_instr.operand1));
 }
 
 //take the element at top of stack and copy it to register at operand1
@@ -539,9 +549,16 @@ void wc::vm::exec_s_popstk(wcSimpleExecContext &p_context, wcInstructionPlusOper
 	p_context.stack.set(p_instr.operand1, *p_context.stack.pop());
 }
 
+//remove the top element from the stack, and place it at the register operand1
 void wc::vm::exec_s_popr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.registers[p_instr.operand1] = p_context.stack.popi()->i();
+}
+
+//set stack index at operand1 with top stack element
+void wc::vm::exec_s_setstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
+{
+	p_context.stack.set(p_instr.operand1, *p_context.stack.topi());
 }
 
 inline void wc::vm::exec_s_cmp(wcSimpleExecContext &p_context, wcInstruction p_instr)

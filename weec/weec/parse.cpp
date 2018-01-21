@@ -159,6 +159,13 @@ wc::parse::wcSymbol::wcSymbol(string p_identifier)
 	fullyQualifiedIdent = ident = p_identifier;
 }
 
+wc::parse::wcSymbol::wcSymbol(std::string p_identifier, std::string scopeFQIdent)
+{
+	type = deriveSymbolType(deriveTokenType(p_identifier));
+	fullyQualifiedIdent = createFullyQualifiedIdent(scopeFQIdent, p_identifier);
+	ident = p_identifier;
+}
+
 wc::parse::wcSymbol::wcSymbol(wcSymbolType p_type, std::string p_ident, std::string p_fullIdent, bool p_isNamespace, bool p_isArray, bool p_isConst, bool p_isStatic, unsigned int p_size, unsigned int p_dataSize, int p_stackOffset, wcSymbol* p_dataType)
 {
 	type = p_type;
@@ -1004,7 +1011,7 @@ wcSymbol wc::parse::tryParseUnknownIdent(wcParseParams params, bool p_restoreLex
 		else
 			return setErrorReturnNullSymbol(params.pError, wcError(ec_par_malformedident, identifier, openingToken.line, openingToken.col));	//malformed ident
 
-	return wcSymbol(identifier);
+	return wcSymbol(identifier,params.pData.currentScope->fullyQualifiedIdent);
 }
 
 //checks whether the tokens make a valid new ident name
@@ -1022,7 +1029,7 @@ int wc::parse::parseUnknownIdent(wcParseParams params)
 	if (identSymbol.ident == "")
 		return setErrorReturn0(params.pError, wcError(ec_par_unexpectedtoken, "", params.pIndex.getToken().line, params.pIndex.getToken().col));
 
-	//do it again but dont restore 
+	//do it again but dont restore lexer
 	identSymbol = tryParseUnknownIdent(params, false);
 	params.pOutput.addChild(params.pIndex, wcParseNode(identSymbol, identSymbol.ident));
 

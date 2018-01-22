@@ -43,8 +43,9 @@ namespace wctest
 		int vm_basic_2();
 		int vm_basic_3();
 		int vm_basic_4();
+		int vm_basic_5();
 
-		const std::vector<int(*)()> allVMTests = { &vm_basic_1 ,&vm_basic_2 ,&vm_basic_3,&vm_basic_4 };
+		const std::vector<int(*)()> allVMTests = { &vm_basic_1 ,&vm_basic_2 ,&vm_basic_3,&vm_basic_4,&vm_basic_5 };
 	}
 
 	namespace api

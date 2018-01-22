@@ -77,5 +77,14 @@ int wctest::vm::vm_basic_4()
 {
 	return standardVMTest("int a = 123;"
 		"int b = 345;"
-		"int c = a + b;",123+345);
+		"int c = a + b;", 123 + 345);
+}
+
+int wctest::vm::vm_basic_5()
+{
+	return standardVMTest("int a = 123;"
+		"int b = 345;"
+		"int c = a + b;"
+		"c = c * a + b;"
+		"int d = a + b + c;", 123 + 345);
 }

@@ -532,31 +532,31 @@ inline void wc::vm::exec_s_pop(wcSimpleExecContext &p_context, wcInstruction p_i
 }
 
 //take the stack element at operand1 and push it to the top of the stack
-void wc::vm::exec_s_pushstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
+inline void wc::vm::exec_s_pushstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.stack.push(*p_context.stack.peeki(p_instr.operand1));
 }
 
 //take the element at top of stack and copy it to register at operand1
-void wc::vm::exec_s_pushr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
+inline void wc::vm::exec_s_pushr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.registers[p_instr.operand1] = p_context.stack.topi()->i();
 }
 
 //remove the top element from the stack, and place it at the stack index operand1
-void wc::vm::exec_s_popstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
+inline void wc::vm::exec_s_popstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.stack.set(p_instr.operand1, *p_context.stack.pop());
 }
 
 //remove the top element from the stack, and place it at the register operand1
-void wc::vm::exec_s_popr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
+inline void wc::vm::exec_s_popr(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.registers[p_instr.operand1] = p_context.stack.popi()->i();
 }
 
 //set stack index at operand1 with top stack element
-void wc::vm::exec_s_setstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
+inline void wc::vm::exec_s_setstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.stack.set(p_instr.operand1, *p_context.stack.topi());
 }

@@ -18,7 +18,9 @@ namespace wc
 		ec_par_undeclaredident,		//ident unknown at this point
 		ec_par_identoutofscope,		//ident used outside it's valid scope(s)
 		ec_par_invalidsymbol,		//symbol not valid in given context
-		ec_par_redeclaration
+		ec_par_redeclaration,
+
+		ec_vm_unknownopcode			//unknown opcode encoutered during execution
 	};
 
 

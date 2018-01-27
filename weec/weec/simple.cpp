@@ -375,102 +375,39 @@ int wc::vm::wcSimpleVM::exec(int p_handle)
 int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, shared_ptr<wcInstruction> p_instruction)
 {
 	switch (p_instruction->opcode)
-	{
-		case soc_nop:
-			break;
-		case soc_push:
-			exec_s_push(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_pushr:
-			exec_s_pushr(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_pushstk:
-			exec_s_pushstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_pop:
-			exec_s_pop(p_context, *p_instruction);
-			break;
-		case soc_popr:
-			exec_s_popr(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_popstk:
-			exec_s_popstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_setstk:
-			exec_s_setstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_cmp: 
-			exec_s_cmp(p_context, *p_instruction);
-			break;
-		case soc_jmp:
-			exec_s_jmp(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_je:
-			exec_s_je(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_jne: 
-			exec_s_jne(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_jg:
-			exec_s_jg(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_jl:
-			exec_s_jl(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_jge:
-			exec_s_jge(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_jle:
-			exec_s_jle(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_assign:
-			exec_s_assign(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
-		case soc_plus:
-			exec_s_plus(p_context, *p_instruction);
-			break;
-		case soc_minus:
-			exec_s_minus(p_context, *p_instruction);
-			break;
-		case soc_mult: 
-			exec_s_mult(p_context, *p_instruction);
-			break;
-		case soc_div: 
-			exec_s_div(p_context, *p_instruction);
-			break;
-		case soc_expo: 
-			exec_s_expo(p_context, *p_instruction);
-			break;
-		case soc_mod: 
-			exec_s_mod(p_context, *p_instruction);
-			break;
-		case soc_inc:
-			exec_s_inc(p_context, *p_instruction);
-			break;
-		case soc_dec:
-			exec_s_dec(p_context, *p_instruction);
-			break;
-		case soc_and:
-			exec_s_and(p_context, *p_instruction);
-			break;
-		case soc_or:
-			exec_s_or(p_context, *p_instruction);
-			break;
-		case soc_xor:
-			exec_s_xor(p_context, *p_instruction);
-			break;
-		case soc_not:
-			exec_s_not(p_context, *p_instruction);
-			break;
-		case soc_shfl:
-			exec_s_shfl(p_context, *p_instruction);
-			break;
-		case soc_shfr:
-			exec_s_shfr(p_context, *p_instruction);
-			break;
-		case soc_halt:
-			exec_s_halt(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));
-			break;
+	{		
+		case soc_nop:		break;
+		case soc_push:		exec_s_push(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_pushr:		exec_s_pushr(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_pushstk:	exec_s_pushstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));	break;
+		case soc_pop:		exec_s_pop(p_context, *p_instruction);			break;
+		case soc_popr:		exec_s_popr(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_popstk:	exec_s_popstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));	break;
+		case soc_setstk:	exec_s_setstk(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));	break;
+		case soc_cmp: 		exec_s_cmp(p_context, *p_instruction);			break;
+		case soc_jmp:		exec_s_jmp(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_je:		exec_s_je(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_jne: 		exec_s_jne(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_jg:		exec_s_jg(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_jl:		exec_s_jl(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_jge:		exec_s_jge(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_jle:		exec_s_jle(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));		break;
+		case soc_assign:	exec_s_assign(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));	break;
+		case soc_plus:		exec_s_plus(p_context, *p_instruction);			break;
+		case soc_minus:		exec_s_minus(p_context, *p_instruction);		break;
+		case soc_mult: 		exec_s_mult(p_context, *p_instruction);			break;
+		case soc_div: 		exec_s_div(p_context, *p_instruction);			break;
+		case soc_expo: 		exec_s_expo(p_context, *p_instruction);			break;
+		case soc_mod: 		exec_s_mod(p_context, *p_instruction);			break;
+		case soc_inc:		exec_s_inc(p_context, *p_instruction);			break;
+		case soc_dec:		exec_s_dec(p_context, *p_instruction);			break;
+		case soc_and:		exec_s_and(p_context, *p_instruction);			break;
+		case soc_or:		exec_s_or(p_context, *p_instruction);			break;
+		case soc_xor:		exec_s_xor(p_context, *p_instruction);			break;
+		case soc_not:		exec_s_not(p_context, *p_instruction);			break;
+		case soc_shfl:		exec_s_shfl(p_context, *p_instruction);			break;
+		case soc_shfr:		exec_s_shfr(p_context, *p_instruction);			break;
+		case soc_halt:		exec_s_halt(p_context, *static_pointer_cast<wcInstructionPlusOperand>(p_instruction));break;
 		default:
 			//unrecognised opcode
 			break;
@@ -619,68 +556,68 @@ inline void wc::vm::exec_s_plus(wcSimpleExecContext &p_context, wcInstruction p_
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 + p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 + p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_minus(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 - p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 - p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_mult(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 * p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 * p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_div(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 / p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 / p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_expo(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 ^ p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 ^ p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_mod(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 % p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 % p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_inc(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1++));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1++)));
 }
 
 inline void wc::vm::exec_s_dec(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1--));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1--)));
 }
 
 inline void wc::vm::exec_s_and(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 && p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 && p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_or(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 || p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 || p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_xor(wcSimpleExecContext &p_context, wcInstruction p_instr)
@@ -698,14 +635,14 @@ inline void wc::vm::exec_s_shfl(wcSimpleExecContext &p_context, wcInstruction p_
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 << p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 << p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_shfr(wcSimpleExecContext &p_context, wcInstruction p_instr)
 {
 	p_context.registers.t2 = p_context.stack.popi()->i();
 	p_context.registers.t1 = p_context.stack.popi()->i();
-	p_context.stack.push(wcChunki(p_context.registers.t1 >> p_context.registers.t2));
+	p_context.stack.push(wcChunki(p_context.registers.eax = (p_context.registers.t1 >> p_context.registers.t2)));
 }
 
 inline void wc::vm::exec_s_halt(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)

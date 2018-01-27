@@ -64,7 +64,13 @@ namespace wc
 
 		enum wcRegisterTitles
 		{
-			pc, t1, t2, cmp, eax, instr, halt
+			pc, //program counter
+			t1, //temporary 1
+			t2, //temporary 2
+			cmp, //compare result
+			eax, //expresiion result
+			instr, 
+			halt	//halt execution
 		};
 
 		struct wcExecContextRegisters
@@ -166,7 +172,7 @@ namespace wc
 
 			int contextID;
 			std::vector<std::shared_ptr<wcInstruction>> instructions;
-			wcExecStack stack;
+			wcExecStack stack,returnStack;
 			wcExecContextRegisters registers;
 			wcTargetPlatform targetPlatform;
 			wcStringTable stringTable;

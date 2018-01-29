@@ -52,6 +52,8 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcGenParams params, in
 	while (params.pindex.getCurrentNodeDepth() > startingDepth)
 	{
 		currentToken = params.pindex.getNode()->tokens[0];	
+		if(stack.size())
+			topOfStack = stack[stack.size() - 1].tokens[0];
 		switch (params.pindex.getNode()->type)
 		{
 		case pn_exp:
@@ -64,8 +66,9 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcGenParams params, in
 			break;
 
 		CASE_ALL_OPERATORS_PN
-			while (stack.size() && (getPrecedence(currentToken) == getPrecedence(stack[stack.size() - 1].tokens[0]) && !isRightAssociative(currentToken)
-				|| isRightAssociative(currentToken) && getPrecedence(currentToken) < getPrecedence(stack[stack.size() - 1].tokens[0])))
+			while ( (stack.size() && ((getPrecedence(currentToken) < getPrecedence(topOfStack) ) ||
+					(!isRightAssociative(currentToken) && getPrecedence(currentToken) == getPrecedence(topOfStack)))
+					&& topOfStack.type != tt_obracket)	)
 			{
 				rpnOutput->push_back(stack[stack.size() - 1]);
 				stack.pop_back();
@@ -79,7 +82,7 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcGenParams params, in
 
 		case pn_cparen:
 			while (!foundParen && stack.size())
-				if (stack[stack.size() - 1].tokens[0].type == pn_oparen)
+				if (topOfStack.type == pn_oparen)
 					foundParen = true;
 				else
 				{
@@ -415,7 +418,10 @@ int wc::vm::wcSimpleVM::execInstruction(wcSimpleExecContext& p_context, shared_p
 	
 	p_context.registers.pc++;
 	if (p_context.registers.pc >= p_context.instructions.size())
+	{
 		p_context.registers.halt = true;
+		p_context.registers.ret = p_context.registers.eax;	//take return value from last expression result
+	}
 	return 1;
 }
 
@@ -492,7 +498,7 @@ inline void wc::vm::exec_s_popr(wcSimpleExecContext &p_context, wcInstructionPlu
 	p_context.registers[p_instr.operand1] = p_context.stack.popi()->i();
 }
 
-//set stack index at operand1 with top stack element
+//overwrite stack element at operand1 with top stack element
 inline void wc::vm::exec_s_setstk(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
 	p_context.stack.set(p_instr.operand1, *p_context.stack.topi());
@@ -549,7 +555,7 @@ inline void wc::vm::exec_s_jle(wcSimpleExecContext &p_context, wcInstructionPlus
 //pop value from top of stack and copy to stack element at operand1
 inline void wc::vm::exec_s_assign(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.stack.set(p_instr.operand1, *p_context.stack.popi());
+	p_context.stack.set(p_instr.operand1,wcChunki(p_context.registers.eax = (p_context.stack.popi()->i())));
 }
 
 inline void wc::vm::exec_s_plus(wcSimpleExecContext &p_context, wcInstruction p_instr)

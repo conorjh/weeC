@@ -13,8 +13,8 @@ namespace wc
 
 		//declarations
 		int parseDec(wcParseParams params);
-		int parseDec_Func(wcParseParams params);
-		int parseParameterList(wcParseParams params);
+		int parseDec_Func(wcParseParams params, wcSymbol*,wcSymbol);
+		int parseParameterList(wcParseParams params, wcParamList& paramList);
 		int parseParameterList_Dec(wcParseParams params);
 
 		//conditional statements
@@ -69,6 +69,7 @@ namespace wc
 		bool isSymbolInScope(wcSymbol* p_scope, wcSymbol* p_symbol);
 		bool lexIdent(wcParseParams params, wcToken* p_tokenBuffer, bool p_restoreLexIndex, string* p_identifierOutput);
 		string createFullyQualifiedIdent(string p_scopeIdent, string p_ident);
+		string createInternalFuncName(wcSymbol p_ident, wcParamList& p_paramList);
 		bool isEOS(wcParseIndex& pIndex, wcError& pError);
 		
 		//helps with constructor
@@ -82,6 +83,15 @@ namespace wc
 			{ tt_mult ,	pn_mult },{ tt_mod , pn_mod },{ tt_expo , pn_expo },{ tt_assign , pn_assign },
 			{ tt_oparen , pn_oparen },{ tt_cparen , pn_cparen }
 		};
+
+		const char* parse_internalFuncNameSeprator = "@@";
+		wcFunctionTable::wcFunctionTable()
+		{
+		}
+		int wcFunctionTable::addSymbol(std::string internalFunctionName, wcFunctionInfo p_sym)
+		{
+			return 0;
+		}
 	}
 }
 
@@ -354,6 +364,16 @@ wcSymbol wc::parse::createIntSymbol()
 string wc::parse::createFullyQualifiedIdent(string p_scopeIdent, string p_ident)
 {
 	return p_scopeIdent + "::" + p_ident;
+}
+
+string wc::parse::createInternalFuncName(wcSymbol p_ident, wcParamList& p_paramList)
+{
+	string output = p_ident.fullyQualifiedIdent;
+
+	for (int t = 0; t < p_paramList.paramCount(); ++t)
+		output += parse_internalFuncNameSeprator + p_paramList.params[t].tableEntry->fullyQualifiedIdent;
+
+	return output;
 }
 
 wc::parse::wcParseNode::wcParseNode()
@@ -1077,9 +1097,9 @@ int wc::parse::parseDec(wcParseParams params)
 	case tt_oparen:
 		//function declaration
 		openingNode->type = pn_funcdec;
-		if (!parseDec_Func(params))
+		if (!parseDec_Func(params, typeSymbol, identSymbol))
 			return 0;
-		break;
+		return 1;	
 
 	default:
 		return setErrorReturn0(params.pError, wcError(ec_par_unexpectedtoken, params.pIndex.getToken().data, params.pIndex.getToken().line, params.pIndex.getToken().col));
@@ -1095,27 +1115,44 @@ int wc::parse::parseDec(wcParseParams params)
 }
 
 //branches from parseDec() if opening parenthesis are found after identifier
-int wc::parse::parseDec_Func(wcParseParams params)
+int wc::parse::parseDec_Func(wcParseParams params, wcSymbol* p_typeSymbol, wcSymbol p_identSymbol)
 {
 	//parameters
-	if (!parseParameterList(params))
+	wcParamList paramList;
+	if (parseParameterList(params, paramList))
 		return 0;
+
+	//register this function so we have a scope to reference against in the symbol table
+	wcSymbol funcSymbol(st_function, p_identSymbol.ident, p_identSymbol.fullyQualifiedIdent,
+		p_identSymbol.isNamespace, p_identSymbol.isArray, p_identSymbol.isConst, p_identSymbol.isStatic, 1, p_typeSymbol->dataSize, params.pData.currentStackIndex, p_typeSymbol);
+	params.pOutput.symTab.addSymbol(funcSymbol);
+
+	//create a new stackframe for this function
+	string internalFuncName = createInternalFuncName(p_identSymbol, paramList);
+	wcStackframe thisFrame(params.pData.currentScope);
+	params.pOutput.frames.insert(make_pair(thisFrame.owner->fullyQualifiedIdent, thisFrame));
+
+	//create func info
+	wcFunctionInfo funcInfo;
+	funcInfo.internalFuncName = internalFuncName;
+	funcInfo.symbol = params.pOutput.symTab.getSymbol(internalFuncName);
+	funcInfo.paramList = paramList;
 
 	//prototype only
 	if (params.pIndex.getToken().type == tt_scolon)
 		if (!parseSColon(params))
 			return 0;
 
-	//create a new stackframe for this function
-
 	//function body
 	if (!parseBlock(params))
 		return 0;	
 
+	params.pIndex.backToParent();
+
 	return 1;
 }
 
-int wc::parse::parseParameterList(wcParseParams params)
+int wc::parse::parseParameterList(wcParseParams params, wcParamList& p_paramList)
 {
 	if (isEOS(params.pIndex, params.pError))
 		return 0;

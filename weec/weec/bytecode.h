@@ -68,15 +68,17 @@ namespace wc
 			t1, //temporary 1
 			t2, //temporary 2
 			cmp, //compare result
-			eax, //expresiion result
+			eax, //expression result
 			instr, 
+			ret,	//return value
 			halt	//halt execution
 		};
 
 		struct wcExecContextRegisters
 		{
+			wcExecContextRegisters();
 			int& operator[](int);
-			int pc,t1,t2,cmp,eax,instr,halt;
+			int pc,t1,t2,cmp,eax,instr,ret,halt;
 		}; 
 
 		struct wcStringTable
@@ -168,7 +170,7 @@ namespace wc
 		{
 			wcExecContext();
 			std::shared_ptr<wcInstruction> getInstr()	{return instructions[registers.pc];};
-			bool execStopped()			{return registers.halt;};
+			bool execStopped()	{return registers.halt;};
 
 			int contextID;
 			std::vector<std::shared_ptr<wcInstruction>> instructions;

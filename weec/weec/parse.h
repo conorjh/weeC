@@ -145,10 +145,45 @@ namespace wc
 			int tokenIndex;
 		};
 
+		struct wcParameter
+		{
+			wcParameter(wcSymbol*);
+			wcSymbol* tableEntry;	//link to symbol table entry
+		};
+
+		struct wcParamList
+		{
+			unsigned int paramCount() { return params.size(); }
+			std::vector<wcParameter> params;
+		};
+
+		struct wcFunctionInfo
+		{
+			wcFunctionInfo() {};
+			wcFunctionInfo(std::string p_name, wcParamList p_params, wcSymbol* p_sym, tree<wcParseNode>::iterator p_it)
+			{	internalFuncName = p_name; paramList = p_params, symbol = p_sym, bodyNode = p_it;	}
+
+			std::string internalFuncName;
+			wcParamList paramList;
+			wcSymbol* symbol;
+			tree<wcParseNode>::iterator bodyNode;
+		};
+
+		struct wcFunctionTable
+		{
+			wcFunctionTable();
+
+			int addSymbol(std::string internalFunctionName, wcFunctionInfo p_sym);
+
+			std::unordered_map<std::string, wcFunctionInfo> ident2Funcinfo;
+		};
+
 		struct wcStackframe
 		{
+			wcStackframe(wcSymbol* p_owner) { owner = p_owner; }
 			wcSymbol* owner;
-			std::vector<wcSymbol*> local;
+			wcFunctionInfo* thisFrame;
+			std::vector<wcSymbol*> locals;
 		};
 
 		struct wcExpression
@@ -164,7 +199,9 @@ namespace wc
 			tree<wcParseNode>::iterator addChild(wcParseIndex&, wcParseNode);	//add node, but pindex remains on parent node
 
 			tree<wcParseNode> parseTree;
+			std::unordered_map<std::string, wcStackframe> frames;
 			wcSymbolTable symTab;
+			wcFunctionTable funcTab;
 		};
 
 		struct wcParseData

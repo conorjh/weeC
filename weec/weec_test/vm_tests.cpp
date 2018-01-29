@@ -33,7 +33,7 @@ int wctest::vm::standardVMTest(const char * p_source)
 	int handle = vm.load(testOutput);
 	vm.exec(handle);
 	testOutput = vm.getContext(handle);
-	if (testOutput.registers.eax == 0)
+	if (testOutput.registers.ret != 0)
 		return 0;
 	return 1;
 }
@@ -52,14 +52,14 @@ int wctest::vm::standardVMTest(const char * p_source, int expectedResult)
 	int andle = vm.load(testOutput);
 	vm.exec(andle);
 	testOutput = vm.getContext(andle);
-	if (testOutput.registers.eax == expectedResult)
+	if (testOutput.registers.ret == expectedResult)
 		return 0;
 	return 1;
 }
 
 int wctest::vm::vm_basic_1()
 {
-	return standardVMTest("2 + 55 * 88 / 99;", 2 + 55 * 88 / 99);
+	return standardVMTest("123 * 345 + 678;", 123 * 345 + 678);
 }
 
 int wctest::vm::vm_basic_2()
@@ -69,8 +69,10 @@ int wctest::vm::vm_basic_2()
 
 int wctest::vm::vm_basic_3()
 {
+	int a = 22 + 22;
+	a = 22 + a;
 	return standardVMTest("int a = 22 + 22;"
-		"a = 22 + a;");
+		"a = 22 + a;",a);
 }
 
 int wctest::vm::vm_basic_4()
@@ -82,9 +84,35 @@ int wctest::vm::vm_basic_4()
 
 int wctest::vm::vm_basic_5()
 {
+	int a = 123; 
+	int b = 345;
+	int c = a + b;
+	c = c * a + b;
+	int d = a + b + c;
 	return standardVMTest("int a = 123;"
 		"int b = 345;"
 		"int c = a + b;"
 		"c = c * a + b;"
-		"int d = a + b + c;", 123 + 345);
+		"int d = a + b + c;",d);
+}
+
+int wctest::vm::vm_basic_6()
+{	
+	int c = 456 * 123 + 345;
+	return standardVMTest("int c = 456 * 123 + 345;", c);
+}
+
+int wctest::vm::vm_basic_7()
+{
+	int a = 123;
+	int b = 345;
+	int c = a + b;
+	int d = c * a + b;
+	int e = a + b + c;
+	return standardVMTest("int a = 123;"
+		"int b = 345;"
+		"int c = a + b;"
+		"int d = c * a + b;"
+		"int e = a + b + c;", e);
+
 }

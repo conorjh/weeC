@@ -85,14 +85,18 @@ namespace wc
 		};
 
 		const char* parse_internalFuncNameSeprator = "@@";
-		wcFunctionTable::wcFunctionTable()
-		{
-		}
-		int wcFunctionTable::addSymbol(std::string internalFunctionName, wcFunctionInfo p_sym)
-		{
-			return 0;
-		}
+		
 	}
+}
+
+wc::parse::wcFunctionTable::wcFunctionTable()
+{
+
+}
+
+int wc::parse::wcFunctionTable::addSymbol(std::string internalFunctionName, wcFunctionInfo p_sym)
+{
+	return 0;
 }
 
 int wc::parse::getPrecedence(wcToken p_token)
@@ -100,27 +104,27 @@ int wc::parse::getPrecedence(wcToken p_token)
 	switch (p_token.type)
 	{
 	case tt_assign:
-		return 15;
+		return 1;
 	case tt_logor:
-		return 14;
+		return 2;
 	case tt_logand:
-		return 13;
+		return 3;
 	case tt_equal:	case tt_notequal:
-		return 12;
+		return 4;
 	case tt_greater:	case tt_less:	case tt_lessequal:	case tt_greaterequal:
-		return 10;
+		return 5;
 	case tt_mod:	case tt_expo:
-		return 9;
+		return 6;
+	case tt_plus:	case tt_minus:
+		return 7;
 	case tt_mult:	case tt_div:
 		return 8;
-	case tt_plus:	case tt_minus:
-		return 6;
 	case tt_lognot:
-		return 4;
+		return 9;
 	case tt_cparen:
-		return -1;
+		return 10;
 	default:
-		return 0;
+		return -1;
 	}
 }
 

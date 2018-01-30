@@ -294,6 +294,10 @@ std::string wc::bytecode::wcChunks::s()
 	return _s;
 }
 
+wc::bytecode::wcExecContextRegisters::wcExecContextRegisters()
+{
+}
+
 int& wc::bytecode::wcExecContextRegisters::operator[](int p_int)
 {
 	switch (p_int)

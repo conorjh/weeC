@@ -64,7 +64,7 @@ int wctest::vm::vm_basic_1()
 
 int wctest::vm::vm_basic_2()
 {
-	return standardVMTest("int a = 22 + 22;");
+	return standardVMTest("int a = 22 + 22;",44);
 }
 
 int wctest::vm::vm_basic_3()
@@ -97,12 +97,28 @@ int wctest::vm::vm_basic_5()
 }
 
 int wctest::vm::vm_basic_6()
-{	
-	int c = 456 * 123 + 345;
-	return standardVMTest("int c = 456 * 123 + 345;", c);
+{
+	int a = 111;
+	(a * 222 + 333);
+	return standardVMTest("int a = 111;"
+		"a * 222 + 333; ", a * 222 + 333);
 }
 
 int wctest::vm::vm_basic_7()
+{
+	int a = 111;
+	(a * 222 + 333);
+	return standardVMTest("int a = 111;"
+		"a = a * 222 + 333; ", a * 222 + 333);
+}
+
+int wctest::vm::vm_basic_8()
+{
+	int c = 468 * 123 + 345;
+	return standardVMTest("int c = 468 * 123 + 345;", c);
+}
+
+int wctest::vm::vm_basic_9()
 {
 	int a = 123;
 	int b = 345;

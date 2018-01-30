@@ -52,8 +52,7 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcGenParams params, in
 	while (params.pindex.getCurrentNodeDepth() > startingDepth)
 	{
 		currentToken = params.pindex.getNode()->tokens[0];	
-		if(stack.size())
-			topOfStack = stack[stack.size() - 1].tokens[0];
+		if(stack.size())			topOfStack = stack[stack.size() - 1].tokens[0];
 		switch (params.pindex.getNode()->type)
 		{
 		case pn_exp:
@@ -66,7 +65,7 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcGenParams params, in
 			break;
 
 		CASE_ALL_OPERATORS_PN
-			while ( (stack.size() && ((getPrecedence(currentToken) < getPrecedence(topOfStack) ) ||
+			while ( (stack.size() && ((getPrecedence(currentToken) <= getPrecedence(topOfStack) ) ||
 					(!isRightAssociative(currentToken) && getPrecedence(currentToken) == getPrecedence(topOfStack)))
 					&& topOfStack.type != tt_obracket)	)
 			{
@@ -82,7 +81,7 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcGenParams params, in
 
 		case pn_cparen:
 			while (!foundParen && stack.size())
-				if (topOfStack.type == pn_oparen)
+				if (stack[stack.size() - 1].type == pn_oparen)
 					foundParen = true;
 				else
 				{
@@ -552,10 +551,13 @@ inline void wc::vm::exec_s_jle(wcSimpleExecContext &p_context, wcInstructionPlus
 		p_context.registers.pc = p_instr.operand1;
 }
 
-//pop value from top of stack and copy to stack element at operand1
+//pop top 2 values from top of stack and copy to stack element at operand1
 inline void wc::vm::exec_s_assign(wcSimpleExecContext &p_context, wcInstructionPlusOperand p_instr)
 {
-	p_context.stack.set(p_instr.operand1,wcChunki(p_context.registers.eax = (p_context.stack.popi()->i())));
+	p_context.registers.t2 = p_context.stack.popi()->i();
+	p_context.registers.t1 = p_context.stack.popi()->i();
+	p_context.stack.set(p_instr.operand1, wcChunki(p_context.registers.t2)); //same as setstk for now
+	p_context.stack.push(wcChunki(p_context.registers.t2));
 }
 
 inline void wc::vm::exec_s_plus(wcSimpleExecContext &p_context, wcInstruction p_instr)

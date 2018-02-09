@@ -3,7 +3,6 @@
 #include "lex.h"
 #include <sstream>
 
-#define CASE_TT_WS case tt_ws: case tt_newline: case tt_tab:
 
 using namespace std;
 using namespace wc;
@@ -14,16 +13,7 @@ namespace wc
 {
 	namespace lex
 	{
-		//free floating lexer helpers
-		bool lex_stringLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_intLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_ws(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_2step(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_default(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_comment(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_commentMultiLine(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
 		
-		bool setErrorReturnFalse(wcError& p_error, wcError p_newError);
 		wcLexer lexingLexer;
 	}
 }

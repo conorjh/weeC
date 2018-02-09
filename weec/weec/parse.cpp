@@ -85,8 +85,7 @@ namespace wc
 		};
 
 		const char* parse_internalFuncNameSeprator = "@@";
-		static wcLexer parsingLexer;
-		
+		static wcLexer parsingLexer;		
 	}
 }
 

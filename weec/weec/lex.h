@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include "error.h"
 
+#define CASE_TT_WS case tt_ws: case tt_newline: case tt_tab:
+
 namespace wc
 {
 	namespace parse
@@ -130,13 +132,20 @@ namespace wc
 			wcError getError();
 			void setError(wcError);
 
-		private:
+		protected:
 			wcLexIndex lexIndex;
 			wcError error;
 		};
 
-		
-		
+		//free floating lexer helpers
+		bool lex_stringLiteral(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
+		bool lex_intLiteral(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
+		bool lex_ws(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
+		bool lex_2step(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
+		bool lex_default(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
+		bool lex_comment(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
+		bool lex_commentMultiLine(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
+		bool setErrorReturnFalse(wcError& p_error, wcError p_newError);		
 	}
 
 }

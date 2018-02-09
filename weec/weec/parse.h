@@ -224,7 +224,7 @@ namespace wc
 			wcError getError();
 			void setError(wcError);
 
-		private:
+		protected:
 			void init();
 			wcError error;
 			wcParseIndex index;

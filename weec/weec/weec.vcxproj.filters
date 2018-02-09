@@ -45,6 +45,9 @@
     <ClCompile Include="bytecode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wasm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lex.h">
@@ -84,6 +87,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wasm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

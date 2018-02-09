@@ -40,6 +40,9 @@ namespace wctest
 	namespace vm
 	{
 		int vm_basic_1();
+		int vm_basic_1a();
+		int vm_basic_1b();
+		int vm_basic_1c();
 		int vm_basic_2();
 		int vm_basic_3();
 		int vm_basic_4();
@@ -49,7 +52,7 @@ namespace wctest
 		int vm_basic_8();
 		int vm_basic_9();
 
-		const std::vector<int(*)()> allVMTests = { &vm_basic_1 ,&vm_basic_2 ,&vm_basic_3,&vm_basic_4,&vm_basic_5,&vm_basic_6,&vm_basic_7,&vm_basic_8,&vm_basic_9 };
+		const std::vector<int(*)()> allVMTests = { &vm_basic_1, &vm_basic_1a, &vm_basic_1b, &vm_basic_1c, &vm_basic_2 ,&vm_basic_3,&vm_basic_4,&vm_basic_5,&vm_basic_6,&vm_basic_7,&vm_basic_8,&vm_basic_9 };
 	}
 
 	namespace api

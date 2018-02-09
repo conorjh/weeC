@@ -114,8 +114,18 @@ namespace wc
 
 			std::vector<wcToken> lex(const char *);
 			std::vector<wcToken> lex(std::string);
-			std::vector<wcToken> lex(std::vector<std::string>);
-			
+			virtual std::vector<wcToken> lex(std::vector<std::string>);
+
+			bool isDelim(std::string);
+			virtual bool isDelim(wcTokenType);
+			bool isDelimDroppable(wcToken);
+			virtual bool isDelimDroppable(wcTokenType);
+			virtual bool isPunctuation(wcTokenType);
+
+			wcTokenType deriveTokenType(const char *);
+			virtual wcTokenType deriveTokenType(char);
+			virtual wcTokenType deriveTokenType(std::string);
+
 			bool isError();
 			wcError getError();
 			void setError(wcError);
@@ -125,13 +135,8 @@ namespace wc
 			wcError error;
 		};
 
-		wcTokenType deriveTokenType(const char *);
-		wcTokenType deriveTokenType(char);
-		wcTokenType deriveTokenType(std::string);
-		bool isDelim(std::string);
-		bool isDelim(wcTokenType);
-		bool isDelimDroppable(wcToken);
-		bool isPunctuation(wcTokenType);
+		
+		
 	}
 
 }

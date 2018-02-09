@@ -218,7 +218,7 @@ namespace wc
 		public:
 			wcParser();
 
-			wcAST parse(std::vector<lex::wcToken>);
+			virtual wcAST parse(std::vector<lex::wcToken>);
 
 			bool isError();
 			wcError getError();

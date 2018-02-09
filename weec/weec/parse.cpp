@@ -85,6 +85,7 @@ namespace wc
 		};
 
 		const char* parse_internalFuncNameSeprator = "@@";
+		static wcLexer parsingLexer;
 		
 	}
 }
@@ -169,13 +170,13 @@ wc::parse::wcSymbol::wcSymbol(wcTokenType p_tokenType)
 
 wc::parse::wcSymbol::wcSymbol(string p_identifier)
 {
-	type = deriveSymbolType(deriveTokenType(p_identifier));
+	type = deriveSymbolType(parsingLexer.deriveTokenType(p_identifier));
 	fullyQualifiedIdent = ident = p_identifier;
 }
 
 wc::parse::wcSymbol::wcSymbol(std::string p_identifier, std::string scopeFQIdent)
 {
-	type = deriveSymbolType(deriveTokenType(p_identifier));
+	type = deriveSymbolType(parsingLexer.deriveTokenType(p_identifier));
 	fullyQualifiedIdent = createFullyQualifiedIdent(scopeFQIdent, p_identifier);
 	ident = p_identifier;
 }
@@ -226,7 +227,7 @@ wcSymbol* wc::parse::wcSymbolTable::getSymbol(wcSymbol* p_scope, string p_ident)
 }
 
 //TODO
-//returns a symbol wit matcing ident only if it's valid in given scope
+//returns a symbol with matching ident only if it's valid in given scope
 wcSymbol* wc::parse::wcSymbolTable::getSymbolFromShortIdent(string p_ident, vector<wcSymbol> openScopes)
 {
 	//search open scopes to see if the given ident is valid
@@ -737,10 +738,14 @@ wcExpression wc::parse::parseExpressionFull(wcParseParams params)
 		switch (operatorToken.type)
 		{
 		case tt_assign:
-		CASE_ALL_BOOLEAN_OPERATORS_TT
 			//get fully qualified ident for left operand, code generators need it to get correct stackindex;
 			fqOperandLeft = params.pOutput.symTab.getSymbol(params.pData.currentScope, operandLeft.data)->fullyQualifiedIdent;
 			params.pOutput.addChild(params.pIndex, wcParseNode(pn_assign, operatorToken, fqOperandLeft));
+			params.pIndex.nextToken();
+			break;
+		CASE_ALL_BOOLEAN_OPERATORS_TT
+			//get fully qualified ident for left operand, code generators need it to get correct stackindex;
+			params.pOutput.addChild(params.pIndex, wcParseNode(deriveParseNodeType(operatorToken), operatorToken));
 			params.pIndex.nextToken();
 			break;
 
@@ -944,9 +949,9 @@ bool wc::parse::lexIdent(wcParseParams params, wcToken* p_tokenBuffer = nullptr,
 
 		default:
 			punctuationLexedLast = false;
-			if (!isDelim(p_tokenBuffer->type))
+			if (!parsingLexer.isDelim(p_tokenBuffer->type))
 			{
-				if (isPunctuation(p_tokenBuffer->type))
+				if (parsingLexer.isPunctuation(p_tokenBuffer->type))
 					punctuationLexedLast = true;
 				*p_identifierOutput += p_tokenBuffer->data;
 				*p_tokenBuffer = params.pIndex.nextToken();

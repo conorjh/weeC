@@ -24,6 +24,7 @@ namespace wc
 		bool lex_commentMultiLine(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
 		
 		bool setErrorReturnFalse(wcError& p_error, wcError p_newError);
+		wcLexer lexingLexer;
 	}
 }
 
@@ -33,21 +34,21 @@ bool wc::lex::setErrorReturnFalse(wcError& p_error, wcError p_newError)
 	return false;
 }
 
-wcTokenType wc::lex::deriveTokenType(string p_input)
+wcTokenType wc::lex::wcLexer::deriveTokenType(string p_input)
 {
-	return deriveTokenType(p_input.c_str());
+	return lexingLexer.deriveTokenType(p_input.c_str());
 }
 
 //returns the the token type of a given string
-wcTokenType wc::lex::deriveTokenType(char p_input)
+wcTokenType wc::lex::wcLexer::deriveTokenType(char p_input)
 {
 	stringstream ss;
 	ss << p_input;
-	return deriveTokenType(ss.str().c_str());
+	return lexingLexer.deriveTokenType(ss.str().c_str());
 }
 
 //returns the the token type of a given string
-wcTokenType wc::lex::deriveTokenType(const char * p_input)
+wcTokenType wc::lex::wcLexer::deriveTokenType(const char * p_input)
 {
 	if (p_input == "")	
 		return tt_null;
@@ -60,7 +61,7 @@ wcTokenType wc::lex::deriveTokenType(const char * p_input)
 	return result->second;	//matches a known token string
 }
 
-bool wc::lex::isPunctuation(wcTokenType p_type)
+bool wc::lex::wcLexer::isPunctuation(wcTokenType p_type)
 {
 	if (p_type == tt_period || p_type == tt_dcolon)
 		return true;
@@ -68,12 +69,12 @@ bool wc::lex::isPunctuation(wcTokenType p_type)
 }
 
 //is a given string a delimiter
-bool wc::lex::isDelim(string p_input)
+bool wc::lex::wcLexer::isDelim(string p_input)
 {
-	return isDelim(deriveTokenType(p_input));
+	return isDelim(lexingLexer.deriveTokenType(p_input));
 }
 
-bool wc::lex::isDelim(wcTokenType p_type)
+bool wc::lex::wcLexer::isDelim(wcTokenType p_type)
 {
 	if (p_type != tt_null)
 	{
@@ -87,9 +88,9 @@ bool wc::lex::isDelim(wcTokenType p_type)
 }
 
 //whether or not to add a given token to the output
-bool wc::lex::isDelimDroppable(wcToken p_token)
+bool wc::lex::wcLexer::isDelimDroppable(wcTokenType p_tokenType)
 {
-	switch (p_token.type)
+	switch (p_tokenType)
 	{
 	CASE_TT_WS
 		if (wc_lexer_dropWS)
@@ -101,13 +102,17 @@ bool wc::lex::isDelimDroppable(wcToken p_token)
 	}
 }
 
+bool wc::lex::wcLexer::isDelimDroppable(wcToken p_token)
+{
+	return isDelimDroppable(deriveTokenType(p_token.data));
+}
+
 wc::lex::wcToken::wcToken()
 {
 	type = tt_null;
 	line = col = 0;
 	data = "";
 }
-
 
 wc::lex::wcToken::wcToken(wc::parse::wcSymbol p_sym)
 {
@@ -140,7 +145,7 @@ wc::lex::wcToken::wcToken(wcTokenType p_tt, string p_data, int p_line, int p_col
 wc::lex::wcToken::wcToken(string p_data)
 {
 	*this = wcToken();
-	type = deriveTokenType(p_data);
+	type = lexingLexer.deriveTokenType(p_data);
 	data = p_data;
 }
 
@@ -259,7 +264,7 @@ vector<wcToken> wc::lex::wcLexer::lex(vector<string> p_input)
 
 	//loop through characters making tokens until end of stream
 	while (lexIndex.isValid())
-		switch (deriveTokenType(lexIndex.getChar()))
+		switch (lexingLexer.deriveTokenType(lexIndex.getChar()))
 		{
 			//string literal
 		case tt_dquote:
@@ -324,21 +329,21 @@ bool wc::lex::lex_default(vector<wcToken>& p_output, wcLexIndex& p_index, wcErro
 	int origCol = p_index.column;
 
 	//build up the token until we hit a delimiter or eos
-	while (p_index.isValid() && !isDelim(p_index.getChar()))
+	while (p_index.isValid() && !lexingLexer.isDelim(p_index.getChar()))
 	{
 		strBuff += p_index.getChar();
 		p_index.nextChar();
 	}
 	
 	//create a token for the delimiter unless it was end of stream
-	wcToken preDelim(deriveTokenType(strBuff), strBuff, origLine, origCol);
-	if (isDelim(p_index.getChar()))
+	wcToken preDelim(lexingLexer.deriveTokenType(strBuff), strBuff, origLine, origCol);
+	if (lexingLexer.isDelim(p_index.getChar()))
 	{
 		if(preDelim.type != tt_null)
 			p_output.push_back(preDelim);
 		
-		wcToken delim(deriveTokenType(p_index.getChar()), p_index.getChar(), p_index.line, p_index.column);
-		if(!isDelimDroppable(delim))
+		wcToken delim(lexingLexer.deriveTokenType(p_index.getChar()), p_index.getChar(), p_index.line, p_index.column);
+		if(!lexingLexer.isDelimDroppable(delim))
 			p_output.push_back(delim);
 	}
 	else
@@ -356,22 +361,22 @@ bool wc::lex::lex_2step(vector<wcToken>& p_output, wcLexIndex& p_index, wcError&
 	//dual step tokens	
 
 	if (!(
-		( deriveTokenType((p_index.getChar() + p_index.peekChar())) ) != tt_greaterequal && (deriveTokenType( (p_index.getChar() + p_index.peekChar() ))) != tt_lessequal &&
-		(deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_notequal && (deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_equal &&
-		(deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_incr && (deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_plusassign &&
-		(deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_decr && (deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_minusassign &&
-		(deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_logand && (deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_logor &&
-		(deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_dcolon
+		( lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar())) ) != tt_greaterequal && (lexingLexer.deriveTokenType( (p_index.getChar() + p_index.peekChar() ))) != tt_lessequal &&
+		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_notequal && (lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_equal &&
+		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_incr && (lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_plusassign &&
+		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_decr && (lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_minusassign &&
+		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_logand && (lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_logor &&
+		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_dcolon
 		))
 	{
-		wcToken twoStep(deriveTokenType(p_index.getChar() + p_index.peekChar()), p_index.getChar() + p_index.peekChar(),p_index.line, p_index.column);
+		wcToken twoStep(lexingLexer.deriveTokenType(p_index.getChar() + p_index.peekChar()), p_index.getChar() + p_index.peekChar(),p_index.line, p_index.column);
 		p_output.push_back(twoStep);
 		p_index.nextChar();
 		p_index.nextChar();
 	}
 	else
 	{
-		p_output.push_back(wcToken(deriveTokenType(p_index.getChar()), p_index.getChar(), p_index.line, p_index.column));
+		p_output.push_back(wcToken(lexingLexer.deriveTokenType(p_index.getChar()), p_index.getChar(), p_index.line, p_index.column));
 		p_index.nextChar();
 	}
 	return true;
@@ -386,12 +391,12 @@ bool wc::lex::lex_intLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, wcE
 	bool breakWhile = false;
 
 	//make sure we have an opening int
-	if (deriveTokenType(p_index.getChar()) != tt_intlit)
+	if (lexingLexer.deriveTokenType(p_index.getChar()) != tt_intlit)
 		return setErrorReturnFalse(p_error, wcError(ec_lex_unexpectedtoken, "Expected a numeric value (0-9)", origLine, origCol));
 
 	//get all the numbers til we hit not a number
 	while (p_index.isValid() && !breakWhile)
-		switch (deriveTokenType(p_index.getChar()))
+		switch (lexingLexer.deriveTokenType(p_index.getChar()))
 		{
 		case tt_intlit:
 			if(firstHalf)
@@ -435,7 +440,7 @@ bool wc::lex::lex_stringLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, 
 	int origCol = p_index.column;
 
 	//make sure we have an opening double quote
-	if (deriveTokenType(p_index.getChar()) != tt_dquote)
+	if (lexingLexer.deriveTokenType(p_index.getChar()) != tt_dquote)
 	{
 		p_error = wcError(ec_lex_unexpectedtoken, "Expected '\"'", origLine, origCol);
 		return false;
@@ -444,7 +449,7 @@ bool wc::lex::lex_stringLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, 
 
 	//loop through until we reach the closing quote, or end of stream
 	while (p_index.isValid())
-		switch (deriveTokenType(p_index.getChar()))
+		switch (lexingLexer.deriveTokenType(p_index.getChar()))
 		{
 		case tt_dquote:
 			p_output.push_back(wcToken(tt_strlit, strBuff, origLine, origCol));
@@ -468,7 +473,7 @@ bool wc::lex::lex_ws(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_
 	bool breakWhile = false;
 	int origLine = p_index.line;
 	int origCol = p_index.column;
-	wcTokenType tt = deriveTokenType(p_index.getChar());
+	wcTokenType tt = lexingLexer.deriveTokenType(p_index.getChar());
 
 	//make sure we have an opening whitespace
 	if (tt != tt_ws && tt!= tt_tab && tt!= tt_newline)
@@ -476,7 +481,7 @@ bool wc::lex::lex_ws(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_
 
 	//clump all consecutive whitespace together
 	while (p_index.isValid() && !breakWhile)
-		switch (deriveTokenType(p_index.getChar()))
+		switch (lexingLexer.deriveTokenType(p_index.getChar()))
 		{
 		CASE_TT_WS
 			if (!wc_lexer_dropWS)
@@ -491,7 +496,7 @@ bool wc::lex::lex_ws(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_
 		}
 
 	if (!wc_lexer_dropWS)
-		p_output.push_back(wcToken(deriveTokenType(strBuff), strBuff, origLine, origCol));
+		p_output.push_back(wcToken(lexingLexer.deriveTokenType(strBuff), strBuff, origLine, origCol));
 	return true;
 }
 
@@ -499,13 +504,13 @@ bool wc::lex::lex_ws(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_
 bool wc::lex::lex_comment(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
 {
 	//make sure we have an opening / 
-	if (deriveTokenType(p_index.getChar()) != tt_div)
+	if (lexingLexer.deriveTokenType(p_index.getChar()) != tt_div)
 		return setErrorReturnFalse(p_error, wcError(ec_lex_unexpectedtoken, "Expected '/'", p_index.line, p_index.column));
 
 	//handle multi line elsewhere
-	if (deriveTokenType(p_index.peekChar()) == tt_mult)
+	if (lexingLexer.deriveTokenType(p_index.peekChar()) == tt_mult)
 		return lex_commentMultiLine(p_output, p_index, p_error);
-	else if (deriveTokenType(p_index.peekChar()) != tt_div)
+	else if (lexingLexer.deriveTokenType(p_index.peekChar()) != tt_div)
 	{
 		//just a single division symbol (/) not actually a comment (//)
 		p_output.push_back(wcToken(tt_div, p_index.getChar(), p_index.line, p_index.column));
@@ -515,7 +520,7 @@ bool wc::lex::lex_comment(vector<wcToken>& p_output, wcLexIndex& p_index, wcErro
 
 	//go through until end of line or eos
 	while(p_index.isValid())
-		switch (deriveTokenType(p_index.getChar()))
+		switch (lexingLexer.deriveTokenType(p_index.getChar()))
 		{
 		default:
 			p_index.nextChar();
@@ -539,10 +544,10 @@ bool wc::lex::lex_commentMultiLine(vector<wcToken>& p_output, wcLexIndex& p_inde
 
 	//go through until */ or eos
 	while (p_index.isValid())
-		switch (deriveTokenType(p_index.getChar()))
+		switch (lexingLexer.deriveTokenType(p_index.getChar()))
 		{
 		case tt_mult:
-				if (deriveTokenType(p_index.nextChar()) == tt_div)
+				if (lexingLexer.deriveTokenType(p_index.nextChar()) == tt_div)
 				{
 					p_index.nextChar();
 					return true;	//end of comment found

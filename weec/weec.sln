@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27004.2002
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "weec", "weec\weec.vcxproj", "{8CA162B1-8577-43B8-8730-A6BD34CCAFE7}"
 EndProject
@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wcIDE", "wcIDE\wcIDE.csproj
 		{8CA162B1-8577-43B8-8730-A6BD34CCAFE7} = {8CA162B1-8577-43B8-8730-A6BD34CCAFE7}
 		{61563DDA-0E2C-4E86-8764-1BF4C5EF1715} = {61563DDA-0E2C-4E86-8764-1BF4C5EF1715}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wasm", "wasm\wasm.vcxproj", "{E444A304-AC8E-45EC-88F9-B0E06A09EE99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -100,6 +102,16 @@ Global
 		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Release|x64.Build.0 = Release|Any CPU
 		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Release|x86.ActiveCfg = Release|Any CPU
 		{69CE0FB9-99CF-4A40-A0AB-E39F5050054E}.Release|x86.Build.0 = Release|Any CPU
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Debug|x64.ActiveCfg = Debug|x64
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Debug|x64.Build.0 = Debug|x64
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Debug|x86.ActiveCfg = Debug|Win32
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Debug|x86.Build.0 = Debug|Win32
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Release|Any CPU.ActiveCfg = Release|Win32
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Release|x64.ActiveCfg = Release|x64
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Release|x64.Build.0 = Release|x64
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Release|x86.ActiveCfg = Release|Win32
+		{E444A304-AC8E-45EC-88F9-B0E06A09EE99}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

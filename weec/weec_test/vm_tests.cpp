@@ -62,9 +62,24 @@ int wctest::vm::vm_basic_1()
 	return standardVMTest("123 * 345 + 678;", 123 * 345 + 678);
 }
 
+int wctest::vm::vm_basic_1a()
+{
+	return standardVMTest("123 * 345 + 678 / 2;", 123 * 345 + 678 / 2);
+}
+
+int wctest::vm::vm_basic_1b()
+{
+	return standardVMTest("123 * 345 + 678 / 2 ^ 3;", 123 * 345 + 678 / 2 ^ 3);
+}
+
+int wctest::vm::vm_basic_1c()
+{
+	return standardVMTest("123 * ( 345 + 678 / 2);", 123 * (345 + 678 / 2));
+}
+
 int wctest::vm::vm_basic_2()
 {
-	return standardVMTest("int a = 22 + 22;",44);
+	return standardVMTest("int a = 22 + 22;",22 + 22);
 }
 
 int wctest::vm::vm_basic_3()

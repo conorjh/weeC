@@ -10,13 +10,13 @@ namespace wc
 		struct wcScript
 		{
 			wcScript();
-			wcScript(wcError);
+			wcScript(error::wcError);
 
-			wcError getError();
-			void setError(wcError);
+			error::wcError getError();
+			void setError(error::wcError);
 
 			bytecode::wcExecContext con;
-			wcError error;
+			error::wcError error;
 			int handle;
 		};
 

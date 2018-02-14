@@ -12,21 +12,13 @@ namespace wc
 		public:
 			wcBaseCompiler();
 
-			wcError getError();
-			void setError(wcError);
+			error::wcError getError();
+			void setError(error::wcError);
 
 			virtual api::wcScript compile(std::vector<std::string> input);
 
 		protected:
-			wcError error;
-		};
-
-		class wcClassicCompiler : public wcBaseCompiler
-		{
-		public:
-			wcClassicCompiler();
-
-			virtual api::wcScript compile(std::vector<std::string> input);
+			error::wcError error;
 		};
 
 		class wcHostedEXECompiler : public wcBaseCompiler

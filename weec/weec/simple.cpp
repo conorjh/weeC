@@ -13,6 +13,7 @@ using namespace wc::lex;
 using namespace wc::codegen;
 using namespace wc::util;
 using namespace wc::vm;
+using namespace wc::error;
 
 namespace wc
 {
@@ -307,7 +308,21 @@ int wc::codegen::genSimpStatement(wcGenParams params)
 	case pn_decvar:
 		genSimpDecVar(params);
 		break;
+
+	case pn_namespacedec:
+		genSimpNamespaceDec(params);
+		break;
+
+	default:
+		auto t = params.pindex.getNode()->type;
+		t;
+		break;
 	}
+	return 1;
+}
+
+int wc::codegen::genSimpNamespaceDec(wcGenParams params)
+{
 
 	return 1;
 }
@@ -344,7 +359,8 @@ wcSimpleExecContext wc::codegen::wcSimpleBytecodeGen::genSimple(wcAST& p_ast)
 	wcGenParams params(pindex, p_ast, output);
 
 	while (pindex.getNode() != p_ast.parseTree.end())
-		genSimpStatement(params);
+		if (!genSimpStatement(params))
+			return output;
 
 	return output;
 }
@@ -453,7 +469,7 @@ wcScript wc::compile::wcSimpleCompiler::compile(vector<string> p_source)
 
 	//code gen
 	wcSimpleBytecodeGen gen;
-	output.con = gen.gen(tree);
+	output.con = gen.genSimple(tree);
 	if (gen.getError().code)
 		return wcScript(gen.getError());
 

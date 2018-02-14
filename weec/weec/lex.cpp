@@ -1,13 +1,12 @@
-
 #include "parse.h"
 #include "lex.h"
 #include <sstream>
-
 
 using namespace std;
 using namespace wc;
 using namespace wc::lex;
 using namespace wc::parse;
+using namespace wc::error;
 
 namespace wc
 {
@@ -237,7 +236,7 @@ bool wc::lex::wcLexer::isError()
 	return error != ec_null;
 }
 
-wc::wcError wc::lex::wcLexer::getError()
+wc::error::wcError wc::lex::wcLexer::getError()
 {
 	return error;
 }

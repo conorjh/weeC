@@ -33,9 +33,6 @@
     <ClCompile Include="util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="classicvm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="codegen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -46,6 +43,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wasm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="classic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="error.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -90,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="wasm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="classic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

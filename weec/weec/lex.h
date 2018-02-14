@@ -129,23 +129,23 @@ namespace wc
 			virtual wcTokenType deriveTokenType(std::string);
 
 			bool isError();
-			wcError getError();
-			void setError(wcError);
+			error::wcError getError();
+			void setError(error::wcError);
 
 		protected:
 			wcLexIndex lexIndex;
-			wcError error;
+			error::wcError error;
 		};
 
 		//free floating lexer helpers
-		bool lex_stringLiteral(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_intLiteral(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_ws(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_2step(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_default(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_comment(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool lex_commentMultiLine(std::vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error);
-		bool setErrorReturnFalse(wcError& p_error, wcError p_newError);		
+		bool lex_stringLiteral(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
+		bool lex_intLiteral(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
+		bool lex_ws(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
+		bool lex_2step(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
+		bool lex_default(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
+		bool lex_comment(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
+		bool lex_commentMultiLine(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
+		bool setErrorReturnFalse(error::wcError& p_error, error::wcError p_newError);
 	}
 
 }

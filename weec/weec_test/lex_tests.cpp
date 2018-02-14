@@ -4,6 +4,7 @@
 
 using namespace wc;
 using namespace wc::lex;
+using namespace wc::error;
 using namespace std;
 
 namespace wctest
@@ -32,7 +33,7 @@ int wctest::lex::l_basic_1()
 
 	vector<wcToken> correctOutput = { wcToken(tt_strlit, "Hello World") };
 
-	if (lexer.getError() != wc::ec_null)
+	if (lexer.getError() != ec_null)
 		return !(l_compare(correctOutput, lexOutput));
 	return lexer.getError().code;
 }
@@ -46,7 +47,7 @@ int wctest::lex::l_basic_2()
 
 	vector<wcToken> correctOutput = { wcToken(tt_intlit, "1"),wcToken(tt_intlit, "55"),wcToken(tt_intlit, "000001"),wcToken(tt_intlit, "128") };
 
-	if (lexer.getError() != wc::ec_null)
+	if (lexer.getError() != ec_null)
 		return !(l_compare(correctOutput, lexOutput));
 	return lexer.getError().code;
 }
@@ -61,7 +62,7 @@ int wctest::lex::l_basic_3()
 	vector<wcToken> correctOutput = 
 	{ wcToken(tt_fltlit, "3.14"),wcToken(tt_fltlit, "500.500"),wcToken(tt_fltlit, "0.000000001"),wcToken(tt_fltlit, "128.0") };
 
-	if (lexer.getError() != wc::ec_null)
+	if (lexer.getError() != ec_null)
 		return !(l_compare(correctOutput, lexOutput));
 	return lexer.getError().code;
 }
@@ -95,7 +96,7 @@ int wctest::lex::l_basic_5()
 
 	vector<wcToken> lexOutput = lexer.lex(sourceCode);
 
-	if (lexer.getError() != wc::ec_null)
+	if (lexer.getError() != wc::error::ec_null)
 		return !(l_compare(correctOutput, lexOutput));
 	return lexer.getError().code;
 }
@@ -109,7 +110,7 @@ int wctest::lex::l_basic_6()
 
 	vector<wcToken> correctOutput = { wcToken(tt_ident, "cats"),wcToken(tt_ident, "dogs"),wcToken(tt_ident, "bogs") };
 
-	if (lexer.getError() != wc::ec_null)
+	if (lexer.getError() != wc::error::ec_null)
 		return !(l_compare(correctOutput, lexOutput));
 	return lexer.getError().code;
 }
@@ -129,7 +130,7 @@ int wctest::lex::l_basic_7()
 
 	vector<wcToken> lexOutput = lexer.lex(sourceCode);
 
-	if (lexer.getError() != wc::ec_null)
+	if (lexer.getError() != ec_null)
 		return !(l_compare(correctOutput, lexOutput));
 	return lexer.getError().code;
 }

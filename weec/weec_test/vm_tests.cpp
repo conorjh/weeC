@@ -47,6 +47,8 @@ int wctest::vm::standardVMTest(const char * p_source, int expectedResult)
 
 	if (parser.getError().code)
 		return parser.getError().code;
+	if (gen.getError().code)
+		return gen.getError().code;
 
 	wcSimpleVM vm;
 	int andle = vm.load(testOutput);
@@ -146,4 +148,21 @@ int wctest::vm::vm_basic_9()
 		"int d = c * a + b;"
 		"int e = a + b + c;", e);
 
+}
+
+int wctest::vm::vm_basic_10()
+{
+	return standardVMTest("namespace outer"
+		"{"
+		"	namespace inner"
+		"	{"
+		"		int innerVar = 22;"
+		"		int innerMethod()"
+		"		{"
+		"			int innerMethodVar = 44;"
+		"			return innerMethodVar;"
+		"		}"
+		"	}"
+		"	int outerVar = 33;"
+		"}",33);
 }

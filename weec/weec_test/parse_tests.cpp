@@ -59,8 +59,46 @@ int wctest::parse::p_basic_5()
 	return standardParseTest("int a = 22 + 22;"
 		"a + 55 * (600 / 2 );");
 }
+
 int wctest::parse::p_basic_6()
 {
 	return standardParseTest("int a = 22 + 22;"
 		"a = 22 + a;");
+}
+
+int wctest::parse::p_basic_7()
+{
+	return standardParseTest("namespace test"
+		"{"
+		"	int a;"
+		"}");
+}
+
+int wctest::parse::p_basic_8()
+{
+	return standardParseTest("namespace outer"
+		"{"
+		"	namespace inner"
+		"	{"
+		"		int innerVar = 22;"
+		"	}"
+		"	int outerVar = 33;"
+		"}");
+}
+
+int wctest::parse::p_basic_9()
+{
+	return standardParseTest("namespace outer"
+		"{"
+		"	namespace inner"
+		"	{"
+		"		int innerVar = 22;"
+		"		int innerMethod()"
+		"		{"
+		"			int innerMethodVar = 44;"
+		"			return innerMethodVar;"
+		"		}"
+		"	}"
+		"	int outerVar = 33;"
+		"}");
 }

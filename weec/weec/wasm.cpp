@@ -90,9 +90,9 @@ wcAST wc::wasm::parse::wasmParser::parse(vector<wcToken> p_tokens)
 
 	wcParseParams params(index, output, error, data);
 
-	while (index.isLexIndexValid() && !getError().code)
+	/*while (index.isLexIndexValid() && !getError().code)
 		if (!parseStatement(params))
-			return output;
+			return output;*/
 
 	return output;
 }

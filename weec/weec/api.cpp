@@ -2,12 +2,14 @@
 #include "api.h"
 #include "util.h"
 #include "compiler.h"
+#include "classic.h"
 
 using namespace std;
 using namespace wc;
 using namespace wc::api;
 using namespace wc::compile;
 using namespace wc::bytecode;
+using namespace wc::error;
 
 namespace wc
 {

@@ -25,7 +25,7 @@ int wctest::test_runall()
 	{
 		int testResult = allLexTests[t]();
 		if(testResult)
-			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
+			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
 		else
 			cout << "\tTest #" << t + 1 << " passed" << endl;
 	}
@@ -36,7 +36,7 @@ int wctest::test_runall()
 	{
 		int testResult = allParseTests[t]();
 		if (testResult)
-			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
+			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
 		else
 			cout << "\tTest #" << t + 1 << " passed" << endl;
 
@@ -48,7 +48,7 @@ int wctest::test_runall()
 	{
 		int testResult = allGenTests[t]();
 		if (testResult)
-			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
+			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
 		else
 			cout << "\tTest #" << t + 1 << " passed" << endl;
 	}
@@ -59,7 +59,7 @@ int wctest::test_runall()
 	{
 		int testResult = allVMTests[t]();
 		if (testResult)
-			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::errorStrings.find(testResult)->second << endl;
+			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
 		else
 			cout << "\tTest #" << t + 1 << " passed" << endl;
 	}

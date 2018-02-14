@@ -23,19 +23,13 @@ namespace wc
 		class wcBaseBytecodeGen
 		{
 		public:
-			wcError getError();
-			void setError(wcError);
+			error::wcError getError();
+			void setError(error::wcError);
 
 			virtual bytecode::wcExecContext gen(parse::wcAST&);
 
 		private:
-			wcError error;
-		};
-
-		class wcClassicBytecodeGen : public wcBaseBytecodeGen
-		{
-		public:
-			virtual bytecode::wcExecContext gen(parse::wcAST&);
+			error::wcError error;
 		};
 
 		

@@ -54,6 +54,7 @@ namespace wc
 		std::vector<std::shared_ptr<bytecode::wcInstruction>> genSimpExpression(wc::codegen::wcGenParams, std::vector<parse::wcParseNode>* rpnOutput);
 		int genSimpIf(wc::codegen::wcGenParams);
 		int genSimpDecVar(wc::codegen::wcGenParams);
+		int genSimpNamespaceDec(wc::codegen::wcGenParams);
 
 		class wcSimpleBytecodeGen : public wcBaseBytecodeGen
 		{

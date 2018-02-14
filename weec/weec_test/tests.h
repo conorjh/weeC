@@ -26,8 +26,11 @@ namespace wctest
 		int p_basic_4();
 		int p_basic_5();
 		int p_basic_6();
+		int p_basic_7();
+		int p_basic_8();
+		int p_basic_9();
 
-		const std::vector<int(*)()> allParseTests = { &p_basic_1,&p_basic_2,&p_basic_3,&p_basic_4 ,&p_basic_5, &p_basic_6 };
+		const std::vector<int(*)()> allParseTests = { &p_basic_1,&p_basic_2,&p_basic_3,&p_basic_4 ,&p_basic_5, &p_basic_6 , &p_basic_7, &p_basic_8, &p_basic_9 };
 	}
 
 	namespace gen
@@ -51,8 +54,9 @@ namespace wctest
 		int vm_basic_7();
 		int vm_basic_8();
 		int vm_basic_9();
+		int vm_basic_10();
 
-		const std::vector<int(*)()> allVMTests = { &vm_basic_1, &vm_basic_1a, &vm_basic_1b, &vm_basic_1c, &vm_basic_2 ,&vm_basic_3,&vm_basic_4,&vm_basic_5,&vm_basic_6,&vm_basic_7,&vm_basic_8,&vm_basic_9 };
+		const std::vector<int(*)()> allVMTests = { &vm_basic_1, &vm_basic_1a, &vm_basic_1b, &vm_basic_1c, &vm_basic_2 ,&vm_basic_3,&vm_basic_4,&vm_basic_5,&vm_basic_6,&vm_basic_7,&vm_basic_8,&vm_basic_9,&vm_basic_10 };
 	}
 
 	namespace api

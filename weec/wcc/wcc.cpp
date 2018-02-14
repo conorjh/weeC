@@ -1,6 +1,7 @@
 #include "wcc.h"
 #include "api.h"
 #include "util.h"
+#include "classic.h"
 #include <iostream>
 
 using namespace std;
@@ -10,6 +11,7 @@ using namespace wc;
 using namespace wc::compile;
 using namespace wc::util;
 using namespace wc::bytecode;
+using namespace wc::error;
 using namespace wc::api;
 
 namespace wcc

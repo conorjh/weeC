@@ -114,9 +114,10 @@
   <ItemGroup>
     <ClCompile Include="api.cpp" />
     <ClCompile Include="bytecode.cpp" />
-    <ClCompile Include="classicvm.cpp" />
+    <ClCompile Include="classic.cpp" />
     <ClCompile Include="codegen.cpp" />
     <ClCompile Include="compiler.cpp" />
+    <ClCompile Include="error.cpp" />
     <ClCompile Include="lex.cpp" />
     <ClCompile Include="parse.cpp" />
     <ClCompile Include="simple.cpp" />
@@ -127,6 +128,7 @@
   <ItemGroup>
     <ClInclude Include="api_types.h" />
     <ClInclude Include="bytecode.h" />
+    <ClInclude Include="classic.h" />
     <ClInclude Include="codegen.h" />
     <ClInclude Include="compiler.h" />
     <ClInclude Include="debug.h" />

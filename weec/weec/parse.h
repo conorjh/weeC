@@ -29,6 +29,7 @@ namespace wc
 			wcSymbol(lex::wcTokenType);
 			wcSymbol(std::string);
 			wcSymbol(std::string, std::string);
+			wcSymbol(wcSymbolType, std::string, std::string);
 			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace, 
 				bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, int stackOffset, wcSymbol* dataType);
 
@@ -126,7 +127,7 @@ namespace wc
 			lex::wcToken getToken();
 			lex::wcToken getToken(int);
 			lex::wcToken nextToken();
-			lex::wcToken nextToken(lex::wcTokenType p_expectedType, wcError& p_error);
+			lex::wcToken nextToken(lex::wcTokenType p_expectedType, error::wcError& p_error);
 			lex::wcToken decToken();
 
 			void setNode(tree<wcParseNode>::iterator);
@@ -221,23 +222,23 @@ namespace wc
 			virtual wcAST parse(std::vector<lex::wcToken>);
 
 			bool isError();
-			wcError getError();
-			void setError(wcError);
+			error::wcError getError();
+			void setError(error::wcError);
 
 		protected:
 			void init();
-			wcError error;
+			error::wcError error;
 			wcParseIndex index;
 			wcParseData data;
 		};
 
 		struct wcParseParams 
 		{
-			wcParseParams(wcParseIndex&, wcAST&, wcError&, wcParseData&);
-			wcParseIndex& pIndex;
-			wcAST& pOutput;
-			wcError& pError;
-			wcParseData& pData;
+			wcParseParams(wcParseIndex&, wcAST&, error::wcError&, wcParseData&);
+			wcParseIndex& index;
+			wcAST& output;
+			error::wcError& error;
+			wcParseData& data;
 			friend class wcParser;
 		};
 

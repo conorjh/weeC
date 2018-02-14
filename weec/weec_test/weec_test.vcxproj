@@ -119,6 +119,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="api_tests.cpp" />
+    <ClCompile Include="exp_tests.cpp" />
     <ClCompile Include="gen_tests.cpp" />
     <ClCompile Include="lex_tests.cpp" />
     <ClCompile Include="main.cpp" />

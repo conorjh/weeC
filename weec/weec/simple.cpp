@@ -20,11 +20,11 @@ namespace wc
 	namespace codegen
 	{
 		inline vector<wcParseNode> genSimpExpression_genRPN(wcGenParams params, int startingDepth, vector<wcParseNode>* rpnOutput);
-		inline vector<shared_ptr<wcInstruction>> genSimpExpression_genInstructionsFromRPN(wcGenParams params, vector<wcParseNode>* rpnOutput);
+		inline vector<shared_ptr<wcInstruction>> genSimpExpression_genInstructionsFromRPN(wcGenParams params, vector<wcParseNode>* rpnInput);
 	}
 }
 
-vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression(wcGenParams params, vector<wcParseNode>* rpnOutput = nullptr)
+vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression(wcGenParams params, vector<wcParseNode>* rpnOutput)
 {
 	if (params.pindex.getNode()->type != pn_exp)
 		return vector<shared_ptr<wcInstruction>>();
@@ -119,7 +119,7 @@ vector<wcParseNode> wc::codegen::genSimpExpression_genRPN(wcGenParams params, in
 	return *rpnOutput;
 }
 
-vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructionsFromRPN(wcGenParams params, vector<wcParseNode>* rpnOutput)
+vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructionsFromRPN(wcGenParams params, vector<wcParseNode>* rpnInput)
 {
 	vector<shared_ptr<wcInstruction>> instructionOutput;
 	int operand1,operand2,stackIndex; 
@@ -127,12 +127,12 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 	wcInstructionPlusOperand s;
 	shared_ptr<wcInstructionPlusOperand> p;
 
-	for (int i = 0; i < rpnOutput->size(); ++i)
-		switch(rpnOutput->at(i).type)
+	for (int i = 0; i < rpnInput->size(); ++i)
+		switch(rpnInput->at(i).type)
 		{
 		//literals
 		case pn_strlit:
-			stringLiteral = rpnOutput->at(i).tokens[0].data;
+			stringLiteral = rpnInput->at(i).tokens[0].data;
 			if (!params.output.stringTable.doesStringExist(stringLiteral))
 				operand1 = params.output.stringTable.addEntry(stringLiteral);	//add to string table if it's the first occurence
 			else
@@ -141,7 +141,7 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 			break;
 
 		case pn_intlit:
-			operand1 = stoi(rpnOutput->at(i).tokens[0].data);
+			operand1 = stoi(rpnInput->at(i).tokens[0].data);
 			instructionOutput.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_push, operand1)));
 			break;
 
@@ -158,7 +158,7 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 
 		//variables
 		case pn_ident:
-			stackIndex = params.ast.symTab.getSymbol(rpnOutput->at(i).tokens[0].data)->stackOffset;
+			stackIndex = params.ast.symTab.getSymbol(rpnInput->at(i).tokens[0].data)->stackOffset;
 			instructionOutput.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_pushstk, stackIndex)));
 			//p = static_pointer_cast<wcInstructionPlusOperand>(instructionOutput[instructionOutput.size() - 1]);
 			break;
@@ -207,7 +207,7 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 			break;
 
 		case pn_assign:
-			stackIndex = params.ast.symTab.getSymbol(rpnOutput->at(i).tokens[1].data)->stackOffset;
+			stackIndex = params.ast.symTab.getSymbol(rpnInput->at(i).tokens[1].data)->stackOffset;
 			instructionOutput.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_assign, stackIndex)));
 			break;
 		case pn_mult:
@@ -331,7 +331,6 @@ namespace wc
 {
 	namespace codegen
 	{
-		wcParseIndex gen_initParseIndex(wcParseIndex p_pi, wcAST& p_ast);
 	}
 }
 

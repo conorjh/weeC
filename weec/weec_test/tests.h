@@ -40,6 +40,13 @@ namespace wctest
 		const std::vector<int(*)()> allGenTests = { &g_basic_1 };
 	}
 
+	namespace exp
+	{
+		int exp_basic_1();
+		int exp_basic_2();
+		const std::vector<int(*)()> allExpTests = { &exp_basic_1, &exp_basic_2 };
+	}
+
 	namespace vm
 	{
 		int vm_basic_1();

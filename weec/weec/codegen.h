@@ -11,7 +11,8 @@ namespace wc
 	{
 		int genStatement(wc::parse::wcParseIndex&);
 		int genExpression(wc::parse::wcParseIndex&);
-		
+		parse::wcParseIndex gen_initParseIndex(parse::wcParseIndex p_pi, parse::wcAST& p_ast);
+
 		struct wcGenParams
 		{
 			wcGenParams(wc::parse::wcParseIndex&, wc::parse::wcAST&, bytecode::wcExecContext&);

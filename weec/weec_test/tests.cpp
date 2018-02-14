@@ -8,6 +8,7 @@ using namespace wctest::lex;
 using namespace wctest::parse;
 using namespace wctest::gen;
 using namespace wctest::vm;
+using namespace wctest::exp;
 
 namespace wctest
 {
@@ -30,6 +31,17 @@ int wctest::test_runall()
 			cout << "\tTest #" << t + 1 << " passed" << endl;
 	}
 
+	//expression parsing tests
+	cout << "Running expression parsing tests..." << endl;
+	for (int t = 0; t < allExpTests.size(); ++t)
+	{
+		int testResult = allExpTests[t]();
+		if (testResult)
+			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
+		else
+			cout << "\tTest #" << t + 1 << " passed" << endl;
+	}
+
 	//parse tests
 	cout << "Running parse tests..." << endl;
 	for (int t = 0; t < allParseTests.size(); ++t)
@@ -39,7 +51,6 @@ int wctest::test_runall()
 			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
 		else
 			cout << "\tTest #" << t + 1 << " passed" << endl;
-
 	}
 
 	//bytecode generation tests
@@ -53,7 +64,7 @@ int wctest::test_runall()
 			cout << "\tTest #" << t + 1 << " passed" << endl;
 	}
 
-	//vn tests
+	//vm tests
 	cout << "Running VM tests..." << endl;
 	for (int t = 0; t < allVMTests.size(); ++t)
 	{

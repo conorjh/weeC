@@ -15,7 +15,7 @@ namespace wc
 			error::wcError getError();
 			void setError(error::wcError);
 
-			virtual api::wcScript compile(std::vector<std::string> input);
+			virtual api::wcScript compile(std::vector<std::string> input, parse::wcAST* outputAST = nullptr);
 
 		protected:
 			error::wcError error;

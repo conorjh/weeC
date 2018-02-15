@@ -13,6 +13,8 @@ namespace wc
 		 unsigned int randomUInt();
 		 std::string itos(int);
 		 std::string ftos(float);
+		 int stoi(std::string);
+		 int stoi(char);
 	}
 }
 

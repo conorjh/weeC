@@ -43,6 +43,22 @@ unsigned int wc::util::randomUInt()
 	return min + (rand() % static_cast<unsigned int>(max - min));
 }
 
+int wc::util::stoi(string p_in)
+{
+	stringstream ss(p_in);
+	int out;
+	ss >> out;
+	return out;
+}
+
+int wc::util::stoi(char p_in)
+{
+	stringstream ss(p_in);
+	int out;
+	ss >> out;
+	return out;
+}
+
 string wc::util::itos(int p_in)
 {
 	stringstream ss;
@@ -54,7 +70,7 @@ std::string wc::util::ftos(float p_f)
 {
 	int nd = 2;
 	ostringstream ostr;
-	int tens = stoi("1" + string(nd, '0'));
+	int tens = std::stoi("1" + string(nd, '0'));
 	ostr << round(p_f*tens) / tens;
 	return ostr.str();
 }

@@ -1,7 +1,8 @@
 #ifndef WCC_WCC_H
 #define WCC_WCC_H
 #include <vector>
-#include "io.h"
+#include <string>
+#include "weec.h"
 
 namespace wcc
 {
@@ -9,38 +10,26 @@ namespace wcc
 	void init(int argc, char *argv[]);
 	void cleanup();
 
-	enum CmdLineArgType
-	{
-		null, command, optional, free_floating_parameter
-	};
-
-	struct CmdLineArg
-	{
-		CmdLineArg();
-		CmdLineArgType type;
-		std::string cmdlet;
-		std::vector<std::string> params;
-	};
-
 	struct CompilerOutput
 	{
+		wc::parse::wcAST ast;
 		wc::compile::wcBaseCompiler* compiler;
 		wc::api::wcScript script;
 	};
 
 	enum SourceType
 	{
-		wcst_sourcecode, wcst_ast, wcst_bytecode, wcst_bytecode_debug,
+		wcst_sourcecode, wcst_wasm, wcst_ast, wcst_bytecode, wcst_bytecode_debug,
 	};
 
 	const std::unordered_multimap<int, std::string> sourceTypeStrings =
 	{
 		{ wcst_sourcecode,"Source Code" },
+		{ wcst_wasm,"WASM Source Code" },
 		{ wcst_ast,"AST" },
 		{ wcst_bytecode,"Precompiled Bytecode" },
 		{ wcst_bytecode_debug,"Precompiled Bytecode with Debug Info" }
 	};
-
 
 	enum CompileTarget
 	{
@@ -60,14 +49,30 @@ namespace wcc
 		wccData();
 		std::string filenameSource, filenameOutput, filenameAST;
 		SourceType sourceType;
-		CompileTarget target;
+		CompileTarget compileTarget;
 		bool consoleOn, displayOutput, outputAST;
 	};
 
+	enum CmdLineArgType
+	{
+		null, command, optional, free_floating_parameter
+	};
+
+	struct CmdLineArg
+	{
+		CmdLineArg();
+		CmdLineArgType type;
+		std::string cmdlet;
+		std::vector<std::string> params;
+	};
+
+	void parseCmdLine(int argc, char *argv[]);
+	bool parseCmdLine_Arg(CmdLineArg p_arg);
+	std::vector<CmdLineArg> convertCmdLineArgs(int p_argc, char *p_argv[]);
+	
 	//data
 	extern wccData data;
 
-	void parseCmdLine(int argc, char *argv[]);
 }
 
 #endif 

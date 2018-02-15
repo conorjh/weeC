@@ -2,17 +2,20 @@
 #include "api.h"
 #include "util.h"
 #include "classic.h"
+#include "io.h"
+#include <string>
 #include <iostream>
 
 using namespace std;
 using namespace wcc;
-using namespace wcc::io;
 using namespace wc;
 using namespace wc::compile;
 using namespace wc::util;
 using namespace wc::bytecode;
 using namespace wc::error;
 using namespace wc::api;
+using namespace wc::parse;
+using namespace wc::io;
 
 namespace wcc
 {
@@ -20,40 +23,42 @@ namespace wcc
 
 	//methods
 	CompilerOutput compile();
+	void compile_exportOutput(CompilerOutput&);
 	void splash();
 	void print();
 	void print(string);
 	void displayPreCompileInfo();
 	void displayCompileResult(CompilerOutput);
 	bool parseCmdLine_Arg(CmdLineArg p_arg);
-	
+
 	//helpers
-	vector<CmdLineArg> convertCmdLineArgs(int, char *[]);
-	wcBaseCompiler getTargetCompiler(CompileTarget);
-	SourceType deriveInputType(string p_filename);
-	string getSourceLine(int line);
-	string getFilenameWithoutExt(string);
-	string getExtensionFromTargetPlatform(CompileTarget);
-	string getFilenameExtension(string);
+	wc::compile::wcBaseCompiler getTargetCompiler(CompileTarget);
+	SourceType deriveInputType(std::string p_filename);
+	std::string getSourceLine(int line);
+	std::string getFilenameWithoutExt(string);
+	std::string getExtensionFromTargetPlatform(CompileTarget);
+	std::string getFilenameExtension(string);
 
 	//consts
-	const char * cmdlet_output = "o";
-	const char * cmdlet_source = "s";
-	const char * cmdlet_target = "t";
-	const char * cmdlet_console = "console";
-	const char * cmdlet_h = "h";
-	const char * cmdlet_ast = "ast";
+	const char * cmdlet_output = "o";			//output filename
+	const char * cmdlet_source = "s";			//source filename
+	const char * cmdlet_target = "t";			//compilation target
+	const char * cmdlet_console = "console";	//console active
+	const char * cmdlet_h = "h";				//hide output
+	const char * cmdlet_ast = "ast";			//export AST (filename optional, uses output filename)
 
 	const char * fext_sourcecode = ".wc";
 	const char * fext_bytecode = ".wcc";
 	const char * fext_ansi_c = ".c";
+	const char * fext_wasm = ".wasm";
+	const char * fext_ast = ".ast";
 	const char * fext_x86 = ".exe";
 }
 
 wcc::wccData::wccData()
 {
 	sourceType = wcst_sourcecode;
-	target = wcct_bytecode;
+	compileTarget = wcct_bytecode;
 	filenameOutput = filenameSource = filenameAST = "";
 	outputAST = consoleOn = false;
 	displayOutput = true;
@@ -79,10 +84,82 @@ wcBaseCompiler wcc::getTargetCompiler(CompileTarget p_target)
 	}
 }
 
+
+void wcc::parseCmdLine(int p_argc, char *p_argv[])
+{
+	//convert to an easier to use format
+	vector<CmdLineArg> args = convertCmdLineArgs(p_argc, p_argv);
+
+	//process each command line argument
+	for (int t = 0; t < args.size(); ++t)
+		parseCmdLine_Arg(args[t]);
+
+	//output filename required even if not specified by user
+	if (data.filenameOutput == "")
+		data.filenameOutput = getFilenameWithoutExt(data.filenameSource) + getExtensionFromTargetPlatform(data.compileTarget);
+
+	//use the output filename for the AST if one wasnt specified
+	if (data.outputAST && data.filenameAST == "")
+		data.filenameAST = getFilenameWithoutExt(data.filenameOutput) + fext_ast;
+}
+
+//adjust program settings according to command line parameters
+bool wcc::parseCmdLine_Arg(CmdLineArg p_arg)
+{
+	switch (p_arg.type)
+	{
+	case free_floating_parameter:
+		p_arg.cmdlet = cmdlet_source;
+	case command:
+	case optional:
+		if (p_arg.cmdlet == cmdlet_output)			//-o    Output filename
+		{
+			if (!p_arg.params.size())
+				return false;
+			data.filenameOutput = p_arg.params[0];
+		}
+		else if (p_arg.cmdlet == cmdlet_target)		//-t	Target Compiler
+		{
+			if (!p_arg.params.size())
+				return false;	//we need at least 1 parameter
+			if (p_arg.params[0] == "bytecode" || p_arg.params[0] == "bc")
+				data.compileTarget = wcct_bytecode;
+			else if (p_arg.params[0] == "simple_bytecode" || p_arg.params[0] == "simple")
+				data.compileTarget = wcct_simple_bytecode;
+			else if (p_arg.params[0] == "ansi_c" || p_arg.params[0] == "c")
+				data.compileTarget = wcct_ansi_c;
+			else
+				data.compileTarget = wcct_x86;
+		}
+		else if (p_arg.cmdlet == cmdlet_source)		//-s      Source filename
+		{
+			if (!p_arg.params.size())
+				return false;
+			data.filenameSource = p_arg.params[0];
+		}
+		else if (p_arg.cmdlet == cmdlet_h)			//-h (hide display)
+		{
+			data.displayOutput = false;
+		}
+		else if (p_arg.cmdlet == cmdlet_console)	//-console   Console input active
+		{
+			data.consoleOn = true;
+		}
+		else if (p_arg.cmdlet == cmdlet_ast)		//-ast    AST Filename
+		{
+			data.outputAST = true;
+			if (p_arg.params.size())
+				data.filenameAST = p_arg.params[0];
+		}
+		return true;
+	}
+	return true;
+}
+
 vector<CmdLineArg> wcc::convertCmdLineArgs(int p_argc, char *p_argv[])
 {
 	vector<CmdLineArg> argOutput;
-	
+
 	CmdLineArg arg;
 	bool parsingParams = false;
 	int index = 1;	//skip the 1st argument
@@ -90,8 +167,8 @@ vector<CmdLineArg> wcc::convertCmdLineArgs(int p_argc, char *p_argv[])
 	{
 		switch (p_argv[index][0])
 		{
-		//command
-		//optional command
+			//command
+			//optional command
 		case '\\':
 		case '-':
 		case '--':
@@ -124,8 +201,8 @@ vector<CmdLineArg> wcc::convertCmdLineArgs(int p_argc, char *p_argv[])
 		}
 		index++;
 	}
-	
-	if(parsingParams)
+
+	if (parsingParams)
 		argOutput.push_back(arg);
 	return argOutput;
 }
@@ -137,9 +214,9 @@ void wcc::exec()
 
 	//attempt to compile
 	CompilerOutput output = compile();
-	
+
 	//export compiled code
-	
+
 }
 
 CompilerOutput wcc::compile()
@@ -149,25 +226,50 @@ CompilerOutput wcc::compile()
 
 	//compile with the appropriate compiler
 	CompilerOutput output;	wcClassicCompiler* classicComp;	wcSimpleCompiler* simpleComp;
-	switch (data.target)
+	switch (data.compileTarget)
 	{
 	case wcct_bytecode:
-		output.compiler = classicComp = static_cast<wcClassicCompiler*>(&getTargetCompiler(data.target));
-		output.script = classicComp->wcClassicCompiler::compile(importSource(data.filenameSource));
+		output.compiler = classicComp = static_cast<wcClassicCompiler*>(&getTargetCompiler(data.compileTarget));
+		output.script = classicComp->wcClassicCompiler::compile(importSource(data.filenameSource), &output.ast);
 		break;
 	case wcct_simple_bytecode:
-		output.compiler = simpleComp = static_cast<wcSimpleCompiler*>(&getTargetCompiler(data.target));
-		output.script = simpleComp->wcSimpleCompiler::compile(importSource(data.filenameSource));
+		output.compiler = simpleComp = static_cast<wcSimpleCompiler*>(&getTargetCompiler(data.compileTarget));
+		output.script = simpleComp->wcSimpleCompiler::compile(importSource(data.filenameSource), &output.ast);
 		break;
 	default:	case wcct_x86:	case wcct_ansi_c:
-		print("Currently unsupported Target Platform ("+targetStrings.find(data.target)->second+")");
+		print("Currently unsupported Target Platform (" + targetStrings.find(data.compileTarget)->second + ")");
 		return output;
 	}
-	
+
+	//export our compiled data
+	compile_exportOutput(output);
+
 	//display result/error etc
 	displayCompileResult(output);
 
 	return output;
+}
+
+void wcc::compile_exportOutput(CompilerOutput& output)
+{
+	//export the AST if required
+	if (data.outputAST)
+		io::exportAST(output.ast, data.filenameAST);
+
+	//export the compilation in appropriate format
+	switch (data.compileTarget)
+	{
+	case wcct_bytecode:
+	case wcct_simple_bytecode:
+		exportBytecode(output.script.con, data.filenameOutput);
+		break;
+
+	case wcct_ansi_c:
+	case wcct_x86:
+	default:
+		//currently unimplemented
+		break;
+	}
 }
 
 void wcc::print()
@@ -183,7 +285,7 @@ void wcc::print(string p_input)
 	cout << p_input;
 	if (p_input.size() && p_input[p_input.length() - 1] != '\n')
 		cout << "\n";
-	else if(!p_input.size())
+	else if (!p_input.size())
 		cout << "\n";
 }
 
@@ -196,10 +298,6 @@ void wcc::splash()
 void wcc::init(int argc, char *argv[])
 {
 	parseCmdLine(argc, argv);
-
-	//output filename required even if not specified by user
-	if (data.filenameOutput == "")
-		data.filenameOutput = getFilenameWithoutExt(data.filenameSource) + getExtensionFromTargetPlatform(data.target);
 
 	splash();
 }
@@ -216,6 +314,10 @@ SourceType wcc::deriveInputType(string p_filename)
 		return wcst_sourcecode;
 	else if (ext == fext_bytecode)
 		return wcst_bytecode;
+	else if (ext == fext_wasm)
+		return wcst_wasm;
+	else if (ext == fext_ast)
+		return wcst_ast;
 	else
 		return wcst_sourcecode;
 }
@@ -230,12 +332,22 @@ string wcc::getFilenameWithoutExt(string p_input)
 	if (p_input.size() < 3)
 		return p_input;
 
-	int index = 0;
-	while (index < p_input.size() && p_input[index] != '.')
-		index++;
-	return p_input.substr(0, p_input.size() - 3);
+	//work backwards to find the final period
+	int index = p_input.size() - 1;
+	while (index != 0)
+		if (p_input[index] == '.')
+			break;
+		else
+			index--;
+
+	//no . found, return whole input
+	if (index == p_input.size())
+		return p_input;
+
+	return p_input.substr(0, p_input.size() - (p_input.size() - index));
 }
 
+//takes a CompileTarget, returns the string rep of it
 string wcc::getExtensionFromTargetPlatform(CompileTarget p_target)
 {
 	switch (p_target)
@@ -259,6 +371,7 @@ string wcc::getFilenameExtension(string p_input)
 	return p_input.substr(index);
 }
 
+//display compile settings
 void wcc::displayPreCompileInfo()
 {
 	if (data.filenameSource == "")
@@ -267,10 +380,10 @@ void wcc::displayPreCompileInfo()
 		return;	//no source file specified
 	}
 
-	print("Filename: " + data.filenameSource+ "\t(" 
-		+ sourceTypeStrings.find(deriveInputType(data.filenameSource))->second +")");
-	print("Target Platform: " + targetStrings.find(data.target)->second);
-	
+	print("Filename: " + data.filenameSource + "\t("
+		+ sourceTypeStrings.find(deriveInputType(data.filenameSource))->second + ")");
+	print("Target Platform: " + targetStrings.find(data.compileTarget)->second);
+
 	if (data.filenameAST != "")
 		print("\t-AST: " + data.filenameAST);
 
@@ -278,6 +391,7 @@ void wcc::displayPreCompileInfo()
 	print("Compiling " + data.filenameOutput + "...");
 }
 
+//
 void wcc::displayCompileResult(CompilerOutput p_input)
 {
 	wcError err = p_input.compiler->getError();
@@ -285,8 +399,8 @@ void wcc::displayCompileResult(CompilerOutput p_input)
 	{
 		print("Compilation failed...");
 		print("- - - - - - - - - - - -");
-		print(itos((int)err.line + 1) + "," + itos((int)err.col) + ": \""+getSourceLine(err.line )+"\"");
-		print("Error "+itos((int)err.code) + " " + errorStrings.find((int)err.code)->second + ":  \""+err.text+"\"" );
+		print(itos((int)err.line + 1) + "," + itos((int)err.col) + ": \"" + getSourceLine(err.line) + "\"");
+		print("Error " + itos((int)err.code) + " " + errorStrings.find((int)err.code)->second + ":  \"" + err.text + "\"");
 		print("- - - - - - - - - - - -");
 	}
 	else
@@ -295,66 +409,3 @@ void wcc::displayCompileResult(CompilerOutput p_input)
 	}
 }
 
-void wcc::parseCmdLine(int p_argc, char *p_argv[])
-{
-	//convert to an easier to use format
-	vector<CmdLineArg> args = convertCmdLineArgs(p_argc, p_argv);
-
-	//process each command line argument
-	for (int t = 0; t < args.size(); ++t)
-		parseCmdLine_Arg(args[t]);
-
-}
-
-bool wcc::parseCmdLine_Arg(CmdLineArg p_arg)
-{
-	switch (p_arg.type)
-	{
-	case free_floating_parameter:
-		p_arg.cmdlet = cmdlet_source;
-	case command:
-	case optional:
-		if (p_arg.cmdlet == cmdlet_output)			//-o
-		{
-			if (!p_arg.params.size())
-				return false;
-			data.filenameOutput = p_arg.params[0];
-		}
-		else if (p_arg.cmdlet == cmdlet_target)		//-t
-		{
-			if (!p_arg.params.size())
-				return false;
-			if (p_arg.params[0] == "bytecode" || p_arg.params[0] == "bc")
-				data.target = wcct_bytecode;
-			else if (p_arg.params[0] == "simple_bytecode" || p_arg.params[0] == "simple")
-				data.target = wcct_simple_bytecode;
-			else if (p_arg.params[0] == "ansi_c" || p_arg.params[0] == "c")
-				data.target = wcct_ansi_c;
-			else
-				data.target = wcct_x86;
-		}
-		else if (p_arg.cmdlet == cmdlet_source)		//-s
-		{
-			if (!p_arg.params.size())
-				return false;
-			data.filenameSource = p_arg.params[0];
-		}
-		else if (p_arg.cmdlet == cmdlet_h)			//-h (hide display)
-		{
-			data.displayOutput = false;
-		}
-		else if (p_arg.cmdlet == cmdlet_console)	//-console
-		{
-			data.consoleOn = true;
-		}
-		else if (p_arg.cmdlet == cmdlet_ast)		//-ast
-		{
-			data.outputAST = true;
-			if (!p_arg.params.size())
-				return true;
-			data.filenameAST = p_arg.params[0];
-		}
-		return true;
-	}
-	return true;
-}

@@ -281,7 +281,7 @@ wc::bytecode::wcChunks::wcChunks(string p_s)
 
 int wc::bytecode::wcChunks::i()
 {
-	return stoi(_s);
+	return util::stoi(_s);
 }
 
 float wc::bytecode::wcChunks::f()
@@ -318,4 +318,12 @@ int& wc::bytecode::wcExecContextRegisters::operator[](int p_int)
 	case wcRegisterTitles::halt:
 		return halt;
 	}
+}
+
+
+unsigned int wc::bytecode::getOpCount(wcOpcode oc)
+{
+	if (wcOpcodeOperandCounts.find(oc) == wcOpcodeOperandCounts.end())
+		return 0;
+	return wcOpcodeOperandCounts.find(oc)->second;
 }

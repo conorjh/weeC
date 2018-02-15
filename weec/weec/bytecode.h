@@ -181,7 +181,15 @@ namespace wc
 			debug::wcDebugSymbolTable debugSymbolTable;
 		};
 
+		const std::unordered_multimap<wcOpcode, unsigned int> wcOpcodeOperandCounts =
+		{
+			{ oc_nop,0 },{ oc_push,1 },{ oc_pop,0 },{ oc_pushstk,1 } ,{ oc_pushr,1 },{ oc_popstk,1 },{ oc_popr,1 },{ oc_setstk,1 },
+			{ oc_cmp,0 },{ oc_jmp,1 },{ oc_je,1 },{ oc_jne,1 },{ oc_jg,1 },{ oc_jl,1 },{ oc_jge,1 },{ oc_jle,1 },
+			{ oc_assign,0 },{ oc_plus,0 },{ oc_minus,0 },{ oc_mult,0 },{ oc_div,0 },{ oc_expo,0 },{ oc_mod,0 },{ oc_inc,0 },{ oc_dec,0 },
+			{ oc_and,0 },{ oc_or,0 },{ oc_xor,0 },{ oc_not,0 },{ oc_shfl,0 },{ oc_shfr,0 },{ oc_call,0 },{ oc_ret,0 },{ oc_callvm,0 },{ oc_halt,1 },
+		};
 
+		unsigned int getOpCount(wcOpcode);
 	}
 }
 #endif

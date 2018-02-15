@@ -37,7 +37,7 @@ namespace wc
 			soc_halt, soc_call, soc_ret, soc_callvm,
 		};
 
-		const std::unordered_multimap<wcSimpleOpcode, int> wcSimpleOpcodeOperandCounts=
+		const std::unordered_multimap<wcSimpleOpcode, unsigned int> wcSimpleOpcodeOperandCounts=
 		{
 			{soc_nop,0},{ soc_push,1 },{ soc_pop,0 }, {soc_pushstk,1} , {soc_pushr,1}, {soc_popstk,1},{ soc_popr,1 },{ soc_setstk,1 },
 			{soc_cmp,0}, {soc_jmp,1}, {soc_je,1}, {soc_jne,1}, {soc_jg,1}, {soc_jl,1}, {soc_jge,1}, {soc_jle,1},
@@ -45,7 +45,7 @@ namespace wc
 			{soc_and,0}, {soc_or,0}, {soc_xor,0}, {soc_not,0}, {soc_shfl,0}, {soc_shfr,0},{soc_call,0}, {soc_ret,0}, {soc_callvm,0}, {soc_halt,1},
 		};
 
-		int getSimpOpCount(wcSimpleOpcode);
+		unsigned int getSimpOpCount(wcSimpleOpcode);
 	}
 
 	namespace codegen
@@ -117,7 +117,7 @@ namespace wc
 		public:
 			wcSimpleCompiler();
 
-			virtual api::wcScript compile(std::vector<std::string> input);
+			virtual api::wcScript compile(std::vector<std::string> input, parse::wcAST* p_outputAST = nullptr);
 		};
 	}
 }

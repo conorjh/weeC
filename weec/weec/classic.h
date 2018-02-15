@@ -23,7 +23,7 @@ namespace wc
 		public:
 			wcClassicCompiler();
 
-			virtual api::wcScript compile(std::vector<std::string> input);
+			virtual api::wcScript compile(std::vector<std::string> input, parse::wcAST* p_outputAST = nullptr);
 		};
 	}
 

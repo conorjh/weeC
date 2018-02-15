@@ -141,7 +141,7 @@ vector<shared_ptr<wcInstruction>> wc::codegen::genSimpExpression_genInstructions
 			break;
 
 		case pn_intlit:
-			operand1 = stoi(rpnInput->at(i).tokens[0].data);
+			operand1 = util::stoi(rpnInput->at(i).tokens[0].data);
 			instructionOutput.push_back(make_shared<wcInstructionPlusOperand>(wcInstructionPlusOperand(soc_push, operand1)));
 			break;
 
@@ -369,7 +369,7 @@ wc::vm::wcSimpleVM::wcSimpleVM()
 
 }
 
-int wc::bytecode::getSimpOpCount(wcSimpleOpcode p_oc)
+unsigned int wc::bytecode::getSimpOpCount(wcSimpleOpcode p_oc)
 {
 	if (wcSimpleOpcodeOperandCounts.find(p_oc) == wcSimpleOpcodeOperandCounts.end())
 		return 0;
@@ -450,7 +450,7 @@ wc::compile::wcSimpleCompiler::wcSimpleCompiler()
 
 }
 
-wcScript wc::compile::wcSimpleCompiler::compile(vector<string> p_source)
+wcScript wc::compile::wcSimpleCompiler::compile(vector<string> p_source, wcAST* p_ast)
 {
 	wcScript output;
 
@@ -471,6 +471,10 @@ wcScript wc::compile::wcSimpleCompiler::compile(vector<string> p_source)
 	output.con = gen.genSimple(tree);
 	if (gen.getError().code)
 		return wcScript(gen.getError());
+
+	//return AST if specified
+	if (p_ast != nullptr)
+		*p_ast = tree;
 
 	//return what we've created
 	return output;

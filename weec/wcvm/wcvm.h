@@ -24,18 +24,24 @@ namespace wcvm
 		std::vector<std::string> params;
 	};
 
+	enum SourceType
+	{
+		wcvmst_bytecode, wcvmst_simple_bytecode
+	};
+
 	struct wcvmData
 	{
 		wcvmData();
 		std::string filenameSource;
+		SourceType sourceType;
 	};
 
 	//data
 	extern wcvmData data;
 
 	void parseCmdLine(int argc, char *argv[]);
+	bool parseCmdLine_Arg(CmdLineArg p_arg);
+	std::vector<CmdLineArg> convertCmdLineArgs(int p_argc, char *p_argv[]);
+
 }
-
-
-
 #endif

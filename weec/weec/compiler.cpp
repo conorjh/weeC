@@ -25,8 +25,7 @@ wcError wc::compile::wcBaseCompiler::getError()
 	return error;
 }
 
-wcScript wc::compile::wcBaseCompiler::compile(vector<string> p_source)
+wcScript wc::compile::wcBaseCompiler::compile(vector<string> p_source, wcAST* p_ast)
 {
-	
 	return wcScript();
 }

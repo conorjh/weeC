@@ -119,13 +119,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\include\tinyxml2\tinyxml2.cpp" />
-    <ClCompile Include="io.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="wcc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\tinyxml2\tinyxml2.h" />
-    <ClInclude Include="io.h" />
     <ClInclude Include="wcc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -34,7 +34,7 @@ wc::compile::wcClassicCompiler::wcClassicCompiler()
 
 }
 
-wcScript wc::compile::wcClassicCompiler::compile(vector<string> p_source)
+wcScript wc::compile::wcClassicCompiler::compile(vector<string> p_source, wcAST* p_outputAST)
 {
 	wcScript output;
 
@@ -64,6 +64,10 @@ wcScript wc::compile::wcClassicCompiler::compile(vector<string> p_source)
 		error = gen.getError();
 		return wcScript();
 	}
+
+	if (p_outputAST != nullptr)
+		*p_outputAST = tree;
+
 	return output;
 }
 

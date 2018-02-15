@@ -118,6 +118,7 @@
     <ClCompile Include="codegen.cpp" />
     <ClCompile Include="compiler.cpp" />
     <ClCompile Include="error.cpp" />
+    <ClCompile Include="io.cpp" />
     <ClCompile Include="lex.cpp" />
     <ClCompile Include="parse.cpp" />
     <ClCompile Include="simple.cpp" />
@@ -133,6 +134,7 @@
     <ClInclude Include="compiler.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="error.h" />
+    <ClInclude Include="io.h" />
     <ClInclude Include="lex.h" />
     <ClInclude Include="parse.h" />
     <ClInclude Include="simple.h" />

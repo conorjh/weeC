@@ -14,9 +14,33 @@ namespace wcIDE
         public CompilerOptions()
         {
             InitializeComponent();
+            switch(wcIDEData.compileTarget)
+            {
+                case CompileTargetPlatform.Bytecode:
+                    cbTargetPlatform.SelectedItem = "Bytecode";
+                    break;
+                case CompileTargetPlatform.SimpleBytecode:
+                    cbTargetPlatform.SelectedItem = "Simple Bytecode";
+                    break;
+            }
+            switch (wcIDEData.vmTarget)
+            {
+                case VMTargetPlatform.Bytecode:
+                    cbVMPlatform.SelectedItem = "Default";
+                    break;
+                case VMTargetPlatform.SimpleBytecode:
+                    cbVMPlatform.SelectedItem = "Simple";
+                    break;
+            }
+
         }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button4_Click(object sender, EventArgs e)
         {
 
         }

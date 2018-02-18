@@ -30,7 +30,7 @@ namespace wc
 
 	namespace vm
 	{
-		class wcClassicVM : wcBaseVM
+		class wcClassicVM : public wcBaseVM
 		{
 		public:
 			wcClassicVM();

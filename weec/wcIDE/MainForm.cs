@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -8,10 +8,11 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using wcIDE;
-using wcIDE.Demo.Utils;
+using wcIDE.Utils;
+using System.
 using ScintillaNET;
 
-namespace wcIDE.Demo {
+namespace wcIDE {
 	public partial class MainForm : Form {
 		public MainForm() {
 			InitializeComponent();
@@ -53,9 +54,10 @@ namespace wcIDE.Demo {
 
 			// DEFAULT FILE
 			LoadDataFromFile("../../../scripts/test.wc");
+            wcIDEData.currentScriptFilename = "../../../scripts/test.wc";
 
-			// INIT HOTKEYS
-			InitHotkeys();
+            // INIT HOTKEYS
+            InitHotkeys();
 
 		}
 
@@ -587,6 +589,17 @@ namespace wcIDE.Demo {
                 FileName.Text = "";
                 TextArea.Text = "";
             
+        }
+
+        private void compileToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            //compile our input
+            string wccCmdLine = wcIDE.wcIDEHelper.getCompilerCommandLine();
+            Process.Start(wccCmdLine);
+
+            //take the output, and load it into the VM
+
+
         }
     }
 }

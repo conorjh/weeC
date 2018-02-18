@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 
-namespace wcIDE.Demo.Utils {
+namespace wcIDE.Utils {
 	internal class HotKeyManager {
 
 		public static bool Enable = true;

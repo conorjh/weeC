@@ -5,7 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using ScintillaNET;
 
-namespace wcIDE.Demo.Utils {
+namespace wcIDE.Utils {
 	internal class SearchManager {
 
 		public static Scintilla TextArea;

@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include "api.h"
+#include "weec.h"
 
 namespace wcvm
 {
@@ -34,6 +34,7 @@ namespace wcvm
 		wcvmData();
 		std::string filenameSource;
 		SourceType sourceType;
+		bool hideConsole,hideOutput;
 	};
 
 	//data

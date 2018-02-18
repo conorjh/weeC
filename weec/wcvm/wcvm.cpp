@@ -1,27 +1,100 @@
 #include "wcvm.h"
 #include <vector>
-
+#include <iostream>
 using namespace std;
 using namespace wcvm;
 using namespace wc;
+using namespace wc::bytecode;
+using namespace wc::vm;
+using namespace wc::io;
+namespace wcvm
+{
+	wcvmData data;
+	void splash();
+	void print();
+	void print(string);
+
+	//consts
+	const char * cmdlet_source = "s";			//source filename
+	const char * cmdlet_sourcetype = "t";			//source type (bytecode,simple bytecode
+	const char * cmdlet_hideconsole = "hc";		//hide the input console when running
+	const char * cmdlet_hideoutput = "h";		//hide any output
+
+	const char * fext_bytecode = ".wcc";
+}
+
+wcvm::CmdLineArg::CmdLineArg()
+{
+	type = null;
+}
+
+void wcvm::print()
+{
+	print("");
+}
+
+void wcvm::print(string p_input)
+{
+	if (data.hideOutput)
+		return;
+
+	cout << p_input;
+	if (p_input.size() && p_input[p_input.length() - 1] != '\n')
+		cout << "\n";
+	else if (!p_input.size())
+		cout << "\n";
+}
+
+void wcvm::splash()
+{
+	print("WeeC VM");
+	print("- - - - - - - - - - - -");
+}
 
 void wcvm::exec()
 {
+	wcExecContext con;	wcSimpleExecContext scon;
+	wcClassicVM cvm;	wcSimpleVM svm;
+	int handle;
+	//import source
+	if (data.sourceType == wcvmst_bytecode)
+	{
+		importBytecode(con, data.filenameSource);
+		handle = cvm.load(con);
+	}
+	else
+	{
+		importBytecode(scon, data.filenameSource);
+		handle = svm.load(scon);
+	}
+
+	//execute
+	if (data.sourceType == wcvmst_bytecode)
+		cvm.exec(handle);
+	else
+		svm.exec(handle);
+
 }
 
 void wcvm::init(int argc, char * argv[])
 {
+	parseCmdLine(argc, argv);
 
+	splash();
 }
 
 void wcvm::cleanup()
 {
+
 }
 
 wcvm::wcvmData::wcvmData()
 {
-
+	filenameSource = "";
+	hideConsole = false;
+	sourceType = wcvmst_bytecode;
 }
+
 void wcvm::parseCmdLine(int p_argc, char *p_argv[])
 {
 	//convert to an easier to use format
@@ -36,61 +109,42 @@ void wcvm::parseCmdLine(int p_argc, char *p_argv[])
 //adjust program settings according to command line parameters
 bool wcvm::parseCmdLine_Arg(CmdLineArg p_arg)
 {
-	/*
 	switch (p_arg.type)
 	{
 	case free_floating_parameter:
 		p_arg.cmdlet = cmdlet_source;
 	case command:
 	case optional:
-		if (p_arg.cmdlet == cmdlet_output)			//-o    Output filename
-		{
-			if (!p_arg.params.size())
-				return false;
-			data.filenameOutput = p_arg.params[0];
-		}
-		else if (p_arg.cmdlet == cmdlet_target)		//-t	Target Compiler
+		if (p_arg.cmdlet == cmdlet_sourcetype)				//-t	source type
 		{
 			if (!p_arg.params.size())
 				return false;	//we need at least 1 parameter
 			if (p_arg.params[0] == "bytecode" || p_arg.params[0] == "bc")
-				data.compileTarget = wcct_bytecode;
+				data.sourceType = wcvmst_bytecode;
 			else if (p_arg.params[0] == "simple_bytecode" || p_arg.params[0] == "simple")
-				data.compileTarget = wcct_simple_bytecode;
-			else if (p_arg.params[0] == "ansi_c" || p_arg.params[0] == "c")
-				data.compileTarget = wcct_ansi_c;
-			else
-				data.compileTarget = wcct_x86;
+				data.sourceType = wcvmst_simple_bytecode;
 		}
-		else if (p_arg.cmdlet == cmdlet_source)		//-s      Source filename
+		else if (p_arg.cmdlet == cmdlet_source)			//-s      Source filename
 		{
 			if (!p_arg.params.size())
-				return false;
+				return false;//we need at least 1 parameter
 			data.filenameSource = p_arg.params[0];
 		}
-		else if (p_arg.cmdlet == cmdlet_h)			//-h (hide display)
+		else if (p_arg.cmdlet == cmdlet_hideoutput)			//-h      Hide any output
 		{
-			data.displayOutput = false;
+			data.hideOutput = true;
 		}
-		else if (p_arg.cmdlet == cmdlet_console)	//-console   Console input active
+		else if (p_arg.cmdlet == cmdlet_hideconsole)	//-hc    hides the console
 		{
-			data.consoleOn = true;
+			data.hideConsole = true;
 		}
-		else if (p_arg.cmdlet == cmdlet_ast)		//-ast    AST Filename
-		{
-			data.outputAST = true;
-			if (p_arg.params.size())
-				data.filenameAST = p_arg.params[0];
-		}
-		return true;
 	}
 	return true;
-	*/
+	
 }
 
 vector<CmdLineArg> wcvm::convertCmdLineArgs(int p_argc, char *p_argv[])
 {
-	/*
 	vector<CmdLineArg> argOutput;
 
 	CmdLineArg arg;
@@ -138,5 +192,4 @@ vector<CmdLineArg> wcvm::convertCmdLineArgs(int p_argc, char *p_argv[])
 	if (parsingParams)
 		argOutput.push_back(arg);
 	return argOutput;
-	*/
 }

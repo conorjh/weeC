@@ -1,4 +1,4 @@
-﻿namespace wcIDE.Demo {
+﻿namespace wcIDE {
 	partial class MainForm {
 		/// <summary>
 		/// Required designer variable.
@@ -77,14 +77,14 @@
             this.compileAndRunToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.startDebuggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aSTViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.disassemblerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.startDebuggerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.TextPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.PanelSearch.SuspendLayout();
@@ -543,6 +543,7 @@
             this.compileToolStripMenuItem1.Name = "compileToolStripMenuItem1";
             this.compileToolStripMenuItem1.Size = new System.Drawing.Size(183, 24);
             this.compileToolStripMenuItem1.Text = "Compile";
+            this.compileToolStripMenuItem1.Click += new System.EventHandler(this.compileToolStripMenuItem1_Click);
             // 
             // compileAndRunToolStripMenuItem
             // 
@@ -561,6 +562,20 @@
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(183, 24);
             this.optionsToolStripMenuItem.Text = "Options";
             this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
+            // 
+            // debugToolStripMenuItem
+            // 
+            this.debugToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.startDebuggerToolStripMenuItem});
+            this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
+            this.debugToolStripMenuItem.Size = new System.Drawing.Size(62, 23);
+            this.debugToolStripMenuItem.Text = "Debug";
+            // 
+            // startDebuggerToolStripMenuItem
+            // 
+            this.startDebuggerToolStripMenuItem.Name = "startDebuggerToolStripMenuItem";
+            this.startDebuggerToolStripMenuItem.Size = new System.Drawing.Size(172, 24);
+            this.startDebuggerToolStripMenuItem.Text = "Start Debugger";
             // 
             // toolsToolStripMenuItem
             // 
@@ -604,20 +619,6 @@
             this.openFileDialog.DefaultExt = "txt";
             this.openFileDialog.FileName = "New File";
             this.openFileDialog.Filter = "All files|*.*";
-            // 
-            // debugToolStripMenuItem
-            // 
-            this.debugToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.startDebuggerToolStripMenuItem});
-            this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
-            this.debugToolStripMenuItem.Size = new System.Drawing.Size(62, 23);
-            this.debugToolStripMenuItem.Text = "Debug";
-            // 
-            // startDebuggerToolStripMenuItem
-            // 
-            this.startDebuggerToolStripMenuItem.Name = "startDebuggerToolStripMenuItem";
-            this.startDebuggerToolStripMenuItem.Size = new System.Drawing.Size(172, 24);
-            this.startDebuggerToolStripMenuItem.Text = "Start Debugger";
             // 
             // MainForm
             // 

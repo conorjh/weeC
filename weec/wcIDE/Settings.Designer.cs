@@ -30,13 +30,13 @@
         {
             this.label1 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.tbVMPath = new System.Windows.Forms.TextBox();
+            this.tbCompilerPath = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.button5 = new System.Windows.Forms.Button();
+            this.btnBrowseVM = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnBrowseCompiler = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -60,9 +60,9 @@
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25.18892F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 74.81108F));
-            this.tableLayoutPanel1.Controls.Add(this.textBox2, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.tbVMPath, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.textBox1, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.tbCompilerPath, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 1);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 12);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -72,23 +72,23 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(397, 59);
             this.tableLayoutPanel1.TabIndex = 7;
             // 
-            // textBox2
+            // tbVMPath
             // 
-            this.textBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.tbVMPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox2.Location = new System.Drawing.Point(103, 36);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(291, 20);
-            this.textBox2.TabIndex = 4;
+            this.tbVMPath.Location = new System.Drawing.Point(103, 36);
+            this.tbVMPath.Name = "tbVMPath";
+            this.tbVMPath.Size = new System.Drawing.Size(291, 20);
+            this.tbVMPath.TabIndex = 4;
             // 
-            // textBox1
+            // tbCompilerPath
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.tbCompilerPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(103, 6);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(291, 20);
-            this.textBox1.TabIndex = 2;
+            this.tbCompilerPath.Location = new System.Drawing.Point(103, 6);
+            this.tbCompilerPath.Name = "tbCompilerPath";
+            this.tbCompilerPath.Size = new System.Drawing.Size(291, 20);
+            this.tbCompilerPath.TabIndex = 2;
             // 
             // label2
             // 
@@ -104,14 +104,15 @@
             this.label2.Text = "VM Path";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // button5
+            // btnBrowseVM
             // 
-            this.button5.Location = new System.Drawing.Point(415, 46);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(24, 20);
-            this.button5.TabIndex = 12;
-            this.button5.Text = "...";
-            this.button5.UseVisualStyleBackColor = true;
+            this.btnBrowseVM.Location = new System.Drawing.Point(415, 46);
+            this.btnBrowseVM.Name = "btnBrowseVM";
+            this.btnBrowseVM.Size = new System.Drawing.Size(24, 20);
+            this.btnBrowseVM.TabIndex = 12;
+            this.btnBrowseVM.Text = "...";
+            this.btnBrowseVM.UseVisualStyleBackColor = true;
+            this.btnBrowseVM.Click += new System.EventHandler(this.btnBrowseVM_Click);
             // 
             // button4
             // 
@@ -122,6 +123,7 @@
             this.button4.TabIndex = 11;
             this.button4.Text = "Apply";
             this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // button3
             // 
@@ -134,14 +136,15 @@
             this.button3.Text = "Cancel";
             this.button3.UseVisualStyleBackColor = true;
             // 
-            // button1
+            // btnBrowseCompiler
             // 
-            this.button1.Location = new System.Drawing.Point(415, 16);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(24, 20);
-            this.button1.TabIndex = 8;
-            this.button1.Text = "...";
-            this.button1.UseVisualStyleBackColor = true;
+            this.btnBrowseCompiler.Location = new System.Drawing.Point(415, 16);
+            this.btnBrowseCompiler.Name = "btnBrowseCompiler";
+            this.btnBrowseCompiler.Size = new System.Drawing.Size(24, 20);
+            this.btnBrowseCompiler.TabIndex = 8;
+            this.btnBrowseCompiler.Text = "...";
+            this.btnBrowseCompiler.UseVisualStyleBackColor = true;
+            this.btnBrowseCompiler.Click += new System.EventHandler(this.button1_Click);
             // 
             // button2
             // 
@@ -152,6 +155,7 @@
             this.button2.TabIndex = 9;
             this.button2.Text = "OK";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // Settings
             // 
@@ -162,10 +166,10 @@
             this.CancelButton = this.button3;
             this.ClientSize = new System.Drawing.Size(445, 122);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Controls.Add(this.button5);
+            this.Controls.Add(this.btnBrowseVM);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.btnBrowseCompiler);
             this.Controls.Add(this.button2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -184,13 +188,13 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox tbVMPath;
+        private System.Windows.Forms.TextBox tbCompilerPath;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button button5;
+        private System.Windows.Forms.Button btnBrowseVM;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnBrowseCompiler;
         private System.Windows.Forms.Button button2;
     }
 }

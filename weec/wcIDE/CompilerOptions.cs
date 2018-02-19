@@ -32,6 +32,15 @@ namespace wcIDE
                     cbVMPlatform.SelectedItem = "Simple";
                     break;
             }
+            switch (wcIDEData.debugMode)
+            {
+                case DebugMode.Off:
+                    cbDebug.SelectedItem = "Off";
+                    break;
+                case DebugMode.On:
+                    cbDebug.SelectedItem = "Debug (include Symbols)";
+                    break;
+            }
 
         }
 
@@ -40,8 +49,47 @@ namespace wcIDE
 
         }
 
+        //apply button
         private void button4_Click(object sender, EventArgs e)
         {
+            switch (cbTargetPlatform.SelectedItem)
+            {
+                case "Bytecode":
+                    wcIDEData.compileTarget = CompileTargetPlatform.Bytecode;
+                    break;
+                case "Simple Bytecode":
+                    wcIDEData.compileTarget = CompileTargetPlatform.SimpleBytecode;
+                    break;
+            }
+            switch (cbVMPlatform.SelectedItem)
+            {
+                case "Default":
+                    wcIDEData.vmTarget = VMTargetPlatform.Bytecode;
+                    break;
+                case "Simple":
+                    wcIDEData.vmTarget = VMTargetPlatform.SimpleBytecode;
+                    break;
+            }
+            switch (cbDebug.SelectedItem )
+            {
+                case "Off":
+                    wcIDEData.debugMode = DebugMode.Off;
+                    break;
+                case "Debug (include Symbols)":
+                    wcIDEData.debugMode = DebugMode.On;
+                    break;
+            }
+        }
+
+        private void CompilerOptions_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            //do apply
+            button4_Click(sender, e);
 
         }
     }

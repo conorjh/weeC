@@ -178,6 +178,7 @@
             this.btnOk.TabIndex = 9;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // CompilerOptions
             // 
@@ -197,6 +198,7 @@
             this.Name = "CompilerOptions";
             this.Text = "Compiler Options";
             this.TopMost = true;
+            this.Load += new System.EventHandler(this.CompilerOptions_Load);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);

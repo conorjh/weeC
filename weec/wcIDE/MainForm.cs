@@ -9,7 +9,6 @@ using System.Windows.Forms;
 using System.IO;
 using wcIDE;
 using wcIDE.Utils;
-using System.
 using ScintillaNET;
 
 namespace wcIDE {
@@ -585,21 +584,18 @@ namespace wcIDE {
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            
-                FileName.Text = "";
-                TextArea.Text = "";
-            
+            FileName.Text = "";
+            TextArea.Text = "";
         }
 
         private void compileToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             //compile our input
-            string wccCmdLine = wcIDE.wcIDEHelper.getCompilerCommandLine();
+            string wccCmdLine = wcIDEHelper.getCompilerCommandLine();
             Process.Start(wccCmdLine);
 
             //take the output, and load it into the VM
-
-
+            
         }
     }
 }

@@ -27,8 +27,8 @@ namespace wcIDE {
             compileTarget = CompileTargetPlatform.SimpleBytecode;
             vmTarget = VMTargetPlatform.SimpleBytecode;
             debugMode = DebugMode.Off;
-            pathCompiler = "wcc.exe";
-            pathVM = "wcvm.exe";
+            pathCompiler = "../../../Debug/wcc.exe";
+            pathVM = "../../../Debug/wcvm.exe";
         }
         public static string currentScriptFilename;
         public static string pathCompiler, pathVM;
@@ -41,19 +41,27 @@ namespace wcIDE {
     {
         public static string getCompilerCommandLine()
         {
-            string output = wcIDEData.pathCompiler + " ";
+            string output = wcIDEData.pathCompiler;
+
+            //source filename
+            output += " -s \"" + wcIDEData.currentScriptFilename+"\"";
+
+            //target compiler
             switch(wcIDEData.compileTarget)
             {
                 case CompileTargetPlatform.Bytecode:
-                    output += "-t bytecode";       
+                    output += " -t bytecode";       
                     break;
 
                 case CompileTargetPlatform.SimpleBytecode:
-                    output += "-t simple";
+                    output += " -t simple";
                     break;
             }
+
+            //produce an AST
+            output += " -ast";
             
-            return "";
+            return output;
         }
 
         public static string getVMCommandLine()

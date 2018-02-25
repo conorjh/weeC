@@ -146,6 +146,7 @@ namespace wc
 		bool lex_comment(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
 		bool lex_commentMultiLine(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
 		bool setErrorReturnFalse(error::wcError& p_error, error::wcError p_newError);
+		std::vector<std::string> tokenizeString(std::string);
 	}
 
 }

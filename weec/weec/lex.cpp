@@ -23,6 +23,15 @@ bool wc::lex::setErrorReturnFalse(wcError& p_error, wcError p_newError)
 	return false;
 }
 
+vector<string> wc::lex::tokenizeString(string p_input)
+{
+	vector<string> output;
+	auto tokens = lexingLexer.lex(p_input);
+	for (int t = 0; t < tokens.size(); ++t)
+		output.push_back(tokens[t].data);
+	return output;
+}
+
 wcTokenType wc::lex::wcLexer::deriveTokenType(string p_input)
 {
 	return lexingLexer.deriveTokenType(p_input.c_str());

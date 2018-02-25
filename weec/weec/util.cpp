@@ -51,6 +51,22 @@ int wc::util::stoi(string p_in)
 	return out;
 }
 
+bool wc::util::stob(char p_in)
+{
+	stringstream ss(p_in);
+	int out;
+	ss >> out;
+	return (bool)out;
+}
+
+bool wc::util::stob(string p_in)
+{
+	stringstream ss(p_in);
+	int out;
+	ss >> out;
+	return (bool)out;
+}
+
 int wc::util::stoi(char p_in)
 {
 	stringstream ss(p_in);

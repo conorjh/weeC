@@ -15,6 +15,8 @@ namespace wc
 		 std::string ftos(float);
 		 int stoi(std::string);
 		 int stoi(char);
+		 bool stob(std::string);
+		 bool stob(char);
 	}
 }
 

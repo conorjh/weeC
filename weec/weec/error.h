@@ -46,7 +46,8 @@ namespace wc
 			{ec_par_malformedident,		"Malformed identifier"},
 			{ec_par_undeclaredident,	"Undeclared identifier"},
 			{ec_par_identoutofscope,	"Identifier invalid in this scope"},
-			{ec_par_invalidsymbol,		"Symbol cannot be used in this context"},
+			{ec_par_invalidsymbol,		"Symbol cannot be used in this context" },
+			{ec_par_illegalstatement,	"Statement illegal in this context" },
 			{ec_par_redeclaration,		"Symbol redeclaration"}
 
 		};

@@ -254,7 +254,7 @@ void wcc::compile_exportOutput(CompilerOutput& output)
 {
 	//export the AST if required
 	if (data.outputAST)
-		io::exportAST(output.ast, data.filenameAST);
+		wc::io::exportAST(output.ast, data.filenameAST);
 
 	//export the compilation in appropriate format
 	switch (data.compileTarget)

@@ -124,7 +124,7 @@ namespace wc
 			virtual bool isDelimDroppable(wcTokenType);
 			virtual bool isPunctuation(wcTokenType);
 
-			wcTokenType deriveTokenType(const char *);
+			virtual wcTokenType deriveTokenType(const char *);
 			virtual wcTokenType deriveTokenType(char);
 			virtual wcTokenType deriveTokenType(std::string);
 

@@ -13,7 +13,7 @@ namespace wc
 	{
 		namespace lex
 		{
-			wcLexer asmLexer;
+			wasmLexer asmLexer;
 		}
 	}
 }
@@ -35,7 +35,7 @@ vector<wcToken> wc::wasm::lex::wasmLexer::lex(vector<string> p_input)
 
 	//loop through characters making tokens until end of stream
 	while (lexIndex.isValid())
-		switch (asmLexer.deriveTokenType(lexIndex.getChar()))
+		switch (asmLexer.deriveTokenType(lexIndex.getChar().c_str()))
 		{
 			//string literal
 		case tt_dquote:
@@ -77,6 +77,19 @@ vector<wcToken> wc::wasm::lex::wasmLexer::lex(vector<string> p_input)
 		}
 
 	return out;
+}
+
+wcTokenType wc::wasm::lex::wasmLexer::deriveTokenType(const char * p_input)
+{
+	if (p_input == "")
+		return tt_null;
+
+	auto result = wasmTokenStrings.find(p_input);
+
+	if (result == wasmTokenStrings.end())
+		return tt_ident;	//no match, treat as identifier (variable name etc)
+
+	return result->second;	//matches a known token string
 }
 
 wcAST wc::wasm::parse::wasmParser::parse(vector<wcToken> p_tokens)

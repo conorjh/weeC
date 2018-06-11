@@ -28,6 +28,15 @@ namespace wc
 			tt_intlit, tt_strlit, tt_fltlit, tt_ident, tt_comment, tt_chr, tt_const,
 			tt_true, tt_false, tt_namespace, tt_function, tt_if, tt_else, tt_elseif, tt_while, tt_break, tt_return, tt_continue,
 			tt_varident, tt_funcident, tt_lvalue,
+			
+			tt_asm_key_add, tt_asm_key_sub, tt_asm_key_mul,
+			tt_asm_key_div, tt_asm_key_mov, tt_asm_key_cmp,
+			tt_asm_key_inc, tt_asm_key_dec, tt_asm_key_and,
+			tt_asm_key_or, tt_asm_key_not, tt_asm_key_jmp,
+			tt_asm_key_je, tt_asm_key_jne, tt_asm_key_jz,
+			tt_asm_key_jg, tt_asm_key_jge, tt_asm_key_jl,
+			tt_asm_key_jle, tt_asm_key_call,
+			tt_asm_key_ret, tt_asm_key_push, tt_asm_key_pop,
 
 			tt_tab, tt_ws, tt_eos
 		};

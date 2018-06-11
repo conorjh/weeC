@@ -124,7 +124,7 @@ int wctest::lex::l_basic_7()
 	vector<wcToken> correctOutput =
 	{ 
 		wcToken(tt_int, "int"),wcToken(tt_ident, "daveBrubeck"),wcToken(tt_assign, "="),
-		wcToken(tt_intlit, "0"), wcToken(tt_scolon, ";"), wcToken(tt_return, "return"), 
+		wcToken(tt_intlit, "0"), wcToken(tt_scolon, ";"), wcToken(tt_key_return, "return"), 
 		wcToken(tt_ident, "daveBrubeck"), wcToken(tt_scolon, ";") 
 	};
 

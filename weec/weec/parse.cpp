@@ -710,7 +710,7 @@ int wc::parse::parseStatement(wcParseParams params, bool onlyAllowDeclarations, 
 			return setErrorReturn0(params.error, wcError(ec_par_illegalstatement, params.index.getToken()));
 		break;
 
-	case tt_return:
+	case tt_key_return:
 		if (onlyAllowDeclarations || (!allowAnyDeclarations))
 			return setErrorReturn0(params.error, wcError(ec_par_illegalstatement, params.index.getToken()));
 		if (!parseReturn(params))
@@ -1341,7 +1341,7 @@ int wc::parse::parseReturn(wcParseParams params)
 		return 0;
 
 	//make sure the first token is return
-	if (params.index.getToken().type != tt_return)
+	if (params.index.getToken().type != tt_key_return)
 		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'return', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
 	params.output.addChild(params.index, wcParseNode(pn_return));
 	params.index.nextToken();

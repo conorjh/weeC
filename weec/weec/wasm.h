@@ -44,7 +44,7 @@ namespace wc
 			{ "ret", wc::lex::tt_asm_key_ret },{ "push", wc::lex::tt_asm_key_push },{ "pop", wc::lex::tt_asm_key_pop },
 
 			{ "const", wc::lex::tt_const },{ "namespace", wc::lex::tt_namespace },{ "func", wc::lex::tt_function },
-			{ "if", wc::lex::tt_if },{ "else", wc::lex::tt_else },{ "return", wc::lex::tt_return },{ "`",wc::lex::tt_tilde },
+			{ "if", wc::lex::tt_if },{ "else", wc::lex::tt_else },{ "return", wc::lex::tt_key_return },{ "`",wc::lex::tt_tilde },
 			{ "while", wc::lex::tt_while },{ "break", wc::lex::tt_break },{ "continue", wc::lex::tt_continue },
 			};
 

@@ -26,7 +26,7 @@ namespace wc
 			tt_dollar, tt_amper, tt_greater, tt_less, tt_equal, tt_notequal, tt_greaterequal, tt_lessequal,
 			tt_lognot, tt_logor, tt_logand, tt_incr, tt_decr, tt_plusassign, tt_minusassign, tt_multassign, tt_divassign,
 			tt_intlit, tt_strlit, tt_fltlit, tt_ident, tt_comment, tt_chr, tt_const,
-			tt_true, tt_false, tt_namespace, tt_function, tt_if, tt_else, tt_elseif, tt_while, tt_break, tt_return, tt_continue,
+			tt_true, tt_false, tt_namespace, tt_function, tt_if, tt_else, tt_elseif, tt_while, tt_break, tt_key_return, tt_continue,
 			tt_varident, tt_funcident, tt_lvalue,
 			
 			tt_asm_key_add, tt_asm_key_sub, tt_asm_key_mul,
@@ -66,7 +66,7 @@ namespace wc
 			{ "int", tt_int },{ "str", tt_string },{ "flt", tt_float },
 			{ "bool", tt_bool },{ "true", tt_true },{ "false", tt_false },
 			{ "const", tt_const },{ "namespace", tt_namespace },{ "func", tt_function },
-			{ "if", tt_if },{ "else", tt_else },{ "return", tt_return },{ "`",tt_tilde },
+			{ "if", tt_if },{ "else", tt_else },{ "return", tt_key_return },{ "`",tt_tilde },
 			{ "while", tt_while },{ "break", tt_break },{ "continue", tt_continue },
 		};
 

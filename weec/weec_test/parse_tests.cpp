@@ -88,7 +88,8 @@ int wctest::parse::p_basic_8()
 
 int wctest::parse::p_basic_9()
 {
-	return standardParseTest("namespace outer"
+	return standardParseTest(
+		"namespace outer"
 		"{"
 		"	namespace inner"
 		"	{"

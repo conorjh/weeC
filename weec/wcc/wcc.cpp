@@ -151,6 +151,8 @@ bool wcc::parseCmdLine_Arg(CmdLineArg p_arg)
 			if (p_arg.params.size())
 				data.filenameAST = p_arg.params[0];
 		}
+		else
+			return false;
 		return true;
 	}
 	return true;

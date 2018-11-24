@@ -38,9 +38,9 @@ bool wc::io::exportSource(string filename, string content)
 bool wc::io::exportAST(wc::parse::wcAST &p_ast, std::string p_outputFilename)
 {
 	tree<wcParseNode>::pre_order_iterator index = p_ast.parseTree.begin();
-	++index;
-	int lastDepth = 0;
+	int lastDepth = -1;
 	string outputString = "";
+
 	while (index != p_ast.parseTree.end())
 	{
 		if (p_ast.parseTree.depth(index) > lastDepth)
@@ -61,7 +61,7 @@ bool wc::io::exportAST(wc::parse::wcAST &p_ast, std::string p_outputFilename)
 		else if (lastDepth == -1)
 		{
 			//we are writing the initial head of the tree
-
+			outputString += "#head" + '\n';
 		}
 		lastDepth = p_ast.parseTree.depth(index);
 		++index;

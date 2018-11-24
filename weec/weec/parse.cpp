@@ -396,7 +396,7 @@ string wc::parse::createInternalFuncName(wcSymbol p_ident, wcParamList& p_paramL
 {
 	string output = p_ident.fullyQualifiedIdent;
 
-	for (int t = 0; t < p_paramList.paramCount(); ++t)
+	for (unsigned int t = 0; t < p_paramList.paramCount(); ++t)
 		output += parse_internalFuncNameSeprator + p_paramList.params[t].tableEntry->fullyQualifiedIdent;
 
 	return output;

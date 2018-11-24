@@ -118,8 +118,8 @@ int wctest::lex::l_basic_6()
 int wctest::lex::l_basic_7()
 {
 	wcLexer lexer;
-	string sourceCode = "int daveBrubeck = 0;"
-		"return daveBrubeck;";
+	string sourceCode = "int a = 0;"
+		"int b = a + 1;";
 
 	vector<wcToken> correctOutput =
 	{ 

@@ -17,7 +17,6 @@ namespace wctest
 
 int wctest::test_runall()
 {
-
 	cout << "Running all tests..." << endl;
 
 	//lex tests

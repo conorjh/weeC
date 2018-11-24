@@ -185,7 +185,7 @@ string wc::lex::wcLexIndex::nextChar()
 		return "";
 	
 	++index;	++column;
-	if (column >= source[line].size())
+	if (column >= source->at(line).size())
 		if (line + 1 < source->size())
 		{
 			line++;
@@ -193,7 +193,9 @@ string wc::lex::wcLexIndex::nextChar()
 			return getChar();	//next character from the new line
 		}
 		else
+		{
 			return "";	//end of stream
+		}
 
 	return getChar();	//next character
 }
@@ -205,7 +207,7 @@ string wc::lex::wcLexIndex::peekChar()
 		return "";
 
 	//check theres another character
-	if (column + 1 >= source[line].size())
+	if (column + 1 >= source->at(line).size())
 		if (line + 1 >= source->size())
 			return "";	//eos
 		else

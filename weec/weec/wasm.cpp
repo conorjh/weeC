@@ -28,10 +28,10 @@ wc::wasm::lex::wasmLexer::~wasmLexer()
 
 }
 
-vector<wcToken> wc::wasm::lex::wasmLexer::lex(vector<string> p_input)
+vector<wcToken> wc::wasm::lex::wasmLexer::lex(vector<string> input)
 {
 	vector<wcToken> out;
-	lexIndex.source = &p_input;
+	lexIndex.source = &input;
 
 	//loop through characters making tokens until end of stream
 	while (lexIndex.isValid())
@@ -79,12 +79,12 @@ vector<wcToken> wc::wasm::lex::wasmLexer::lex(vector<string> p_input)
 	return out;
 }
 
-wcTokenType wc::wasm::lex::wasmLexer::deriveTokenType(const char * p_input)
+wcTokenType wc::wasm::lex::wasmLexer::deriveTokenType(const char * input)
 {
-	if (p_input == "")
+	if (input == "")
 		return tt_null;
 
-	auto result = wasmTokenStrings.find(p_input);
+	auto result = wasmTokenStrings.find(input);
 
 	if (result == wasmTokenStrings.end())
 		return tt_ident;	//no match, treat as identifier (variable name etc)

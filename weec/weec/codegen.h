@@ -32,9 +32,6 @@ namespace wc
 		private:
 			error::wcError error;
 		};
-
-		
-		
 	}
 }
 

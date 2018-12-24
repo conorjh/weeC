@@ -33,15 +33,15 @@ void wcvm::print()
 	print("");
 }
 
-void wcvm::print(string p_input)
+void wcvm::print(string input)
 {
 	if (data.hideOutput)
 		return;
 
-	cout << p_input;
-	if (p_input.size() && p_input[p_input.length() - 1] != '\n')
+	cout << input;
+	if (input.size() && input[input.length() - 1] != '\n')
 		cout << "\n";
-	else if (!p_input.size())
+	else if (!input.size())
 		cout << "\n";
 }
 

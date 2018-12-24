@@ -693,14 +693,14 @@ int wc::parse::parseStatement(wcParseParams params, bool onlyAllowDeclarations, 
 			return 0;
 		break;
 
-	case tt_if:
+	case tt_keyword_if:
 		if (onlyAllowDeclarations || (!allowAnyDeclarations))
 			return setErrorReturn0(params.error, wcError(ec_par_illegalstatement, params.index.getToken()));
 		if (!parseIf(params))
 			return 0;
 		break;
 
-	case tt_namespace:
+	case tt_keyword_namespace:
 		if (allowNamespaceDec && (onlyAllowDeclarations || (allowAnyDeclarations)))
 		{
 			if (!parseNamespace(params))
@@ -710,14 +710,14 @@ int wc::parse::parseStatement(wcParseParams params, bool onlyAllowDeclarations, 
 			return setErrorReturn0(params.error, wcError(ec_par_illegalstatement, params.index.getToken()));
 		break;
 
-	case tt_key_return:
+	case tt_keyword_return:
 		if (onlyAllowDeclarations || (!allowAnyDeclarations))
 			return setErrorReturn0(params.error, wcError(ec_par_illegalstatement, params.index.getToken()));
 		if (!parseReturn(params))
 			return 0;
 		break;
 
-	case tt_while:
+	case tt_keyword_while:
 		if (onlyAllowDeclarations || (!allowAnyDeclarations))
 			return setErrorReturn0(params.error, wcError(ec_par_illegalstatement, params.index.getToken()));
 		if (!parseWhile(params))
@@ -741,7 +741,7 @@ int wc::parse::parseIf(wcParseParams params)
 	params.output.addNode(params.index, wcParseNode(pn_if));
 
 	//if keyword
-	if (params.index.getToken().type != tt_if)
+	if (params.index.getToken().type != tt_keyword_if)
 		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, params.index.getToken()));
 	params.index.nextToken();
 
@@ -1255,7 +1255,7 @@ int wc::parse::parseNamespace(wcParseParams params)
 		return 0;
 
 	//make sure the first token is the namespace reserved word
-	if (params.index.getToken().type != tt_namespace)
+	if (params.index.getToken().type != tt_keyword_namespace)
 		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'namespace', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
 	params.output.addNode(params.index, wcParseNode(pn_namespacedec));
 	params.index.nextToken();
@@ -1289,7 +1289,7 @@ int wc::parse::parseWhile(wcParseParams params)
 		return 0;
 
 	//make sure the first token is 'while'
-	if (params.index.getToken().type != tt_while)
+	if (params.index.getToken().type != tt_keyword_while)
 		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'while', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
 	params.index.nextToken();
 	params.output.addNode(params.index, wcParseNode(pn_while));
@@ -1341,7 +1341,7 @@ int wc::parse::parseReturn(wcParseParams params)
 		return 0;
 
 	//make sure the first token is return
-	if (params.index.getToken().type != tt_key_return)
+	if (params.index.getToken().type != tt_keyword_return)
 		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'return', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
 	params.output.addChild(params.index, wcParseNode(pn_return));
 	params.index.nextToken();

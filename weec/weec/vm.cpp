@@ -31,13 +31,13 @@ int wc::vm::wcBaseVM::exec(int p_handle)
 	return 0;
 }
 
-int wc::vm::wcBaseVM::load(wcExecContext& p_input)
+int wc::vm::wcBaseVM::load(wcExecContext& input)
 {
 	//look for new handle
 	int possNewHandle = newHandle();
 
 	//add to pool
-	conPool.insert(make_pair(possNewHandle, p_input));
+	conPool.insert(make_pair(possNewHandle, input));
 
 	//return new handle
 	return possNewHandle;

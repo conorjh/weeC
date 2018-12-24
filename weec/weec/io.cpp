@@ -134,9 +134,9 @@ bool incIndex(vector<string>& source, int& x, int& y)
 	return true;
 }
 
-bool wc::io::importBytecode(wc::bytecode::wcExecContext &p_outputContext, std::string p_inputFilename)
+bool wc::io::importBytecode(wc::bytecode::wcExecContext &p_outputContext, std::string inputFilename)
 {
-	auto source = importSource(p_inputFilename);
+	auto source = importSource(inputFilename);
 
 	for (int t = 0; t < source.size(); ++t)
 		for (int y = 0; y < source[t].size(); ++y)
@@ -165,16 +165,16 @@ bool wc::io::importBytecode(wc::bytecode::wcExecContext &p_outputContext, std::s
 		case 2:
 			if (incIndex(source, line, col))
 				return false;	//eos whilst reading 1st operand
+
 			operand1 = util::stoi(source[line].substr(col, 1));
 			if (incIndex(source, line, col))
 				return false;	//eos whilst reading 2nd operand
+
 			operand2 = util::stoi(source[line].substr(col, 1));
 			p_outputContext.instructions.push_back(make_shared<wcInstructionPlusOperands>(wcInstructionPlusOperands(wcOpcode(currentValue), operand1, operand2)));
 			break;
 		}
 	}
-
-
 
 	return true;
 }

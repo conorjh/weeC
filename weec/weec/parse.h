@@ -5,8 +5,8 @@
 #include "error.h"
 #include "lex.h"
 
-#define CASE_BASIC_TYPES_TT case tt_bool: case tt_int: case tt_float: case tt_string: case tt_chr: case tt_object: case tt_var:
-#define CASE_ALL_LITERALS_TT case tt_intlit: case tt_strlit: case tt_fltlit: case tt_true: case tt_false:
+#define CASE_BASIC_TYPES_TT case tt_keyword_bool: case tt_keyword_int: case tt_keyword_float: case tt_keyword_string: case tt_keyword_chr: case tt_object: case tt_var:
+#define CASE_ALL_LITERALS_TT case tt_intlit: case tt_strlit: case tt_fltlit: case tt_keyword_true: case tt_keyword_false:
 #define CASE_ALL_LITERALS_PN case pn_intlit: case pn_strlit: case pn_fltlit: case pn_true: case pn_false:
 #define CASE_ALL_ARITHMETIC_TT case tt_assign: case tt_mult: case tt_div: case tt_plus: case tt_minus:
 #define CASE_ALL_OPERATORS_TT case tt_assign: case tt_logor: case tt_logand: case tt_equal: case tt_notequal: case tt_greater:case tt_less: case tt_lessequal: case tt_greaterequal: case tt_mult: case tt_div: case tt_plus: case tt_minus:	case tt_lognot:
@@ -73,6 +73,7 @@ namespace wc
 			pn_return, pn_continue,
 			 pn_negate
 		};
+
 		const std::unordered_multimap<wcParseNodeType, const char *> pnTypeStrings = 
 		{
 			{	pn_null, "pn_null"	},	{ pn_head, "pn_head"	},		{	pn_exp,	"pn_exp" },

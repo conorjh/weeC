@@ -53,15 +53,15 @@ namespace wc
 		{
 			wcLexInputStreamIndex(wcLexInputStream&);
 
-			wcLexInputStreamIndex operator=(wcLexInputStreamIndex);
-			wcLexInputStreamIndex operator=(int);
-			wcLexInputStreamIndex operator=(wcLineColumnIndex);
-			wcLexInputStreamIndex operator--();
-			wcLexInputStreamIndex operator++();
-			wcLexInputStreamIndex operator-(int);
-			wcLexInputStreamIndex operator+(int);
-			wcLexInputStreamIndex operator-(wcLexInputStreamIndex);
-			wcLexInputStreamIndex operator+(wcLexInputStreamIndex);
+			wcLexInputStreamIndex operator=(wcLexInputStreamIndex),
+				operator=(int),
+				operator=(wcLineColumnIndex),
+				operator--(),
+				operator++(),
+				operator-(int),
+				operator+(int),
+				operator-(wcLexInputStreamIndex),
+				operator+(wcLexInputStreamIndex);
 			const char * operator[](int);
 
 			bool isValid();
@@ -182,17 +182,18 @@ namespace wc
 			wcTokenDefinitionBank& definitionsBank;
 		};
 
+		struct wcTokenStream;
 		struct wcTokenStreamIndex
 		{
 			wcTokenStreamIndex(wcTokenStream&);
 
-			wcTokenStreamIndex operator-(int);
-			wcTokenStreamIndex operator+(int);
-			wcTokenStreamIndex operator-(wcTokenStreamIndex);
-			wcTokenStreamIndex operator+(wcTokenStreamIndex);
-			wcTokenStreamIndex operator--();
-			wcTokenStreamIndex operator++();
-			wcTokenStreamIndex operator=(wcTokenStreamIndex);
+			wcTokenStreamIndex operator-(int),
+				operator+(int),
+				operator-(wcTokenStreamIndex),
+				operator+(wcTokenStreamIndex),
+				operator--(),
+				operator++(),
+				operator=(wcTokenStreamIndex);
 
 			bool isValid();
 			void reset();

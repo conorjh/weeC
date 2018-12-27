@@ -918,3 +918,42 @@ wcTokenStream wc::lex::wcTokenStream::operator+=(wcTokenStream stream)
 {
 	return *this + stream;
 }
+
+wc::lex::wcTokenStreamIndex::wcTokenStreamIndex(wcTokenStream &)
+{
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator-(int)
+{
+	return wcTokenStreamIndex();
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(wcTokenStreamIndex)
+{
+	return wcTokenStreamIndex();
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator-(wcTokenStreamIndex)
+{
+	return wcTokenStreamIndex();
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator=(wcTokenStreamIndex)
+{
+	return wcTokenStreamIndex();
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator++()
+{
+	return wcTokenStreamIndex();
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator--()
+{
+	return wcTokenStreamIndex();
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(int)
+{
+	return wcTokenStreamIndex();
+}

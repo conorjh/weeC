@@ -536,12 +536,12 @@ wcToken wc::parse::wcParseIndex::nextToken(wcTokenType p_expectedType, wcError& 
 			return getToken();
 		else
 		{
-			p_error = wcError(ec_lex_unexpectedtoken, getToken().data, getToken().line, getToken().col);
+			p_error = wcError(ec_lex_unexpectedtoken, getToken().data, getToken().line, getToken().column);
 			return wcToken(tt_null);
 		}
 	else
 	{
-		p_error = wcError(ec_lex_eos, "", getToken().line, getToken().col);
+		p_error = wcError(ec_lex_eos, "", getToken().line, getToken().column);
 		return wcToken(tt_null);
 	}
 }
@@ -886,7 +886,7 @@ wcToken wc::parse::parseFactor(wcParseParams params)
 		break;
 
 	default:	//error if we get here
-		setErrorReturnNullToken(params.error,wcError(ec_par_unexpectedtoken, operandLeft.data, operandLeft.line, operandLeft.col));
+		setErrorReturnNullToken(params.error,wcError(ec_par_unexpectedtoken, operandLeft.data, operandLeft.line, operandLeft.column));
 	}
 	return operandLeft;
 }
@@ -963,7 +963,7 @@ int wc::parse::parseType(wcParseParams params, wcSymbol*& p_typeSymbolOutput)
 
 	default:
 		string errorMsg = "Expected a Type Idenfitifer, got " + token.data;
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, errorMsg, token.line, token.col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, errorMsg, token.line, token.column));
 	}
 
 	return 1;
@@ -1042,7 +1042,7 @@ wcSymbol* wc::parse::tryParseKnownIdent(wcParseParams params, bool p_restoreLexI
 		if(p_restoreLexIndex)
 			return nullptr;	//malformed ident
 		else
-			return setErrorReturnNullPtr(params.error, wcError(ec_par_malformedident, *identifierOutput, openingToken.line, openingToken.col));	//malformed ident
+			return setErrorReturnNullPtr(params.error, wcError(ec_par_malformedident, *identifierOutput, openingToken.line, openingToken.column));	//malformed ident
 
 	//check whether ident exists
 	wcSymbol* outputSymbol = params.output.symTab.getSymbol(createFullyQualifiedIdent(params.data.currentScope->fullyQualifiedIdent, *identifierOutput));
@@ -1058,13 +1058,13 @@ int wc::parse::parseKnownIdent(wcParseParams params)
 {
 	//make sure the first token is an ident
 	if (params.index.getToken().type != tt_ident)
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "", params.index.getToken().line, params.index.getToken().col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "", params.index.getToken().line, params.index.getToken().column));
 
 	//must be valid
 	string identifierAsSeen;
 	wcSymbol* identSymbol = tryParseKnownIdent(params, true, &identifierAsSeen);
 	if(identSymbol == nullptr)
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "", params.index.getToken().line, params.index.getToken().col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "", params.index.getToken().line, params.index.getToken().column));
 	
 	//do it again but dont restore 
 	identSymbol = tryParseKnownIdent(params, false);
@@ -1089,7 +1089,7 @@ wcSymbol wc::parse::tryParseUnknownIdent(wcParseParams params, bool p_restoreLex
 		if (p_restoreLexIndex)
 			return nullptr;	//malformed ident
 		else
-			return setErrorReturnNullSymbol(params.error, wcError(ec_par_malformedident, identifier, openingToken.line, openingToken.col));	//malformed ident
+			return setErrorReturnNullSymbol(params.error, wcError(ec_par_malformedident, identifier, openingToken.line, openingToken.column));	//malformed ident
 	
 	if(p_symbolTypeHint != st_null)
 		return wcSymbol(p_symbolTypeHint,identifier, params.data.currentScope->fullyQualifiedIdent);
@@ -1225,7 +1225,7 @@ int wc::parse::parseParameterList(wcParseParams params, wcParamList& p_paramList
 
 	//make sure the first token is an opening parenthesis
 	if (params.index.getToken().type != tt_oparen)
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected '(' (tt_oparen), got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected '(' (tt_oparen), got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().column));
 	params.index.nextToken();
 	params.output.addNode(params.index, wcParseNode(pn_paramlist));
 
@@ -1256,7 +1256,7 @@ int wc::parse::parseNamespace(wcParseParams params)
 
 	//make sure the first token is the namespace reserved word
 	if (params.index.getToken().type != tt_keyword_namespace)
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'namespace', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'namespace', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().column));
 	params.output.addNode(params.index, wcParseNode(pn_namespacedec));
 	params.index.nextToken();
 
@@ -1290,7 +1290,7 @@ int wc::parse::parseWhile(wcParseParams params)
 
 	//make sure the first token is 'while'
 	if (params.index.getToken().type != tt_keyword_while)
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'while', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'while', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().column));
 	params.index.nextToken();
 	params.output.addNode(params.index, wcParseNode(pn_while));
 	
@@ -1319,7 +1319,7 @@ int wc::parse::parseBlock(wcParseParams params, bool allowStatements, bool allow
 
 	//make sure the first token is an opening brace
 	if (params.index.getToken().type != tt_obrace)
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected '{' (tt_obrace), got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected '{' (tt_obrace), got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().column));
 	params.index.nextToken();
 	params.output.addNode(params.index, wcParseNode(pn_body));
 
@@ -1342,7 +1342,7 @@ int wc::parse::parseReturn(wcParseParams params)
 
 	//make sure the first token is return
 	if (params.index.getToken().type != tt_keyword_return)
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'return', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected 'return', got " + params.index.getToken().data, params.index.getToken().line, params.index.getToken().column));
 	params.output.addChild(params.index, wcParseNode(pn_return));
 	params.index.nextToken();
 
@@ -1370,7 +1370,7 @@ int wc::parse::parseSColon(wcParseParams params)
 	//expect a semi colon
 	wcToken token = params.index.getToken();
 	if (token.type != tt_scolon)
-		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected ';' (tt_scolon), got " + token.data,token.line,token.col));
+		return setErrorReturn0(params.error, wcError(ec_par_unexpectedtoken, "Expected ';' (tt_scolon), got " + token.data,token.line,token.column));
 
 	//simples
 	params.index.nextToken();

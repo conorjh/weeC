@@ -6,6 +6,7 @@
 #include "error.h"
 
 #define CASE_TT_WS case tt_ws: case tt_newline: case tt_tab:
+#define CASE_ALL_2_PARTERS 	case tt_greater: case tt_less: case tt_lognot: case tt_assign: case tt_plus: case tt_minus:case tt_amper: case tt_pipe: case tt_colon:
 
 namespace wc
 {
@@ -23,8 +24,7 @@ namespace wc
 			tt_null, 
 
 			//value types
-			tt_intlit, tt_strlit, tt_fltlit,  tt_comment, 
-			tt_ident, tt_varident, tt_funcident,
+			tt_intlit, tt_strlit, tt_fltlit, tt_charlit,
 
 			//operators
 			tt_minus, tt_plus, tt_div, tt_mult, tt_mod, tt_expo, tt_incr, tt_decr, 
@@ -40,27 +40,50 @@ namespace wc
 			tt_keyword_while, tt_keyword_break,  tt_keyword_continue, tt_keyword_return, tt_keyword_const,
 
 			//misc
+			tt_comment, tt_ident, 
 			tt_scolon, tt_colon, tt_dcolon, tt_comma, tt_period, tt_squote, tt_dquote, 
-			tt_dollar, tt_amper, tt_bslash,
-			tt_qmark, tt_pipe, tt_underscore, tt_tilde,
+			tt_dollar, tt_amper, tt_bslash, tt_qmark, tt_pipe, tt_underscore, tt_tilde,
 			tt_tab, tt_ws, tt_newline, tt_eos, tt_eof
 		};
 		
 		//provides a way to index your read progress
+		struct wcLexInputStream;
+		struct wcLineColumnIndex;
 		struct wcLexInputStreamIndex
 		{
 			wcLexInputStreamIndex(wcLexInputStream&);
 
-			wcLexInputStreamIndex operator-(int);
-			wcLexInputStreamIndex operator+(int);
+			wcLexInputStreamIndex operator=(wcLexInputStreamIndex);
+			wcLexInputStreamIndex operator=(int);
+			wcLexInputStreamIndex operator=(wcLineColumnIndex);
 			wcLexInputStreamIndex operator--();
 			wcLexInputStreamIndex operator++();
-			wcLexInputStreamIndex operator=(wcLexInputStreamIndex);
+			wcLexInputStreamIndex operator-(int);
+			wcLexInputStreamIndex operator+(int);
+			wcLexInputStreamIndex operator-(wcLexInputStreamIndex);
+			wcLexInputStreamIndex operator+(wcLexInputStreamIndex);
+			const char * operator[](int);
 
 			bool isValid();
 			void reset();
 
+			unsigned int size();
+
+			int line, column, index;
 		private:
+			wcLexInputStream& source;
+		};
+
+		//use to convert from index to line/col, or line/col to index
+		struct wcLineColumnIndex
+		{
+			wcLineColumnIndex(wcLexInputStream& source, int index);
+			wcLineColumnIndex(wcLexInputStream& source, int line, int column);
+
+			bool updateFromIndex(int index);
+			bool updateFromLineColumn(int line, int column);
+			bool isValid();
+
 			int line, column, index;
 			wcLexInputStream& source;
 		};
@@ -70,17 +93,20 @@ namespace wc
 		{
 		public:
 			wcLexInputStream();
-			wcLexInputStream(const char *), wcLexInputStream(std::string);
-			wcLexInputStream(std::vector<std::string>), wcLexInputStream(std::vector<const char *>);
+			wcLexInputStream(const char *);
+			wcLexInputStream(std::string);
+			wcLexInputStream(std::vector<std::string>);
+			wcLexInputStream(std::vector<const char *>);
+			const char *operator[](int);
 
-			const char * next(wcLexInputStreamIndex&), 
-				get(wcLexInputStreamIndex&),
-				peek(wcLexInputStreamIndex&);
+			const char *next(wcLexInputStreamIndex&),
+				*get(wcLexInputStreamIndex&),
+				*get(int line,int column);
 
-			 const unsigned int size();
+			const unsigned int size(), size(unsigned int lineNumber);
+			const unsigned int lines();
 
 		private:
-			wcLexInputStreamIndex index;
 			std::vector<const char *> container;
 		};
 
@@ -92,10 +118,11 @@ namespace wc
 			bool operator==(const wcToken&) const;
 			const char * operator[](unsigned int);
 			wcToken operator=(const char *);
+			wcToken operator=(wcToken);
 
 			wcTokenType type;
 			const char * data;
-			int line, col;
+			int line, column;
 		};
 
 		//matches string literals to wcTokenTypes
@@ -157,11 +184,12 @@ namespace wc
 
 		struct wcTokenStreamIndex
 		{
-			wcTokenStreamIndex();
-			wcTokenStreamIndex(wcTokenStreamIndex&);
+			wcTokenStreamIndex(wcTokenStream&);
 
 			wcTokenStreamIndex operator-(int);
 			wcTokenStreamIndex operator+(int);
+			wcTokenStreamIndex operator-(wcTokenStreamIndex);
+			wcTokenStreamIndex operator+(wcTokenStreamIndex);
 			wcTokenStreamIndex operator--();
 			wcTokenStreamIndex operator++();
 			wcTokenStreamIndex operator=(wcTokenStreamIndex);
@@ -178,6 +206,11 @@ namespace wc
 		struct wcTokenStream
 		{
 			wcTokenStream();
+			wcTokenStream(error::wcError);
+			wcTokenStream operator+(wcTokenStream),
+				operator+(wcToken),
+				operator+=(wcTokenStream),
+				operator+=(wcToken);
 
 			bool isError();
 
@@ -186,7 +219,7 @@ namespace wc
 				peek(wcTokenStreamIndex&);
 
 			std::vector<wcToken> container;
-			const error::wcError error;
+			error::wcError error;
 		};
 
 		//lexes string input encapsulated in wcLexInputStreams
@@ -196,11 +229,19 @@ namespace wc
 			wcLexer();
 			~wcLexer();
 
-			virtual wcTokenStream lex(wcLexInputStream&);
+			wcTokenStream lex(wcLexInputStream&);
 
 		protected:
 			wcTokenTypeDeriver deriver;
 			wcTokenDefinitionBank definitionsBank;
+
+			wcTokenStream lex_stringLiteral(wcLexInputStreamIndex& index),
+				lex_intLiteral(wcLexInputStreamIndex& index),
+				lex_ws(wcLexInputStreamIndex& index),
+				lex_2step(wcLexInputStreamIndex& index), 
+				lex_default(wcLexInputStreamIndex& index),
+				lex_comment(wcLexInputStreamIndex& index),
+				lex_commentMultiLine(wcLexInputStreamIndex& index);
 		};
 
 		//free floating lexer helpers

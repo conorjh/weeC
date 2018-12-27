@@ -23,7 +23,7 @@ wc::error::wcError::wcError(wcErrorCode p_ec, string p_text, int p_line, int p_c
 
 wc::error::wcError::wcError(wcErrorCode p_ec, wcToken p_token)
 {
-	code = p_ec; text = errorStrings.find(p_ec)->second + " " + p_token.data; line = p_token.line, col = p_token.col;
+	code = p_ec; text = errorStrings.find(p_ec)->second + " " + p_token.data; line = p_token.line, col = p_token.column;
 }
 
 bool wc::error::wcError::operator==(const wcError& p_err) const

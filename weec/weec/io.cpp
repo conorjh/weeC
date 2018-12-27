@@ -79,7 +79,7 @@ string wc::io::exportASTToText_writeChild(tree<wcParseNode>::pre_order_iterator&
 	//add all tokens
 	for (int t = 0; t < p_index.node->data.tokens.size(); ++t)
 		output += "#token type=" + itos(p_index.node->data.tokens[t].type) + " line=" + itos(p_index.node->data.tokens[t].line)
-		+ " col=" + itos(p_index.node->data.tokens[t].col) + " data=" + p_index.node->data.tokens[t].data + "\n";
+		+ " col=" + itos(p_index.node->data.tokens[t].column) + " data=" + p_index.node->data.tokens[t].data + "\n";
 
 	return output;
 }
@@ -92,7 +92,7 @@ string wc::io::exportASTToText_writeSibling(tree<wcParseNode>::pre_order_iterato
 	//add all tokens
 	for (int t = 0; t < p_index.node->data.tokens.size(); ++t)
 		output += "#token type=" + itos(p_index.node->data.tokens[t].type) + " line=" + itos(p_index.node->data.tokens[t].line)
-		+ " col=" + itos(p_index.node->data.tokens[t].col) + " data=" + p_index.node->data.tokens[t].data + "\n";
+		+ " col=" + itos(p_index.node->data.tokens[t].column) + " data=" + p_index.node->data.tokens[t].data + "\n";
 
 	return output + "\n";
 }

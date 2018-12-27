@@ -15,6 +15,20 @@ namespace wc
 		
 		wcLexer lexingLexer;
 		
+		wcLexInputStream::wcLexInputStream()
+		{
+		}
+
+		wcLexInputStream::wcLexInputStream(std::string)
+		{
+		}
+
+		wcLexInputStream::wcLexInputStream(std::vector<const char*>)
+		{
+		}
+
+		
+
 	}
 }
 
@@ -83,12 +97,12 @@ wc::lex::wcTokenDefinitionBank::wcTokenDefinitionBank() : definitions
 	wcTokenDefinition(tt_intlit, {"0","1","2","3","4","5","6","7","8","9"})
 	})
 {
-	populaterDelimiterTypes();
+	populateDelimiterTypes();
 }
 
 wc::lex::wcTokenDefinitionBank::wcTokenDefinitionBank(const std::vector<wcTokenDefinition>& _definitions) : definitions(_definitions)
 {
-	populaterDelimiterTypes();
+	populateDelimiterTypes();
 }
 
 const bool wc::lex::wcTokenDefinitionBank::exists(const char * identToCheck)
@@ -133,7 +147,7 @@ const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(std::string identTo
 	return find(identToCheck.c_str());
 }
 
-void wc::lex::wcTokenDefinitionBank::populaterDelimiterTypes()
+void wc::lex::wcTokenDefinitionBank::populateDelimiterTypes()
 {
 	for (int t = 0; t < definitions.size(); ++t)
 		if (definitions[t].delimiter)
@@ -263,32 +277,6 @@ bool wc::lex::wcTokenTypeDeriver::isDelim(wcTokenType p_type)
 	return definitionsBank.find(p_type).delimiter;
 }
 
-wc::lex::wcToken::wcToken()
-{
-	type = tt_null;
-	line = col = 0;
-	data = "";
-}
-
-wc::lex::wcToken::wcToken(wc::parse::wcSymbol p_sym)
-{
-	*this = wcToken();
-	type = tt_ident;
-	data = p_sym.fullyQualifiedIdent;
-}
-
-wc::lex::wcToken::wcToken(wcTokenType p_tt)
-{
-	*this = wcToken();
-	type = p_tt;
-}
-
-wc::lex::wcToken::wcToken(wcTokenType p_tt, string p_data)
-{
-	*this = wcToken();
-	type = p_tt;
-	data = p_data;
-}
 
 wc::lex::wcToken::wcToken(wcTokenType p_tt, string p_data, int p_line, int p_col)
 {
@@ -296,13 +284,6 @@ wc::lex::wcToken::wcToken(wcTokenType p_tt, string p_data, int p_line, int p_col
 	data = p_data;
 	line = p_line;
 	col = p_col;
-}
-
-wc::lex::wcToken::wcToken(string p_data)
-{
-	*this = wcToken();
-	type = lexingLexer.deriveTokenType(p_data);
-	data = p_data;
 }
 
 wc::lex::wcLexer::wcLexer() : deriver(definitionsBank)
@@ -315,79 +296,39 @@ wc::lex::wcLexer::~wcLexer()
 
 }
 
-wc::lex::wcLexIndex::wcLexIndex()
+wc::lex::wcLexInputStreamIndex::wcLexInputStreamIndex(wcLexInputStream &stream) :source(stream)
 {
-	index = line = column = 0;
-	source = nullptr;
+
+}
+
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator--()
+{
+	return wcLexInputStreamIndex();
+}
+
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator++()
+{
+	return wcLexInputStreamIndex();
+}
+
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator=(wcLexInputStreamIndex input)
+{
+	column = input.column;
+	line = input.line;
+	source = source;
 }
 
 //reset the index back to the first line and column
-void wc::lex::wcLexIndex::reset()
+void wc::lex::wcLexInputStreamIndex::reset()
 {
 	index = line = column = 0;
 }
-
-//return the character currently pointed to by the index
-string wc::lex::wcLexIndex::getChar()
-{
-	string out = source->at(line);
-	if (isValid())
-		return out.substr(column,1);
-	return "";
-}
-
-//move the index to the next character in the stream, updating info as we go
-string wc::lex::wcLexIndex::nextChar()
-{
-	if (!isValid())
-		return "";
-	
-	++index;	++column;
-	if (column >= source->at(line).size())
-		if (line + 1 < source->size())
-		{
-			line++;
-			column = 0;
-			return getChar();	//next character from the new line
-		}
-		else
-		{
-			return "";	//end of stream
-		}
-
-	return getChar();	//next character
-}
-
-//retrieve the next character from the stream without moving the index ahead
-string wc::lex::wcLexIndex::peekChar()
-{
-	if (!isValid())
-		return "";
-
-	//check theres another character
-	if (column + 1 >= source->at(line).size())
-		if (line + 1 >= source->size())
-			return "";	//eos
-		else
-			return source->at(line + 1).substr(0, 1);	//next character is on a newline
-	else
-		return source->at(line).substr(column + 1,1); //next character
-}
-
-//do we have a source loaded, and are there still character to read
-bool wc::lex::wcLexIndex::isValid()
+//do we have a source loaded, and are there still characters to read
+bool wc::lex::wcLexInputStreamIndex::isValid()
 {
 	if(source != nullptr && line > -1 && column > -1 && index > -1 && (column < getSize()))
 		return true;
 	return false;
-}
-
-unsigned int wc::lex::wcLexIndex::getSize()
-{
-	string s = source->at(line);
-	if (!source->size())
-		return 0;
-	return s.size();
 }
 
 bool wc::lex::wcToken::operator==(const wcToken& p_token) const
@@ -395,27 +336,27 @@ bool wc::lex::wcToken::operator==(const wcToken& p_token) const
 	return (this->type == p_token.type && this->data == p_token.data);
 }
 
+const char * wc::lex::wcToken::operator[](unsigned int index)
+{
+	return std::string(data).substr(index,1).c_str();
+}
+
+wcToken wc::lex::wcToken::operator=(const char *input)
+{
+	data = input;
+	return *this;
+}
+
+wc::lex::wcToken::wcToken(wcTokenType, const char *, int, int)
+{
+}
+
 bool wc::lex::wcToken::operator!=(const wcToken& p_token) const
 {
 	return !(this->type == p_token.type && this->data == p_token.data);
 }
 
-bool wc::lex::wcLexer::isError()
-{
-	return error != ec_null;
-}
-
-wc::error::wcError wc::lex::wcLexer::getError()
-{
-	return error;
-}
-
-void wc::lex::wcLexer::setError(wcError p_err)
-{
-	error = p_err;
-}
-
-vector<wcToken> wc::lex::wcLexer::lex(vector<string> input)
+wcTokenStream wc::lex::wcLexer::lex(wcLexInputStream& input)
 {
 	vector<wcToken> out;
 	lexIndex.source = &input;
@@ -480,7 +421,7 @@ vector<wcToken> wc::lex::wcLexer::lex(const char * input)
 	return lex(inputHolder);
 }
 
-bool wc::lex::lex_default(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool wc::lex::lex_default(vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, wcError& p_error)
 {
 	string strBuff;
 	int origLine = p_index.line;
@@ -514,7 +455,7 @@ bool wc::lex::lex_default(vector<wcToken>& p_output, wcLexIndex& p_index, wcErro
 	return true;
 }
 
-bool wc::lex::lex_2step(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool wc::lex::lex_2step(vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, wcError& p_error)
 {
 	//dual step tokens	
 
@@ -540,7 +481,7 @@ bool wc::lex::lex_2step(vector<wcToken>& p_output, wcLexIndex& p_index, wcError&
 	return true;
 }
 
-bool wc::lex::lex_intLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool wc::lex::lex_intLiteral(vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, wcError& p_error)
 {
 	string leftValue,rightValue;
 	int origCol = p_index.column;
@@ -591,7 +532,7 @@ bool wc::lex::lex_intLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, wcE
 }
 
 //parse a string literal within double quotes
-bool wc::lex::lex_stringLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool wc::lex::lex_stringLiteral(vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, wcError& p_error)
 {
 	string strBuff;
 	int origLine = p_index.line;
@@ -625,7 +566,7 @@ bool wc::lex::lex_stringLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, 
 }
 
 //parse whitespace, tabs and newlines as one solid block. no token produced if wc_lexer_dropWS == true
-bool wc::lex::lex_ws(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool wc::lex::lex_ws(vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, wcError& p_error)
 {
 	string strBuff;
 	bool breakWhile = false;
@@ -659,7 +600,7 @@ bool wc::lex::lex_ws(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_
 }
 
 //parse single (//) and multi-line (/*  */) comments, no token produced
-bool wc::lex::lex_comment(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool wc::lex::lex_comment(vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, wcError& p_error)
 {
 	//make sure we have an opening / 
 	if (lexingLexer.deriveTokenType(p_index.getChar()) != tt_div)
@@ -695,7 +636,7 @@ bool wc::lex::lex_comment(vector<wcToken>& p_output, wcLexIndex& p_index, wcErro
 
 //lex and drop any multi line comments
 //assume first token is / (tt_div), and second token is tt_mult
-bool wc::lex::lex_commentMultiLine(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool wc::lex::lex_commentMultiLine(vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, wcError& p_error)
 {
 	//skip past tt_mult
 	p_index.nextChar();

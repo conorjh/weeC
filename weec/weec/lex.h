@@ -56,8 +56,8 @@ namespace wc
 			wcLexInputStreamIndex operator=(wcLexInputStreamIndex),
 				operator=(int),
 				operator=(wcLineColumnIndex),
-				operator--(),
-				operator++(),
+				operator--(),	operator--(int),
+				operator++(),	operator++(int),
 				operator-(int),
 				operator+(int),
 				operator-(wcLexInputStreamIndex),
@@ -66,6 +66,9 @@ namespace wc
 
 			bool isValid();
 			void reset();
+
+			const char *next(),	*get(),
+				*get(int line, int column);
 
 			unsigned int size();
 
@@ -98,10 +101,14 @@ namespace wc
 			wcLexInputStream(std::vector<std::string>);
 			wcLexInputStream(std::vector<const char *>);
 			const char *operator[](int);
+			bool operator!=(const wcLexInputStream&) const;
+			bool operator==(const wcLexInputStream&) const;
 
 			const char *next(wcLexInputStreamIndex&),
 				*get(wcLexInputStreamIndex&),
-				*get(int line,int column);
+				*get(int line, int column),
+				*getLine(wcLexInputStreamIndex&),
+				*getLine(int line);
 
 			const unsigned int size(), size(unsigned int lineNumber);
 			const unsigned int lines();
@@ -110,8 +117,10 @@ namespace wc
 			std::vector<const char *> container;
 		};
 
+		//a lexed string with a type
 		struct wcToken
 		{
+			wcToken();	//tt_null
 			wcToken(wcTokenType, const char *, int, int);
 
 			bool operator!=(const wcToken&) const;
@@ -183,6 +192,7 @@ namespace wc
 		};
 
 		struct wcTokenStream;
+		//a way to track read progress in a token stream
 		struct wcTokenStreamIndex
 		{
 			wcTokenStreamIndex(wcTokenStream&);
@@ -236,6 +246,7 @@ namespace wc
 			wcTokenTypeDeriver deriver;
 			wcTokenDefinitionBank definitionsBank;
 
+			bool expect(wcTokenType);
 			wcTokenStream lex_stringLiteral(wcLexInputStreamIndex& index),
 				lex_intLiteral(wcLexInputStreamIndex& index),
 				lex_ws(wcLexInputStreamIndex& index),
@@ -245,14 +256,6 @@ namespace wc
 				lex_commentMultiLine(wcLexInputStreamIndex& index);
 		};
 
-		//free floating lexer helpers
-		bool lex_stringLiteral(std::vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, error::wcError& p_error);
-		bool lex_intLiteral(std::vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, error::wcError& p_error);
-		bool lex_ws(std::vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, error::wcError& p_error);
-		bool lex_2step(std::vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, error::wcError& p_error);
-		bool lex_default(std::vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, error::wcError& p_error);
-		bool lex_comment(std::vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, error::wcError& p_error);
-		bool lex_commentMultiLine(std::vector<wcToken>& p_output, wcLexInputStreamIndex& p_index, error::wcError& p_error);
 		bool setErrorReturnFalse(error::wcError& p_error, error::wcError p_newError);
 		std::vector<std::string> tokenizeString(std::string);
 	}

@@ -18,16 +18,6 @@ namespace wctest
 
 int wctest::gen::standardGenTest(const char * p_source)
 {
-	wcLexer lexer;
-	wcParser parser;
-	wcSimpleBytecodeGen gen;
-
-	//wcSimpleExecContext* testOutput = static_cast<wcSimpleExecContext*>(&gen.gen(parser.parse(lexer.lex(p_source))));
-	wcSimpleExecContext testOutput = gen.genSimple(parser.parse(lexer.lex(p_source)));
-		
-	if (parser.getError().code)
-		return parser.getError().code;
-	
 	return 0;
 }
 

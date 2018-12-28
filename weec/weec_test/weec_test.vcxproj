@@ -118,14 +118,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="api_tests.cpp" />
-    <ClCompile Include="exp_tests.cpp" />
-    <ClCompile Include="gen_tests.cpp" />
     <ClCompile Include="lex_tests.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="parse_tests.cpp" />
     <ClCompile Include="tests.cpp" />
-    <ClCompile Include="vm_tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests.h" />

@@ -120,11 +120,8 @@
     <ClCompile Include="error.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="lex.cpp" />
-    <ClCompile Include="parse.cpp" />
-    <ClCompile Include="simple.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="vm.cpp" />
-    <ClCompile Include="wasm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="api_types.h" />
@@ -136,12 +133,9 @@
     <ClInclude Include="error.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="lex.h" />
-    <ClInclude Include="parse.h" />
-    <ClInclude Include="simple.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vm.h" />
     <ClInclude Include="api.h" />
-    <ClInclude Include="wasm.h" />
     <ClInclude Include="weec.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

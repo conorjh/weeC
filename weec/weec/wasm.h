@@ -34,16 +34,7 @@ namespace wc
 			{ "<=", wc::lex::tt_lessequal },{ "!",  wc::lex::tt_lognot },{ "||", wc::lex::tt_logor },
 			{ "&&", wc::lex::tt_logand },{ "::", wc::lex::tt_dcolon },{ "\\", wc::lex::tt_bslash },
 
-			{ "add", wc::lex::tt_asm_keyword_add },{ "sub", wc::lex::tt_asm_keyword_sub },{ "mul", wc::lex::tt_asm_keyword_mul },
-			{ "div", wc::lex::tt_asm_keyword_div },{ "mov", wc::lex::tt_asm_keyword_mov },{ "cmp", wc::lex::tt_asm_keyword_cmp },
-			{ "inc", wc::lex::tt_asm_keyword_inc },{ "dec", wc::lex::tt_asm_keyword_dec },{ "and", wc::lex::tt_asm_keyword_and },
-			{ "or", wc::lex::tt_asm_keyword_or },{ "not", wc::lex::tt_asm_keyword_not },{ "jmp", wc::lex::tt_asm_keyword_jmp },
-			{ "je", wc::lex::tt_asm_keyword_je },{ "jne", wc::lex::tt_asm_keyword_jne },{ "jz", wc::lex::tt_asm_keyword_jz },
-			{ "jg", wc::lex::tt_asm_keyword_jg },{ "jge", wc::lex::tt_asm_keyword_jge },{ "jl", wc::lex::tt_asm_keyword_jl },
-			{ "jle", wc::lex::tt_asm_keyword_jle },{ "cmp", wc::lex::tt_asm_keyword_cmp },{ "call", wc::lex::tt_asm_keyword_call },
-			{ "ret", wc::lex::tt_asm_keyword_ret },{ "push", wc::lex::tt_asm_keyword_push },{ "pop", wc::lex::tt_asm_keyword_pop },
-
-			{ "const", wc::lex::tt_const },{ "namespace", wc::lex::tt_keyword_namespace },{ "func", wc::lex::tt_keyword_function },
+			{ "const", wc::lex::tt_keyword_const },{ "namespace", wc::lex::tt_keyword_namespace },{ "func", wc::lex::tt_keyword_function },
 			{ "if", wc::lex::tt_keyword_if },{ "else", wc::lex::tt_keyword_else },{ "return", wc::lex::tt_keyword_return },{ "`",wc::lex::tt_tilde },
 			{ "while", wc::lex::tt_keyword_while },{ "break", wc::lex::tt_keyword_break },{ "continue", wc::lex::tt_keyword_continue },
 			};

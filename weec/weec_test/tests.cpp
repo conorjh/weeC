@@ -30,49 +30,6 @@ int wctest::test_runall()
 			cout << "\tTest #" << t + 1 << " passed" << endl;
 	}
 
-	//expression parsing tests
-	cout << "Running expression parsing tests..." << endl;
-	for (int t = 0; t < allExpTests.size(); ++t)
-	{
-		int testResult = allExpTests[t]();
-		if (testResult)
-			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
-		else
-			cout << "\tTest #" << t + 1 << " passed" << endl;
-	}
-
-	//parse tests
-	cout << "Running parse tests..." << endl;
-	for (int t = 0; t < allParseTests.size(); ++t)
-	{
-		int testResult = allParseTests[t]();
-		if (testResult)
-			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
-		else
-			cout << "\tTest #" << t + 1 << " passed" << endl;
-	}
-
-	//bytecode generation tests
-	cout << "Running bytecode generation tests..." << endl;
-	for (int t = 0; t < allGenTests.size(); ++t)
-	{
-		int testResult = allGenTests[t]();
-		if (testResult)
-			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
-		else
-			cout << "\tTest #" << t + 1 << " passed" << endl;
-	}
-
-	//vm tests
-	cout << "Running VM tests..." << endl;
-	for (int t = 0; t < allVMTests.size(); ++t)
-	{
-		int testResult = allVMTests[t]();
-		if (testResult)
-			cout << "\tTest #" << t + 1 << " failed: " << testResult << "	" << wc::error::errorStrings.find(testResult)->second << endl;
-		else
-			cout << "\tTest #" << t + 1 << " passed" << endl;
-	}
 
 	//compiler tests
 

@@ -12,6 +12,13 @@ namespace wctest
 	namespace lex
 	{
 		int l_compare(vector<wcToken> p_correctVec, vector<wcToken> p_testVec);
+
+		string					testString = "Test String";
+		const char *			testConstChar = "Test String";
+		vector<const char *>	twoLines = { "Line 1" , "Line 2" }, 
+								threeLines = { "Line 1" , "Line 2", "Line 3" };
+		vector<string>			twoLinesString = { "Line 1" , "Line 2" }, 
+								threeLinesString = { "Line 1" , "Line 2", "Line 3" };
 	}
 }
 
@@ -27,111 +34,109 @@ int wctest::lex::l_compare(vector<wcToken> p_correctVec, vector<wcToken> p_testV
 //create a lexer, lex a simple string ,dispose of the lexer
 int wctest::lex::l_basic_1()
 {
-	wcLexer lexer;
 
-	vector<wcToken> lexOutput = lexer.lex("\"Hello World\"");
-
-	vector<wcToken> correctOutput = { wcToken(tt_strlit, "Hello World") };
-
-	if (lexer.getError() != ec_null)
-		return !(l_compare(correctOutput, lexOutput));
-	return lexer.getError().code;
+	return 0;
 }
 
 //lex some integers
 int wctest::lex::l_basic_2()
 {
-	wcLexer lexer;
 
-	vector<wcToken> lexOutput = lexer.lex("1 55 000001 128");
-
-	vector<wcToken> correctOutput = { wcToken(tt_intlit, "1"),wcToken(tt_intlit, "55"),wcToken(tt_intlit, "000001"),wcToken(tt_intlit, "128") };
-
-	if (lexer.getError() != ec_null)
-		return !(l_compare(correctOutput, lexOutput));
-	return lexer.getError().code;
+	return 0;
 }
 
 //lex some floats
 int wctest::lex::l_basic_3()
 {
-	wcLexer lexer;
 
-	vector<wcToken> lexOutput = lexer.lex("3.14 500.500 0.000000001 128.0");
-
-	vector<wcToken> correctOutput = 
-	{ wcToken(tt_fltlit, "3.14"),wcToken(tt_fltlit, "500.500"),wcToken(tt_fltlit, "0.000000001"),wcToken(tt_fltlit, "128.0") };
-
-	if (lexer.getError() != ec_null)
-		return !(l_compare(correctOutput, lexOutput));
-	return lexer.getError().code;
+	return 0;
 }
 
 //lex with errors
 int wctest::lex::l_basic_4()
 {
-	wcLexer lexer;
 
-	vector<wcToken> lexOutput = lexer.lex("3.1.4");
-	if (lexer.getError() != ec_lex_unexpectedtoken)
-		return lexer.getError().code;
-		
 	return 0;
 }
 
 //lex comments and numbers 
 int wctest::lex::l_basic_5()
 {
-	wcLexer lexer;
-	string sourceCode = "// comment here"
-		"// another one here"
-		"3.14 999 // comment"
-		"/* multi line comment"
-		"    "
-		"123132 numbers not counted here"
-		"/*";	
 
-	vector<wcToken> correctOutput =
-	{ wcToken(tt_fltlit, "3.14"),wcToken(tt_intlit, "999")};
-
-	vector<wcToken> lexOutput = lexer.lex(sourceCode);
-
-	if (lexer.getError() != wc::error::ec_null)
-		return !(l_compare(correctOutput, lexOutput));
-	return lexer.getError().code;
+	return 0;
 }
 
 //lex random identifiers
 int wctest::lex::l_basic_6()
 {
-	wcLexer lexer;
 
-	vector<wcToken> lexOutput = lexer.lex("cats dogs bogs");
-
-	vector<wcToken> correctOutput = { wcToken(tt_ident, "cats"),wcToken(tt_ident, "dogs"),wcToken(tt_ident, "bogs") };
-
-	if (lexer.getError() != wc::error::ec_null)
-		return !(l_compare(correctOutput, lexOutput));
-	return lexer.getError().code;
+	return 0;
 }
 
 int wctest::lex::l_basic_7()
 {
-	wcLexer lexer;
-	string sourceCode = "int a = 0;"
-		"int b = a + 1;";
 
-	vector<wcToken> correctOutput =
-	{ 
-		wcToken(tt_keyword_int, "int"),wcToken(tt_ident, "daveBrubeck"),wcToken(tt_assign, "="),
-		wcToken(tt_intlit, "0"), wcToken(tt_scolon, ";"), wcToken(tt_keyword_return, "return"), 
-		wcToken(tt_ident, "daveBrubeck"), wcToken(tt_scolon, ";") 
-	};
+	return 0;
+}
 
-	vector<wcToken> lexOutput = lexer.lex(sourceCode);
+//constructor tests / size, line & getLine methods
+int wctest::lex::l_wcLexInputStream_1()
+{
+	wcLexInputStream stream1, stream2(testConstChar), stream3(twoLines), stream4(threeLines), stream5(twoLinesString), stream6(threeLinesString), 
+		stream7(testString);
 
-	if (lexer.getError() != ec_null)
-		return !(l_compare(correctOutput, lexOutput));
-	return lexer.getError().code;
+	//default constructor
+	if (stream1.lines() != 0 && stream1.size() != 0)
+		return 1;
+	//const char *
+	if (stream2.lines() != 1 && stream1.size() != 4 && stream2.getLine(0) != testConstChar)
+		return 2;
+	//vector<const char*>
+	if (stream3.lines() != 2 && stream3.size() != 12 && stream3.getLine(0) != twoLines[0] && stream3.getLine(1) != twoLines[1])
+		return 3;
+	//vector<const char*> (3 lines)
+	if (stream4.lines() != 3 && stream4.size() != 18 && stream4.getLine(0) != threeLines[0] && stream4.getLine(1) != threeLines[1] && stream4.getLine(2) != threeLines[2])
+		return 4;
+	//vector<string>
+	if (stream5.lines() != 2 && stream5.size() != 12 && stream5.getLine(0) != twoLinesString[0] && stream5.getLine(1) != twoLinesString[1])
+		return 5;
+	//vector<string> (3 lines)
+	if (stream6.lines() != 3 && stream6.size() != 18 && stream6.getLine(0) != threeLinesString[0] && stream6.getLine(1) != threeLinesString[1] && stream6.getLine(2) != threeLinesString[2])
+		return 6;
+	//string
+	if (stream7.lines() != 1 && stream7.size() != 4 && stream7.getLine(0) != testString)
+		return 7;
+
+	//check first 3 letters are the same (operator[])
+	if (stream7[0] != testString.substr(0, 1) || stream7[1] != testString.substr(1, 1) || stream7[2] != testString.substr(2, 1))
+		return 6;
+
+	return 0;
+}
+
+//operators
+int wctest::lex::l_wcLexInputStream_2()
+{
+	wcLexInputStream stream1, stream2(testConstChar), stream3(twoLines), stream4(threeLines), stream5(twoLinesString), stream6(threeLinesString), stream7(testString);
+
+	//operator== and operator!=
+	if (stream1 != wcLexInputStream() || !(stream1 == wcLexInputStream()))
+		return 1;
+	if (stream2 != stream7 || !(stream2 == stream7))
+		return 2;
+	if (stream3 != stream5 || !(stream3 == stream5))
+		return 3;
+	if (stream4 != stream6 || !(stream4 == stream6))
+		return 4;
+
+	if (stream2.getLine(0) != testConstChar)
+		return 5;
+
+	return 0;
+}
+
+int wctest::lex::l_wcLexInputStream_3()
+{
+	return 0;
 }
 

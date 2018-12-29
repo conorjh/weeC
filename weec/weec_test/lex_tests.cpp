@@ -82,7 +82,7 @@ int wctest::lex::l_basic_7()
 //constructor tests / size, line & getLine methods
 int wctest::lex::l_wcLexInputStream_1()
 {
-	wcLexInputStream stream1, stream2(testConstChar), stream3(twoLines), stream4(threeLines), stream5(twoLinesString), stream6(threeLinesString), 
+	wcLexInputStream stream1, stream2(testConstChar), stream5(twoLinesString), stream6(threeLinesString), 
 		stream7(testString);
 
 	//default constructor
@@ -91,12 +91,7 @@ int wctest::lex::l_wcLexInputStream_1()
 	//const char *
 	if (stream2.lines() != 1 && stream1.size() != 4 && stream2.getLine(0) != testConstChar)
 		return 2;
-	//vector<const char*>
-	if (stream3.lines() != 2 && stream3.size() != 12 && stream3.getLine(0) != twoLines[0] && stream3.getLine(1) != twoLines[1])
-		return 3;
-	//vector<const char*> (3 lines)
-	if (stream4.lines() != 3 && stream4.size() != 18 && stream4.getLine(0) != threeLines[0] && stream4.getLine(1) != threeLines[1] && stream4.getLine(2) != threeLines[2])
-		return 4;
+	
 	//vector<string>
 	if (stream5.lines() != 2 && stream5.size() != 12 && stream5.getLine(0) != twoLinesString[0] && stream5.getLine(1) != twoLinesString[1])
 		return 5;
@@ -110,25 +105,42 @@ int wctest::lex::l_wcLexInputStream_1()
 	//check first 3 letters are the same (operator[])
 	if (stream7[0] != testString.substr(0, 1) || stream7[1] != testString.substr(1, 1) || stream7[2] != testString.substr(2, 1))
 		return 6;
+struct wcLexInputStream
+		{
+		public:
+			wcLexInputStream();
+			wcLexInputStream(std::string);
+			wcLexInputStream(std::vector<std::string>);
+			std::string operator[](int);
+			bool operator!=(const wcLexInputStream&) const;
+			bool operator==(const wcLexInputStream&) const;
 
+			char next(wcLexInputStreamIndex&),
+				get(wcLexInputStreamIndex&),
+				get(int line, int column);
+			std::string getLine(wcLexInputStreamIndex&),
+				getLine(int line);
+
+			const unsigned int size(), size(unsigned int lineNumber);
+			const unsigned int lines();
+
+		private:
+			std::vector<std::string> container;
+		};
 	return 0;
 }
 
 //operators
 int wctest::lex::l_wcLexInputStream_2()
 {
-	wcLexInputStream stream1, stream2(testConstChar), stream3(twoLines), stream4(threeLines), stream5(twoLinesString), stream6(threeLinesString), stream7(testString);
+	wcLexInputStream stream1, stream2(testConstChar), stream5(twoLinesString), stream6(threeLinesString), stream7(testString);
 
 	//operator== and operator!=
 	if (stream1 != wcLexInputStream() || !(stream1 == wcLexInputStream()))
 		return 1;
 	if (stream2 != stream7 || !(stream2 == stream7))
 		return 2;
-	if (stream3 != stream5 || !(stream3 == stream5))
-		return 3;
-	if (stream4 != stream6 || !(stream4 == stream6))
-		return 4;
-
+	
 	if (stream2.getLine(0) != testConstChar)
 		return 5;
 

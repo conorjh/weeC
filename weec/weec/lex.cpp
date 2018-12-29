@@ -76,12 +76,12 @@ wc::lex::wcTokenDefinitionBank::wcTokenDefinitionBank() : definitions
 	populateDelimiterTypes();
 }
 
-wc::lex::wcTokenDefinitionBank::wcTokenDefinitionBank(const std::vector<wcTokenDefinition>& _definitions) : definitions(_definitions)
+wc::lex::wcTokenDefinitionBank::wcTokenDefinitionBank(const vector<wcTokenDefinition>& _definitions) : definitions(_definitions)
 {
 	populateDelimiterTypes();
 }
 
-const bool wc::lex::wcTokenDefinitionBank::exists(const char * identToCheck)
+const bool wc::lex::wcTokenDefinitionBank::exists(string identToCheck)
 {
 	for (int t = 0; t < definitions.size(); ++t)
 		for (int y = 0; t < definitions[t].identifiers.size(); ++y)
@@ -94,15 +94,10 @@ const bool wc::lex::wcTokenDefinitionBank::exists(char identToCheck)
 {
 	stringstream ss;
 	ss << identToCheck;
-	return exists(ss.str().c_str());
+	return exists(ss.str());
 }
 
-const bool wc::lex::wcTokenDefinitionBank::exists(std::string identToCheck)
-{
-	return exists(identToCheck.c_str());
-}
-
-const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(const char *identToCheck)
+const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(string identToCheck)
 {
 	for (int t = 0; t < definitions.size(); ++t)
 		for (int y = 0; t < definitions[t].identifiers.size(); ++y)
@@ -115,12 +110,7 @@ const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(char identToCheck)
 {
 	stringstream ss;
 	ss << identToCheck;
-	return find(ss.str().c_str());
-}
-
-const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(std::string identToCheck)
-{
-	return find(identToCheck.c_str());
+	return find(ss.str());
 }
 
 void wc::lex::wcTokenDefinitionBank::populateDelimiterTypes()
@@ -135,22 +125,22 @@ wc::lex::wcTokenDefinition::wcTokenDefinition() : type(tt_null), identifiers({})
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, const char * identifier) : type(_type), identifiers({ identifier }), delimiter(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) : type(_type), identifiers({ identifier }), delimiter(false)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, const char * identifier, bool _isDelim) : type(_type), identifiers({ identifier }), delimiter(_isDelim)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) : type(_type), identifiers({ identifier }), delimiter(_isDelim)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers) : type(_type), identifiers(_identifiers), delimiter(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) : type(_type), identifiers(_identifiers), delimiter(false)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter)
 {
 
 }
@@ -192,21 +182,16 @@ wc::lex::wcTokenTypeDeriver::wcTokenTypeDeriver(wcTokenDefinitionBank &_definiti
 
 }
 
-wcTokenType wc::lex::wcTokenTypeDeriver::derive(string input)
-{
-	return derive(input.c_str());
-}
-
 //returns the the token type of a given string
 wcTokenType wc::lex::wcTokenTypeDeriver::derive(char input)
 {
 	stringstream ss;
 	ss << input;
-	return derive(ss.str().c_str());
+	return derive(ss.str());
 }
 
 //returns the the token type of a given string
-wcTokenType wc::lex::wcTokenTypeDeriver::derive(const char * input)
+wcTokenType wc::lex::wcTokenTypeDeriver::derive(string input)
 {
 	if (input == "")
 		return tt_null;
@@ -225,16 +210,11 @@ bool wc::lex::wcTokenTypeDeriver::isDelim(string input)
 	return isDelim(derive(input));
 }
 
-bool wc::lex::wcTokenTypeDeriver::isDelim(const char *input)
-{
-	return isDelim(derive(input));
-}
-
 bool wc::lex::wcTokenTypeDeriver::isDelim(char input)
 {
 	stringstream ss;
 	ss << input;
-	return isDelim(ss.str().c_str());
+	return isDelim(ss.str());
 }
 
 bool wc::lex::wcTokenTypeDeriver::isDelim(wcTokenType p_type)
@@ -257,6 +237,7 @@ wc::lex::wcLexInputStreamIndex::wcLexInputStreamIndex(wcLexInputStream &stream) 
 {
 	line = column = index = 0;
 }
+
 //postdecrement
 wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator--(int)
 {
@@ -273,12 +254,14 @@ wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator++(int)
 	*this = newLineColumnIndex;
 	return retVal;
 }
+
 //predecrement
 wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator-(int subtraction)
 {
 	wcLineColumnIndex newLineColumnIndex(source, index - subtraction);
 	return *this = newLineColumnIndex;
 }
+
 //preincrement
 wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator++()
 {
@@ -336,7 +319,7 @@ wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator=(wcLineColumnInde
 }
 
 //pass through to the InputStream
-const char * wc::lex::wcLexInputStreamIndex::operator[](int index)
+string wc::lex::wcLexInputStreamIndex::operator[](int index)
 {
 	return source[index];
 }
@@ -347,17 +330,17 @@ void wc::lex::wcLexInputStreamIndex::reset()
 	index = line = column = 0;
 }
 
-const char * wc::lex::wcLexInputStreamIndex::next()
+ char wc::lex::wcLexInputStreamIndex::next()
 {
 	return source.next(*this);
 }
 
-const char * wc::lex::wcLexInputStreamIndex::get(int _line, int _column)
+ char wc::lex::wcLexInputStreamIndex::get(int _line, int _column)
 {
 	return source.get(_line,_column);
 }
 
-const char * wc::lex::wcLexInputStreamIndex::get()
+char wc::lex::wcLexInputStreamIndex::get()
 {
 	return source.get(*this);
 }
@@ -372,54 +355,22 @@ wc::lex::wcLexInputStream::wcLexInputStream()
 
 }
 
-wc::lex::wcLexInputStream::wcLexInputStream(const char * input)
+wc::lex::wcLexInputStream::wcLexInputStream(string input)
 {
-	int size = strlen(input);
-	char* newData = new char[size + 1];
-	memcpy_s(newData, sizeof(size + 1), input, sizeof(input));
-
-	container.push_back(newData);
+	container.push_back(input);
 }
 
-wc::lex::wcLexInputStream::wcLexInputStream(std::string input)
+wc::lex::wcLexInputStream::wcLexInputStream(vector<string> input)
 {
-	int size = strlen(input.c_str());
-	char* newData = new char[size + 1];
-	memcpy_s(newData, sizeof(newData), input.c_str(), sizeof(input.c_str()));
-
-	container.push_back(newData);
+	container = input;
 }
 
-wc::lex::wcLexInputStream::wcLexInputStream(std::vector<const char*> input)
-{
-	for (int t = 0; t < input.size(); t++)
-	{
-		int size = strlen(input[t]);
-		char* newData = new char[size + 1];
-		memcpy_s(newData, sizeof(newData), input[t], sizeof(input[t]));
-
-		container.push_back(newData);
-	}
-}
-
-wc::lex::wcLexInputStream::wcLexInputStream(std::vector<string> input)
-{
-	for (int t = 0; t < input.size(); t++)
-	{
-		int size = strlen(input[t].c_str());
-		char* newData = new char[size + 1];
-		memcpy_s(newData, sizeof(newData), input[t].c_str(), sizeof(input[t].c_str()));
-
-		container.push_back(newData);
-	}
-}
-
-const char * wc::lex::wcLexInputStream::operator[](int charIndex)
+string wc::lex::wcLexInputStream::operator[](int charIndex)
 {
 	//get the correct line and column
 	wcLineColumnIndex lcIndex(*this, charIndex);
 
-	return string(container[lcIndex.line]).substr(lcIndex.column, 1).c_str();
+	return container[lcIndex.line].substr(lcIndex.column, 1);
 }
 
 bool wc::lex::wcLexInputStream::operator==(const wcLexInputStream& otherStream) const
@@ -436,49 +387,48 @@ bool wc::lex::wcLexInputStream::operator!=(const wcLexInputStream& otherStream) 
 	return false;
 }
 
-const char * wc::lex::wcLexInputStream::next(wcLexInputStreamIndex &index)
+char wc::lex::wcLexInputStream::next(wcLexInputStreamIndex &index)
 {
-	index++;
-	return get(index);
+	return get(index++);
 }
 
-const char * wc::lex::wcLexInputStream::getLine(int line)
+string wc::lex::wcLexInputStream::getLine(int line)
 {
-	return nullptr;
+	return container[line];
 }
 
-const char * wc::lex::wcLexInputStream::getLine(wcLexInputStreamIndex &)
+string wc::lex::wcLexInputStream::getLine(wcLexInputStreamIndex &index)
 {
-	return nullptr;
+	return container[index.line];
 }
 
-const char * wc::lex::wcLexInputStream::get(wcLexInputStreamIndex &index)
+char wc::lex::wcLexInputStream::get(wcLexInputStreamIndex &index)
 {
 	if (!index.isValid())
-		return nullptr;
+		return 0;
 
-	return string(container[index.line]).substr(index.column, 1).c_str();
+	return char(*container[index.line].substr(index.column, 1).c_str());
 }
 
-const char * wc::lex::wcLexInputStream::get(int _line, int _column)
+char wc::lex::wcLexInputStream::get(int _line, int _column)
 {
 	wcLineColumnIndex lcIndex(*this, _line, _column);
 
 	if (lcIndex.isValid())
-		return string(container[_line]).substr(_column, 1).c_str();
+		return char(*container[_line].substr(_column, 1).c_str());
 	else
-		return nullptr;
+		return 0;
 }
 
 //get the amount of characters in stream
 const unsigned int wc::lex::wcLexInputStream::size()
 {
 	if (lines() == 1)
-		return strlen(container[0]);
+		return container[0].size();
 
 	unsigned int sizeAccumulator = 0;
 	for (int t = 0; t < lines(); ++t)
-		sizeAccumulator += strlen(container[t]);
+		sizeAccumulator += container[t].size();
 
 	return sizeAccumulator;
 }
@@ -486,7 +436,7 @@ const unsigned int wc::lex::wcLexInputStream::size()
 //get the amount of characters in a given line 
 const unsigned int wc::lex::wcLexInputStream::size(unsigned int lineNumber)
 {
-	return strlen(container[lineNumber]);
+	return container[lineNumber].size();
 }
 
 //get the amount of lines in the input
@@ -509,12 +459,12 @@ bool wc::lex::wcToken::operator==(const wcToken& p_token) const
 	return (this->type == p_token.type && this->data == p_token.data);
 }
 
-const char * wc::lex::wcToken::operator[](unsigned int index)
+string wc::lex::wcToken::operator[](unsigned int index)
 {
-	return std::string(data).substr(index, 1).c_str();
+	return data.substr(index, 1);
 }
 
-wcToken wc::lex::wcToken::operator=(const char *input)
+wcToken wc::lex::wcToken::operator=(string input)
 {
 	data = input;
 	return *this;
@@ -533,7 +483,7 @@ wc::lex::wcToken::wcToken()
 {
 }
 
-wc::lex::wcToken::wcToken(wcTokenType _type, const char * _data, int _line, int _column)
+wc::lex::wcToken::wcToken(wcTokenType _type, string _data, int _line, int _column)
 {
 	type = _type;
 	data = _data;
@@ -610,7 +560,7 @@ wcTokenStream wc::lex::wcLexer::lex_stringLiteral(wcLexInputStreamIndex & index)
 		switch (deriver.derive(index.get()))
 		{
 		case tt_dquote:
-			token.data = dataBuffer.c_str();
+			token.data = dataBuffer;
 			out += token;
 			return out;
 
@@ -652,26 +602,26 @@ wcTokenStream wc::lex::wcLexer::lex_intLiteral(wcLexInputStreamIndex & index)
 wcTokenStream wc::lex::wcLexer::lex_default(wcLexInputStreamIndex& index)
 {
 	wcToken token(tt_null, "", index.line, index.column);
-	wcTokenStream out;
-	string dataBuffer = "";
 
 	//build up the token until we hit a delimiter or eos
+	string dataBuffer = "";
 	while (index.isValid() && !deriver.isDelim(index.get()))
 	{
 		dataBuffer += index.get();
 		index++;
 	}
 
-	token.data = dataBuffer.c_str();
+	token.data = dataBuffer;
 	token.type = deriver.derive(dataBuffer);
 
 	//create a token for the delimiter unless it was end of stream
+	wcTokenStream out;
 	if (deriver.isDelim(index.get()))
 	{
 		if (token.type != tt_null)
 			out.container.push_back(token);
 
-		wcToken delim(deriver.derive(index.get()), index.get(), index.line, index.column);
+		wcToken delim(deriver.derive(index.get()),string() += index.get(), index.line, index.column);
 		out.container.push_back(delim);
 	}
 	else
@@ -727,7 +677,7 @@ bool wc::lex::wcLineColumnIndex::updateFromIndex(int newIndex)
 bool wc::lex::wcLineColumnIndex::updateFromLineColumn(int _line, int _column)
 {
 	//check for bad line/column
-	if (_line >= source.size() || strlen(source[_line]) >= _column)
+	if (_line >= source.size() || source.getLine(_line).size() >= _column)
 	{
 		line = column = index = -1;
 		return false;

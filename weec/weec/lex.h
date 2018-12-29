@@ -62,13 +62,13 @@ namespace wc
 				operator+(int),
 				operator-(wcLexInputStreamIndex),
 				operator+(wcLexInputStreamIndex);
-			const char * operator[](int);
+			std::string operator[](int);
 
 			bool isValid();
 			void reset();
 
-			const char *next(),	*get(),
-				*get(int line, int column);
+			char next(),	get(),
+				get(int line, int column);
 
 			unsigned int size();
 
@@ -116,21 +116,22 @@ namespace wc
 		private:
 			std::vector<const char *> container;
 		};
+		
 
 		//a lexed string with a type
 		struct wcToken
 		{
 			wcToken();	//tt_null
-			wcToken(wcTokenType, const char *, int, int);
+			wcToken(wcTokenType, std::string, int, int);
 
 			bool operator!=(const wcToken&) const;
 			bool operator==(const wcToken&) const;
-			const char * operator[](unsigned int);
-			wcToken operator=(const char *);
+			std::string operator[](unsigned int);
+			wcToken operator=(std::string);
 			wcToken operator=(wcToken);
 
 			wcTokenType type;
-			const char * data;
+			std::string data;
 			int line, column;
 		};
 
@@ -138,8 +139,8 @@ namespace wc
 		struct wcTokenDefinition
 		{
 			wcTokenDefinition();	//tt_null
-			wcTokenDefinition(wcTokenType _type, const char *);
-			wcTokenDefinition(wcTokenType _type, const char *, bool _isDelimiter);
+			wcTokenDefinition(wcTokenType _type, std::string);
+			wcTokenDefinition(wcTokenType _type, std::string, bool _isDelimiter);
 			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers);
 			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter);
 
@@ -157,13 +158,11 @@ namespace wc
 			wcTokenDefinitionBank();
 			wcTokenDefinitionBank(const std::vector<wcTokenDefinition>&);
 
-			const bool exists(const char *),
-				exists(char),
-				exists(std::string);
+			const bool exists(std::string),
+				exists(char);
 
-			const wcTokenDefinition find(const char *),
-				find(char),
-				find(std::string);
+			const wcTokenDefinition find(std::string),
+				find(char);
 
 		private:
 			void populateDelimiterTypes();
@@ -178,12 +177,10 @@ namespace wc
 			wcTokenTypeDeriver();
 			wcTokenTypeDeriver(wcTokenDefinitionBank&);
 
-			wcTokenType derive(const char *),
-				derive(char),
+			wcTokenType derive(char),
 				derive(std::string);
 
-			bool isDelim(const char *),
-				isDelim(char),
+			bool isDelim(char),
 				isDelim(std::string),
 				isDelim(wcTokenType);
 

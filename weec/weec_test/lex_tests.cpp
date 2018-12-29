@@ -104,29 +104,8 @@ int wctest::lex::l_wcLexInputStream_1()
 
 	//check first 3 letters are the same (operator[])
 	if (stream7[0] != testString.substr(0, 1) || stream7[1] != testString.substr(1, 1) || stream7[2] != testString.substr(2, 1))
-		return 6;
-struct wcLexInputStream
-		{
-		public:
-			wcLexInputStream();
-			wcLexInputStream(std::string);
-			wcLexInputStream(std::vector<std::string>);
-			std::string operator[](int);
-			bool operator!=(const wcLexInputStream&) const;
-			bool operator==(const wcLexInputStream&) const;
+		return 8;
 
-			char next(wcLexInputStreamIndex&),
-				get(wcLexInputStreamIndex&),
-				get(int line, int column);
-			std::string getLine(wcLexInputStreamIndex&),
-				getLine(int line);
-
-			const unsigned int size(), size(unsigned int lineNumber);
-			const unsigned int lines();
-
-		private:
-			std::vector<std::string> container;
-		};
 	return 0;
 }
 
@@ -148,6 +127,35 @@ int wctest::lex::l_wcLexInputStream_2()
 }
 
 int wctest::lex::l_wcLexInputStream_3()
+{
+	return 0;
+}
+
+int wctest::lex::l_wcLexInputStreamIndex_1()
+{
+	wcLexInputStream stream = wcLexInputStream(), stream1(testString), stream2(twoLinesString);
+
+	wcLexInputStreamIndex index(stream), index1(stream1), index2(stream2);
+
+	if (!(index.column == index.line == index.index == 0) || index.size() != 0 || !index.isValid())
+		return 1;
+
+	if (!(index1.column == index1.line == index1.index == 0) || index1.size() != testString.size() || !index1.isValid()) 
+		return 1;
+
+	
+	if (!(index2.column == index2.line == index2.index == 0) || index2.size() != twoLinesString[0].size() + twoLinesString[1].size() || !index2.isValid())
+		return 2;
+
+	return 0;
+}
+
+int wctest::lex::l_wcLexInputStreamIndex_2()
+{
+	return 0;
+}
+
+int wctest::lex::l_wcLexInputStreamIndex_3()
 {
 	return 0;
 }

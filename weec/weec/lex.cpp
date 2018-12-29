@@ -330,17 +330,17 @@ void wc::lex::wcLexInputStreamIndex::reset()
 	index = line = column = 0;
 }
 
- char wc::lex::wcLexInputStreamIndex::next()
+string wc::lex::wcLexInputStreamIndex::next()
 {
 	return source.next(*this);
 }
 
- char wc::lex::wcLexInputStreamIndex::get(int _line, int _column)
+ string wc::lex::wcLexInputStreamIndex::get(int _line, int _column)
 {
 	return source.get(_line,_column);
 }
 
-char wc::lex::wcLexInputStreamIndex::get()
+string wc::lex::wcLexInputStreamIndex::get()
 {
 	return source.get(*this);
 }
@@ -387,7 +387,7 @@ bool wc::lex::wcLexInputStream::operator!=(const wcLexInputStream& otherStream) 
 	return false;
 }
 
-char wc::lex::wcLexInputStream::next(wcLexInputStreamIndex &index)
+string wc::lex::wcLexInputStream::next(wcLexInputStreamIndex &index)
 {
 	return get(index++);
 }
@@ -402,20 +402,20 @@ string wc::lex::wcLexInputStream::getLine(wcLexInputStreamIndex &index)
 	return container[index.line];
 }
 
-char wc::lex::wcLexInputStream::get(wcLexInputStreamIndex &index)
+string wc::lex::wcLexInputStream::get(wcLexInputStreamIndex &index)
 {
 	if (!index.isValid())
 		return 0;
 
-	return char(*container[index.line].substr(index.column, 1).c_str());
+	return container[index.line].substr(index.column, 1);
 }
 
-char wc::lex::wcLexInputStream::get(int _line, int _column)
+string wc::lex::wcLexInputStream::get(int _line, int _column)
 {
 	wcLineColumnIndex lcIndex(*this, _line, _column);
 
 	if (lcIndex.isValid())
-		return char(*container[_line].substr(_column, 1).c_str());
+		return container[_line].substr(_column, 1);
 	else
 		return 0;
 }

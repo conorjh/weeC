@@ -67,7 +67,7 @@ namespace wc
 			bool isValid();
 			void reset();
 
-			char next(),	get(),
+			std::string next(),	get(),
 				get(int line, int column);
 
 			unsigned int size();
@@ -96,25 +96,23 @@ namespace wc
 		{
 		public:
 			wcLexInputStream();
-			wcLexInputStream(const char *);
 			wcLexInputStream(std::string);
 			wcLexInputStream(std::vector<std::string>);
-			wcLexInputStream(std::vector<const char *>);
-			const char *operator[](int);
+			std::string operator[](int);
 			bool operator!=(const wcLexInputStream&) const;
 			bool operator==(const wcLexInputStream&) const;
 
-			const char *next(wcLexInputStreamIndex&),
-				*get(wcLexInputStreamIndex&),
-				*get(int line, int column),
-				*getLine(wcLexInputStreamIndex&),
-				*getLine(int line);
+			std::string next(wcLexInputStreamIndex&),
+				get(wcLexInputStreamIndex&),
+				get(int line, int column),
+				getLine(wcLexInputStreamIndex&),
+				getLine(int line);
 
 			const unsigned int size(), size(unsigned int lineNumber);
 			const unsigned int lines();
 
 		private:
-			std::vector<const char *> container;
+			std::vector<std::string> container;
 		};
 		
 

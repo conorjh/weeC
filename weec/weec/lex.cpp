@@ -565,8 +565,7 @@ wcTokenStream wc::lex::wcLexer::lex_stringLiteral(wcLexInputStreamIndex & index)
 			return out;
 
 		default:
-			dataBuffer += index.get();
-			index++;
+			dataBuffer += (++index).get();
 			break;
 		}
 

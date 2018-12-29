@@ -46,9 +46,9 @@ namespace wc
 			tt_tab, tt_ws, tt_newline, tt_eos, tt_eof
 		};
 		
-		//provides a way to index your read progress
 		struct wcLexInputStream;
 		struct wcLineColumnIndex;
+		//provides a way to index your read progress
 		struct wcLexInputStreamIndex
 		{
 			wcLexInputStreamIndex(wcLexInputStream&);
@@ -241,7 +241,6 @@ namespace wc
 			wcTokenTypeDeriver deriver;
 			wcTokenDefinitionBank definitionsBank;
 
-			bool expect(wcTokenType);
 			wcTokenStream lex_stringLiteral(wcLexInputStreamIndex& index),
 				lex_intLiteral(wcLexInputStreamIndex& index),
 				lex_ws(wcLexInputStreamIndex& index),

@@ -64,14 +64,12 @@ namespace wc
 				operator+(wcLexInputStreamIndex);
 			std::string operator[](int);
 
-			bool isValid();
-			void reset();
-
 			std::string next(),	get(),
 				get(int line, int column),
 				peek(), peek(int);
-
 			unsigned int size();
+			bool isValid();
+			void reset();
 
 			int line, column, index;
 		private:
@@ -97,9 +95,11 @@ namespace wc
 		{
 		public:
 			wcLexInputStream();
+			wcLexInputStream(const char *);
 			wcLexInputStream(std::string);
 			wcLexInputStream(std::vector<std::string>);
 			std::string operator[](int);
+			wcLexInputStream operator=(wcLexInputStream&);
 			bool operator!=(const wcLexInputStream&) const;
 			bool operator==(const wcLexInputStream&) const;
 
@@ -243,7 +243,7 @@ namespace wc
 			wcTokenDefinitionBank definitionsBank;
 
 			wcTokenStream lex_stringLiteral(wcLexInputStreamIndex& index),
-				lex_intLiteral(wcLexInputStreamIndex& index),
+				lex_intOrFloatLiteral(wcLexInputStreamIndex& index),
 				lex_ws(wcLexInputStreamIndex& index),
 				lex_2step(wcLexInputStreamIndex& index), 
 				lex_default(wcLexInputStreamIndex& index),
@@ -254,6 +254,5 @@ namespace wc
 		bool setErrorReturnFalse(error::wcError& p_error, error::wcError p_newError);
 		std::vector<std::string> tokenizeString(std::string);
 	}
-
 }
 #endif

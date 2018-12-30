@@ -162,6 +162,9 @@ int wctest::lex::l_wcLexInputStreamIndex_2()
 	if ((++index1).get() != testString.substr(1,1))
 		return 2;
 
+	wcLexer l;
+	l.lex(wcLexInputStream("HE"));
+
 	return 0;
 }
 

@@ -68,7 +68,8 @@ namespace wc
 			void reset();
 
 			std::string next(),	get(),
-				get(int line, int column);
+				get(int line, int column),
+				peek(), peek(int);
 
 			unsigned int size();
 

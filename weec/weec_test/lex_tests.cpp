@@ -137,7 +137,7 @@ int wctest::lex::l_wcLexInputStreamIndex_1()
 
 	wcLexInputStreamIndex index(stream), index1(stream1), index2(stream2);
 
-	if (!(index.column == index.line == index.index == 0) || index.size() != 0 || !index.isValid())
+	if (!(index.column == index.line == index.index == 0) || index.size() != 0 || index.isValid())
 		return 1;
 
 	if (!(index1.column == index1.line == index1.index == 0) || index1.size() != testString.size() || !index1.isValid()) 
@@ -152,6 +152,16 @@ int wctest::lex::l_wcLexInputStreamIndex_1()
 
 int wctest::lex::l_wcLexInputStreamIndex_2()
 {
+	wcLexInputStream stream = wcLexInputStream(), stream1(testString), stream2(twoLinesString);
+
+	wcLexInputStreamIndex index(stream), index1(stream1), index2(stream2);
+
+	if((++index).isValid())
+		return 1;
+
+	if ((++index1).get() != testString.substr(1,1))
+		return 2;
+
 	return 0;
 }
 

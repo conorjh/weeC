@@ -166,9 +166,9 @@ const bool wc::lex::wcTokenDefinition::isSingleCharacterToken()
 	return !(largestIdentifierSize > 1);
 }
 
-bool wc::lex::setErrorReturnFalse(wcError& p_error, wcError p_newError)
+bool wc::lex::setErrorReturnFalse(wcError& error, wcError newError)
 {
-	p_error = p_newError;
+	error = newError;
 	return false;
 }
 
@@ -217,10 +217,10 @@ bool wc::lex::wcTokenTypeDeriver::isDelim(char input)
 	return isDelim(ss.str());
 }
 
-bool wc::lex::wcTokenTypeDeriver::isDelim(wcTokenType p_type)
+bool wc::lex::wcTokenTypeDeriver::isDelim(wcTokenType type)
 {
 	//.find() returns a tt_null typed wcTokenDefinition if no match was found
-	return definitionsBank.find(p_type).delimiter;
+	return definitionsBank.find(type).delimiter;
 }
 
 wc::lex::wcLexer::wcLexer() : deriver(definitionsBank)
@@ -335,7 +335,7 @@ string wc::lex::wcLexInputStreamIndex::next()
 	return source.next(*this);
 }
 
- string wc::lex::wcLexInputStreamIndex::get(int _line, int _column)
+string wc::lex::wcLexInputStreamIndex::get(int _line, int _column)
 {
 	return source.get(_line,_column);
 }
@@ -347,7 +347,7 @@ string wc::lex::wcLexInputStreamIndex::get()
 
 unsigned int wc::lex::wcLexInputStreamIndex::size()
 {
-	return sizeof(column) + sizeof(line) + sizeof(index) + sizeof(source);
+	return source.size();
 }
 
 wc::lex::wcLexInputStream::wcLexInputStream()
@@ -389,7 +389,7 @@ bool wc::lex::wcLexInputStream::operator!=(const wcLexInputStream& otherStream) 
 
 string wc::lex::wcLexInputStream::next(wcLexInputStreamIndex &index)
 {
-	return get(index++);
+	return get(++index);
 }
 
 string wc::lex::wcLexInputStream::getLine(int line)
@@ -448,15 +448,15 @@ const unsigned int wc::lex::wcLexInputStream::lines()
 //do we have a source loaded, and are there still characters to read
 bool wc::lex::wcLexInputStreamIndex::isValid()
 {
-	if (line > -1 && column > -1 && index > -1 && (column < source.size(line)))
+	if (source.size() && line > -1 && column > -1 && index > -1 && (column < source.size(line)))
 		return true;
 	return false;
 }
 
-bool wc::lex::wcToken::operator==(const wcToken& p_token) const
+bool wc::lex::wcToken::operator==(const wcToken& token) const
 {
 	//dont compare line/column
-	return (this->type == p_token.type && this->data == p_token.data);
+	return (this->type == token.type && this->data == token.data);
 }
 
 string wc::lex::wcToken::operator[](unsigned int index)
@@ -491,9 +491,9 @@ wc::lex::wcToken::wcToken(wcTokenType _type, string _data, int _line, int _colum
 	column = _column;
 }
 
-bool wc::lex::wcToken::operator!=(const wcToken& p_token) const
+bool wc::lex::wcToken::operator!=(const wcToken& token) const
 {
-	return !(this->type == p_token.type && this->data == p_token.data);
+	return !(this->type == token.type && this->data == token.data);
 }
 
 wcTokenStream wc::lex::wcLexer::lex(wcLexInputStream& stream)
@@ -502,7 +502,7 @@ wcTokenStream wc::lex::wcLexer::lex(wcLexInputStream& stream)
 	wcTokenStream out;
 
 	//loop through characters making tokens until end of stream
-	while ((lexIndex++).isValid())
+	while ((++lexIndex).isValid())
 		switch (deriver.derive(stream.get(lexIndex)))
 		{
 		//string literal
@@ -551,7 +551,7 @@ wcTokenStream wc::lex::wcLexer::lex_stringLiteral(wcLexInputStreamIndex & index)
 	//make sure we have an opening double quote
 	if (deriver.derive(index.get()) != tt_dquote)
 		return wcTokenStream(wcError(ec_lex_unexpectedtoken, "Expected '\"'", token.line, token.column));
-	index++;
+	++index;
 
 	wcTokenStream out;
 	string dataBuffer = "";
@@ -565,7 +565,7 @@ wcTokenStream wc::lex::wcLexer::lex_stringLiteral(wcLexInputStreamIndex & index)
 			return out;
 
 		default:
-			dataBuffer += (++index).get();
+			dataBuffer += index.next();
 			break;
 		}
 
@@ -585,7 +585,25 @@ wcTokenStream wc::lex::wcLexer::lex_comment(wcLexInputStreamIndex & index)
 
 wcTokenStream wc::lex::wcLexer::lex_2step(wcLexInputStreamIndex & index)
 {
-	return wcTokenStream();
+	//construct a second index so our increment wont leave the parameter invalid, still return error
+	if (!(wcLexInputStreamIndex(index)++).isValid())
+		return wcTokenStream(wcError(ec_lex_eos, index.get(), index.line, index.column));
+
+	wcTokenType thisAndNext = deriver.derive(index.get() + index.peek());
+	wcTokenStream out;
+	if(	thisAndNext != tt_greaterequal && thisAndNext != tt_lessequal && thisAndNext != tt_notequal && thisAndNext != tt_equal &&
+		thisAndNext != tt_incr && thisAndNext != tt_plusassign && thisAndNext != tt_decr && thisAndNext != tt_minusassign &&
+		thisAndNext != tt_logand && thisAndNext != tt_logor &&	thisAndNext != tt_dcolon )	
+	{
+		out += wcToken(thisAndNext, index.get() + index.peek(), index.line, index.column);
+		index++;
+		index++;;
+	}
+	else
+		out += wcToken(thisAndNext, index.get(), index.line, index.column);
+
+	index++;
+	return out;
 }
 
 wcTokenStream wc::lex::wcLexer::lex_ws(wcLexInputStreamIndex & index)
@@ -595,21 +613,63 @@ wcTokenStream wc::lex::wcLexer::lex_ws(wcLexInputStreamIndex & index)
 
 wcTokenStream wc::lex::wcLexer::lex_intLiteral(wcLexInputStreamIndex & index)
 {
-	return wcTokenStream();
+	string leftValue, rightValue;
+	int origCol = index.column;
+	int origLine = index.line;
+	bool firstHalf = true;
+	bool breakWhile = false;
+	wcTokenStream out;
+
+	//make sure we have an opening int
+	if (deriver.derive(index.get()) != tt_intlit)
+		return wcTokenStream(wcError(ec_lex_unexpectedtoken, "Expected a numeric value (0-9)", origLine, origCol));
+
+	//get all the numbers til we hit not a number
+	while (index.isValid() && !breakWhile)
+		switch (deriver.derive(index.get()))
+		{
+		case tt_intlit:
+			if (firstHalf)
+				leftValue += index.get();
+			else
+				rightValue += index.get();
+			index++;
+			break;
+
+		case tt_period:
+			if (!leftValue.size() && firstHalf)
+				return wcTokenStream(wcError(ec_lex_unexpectedtoken, "Expected a numeric value (0-9)", index.line, index.column));
+			else if (!firstHalf)
+				return wcTokenStream(wcError(ec_lex_unexpectedtoken, "Encountered a second period", index.line, index.column));
+
+			//float encountered, continue lexing the second half after the decimal
+			firstHalf = false;
+			index++;
+			break;
+
+		default:
+			breakWhile = true;
+			break;
+		}
+
+	//check what we found
+	if (firstHalf && leftValue.size() && (!rightValue.size()))
+		return out += wcToken(tt_intlit, leftValue, origLine, origCol);
+	else if (!firstHalf && leftValue.size() && rightValue.size())
+		return out += wcToken(tt_fltlit, leftValue + "." + rightValue, origLine, origCol);
+	else
+		return wcTokenStream(wcError(ec_lex_somekindoferror, "Some kind of error lexing a float", origLine, origCol));
 }
 
 wcTokenStream wc::lex::wcLexer::lex_default(wcLexInputStreamIndex& index)
 {
 	wcToken token(tt_null, "", index.line, index.column);
 
-	//build up the token until we hit a delimiter or eos
 	string dataBuffer = "";
+	//build up the token until we hit a delimiter or eos
 	while (index.isValid() && !deriver.isDelim(index.get()))
-	{
-		dataBuffer += index.get();
-		index++;
-	}
-
+		dataBuffer += index.next();
+	
 	token.data = dataBuffer;
 	token.type = deriver.derive(dataBuffer);
 
@@ -629,7 +689,7 @@ wcTokenStream wc::lex::wcLexer::lex_default(wcLexInputStreamIndex& index)
 		out.container.push_back(token);
 	}
 
-	index++;
+	++index;
 	return out;
 }
 
@@ -647,8 +707,7 @@ bool wc::lex::wcLineColumnIndex::updateFromIndex(int newIndex)
 {
 	if ((newIndex < 0) || newIndex >= source.size())
 	{
-		line = -1;
-		column = -1;
+		index = line = column = -1;
 		return false;
 	}
 
@@ -663,8 +722,8 @@ bool wc::lex::wcLineColumnIndex::updateFromIndex(int newIndex)
 		}
 		else
 		{
-			this->column = newIndex - tempIndex;
-			this->line = t;
+			column = newIndex - tempIndex;
+			line = t;
 			this->index = newIndex;
 			return true;
 		}
@@ -695,7 +754,7 @@ bool wc::lex::wcLineColumnIndex::updateFromLineColumn(int _line, int _column)
 
 bool wc::lex::wcLineColumnIndex::isValid()
 {
-	if (column < 0 || line < 0 || line >= source.lines())
+	if (!source.lines() || column < 0 || line < 0 || line >= source.lines())
 		return false;
 	else
 		return true;

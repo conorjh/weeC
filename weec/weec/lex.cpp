@@ -895,19 +895,22 @@ bool wc::lex::wcTokenStream::isError()
 	return false;
 }
 
-wcToken wc::lex::wcTokenStream::get(wcTokenStreamIndex &)
+wcToken wc::lex::wcTokenStream::get(wcTokenStreamIndex &index)
 {
+	if (index.isValid())
+		return container.at(index.index);
 	return wcToken();
 }
 
-wcToken wc::lex::wcTokenStream::peek(wcTokenStreamIndex &)
+wcToken wc::lex::wcTokenStream::peek(wcTokenStreamIndex &index)
 {
-	return wcToken();
+	wcTokenStreamIndex tempIndex = index;
+	return get(tempIndex++);
 }
 
-wcToken wc::lex::wcTokenStream::next(wcTokenStreamIndex &)
+wcToken wc::lex::wcTokenStream::next(wcTokenStreamIndex &index)
 {
-	return wcToken();
+	return get(index++);
 }
 
 wcTokenStream wc::lex::wcTokenStream::operator+=(wcTokenStream stream)
@@ -917,40 +920,59 @@ wcTokenStream wc::lex::wcTokenStream::operator+=(wcTokenStream stream)
 
 wc::lex::wcTokenStreamIndex::wcTokenStreamIndex(wcTokenStream &stream) : source(stream)
 {
-
+	index = 0;
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator-(int)
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(wcTokenStreamIndex otherIndex)
 {
+	for (int t = 0; t < otherIndex.source.container.size(); ++t)
+		source.container.push_back(otherIndex.source.container[t]);
 	return *this;
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(wcTokenStreamIndex)
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator=(wcTokenStreamIndex otherIndex)
 {
-	return *this;
-}
-
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator-(wcTokenStreamIndex)
-{
-	return *this;
-}
-
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator=(wcTokenStreamIndex)
-{
+	index = otherIndex.index;
+	source = otherIndex.source;
 	return *this;
 }
 
 wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator++()
 {
-	return *this;
+	wcTokenStreamIndex preIndex = *this;
+	index++;
+	return preIndex;
 }
 
 wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator--()
 {
+	wcTokenStreamIndex preIndex = *this;
+	index--;
+	return preIndex;
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(int addition)
+{
+	index += addition;
 	return *this;
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(int)
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator-(int subtraction)
 {
+	index = -subtraction;
+	return *this;
+}
+
+//pre
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator++(int)
+{
+	index++;
+	return *this;
+}
+
+//pre
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator--(int)
+{
+	index--;
 	return *this;
 }

@@ -195,17 +195,16 @@ namespace wc
 
 			wcTokenStreamIndex operator-(int),
 				operator+(int),
-				operator-(wcTokenStreamIndex),
 				operator+(wcTokenStreamIndex),
-				operator--(),
-				operator++(),
+				operator--(),	operator--(int),
+				operator++(),	operator++(int),
 				operator=(wcTokenStreamIndex);
 
 			bool isValid();
 			void reset();
 
+			int index;
 		private:
-			int line, column, index;
 			wcTokenStream& source;
 		};
 

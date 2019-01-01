@@ -357,7 +357,9 @@ string wc::lex::wcLexInputStreamIndex::get(int _line, int _column)
 
 string wc::lex::wcLexInputStreamIndex::get()
 {
-	return source.get(*this);
+	if(isValid())
+		return source.get(*this);
+	return "";
 }
 
 unsigned int wc::lex::wcLexInputStreamIndex::size()
@@ -679,25 +681,16 @@ wcTokenStream wc::lex::wcLexer::lex_2step(wcLexInputStreamIndex & index)
 
 wcTokenStream wc::lex::wcLexer::lex_ws(wcLexInputStreamIndex & index)
 {
-	wcTokenType tt = deriver.derive(index.get());
 
 	//make sure we have an opening whitespace
+	wcTokenType tt = deriver.derive(index.get());
 	if (tt != tt_ws && tt != tt_tab && tt != tt_newline)
 		return wcTokenStream(wcError(ec_lex_unexpectedtoken, "Expected '\"'", index.line, index.column));
 
-	bool breakWhile = false;
 	//clump all consecutive whitespace together
-	while (index.isValid() && !breakWhile)
-		switch (deriver.derive(index.get()))
-		{
-			CASE_TT_WS
+	while (index.isValid() && (deriver.derive(index.get()) == tt_ws ||
+		deriver.derive(index.get()) == tt_tab || deriver.derive(index.get()) == tt_newline))
 			index++;
-			break;
-
-			//end of whitespace as soon as we reach another token or eos
-		default:
-			breakWhile = true;
-		}
 
 	return wcTokenStream();
 }
@@ -719,10 +712,9 @@ wcTokenStream wc::lex::wcLexer::lex_intOrFloatLiteral(wcLexInputStreamIndex & in
 		{
 		case tt_intlit:
 			if (firstHalf)
-				leftValue += index.get();
+				leftValue += (index++).get();
 			else
-				rightValue += index.get();
-			index++;
+				rightValue += (index++).get();
 			break;
 
 		case tt_period:
@@ -856,10 +848,12 @@ bool wc::lex::wcTokenStreamIndex::isValid()
 
 void wc::lex::wcTokenStreamIndex::reset()
 {
+	index = 0;
 }
 
 wc::lex::wcTokenStream::wcTokenStream()
 {
+
 }
 
 wc::lex::wcTokenStream::wcTokenStream(error::wcError _error)

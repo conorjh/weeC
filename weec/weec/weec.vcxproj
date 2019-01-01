@@ -133,6 +133,7 @@
     <ClInclude Include="error.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="lex.h" />
+    <ClInclude Include="parse.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vm.h" />
     <ClInclude Include="api.h" />

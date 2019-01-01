@@ -15,10 +15,8 @@ namespace wctest
 
 		string					testString = "Test String";
 		const char *			testConstChar = "Test String";
-		vector<const char *>	twoLines = { "Line 1" , "Line 2" }, 
-								threeLines = { "Line 1" , "Line 2", "Line 3" };
-		vector<string>			twoLinesString = { "Line 1" , "Line 2" }, 
-								threeLinesString = { "Line 1" , "Line 2", "Line 3" };
+		vector<string>			twoLinesVector = { "Line 1" , "Line 2" }, 
+								threeLinesVector = { "Line 1" , "Line 2", "Line 3" };
 	}
 }
 
@@ -82,7 +80,7 @@ int wctest::lex::l_basic_7()
 //constructor tests / size, line & getLine methods
 int wctest::lex::l_wcLexInputStream_1()
 {
-	wcLexInputStream stream1, stream2(testConstChar), stream5(twoLinesString), stream6(threeLinesString), 
+	wcLexInputStream stream1, stream2(testConstChar), stream5(twoLinesVector), stream6(threeLinesVector), 
 		stream7(testString);
 
 	//default constructor
@@ -93,10 +91,10 @@ int wctest::lex::l_wcLexInputStream_1()
 		return 2;
 	
 	//vector<string>
-	if (stream5.lines() != 2 && stream5.size() != 12 && stream5.getLine(0) != twoLinesString[0] && stream5.getLine(1) != twoLinesString[1])
+	if (stream5.lines() != 2 && stream5.size() != 12 && stream5.getLine(0) != twoLinesVector[0] && stream5.getLine(1) != twoLinesVector[1])
 		return 5;
 	//vector<string> (3 lines)
-	if (stream6.lines() != 3 && stream6.size() != 18 && stream6.getLine(0) != threeLinesString[0] && stream6.getLine(1) != threeLinesString[1] && stream6.getLine(2) != threeLinesString[2])
+	if (stream6.lines() != 3 && stream6.size() != 18 && stream6.getLine(0) != threeLinesVector[0] && stream6.getLine(1) != threeLinesVector[1] && stream6.getLine(2) != threeLinesVector[2])
 		return 6;
 	//string
 	if (stream7.lines() != 1 && stream7.size() != 4 && stream7.getLine(0) != testString)
@@ -112,7 +110,7 @@ int wctest::lex::l_wcLexInputStream_1()
 //operators
 int wctest::lex::l_wcLexInputStream_2()
 {
-	wcLexInputStream stream1, stream2(testConstChar), stream5(twoLinesString), stream6(threeLinesString), stream7(testString);
+	wcLexInputStream stream1, stream2(testConstChar), stream5(twoLinesVector), stream6(threeLinesVector), stream7(testString);
 
 	//operator== and operator!=
 	if (stream1 != wcLexInputStream() || !(stream1 == wcLexInputStream()))
@@ -133,7 +131,7 @@ int wctest::lex::l_wcLexInputStream_3()
 
 int wctest::lex::l_wcLexInputStreamIndex_1()
 {
-	wcLexInputStream stream = wcLexInputStream(), stream1(testString), stream2(twoLinesString);
+	wcLexInputStream stream = wcLexInputStream(), stream1(testString), stream2(twoLinesVector);
 
 	wcLexInputStreamIndex index(stream), index1(stream1), index2(stream2);
 
@@ -144,7 +142,7 @@ int wctest::lex::l_wcLexInputStreamIndex_1()
 		return 1;
 
 	
-	if (!(index2.column == index2.line == index2.index == 0) || index2.size() != twoLinesString[0].size() + twoLinesString[1].size() || !index2.isValid())
+	if (!(index2.column == index2.line == index2.index == 0) || index2.size() != twoLinesVector[0].size() + twoLinesVector[1].size() || !index2.isValid())
 		return 2;
 
 	return 0;
@@ -152,14 +150,14 @@ int wctest::lex::l_wcLexInputStreamIndex_1()
 
 int wctest::lex::l_wcLexInputStreamIndex_2()
 {
-	wcLexInputStream stream = wcLexInputStream(), stream1(testString), stream2(twoLinesString);
+	wcLexInputStream stream = wcLexInputStream(), stream1(testString), stream2(twoLinesVector);
 
 	wcLexInputStreamIndex index(stream), index1(stream1), index2(stream2);
 
 	if((++index).isValid())
 		return 1;
 
-	if ((++index1).get() != testString.substr(1,1))
+	if ((++index1).get() != testString.substr(1,1) || (index1 - 1).get() != testString.substr(0,1))
 		return 2;
 
 	wcLexer l;

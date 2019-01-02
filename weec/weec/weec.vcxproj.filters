@@ -45,6 +45,9 @@
     <ClCompile Include="io.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="parse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lex.h">

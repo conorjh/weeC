@@ -120,6 +120,7 @@
     <ClCompile Include="error.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="lex.cpp" />
+    <ClCompile Include="parse.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="vm.cpp" />
   </ItemGroup>

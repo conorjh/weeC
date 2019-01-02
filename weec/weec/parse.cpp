@@ -872,12 +872,12 @@ wcToken wc::parse::parseFactor(wcParseParams params)
 
 	case tt_oparen:
 		if (!parseFactor_oparen(params, operandLeft, expression))
-			return wcToken(tt_null);
+			return wcToken();
 		break; 
 
 	case tt_ident:
 		if (!parseFactor_ident(params, operandLeft, expression))
-			return wcToken(tt_null);
+			return wcToken();
 		break;
 
 	CASE_ALL_LITERALS_TT

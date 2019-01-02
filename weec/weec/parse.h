@@ -5,7 +5,7 @@
 #include "error.h"
 #include "lex.h"
 
-#define CASE_BASIC_TYPES_TT case tt_keyword_bool: case tt_keyword_int: case tt_keyword_float: case tt_keyword_string: case tt_keyword_chr: case tt_object: case tt_var:
+#define CASE_BASIC_TYPES_TT case tt_keyword_bool: case tt_keyword_int: case tt_keyword_float: case tt_keyword_string: case tt_keyword_char: case tt_object: case tt_var:
 #define CASE_ALL_LITERALS_TT case tt_intlit: case tt_strlit: case tt_fltlit: case tt_keyword_true: case tt_keyword_false:
 #define CASE_ALL_LITERALS_PN case pn_intlit: case pn_strlit: case pn_fltlit: case pn_true: case pn_false:
 #define CASE_ALL_ARITHMETIC_TT case tt_assign: case tt_mult: case tt_div: case tt_plus: case tt_minus:
@@ -215,12 +215,52 @@ namespace wc
 			int parenCount, currentStackIndex;
 		};
 
+		class wcSubParser
+		{
+
+		};
+
+		class wcStatementParser : wcSubParser
+		{
+
+		};
+
+		class wcExpressionParser : wcSubParser
+		{
+
+		};
+
+		class wcNamespaceParser : wcSubParser
+		{
+
+		};
+
+		class wcIfParser : wcSubParser
+		{
+
+		};
+
+		class wcWhileParser : wcSubParser
+		{
+
+		};
+
+		class wcDeclarationParser : wcSubParser
+		{
+
+		};
+
+		class wcIdentParser : wcSubParser
+		{
+
+		};
+
 		class wcParser
 		{
 		public:
 			wcParser();
 
-			virtual wcAST parse(std::vector<lex::wcToken>);
+			virtual wcAST parse(lex::wcTokenStream&);
 
 			bool isError();
 			error::wcError getError();

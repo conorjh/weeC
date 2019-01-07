@@ -139,11 +139,10 @@ int wctest::lex::l_wcLexInputStreamIndex_1()
 		return 1;
 
 	if (!(index1.column == index1.line == index1.index == 0) || index1.size() != testString.size() || !index1.isValid()) 
-		return 1;
-
+		return 2;
 	
 	if (!(index2.column == index2.line == index2.index == 0) || index2.size() != twoLinesVector[0].size() + twoLinesVector[1].size() || !index2.isValid())
-		return 2;
+		return 3;
 
 	return 0;
 }

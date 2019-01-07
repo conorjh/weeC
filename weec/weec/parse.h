@@ -220,11 +220,6 @@ namespace wc
 
 		};
 
-		class wcStatementParser : wcSubParser
-		{
-
-		};
-
 		class wcExpressionParser : wcSubParser
 		{
 
@@ -245,7 +240,7 @@ namespace wc
 
 		};
 
-		class wcDeclarationParser : wcSubParser
+		class wcSemiColonParser : wcSubParser
 		{
 
 		};
@@ -253,6 +248,41 @@ namespace wc
 		class wcIdentParser : wcSubParser
 		{
 
+		};
+
+		class wcStatementParser : wcSubParser
+		{
+
+		};
+
+		class wcDeclarationParser : wcSubParser
+		{
+
+		};
+
+		class wcCodeBlockParser : wcSubParser
+		{
+
+		};
+
+		class wcTypeParser : wcSubParser
+		{
+
+		};
+
+		class wcParserSubParserCollection
+		{
+			wcStatementParser statement;
+			wcDeclarationParser dec;
+			
+			wcIdentParser id;
+			wcTypeParser type;
+			wcExpressionParser exp;
+
+			wcNamespaceParser ns;
+			wcIfParser cond;
+			wcWhileParser whi;
+			wcCodeBlockParser block;
 		};
 
 		class wcParser
@@ -268,6 +298,7 @@ namespace wc
 
 		protected:
 			void init();
+			wcParserSubParserCollection subs;
 			error::wcError error;
 			wcParseIndex index;
 			wcParseData data;

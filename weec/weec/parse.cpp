@@ -170,20 +170,20 @@ wc::parse::wcSymbol::wcSymbol(wcTokenType p_tokenType)
 
 wc::parse::wcSymbol::wcSymbol(string p_identifier)
 {
-	type = deriveSymbolType(parsingLexer.deriveTokenType(p_identifier));
+	type = deriveSymbolType(deriver.derive(p_identifier));
 	fullyQualifiedIdent = ident = p_identifier;
 }
 
 wc::parse::wcSymbol::wcSymbol(std::string p_identifier, std::string scopeFQIdent)
 {
-	type = deriveSymbolType(parsingLexer.deriveTokenType(p_identifier));
+	type = deriveSymbolType(deriver.derive(p_identifier));
 	fullyQualifiedIdent = createFullyQualifiedIdent(scopeFQIdent, p_identifier);
 	ident = p_identifier;
 }
 
 wc::parse::wcSymbol::wcSymbol(wcSymbolType p_type, std::string p_identifier, std::string scopeFQIdent)
 {
-	type = deriveSymbolType(parsingLexer.deriveTokenType(p_identifier));
+	type = deriveSymbolType(deriver.derive(p_identifier));
 	fullyQualifiedIdent = createFullyQualifiedIdent(scopeFQIdent, p_identifier);
 	ident = p_identifier;
 	type = p_type;

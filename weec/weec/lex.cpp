@@ -645,11 +645,11 @@ wcTokenStream wc::lex::wcLexer::lex_comment(wcLexInputStreamIndex & index)
 		switch (deriver.derive(index.get()))
 		{
 		default:
-			index.next();
+			index++;
 			break;
 
 		case tt_newline:
-			index.next();
+			index++;
 			return wcTokenStream();
 		}
 
@@ -681,7 +681,6 @@ wcTokenStream wc::lex::wcLexer::lex_2step(wcLexInputStreamIndex & index)
 
 wcTokenStream wc::lex::wcLexer::lex_ws(wcLexInputStreamIndex & index)
 {
-
 	//make sure we have an opening whitespace
 	wcTokenType tt = deriver.derive(index.get());
 	if (tt != tt_ws && tt != tt_tab && tt != tt_newline)

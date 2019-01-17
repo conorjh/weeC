@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include "error.h"
 
-#define CASE_TT_WS case tt_ws: case tt_newline: case tt_tab:
-#define CASE_ALL_2_PARTERS 	case tt_greater: case tt_less: case tt_lognot: case tt_assign: case tt_plus: case tt_minus:case tt_amper: case tt_pipe: case tt_colon:
+#define CASE_LEX_TT_WS case tt_ws: case tt_newline: case tt_tab:
+#define CASE_LEX_ALL_2_PARTERS 	case tt_greater: case tt_less: case tt_lognot: case tt_assign: case tt_plus: case tt_minus:case tt_amper: case tt_pipe: case tt_colon:
 
 namespace wc
 {

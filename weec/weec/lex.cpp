@@ -544,13 +544,13 @@ wcTokenStream wc::lex::wcLexer::lex(wcLexInputStream& stream)
 			break;
 
 			//all 2 part tokens (operators etc)
-			CASE_ALL_2_PARTERS
+			CASE_LEX_ALL_2_PARTERS
 				if ((out += lex_2step(lexIndex)).isError())
 					return wcTokenStream(out.error);
 			break;
 
 			//whitespace
-			CASE_TT_WS
+			CASE_LEX_TT_WS
 				if ((out += lex_ws(lexIndex)).isError())
 					return wcTokenStream(out.error);
 			break;

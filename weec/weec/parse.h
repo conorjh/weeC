@@ -5,7 +5,7 @@
 #include "error.h"
 #include "lex.h"
 
-#define CASE_BASIC_TYPES_TT case tt_keyword_bool: case tt_keyword_int: case tt_keyword_float: case tt_keyword_string: case tt_keyword_char: case tt_object: case tt_var:
+#define CASE_BASIC_TYPES_TT case tt_keyword_bool: case tt_keyword_int: case tt_keyword_float: case tt_keyword_string: case tt_keyword_char:
 #define CASE_ALL_LITERALS_TT case tt_intlit: case tt_strlit: case tt_fltlit: case tt_keyword_true: case tt_keyword_false:
 #define CASE_ALL_LITERALS_PN case pn_intlit: case pn_strlit: case pn_fltlit: case pn_true: case pn_false:
 #define CASE_ALL_ARITHMETIC_TT case tt_assign: case tt_mult: case tt_div: case tt_plus: case tt_minus:
@@ -30,7 +30,7 @@ namespace wc
 			wcSymbol(std::string);
 			wcSymbol(std::string, std::string);
 			wcSymbol(wcSymbolType, std::string, std::string);
-			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace, 
+			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace,
 				bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, int stackOffset, wcSymbol* dataType);
 
 			std::string ident, fullyQualifiedIdent;
@@ -70,16 +70,15 @@ namespace wc
 			pn_dec, pn_true, pn_false, pn_function, pn_incr, pn_decr, pn_plusassign, pn_minusassign,
 			pn_multassign, pn_divassign, pn_assignment, pn_body, pn_decvar, pn_paramdec, pn_funcdec, pn_namespacedec,
 			pn_paramlist, pn_decparamlist, pn_funccall, pn_if, pn_else, pn_if_trueblock, pn_if_elseblock, pn_while, pn_break,
-			pn_return, pn_continue,
-			 pn_negate
+			pn_return, pn_continue, pn_negate
 		};
 
-		const std::unordered_multimap<wcParseNodeType, const char *> pnTypeStrings = 
+		const std::unordered_multimap<wcParseNodeType, const char *> pnTypeStrings =
 		{
-			{	pn_null, "pn_null"	},	{ pn_head, "pn_head"	},		{	pn_exp,	"pn_exp" },
-			{ pn_type, "pn_type" },	{ pn_statement,	"pn_statement" },{ pn_str,"pn_str" },
-			{ pn_int,"pn_int" }, { pn_flt,"pn_flt"},			{ pn_obj,"pn_obj"},
-			{ pn_var,"pn_var"},	{ pn_bool, "pn_bool"},			{ pn_scolon,"pn_scolon"},
+			{	pn_null, "pn_null"	},			{ pn_head, "pn_head"	},		{	pn_exp,	"pn_exp" },
+			{ pn_type, "pn_type" },				{ pn_statement,	"pn_statement" },{ pn_str,"pn_str" },
+			{ pn_int,"pn_int" },				{ pn_flt,"pn_flt"},			{ pn_obj,"pn_obj"},
+			{ pn_var,"pn_var"},					{ pn_bool, "pn_bool"},			{ pn_scolon,"pn_scolon"},
 			{ pn_colon,"pn_colon"},				{ pn_comma,"pn_comma"},			{ pn_period,"pn_period"},
 			{ pn_squote, "pn_squote"},			{ pn_dquote,"pn_dquote"},			{ pn_qmark,"pn_qmark"},
 			{ pn_exclam, "pn_exclam"},			{ pn_minus, "pn_minus"},			{ pn_plus,"pn_plus"},
@@ -115,166 +114,133 @@ namespace wc
 			wcParseNode(wcParseNodeType, lex::wcToken);
 			wcParseNode(wcParseNodeType, lex::wcToken, lex::wcToken);
 			wcParseNode(wcSymbol, std::string);
+
 			std::vector<lex::wcToken> tokens;
 			wcParseNodeType type;
 			tree<wcParseNode>::iterator parent;
 		};
 
-		struct wcParseIndex
+		struct wcAST;
+		struct wcASTIndex
 		{
-			bool isLexIndexValid();
-			bool isLexIndexValid(int);
-			void setTokens(std::vector<lex::wcToken>*);
-			lex::wcToken getToken();
-			lex::wcToken getToken(int);
-			lex::wcToken nextToken();
-			lex::wcToken nextToken(lex::wcTokenType p_expectedType, error::wcError& p_error);
-			lex::wcToken decToken();
+			wcASTIndex(wcAST&);
 
-			void setNode(tree<wcParseNode>::iterator);
-			void setNode(tree<wcParseNode>*, tree<wcParseNode>::iterator);
-			tree<wcParseNode>::iterator getNode();
-			tree<wcParseNode>::iterator nextNode();
-			tree<wcParseNode>::iterator prevNode();
-			tree<wcParseNode>::iterator backToParent();
-			int getCurrentNodeDepth();
-			int getNodeDepth(tree<wcParseNode>::iterator);
-			tree<wcParseNode>* getTree();
-		private:
-			tree<wcParseNode>* parseTree;
-			tree<wcParseNode>::iterator node;
-			std::vector<lex::wcToken>* tokens;
-			int tokenIndex;
-		};
+			wcASTIndex operator=(wcASTIndex),
+				operator=(tree<wcParseNode>::iterator),
+				operator--(), operator--(int),
+				operator++(), operator++(int),
+				operator-(int),
+				operator+(int);
+			tree<wcParseNode>::iterator operator[](tree<wcParseNode>::iterator);
 
-		struct wcParameter
-		{
-			wcParameter(wcSymbol*);
-			wcSymbol* tableEntry;	//link to symbol table entry
-		};
+			tree<wcParseNode>::iterator get(), next(), prev(), up(), set(tree<wcParseNode>::iterator);
 
-		struct wcParamList
-		{
-			unsigned int paramCount() { return params.size(); }
-			std::vector<wcParameter> params;
-		};
+			int depth(), depth(tree<wcParseNode>::iterator);
 
-		struct wcFunctionInfo
-		{
-			wcFunctionInfo() {};
-			wcFunctionInfo(std::string p_name, wcParamList p_params, wcSymbol* p_sym, tree<wcParseNode>::iterator p_it)
-			{	internalFuncName = p_name; paramList = p_params, symbol = p_sym, bodyNode = p_it;	}
-
-			std::string internalFuncName;
-			wcParamList paramList;
-			wcSymbol* symbol;
-			tree<wcParseNode>::iterator bodyNode;
-		};
-
-		struct wcFunctionTable
-		{
-			wcFunctionTable();
-
-			int addSymbol(std::string internalFunctionName, wcFunctionInfo p_sym);
-
-			std::unordered_map<std::string, wcFunctionInfo> ident2Funcinfo;
-		};
-
-		struct wcStackframe
-		{
-			wcStackframe(wcSymbol* p_owner) { owner = p_owner; }
-			wcSymbol* owner;
-			wcFunctionInfo* thisFrame;
-			std::vector<wcSymbol*> locals;
-		};
-
-		struct wcExpression
-		{
-			bool isError,isConst;
+		protected:
+			tree<wcParseNode>::iterator index;
+			wcAST& ast;
 		};
 
 		struct wcAST
 		{
 			wcAST();
 			wcAST(tree<wcParseNode>);
-			tree<wcParseNode>::iterator addNode(wcParseIndex&, wcParseNode);	//add node and point pindex to the new child node
-			tree<wcParseNode>::iterator addChild(wcParseIndex&, wcParseNode);	//add node, but pindex remains on parent node
 
-			tree<wcParseNode> parseTree;
-			std::unordered_map<std::string, wcStackframe> frames;
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode);	//add node and point pindex to the new child node
+			tree<wcParseNode>::iterator addChild(wcASTIndex&, wcParseNode);	//add node, but pindex remains on parent node
+
+		protected:
+			tree<wcParseNode> tree;
+		};
+
+		//keeps track how far the parser has got into the input stream, and
+		//where the parser is within the output tree. 
+		struct wcParserIndex
+		{
+			wcParserIndex(wcTokenStream&);
+			wcParserIndex(wcTokenStream&, wcAST&);
+
+			wcAST& output;
+			wcASTIndex astIndex;
+			wcTokenStream& input;
+			wcTokenStreamIndex tokenIndex;
+		};
+
+		struct wcParserOutput
+		{
+			wcAST ast;
 			wcSymbolTable symTab;
-			wcFunctionTable funcTab;
+			error::wcError error;
 		};
 
 		struct wcParseData
 		{
 			wcParseData();
-			wcParseData(int);
-			wcSymbol* currentScope, currentStackFrame;
-			std::vector<wcStackframe> stackframes;
-			int parenCount, currentStackIndex;
+
+			wcParserIndex index;
 		};
 
 		class wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcExpressionParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcNamespaceParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcIfParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcWhileParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcSemiColonParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcIdentParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcStatementParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcDeclarationParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcCodeBlockParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcTypeParser : wcSubParser
 		{
-
+			wcParserOutput parse(wcParserIndex&);
 		};
 
 		class wcParserSubParserCollection
 		{
 			wcStatementParser statement;
 			wcDeclarationParser dec;
-			
+
 			wcIdentParser id;
 			wcTypeParser type;
 			wcExpressionParser exp;
@@ -290,33 +256,17 @@ namespace wc
 		public:
 			wcParser();
 
-			virtual wcAST parse(lex::wcTokenStream&);
-
-			bool isError();
-			error::wcError getError();
-			void setError(error::wcError);
+			virtual wcParserOutput parse(lex::wcTokenStream&);
 
 		protected:
 			void init();
 			wcParserSubParserCollection subs;
 			error::wcError error;
-			wcParseIndex index;
 			wcParseData data;
-		};
-
-		struct wcParseParams 
-		{
-			wcParseParams(wcParseIndex&, wcAST&, error::wcError&, wcParseData&);
-			wcParseIndex& index;
-			wcAST& output;
-			error::wcError& error;
-			wcParseData& data;
-			friend class wcParser;
 		};
 
 		int getPrecedence(lex::wcToken);
 		bool isRightAssociative(lex::wcToken);
-
 	}
 }
 #endif

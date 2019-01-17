@@ -90,16 +90,6 @@ namespace wc
 	}
 }
 
-wc::parse::wcFunctionTable::wcFunctionTable()
-{
-
-}
-
-int wc::parse::wcFunctionTable::addSymbol(std::string internalFunctionName, wcFunctionInfo p_sym)
-{
-	return 0;
-}
-
 int wc::parse::getPrecedence(wcToken p_token)
 {
 	switch (p_token.type)
@@ -155,7 +145,7 @@ wcSymbol wc::parse::setErrorReturnNullSymbol(wcError& p_error, wcError p_newErro
 wcToken wc::parse::setErrorReturnNullToken(wcError& p_error, wcError p_newError)
 {
 	p_error = p_newError;
-	return wcToken(tt_null);
+	return wcToken();
 }
 
 wc::parse::wcSymbol::wcSymbol()
@@ -170,20 +160,20 @@ wc::parse::wcSymbol::wcSymbol(wcTokenType p_tokenType)
 
 wc::parse::wcSymbol::wcSymbol(string p_identifier)
 {
-	type = deriveSymbolType(deriver.derive(p_identifier));
+	//type = deriveSymbolType(deriver.derive(p_identifier));
 	fullyQualifiedIdent = ident = p_identifier;
 }
 
 wc::parse::wcSymbol::wcSymbol(std::string p_identifier, std::string scopeFQIdent)
 {
-	type = deriveSymbolType(deriver.derive(p_identifier));
+	//type = deriveSymbolType(deriver.derive(p_identifier));
 	fullyQualifiedIdent = createFullyQualifiedIdent(scopeFQIdent, p_identifier);
 	ident = p_identifier;
 }
 
 wc::parse::wcSymbol::wcSymbol(wcSymbolType p_type, std::string p_identifier, std::string scopeFQIdent)
 {
-	type = deriveSymbolType(deriver.derive(p_identifier));
+	//type = deriveSymbolType(deriver.derive(p_identifier));
 	fullyQualifiedIdent = createFullyQualifiedIdent(scopeFQIdent, p_identifier);
 	ident = p_identifier;
 	type = p_type;
@@ -434,8 +424,8 @@ wc::parse::wcParseNode::wcParseNode(wcParseNodeType p_type, wcToken p_token1, wc
 wc::parse::wcParseNode::wcParseNode(wcSymbol p_sym, string p_identifierAsSeen)
 {
 	type = pn_ident;
-	tokens.push_back(wcToken(tt_ident, p_sym.fullyQualifiedIdent));
-	tokens.push_back(wcToken(tt_varident, p_identifierAsSeen));
+	//tokens.push_back(wcToken(tt_ident, p_sym.fullyQualifiedIdent));
+	//tokens.push_back(wcToken(tt_varident, p_identifierAsSeen));
 }
 
 wc::parse::wcParseData::wcParseData()
@@ -462,10 +452,10 @@ wc::parse::wcAST::wcAST(tree<wcParseNode> p_tree)
 	parseTree = p_tree;
 }
 
-tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcParseIndex& p_index, wcParseNode p_node)
+tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcASTIndex& index, wcParseNode node)
 {
 	//append a child to the current node, then set the index to point at that new addition
-	p_index.setNode(parseTree.append_child(p_index.getNode(), p_node));
+	index.set(parseTree.append_child(p_index.getNode(), p_node));
 
 	//return the new addition
 	return p_index.getNode();
@@ -537,12 +527,12 @@ wcToken wc::parse::wcParseIndex::nextToken(wcTokenType p_expectedType, wcError& 
 		else
 		{
 			p_error = wcError(ec_lex_unexpectedtoken, getToken().data, getToken().line, getToken().column);
-			return wcToken(tt_null);
+			return wcToken();
 		}
 	else
 	{
 		p_error = wcError(ec_lex_eos, "", getToken().line, getToken().column);
-		return wcToken(tt_null);
+		return wcToken();
 	}
 }
 

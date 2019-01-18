@@ -125,27 +125,32 @@ wc::lex::wcTokenDefinition::wcTokenDefinition() : type(tt_null), identifiers({})
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) : type(_type), identifiers({ identifier }), delimiter(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) : type(_type), identifiers({ identifier }), delimiter(false), punctuation(false)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) : type(_type), identifiers({ identifier }), delimiter(_isDelim)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) : type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(false)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) : type(_type), identifiers(_identifiers), delimiter(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) : type(_type), identifiers(_identifiers), delimiter(false), punctuation(false)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(false)
 {
 
 }
 
-const bool wc::lex::wcTokenDefinition::isNull()
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(_isPunctuation)
+{
+
+}
+
+bool wc::lex::wcTokenDefinition::isNull() const
 {
 	if (type == tt_null && delimiter == false && identifiers.size() == 0)
 		return true;
@@ -153,7 +158,7 @@ const bool wc::lex::wcTokenDefinition::isNull()
 		return false;
 }
 
-const bool wc::lex::wcTokenDefinition::isSingleCharacterToken()
+bool wc::lex::wcTokenDefinition::isSingleCharacterToken() const
 {
 	if (identifiers.size() == 0)
 		return false;
@@ -221,6 +226,21 @@ bool wc::lex::wcTokenTypeDeriver::isDelim(wcTokenType type)
 {
 	//.find() returns a tt_null typed wcTokenDefinition if no match was found
 	return definitionsBank.find(type).delimiter;
+}
+
+bool wc::lex::wcTokenTypeDeriver::isPunctuation(char)
+{
+	return false;
+}
+
+bool wc::lex::wcTokenTypeDeriver::isPunctuation(wcTokenType)
+{
+	return false;
+}
+
+bool wc::lex::wcTokenTypeDeriver::isPunctuation(std::string)
+{
+	return false;
 }
 
 wc::lex::wcLexer::wcLexer() : deriver(definitionsBank)

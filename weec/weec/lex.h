@@ -10,11 +10,6 @@
 
 namespace wc
 {
-	namespace parse
-	{
-		struct wcSymbol;
-	}
-
 	namespace lex
 	{
 		const bool wc_lexer_dropWS = true;
@@ -142,12 +137,13 @@ namespace wc
 			wcTokenDefinition(wcTokenType _type, std::string, bool _isDelimiter);
 			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers);
 			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter);
+			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation);
 
-			const bool isSingleCharacterToken();
-			const bool isNull();
+			bool isSingleCharacterToken() const;
+			bool isNull() const;
 
 			const wcTokenType type;
-			const bool delimiter;
+			const bool delimiter, punctuation;
 			const std::vector<std::string> identifiers;
 		};
 
@@ -183,6 +179,10 @@ namespace wc
 				isDelim(std::string),
 				isDelim(wcTokenType);
 
+			bool isPunctuation(char),
+				isPunctuation(std::string),
+				isPunctuation(wcTokenType);
+
 		private:
 			wcTokenDefinitionBank& definitionsBank;
 		};
@@ -200,7 +200,7 @@ namespace wc
 				operator++(),	operator++(int),
 				operator=(wcTokenStreamIndex);
 
-			bool isValid();
+			bool isValid() const;
 			void reset();
 
 			int index;
@@ -218,7 +218,7 @@ namespace wc
 				operator+=(wcTokenStream),
 				operator+=(wcToken);
 
-			bool isError();
+			bool isError() const;
 
 			wcToken next(wcTokenStreamIndex&),
 				get(wcTokenStreamIndex&),

@@ -18,43 +18,6 @@ namespace wc
 {
 	namespace parse
 	{
-		enum wcSymbolType
-		{
-			st_null, st_namespace, st_var, st_type, st_utype, st_object, st_function
-		};
-
-		struct wcSymbol
-		{
-			wcSymbol();
-			wcSymbol(lex::wcTokenType);
-			wcSymbol(std::string);
-			wcSymbol(std::string, std::string);
-			wcSymbol(wcSymbolType, std::string, std::string);
-			wcSymbol(wcSymbolType type, std::string ident, std::string fullIdent, bool isNamespace,
-				bool isArray, bool isConst, bool isStatic, unsigned int size, unsigned int dataSize, int stackOffset, wcSymbol* dataType);
-
-			std::string ident, fullyQualifiedIdent;
-			bool isNamespace, isArray, isConst, isStatic;
-			wcSymbolType type;
-			unsigned int size, dataSize;
-			int stackOffset;
-			wcSymbol* dataType;
-		};
-
-		struct wcSymbolTable
-		{
-			wcSymbolTable();
-
-			wcSymbol* getSymbol(std::string p_fullyQualifiedIdent);
-			wcSymbol* getSymbol(std::string p_fullyQualifiedScopeIdent, std::string p_ident);
-			wcSymbol* getSymbol(wcSymbol* p_scope, std::string p_ident);
-			wcSymbol* getSymbolFromShortIdent(std::string p_ident, std::vector<wcSymbol> p_openScopes);
-
-			int addSymbol(wcSymbol p_sym);
-			bool isSymbolInScope(wcSymbol* p_scope, wcSymbol* p_symbol);
-			std::unordered_map<std::string, wcSymbol> ident2Symbol;
-		};
-
 		enum wcParseNodeType
 		{
 			pn_null, pn_head, pn_exp, pn_type, pn_statement,
@@ -109,8 +72,8 @@ namespace wc
 		struct wcParseNode
 		{
 			wcParseNode();
+			wcParseNode(wcParseNodeType);
 			wcParseNode(wcParseNodeType, std::vector<lex::wcToken>);
-			wcParseNode(wcSymbol, std::string);
 
 			std::vector<lex::wcToken> tokens;
 			wcParseNodeType type;
@@ -151,16 +114,17 @@ namespace wc
 			void removeNode(wcASTIndex&);
 
 		protected:
-			tree<wcParseNode> tree;
+			tree<wcParseNode> parseTree;
 		};
 
 		struct wcParserOutput
 		{
+			wcParserOutput();
+
 			wcParserOutput operator+=(wcParserOutput),
 				operator+(wcParserOutput);
 
 			wcAST ast;
-			wcSymbolTable symTab;
 			error::wcError error;
 		};
 
@@ -171,7 +135,7 @@ namespace wc
 			wcParserIndex(lex::wcTokenStream&);
 			wcParserIndex(lex::wcTokenStream&, wcAST&);
 
-			wcAST& output;
+			wcAST& ast;
 			wcASTIndex astIndex;
 			lex::wcTokenStream& input;
 			lex::wcTokenStreamIndex tokenIndex;
@@ -179,68 +143,106 @@ namespace wc
 
 		struct wcParseData
 		{
-			wcParseData();
+			wcParseData(lex::wcTokenStream&);
+			wcParseData(lex::wcTokenStream&, wcAST&);
 
 			wcParserIndex index;
+			wcParserOutput output;
+		};
+
+		struct wcIdent
+		{
+			wcIdent();
+			wcIdent(std::string);
+
+			bool isDeclared() const;
+			bool isValid() const;
+
+			std::string fullIdentifier;
 		};
 
 		class wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcExpressionParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcNamespaceParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcIfParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcWhileParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcSemiColonParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcIdentParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&), 
+				parse(wcParseData&, wcIdent&);
 		};
 
 		class wcStatementParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcDeclarationParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcCodeBlockParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcTypeParser : wcSubParser
 		{
-			wcParserOutput parse(wcParserIndex&);
+		public:
+			wcParserOutput parse(wcParseData&);
+		};
+
+		class wcReturnParser : wcSubParser
+		{
+		public:
+			wcParserOutput parse(wcParseData&);
+		};
+
+		class wcSColonParser : wcSubParser
+		{
+		public:
+			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcParserSubParserCollection
 		{
+		public:
 			wcStatementParser statement;
 			wcDeclarationParser dec;
 
@@ -249,9 +251,11 @@ namespace wc
 			wcExpressionParser exp;
 
 			wcNamespaceParser ns;
-			wcIfParser cond;
+			wcIfParser conditional;
 			wcWhileParser whi;
 			wcCodeBlockParser block;
+			wcReturnParser ret;
+			wcSColonParser scolon;
 		};
 
 		class wcParser
@@ -259,13 +263,9 @@ namespace wc
 		public:
 			wcParser();
 
-			virtual wcParserOutput parse(lex::lex::wcTokenStream&);
+			virtual wcParserOutput parse(lex::wcTokenStream&);
 
-		protected:
-			void init();
 			wcParserSubParserCollection subs;
-			error::wcError error;
-			wcParseData data;
 		};
 
 		int getPrecedence(lex::wcToken);

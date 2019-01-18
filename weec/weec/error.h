@@ -59,10 +59,22 @@ namespace wc
 			wcError(wcErrorCode p_ec, std::string p_text);
 			wcError(wcErrorCode p_ec, std::string p_text, int p_line, int p_col);
 			wcError(wcErrorCode p_ec, wc::lex::wcToken p_token);
-			bool operator==(const wcError& p_err) const;
-			bool operator==(const wcErrorCode& p_errCode) const;
-			bool operator!=(const wcError& p_err) const;
-			bool operator!=(const wcErrorCode& p_errCode) const;
+			
+			bool operator>(const wcErrorCode& p_errCode) const,
+				operator<(const wcErrorCode& p_errCode) const,
+				operator>=(const wcErrorCode& p_errCode) const,
+				operator<=(const wcErrorCode& p_errCode) const,
+				operator==(const wcErrorCode& p_errCode) const,
+				operator!=(const wcErrorCode& p_errCode) const;
+
+			bool operator>(const wcError& p_err) const,
+				operator<(const wcError& p_err) const,
+				operator>=(const wcError& p_err) const,
+				operator<=(const wcError& p_err) const,
+				operator==(const wcError& p_err) const,
+				operator!=(const wcError& p_err) const,
+				operator!() const;
+			explicit operator bool() const;
 
 			wcErrorCode code;
 			std::string text;

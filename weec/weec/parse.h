@@ -109,10 +109,7 @@ namespace wc
 		struct wcParseNode
 		{
 			wcParseNode();
-			wcParseNode(wcParseNodeType);
-			wcParseNode(lex::wcToken);
-			wcParseNode(wcParseNodeType, lex::wcToken);
-			wcParseNode(wcParseNodeType, lex::wcToken, lex::wcToken);
+			wcParseNode(wcParseNodeType, std::vector<lex::wcToken>);
 			wcParseNode(wcSymbol, std::string);
 
 			std::vector<lex::wcToken> tokens;
@@ -134,7 +131,6 @@ namespace wc
 			tree<wcParseNode>::iterator operator[](tree<wcParseNode>::iterator);
 
 			tree<wcParseNode>::iterator get(), next(), prev(), up(), set(tree<wcParseNode>::iterator);
-
 			int depth(), depth(tree<wcParseNode>::iterator);
 
 		protected:
@@ -147,31 +143,38 @@ namespace wc
 			wcAST();
 			wcAST(tree<wcParseNode>);
 
+			wcAST operator+=(wcAST),
+				operator+(wcAST);
+
 			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode);	//add node and point pindex to the new child node
 			tree<wcParseNode>::iterator addChild(wcASTIndex&, wcParseNode);	//add node, but pindex remains on parent node
+			void removeNode(wcASTIndex&);
 
 		protected:
 			tree<wcParseNode> tree;
+		};
+
+		struct wcParserOutput
+		{
+			wcParserOutput operator+=(wcParserOutput),
+				operator+(wcParserOutput);
+
+			wcAST ast;
+			wcSymbolTable symTab;
+			error::wcError error;
 		};
 
 		//keeps track how far the parser has got into the input stream, and
 		//where the parser is within the output tree. 
 		struct wcParserIndex
 		{
-			wcParserIndex(wcTokenStream&);
-			wcParserIndex(wcTokenStream&, wcAST&);
+			wcParserIndex(lex::wcTokenStream&);
+			wcParserIndex(lex::wcTokenStream&, wcAST&);
 
 			wcAST& output;
 			wcASTIndex astIndex;
-			wcTokenStream& input;
-			wcTokenStreamIndex tokenIndex;
-		};
-
-		struct wcParserOutput
-		{
-			wcAST ast;
-			wcSymbolTable symTab;
-			error::wcError error;
+			lex::wcTokenStream& input;
+			lex::wcTokenStreamIndex tokenIndex;
 		};
 
 		struct wcParseData
@@ -256,7 +259,7 @@ namespace wc
 		public:
 			wcParser();
 
-			virtual wcParserOutput parse(lex::wcTokenStream&);
+			virtual wcParserOutput parse(lex::lex::wcTokenStream&);
 
 		protected:
 			void init();

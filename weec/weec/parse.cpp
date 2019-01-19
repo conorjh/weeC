@@ -91,21 +91,39 @@ wcParserOutput wc::parse::wcParser::parse(lex::wcTokenStream &_tokens)
 	wcParseData data = wcParseData(_tokens);
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
+	wcParserSymbolTable& symTab = data.output.symTab;
 
+	wcIdent ident;
 	//while there are tokens left and no parse errors
 	while (tokenIndex.isValid() && !data.output.error)
 		switch (tokens.get(tokenIndex).type)
 		{
-			//identifier - either dec or statement
+		//identifier - either dec or statement
 		case tt_ident:
+			subs.id.parse(data, ident);
+			if (symTab.exists(ident))
+				switch (symTab.find(ident).type)
+				{
+				case st_var:
+				case st_func:
+					goto _wcParser_parse_statements;
+				case st_type:
+					goto _wcParser_parse_declarations;
+				default:
+					return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+				}
+			else
+				return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 
-			//declarations
-			CASE_BASIC_TYPES_TT
-				data.output += subs.dec.parse(data);
+		//declarations
+		_wcParser_parse_declarations:
+		CASE_BASIC_TYPES_TT
+			data.output += subs.dec.parse(data);
 			break;
 
-			//statements
-			CASE_ALL_LITERALS_TT
+		//statements
+		_wcParser_parse_statements:
+		CASE_ALL_LITERALS_TT
 		case tt_keyword_return:
 		case tt_keyword_namespace:
 		case tt_keyword_if:
@@ -113,7 +131,7 @@ wcParserOutput wc::parse::wcParser::parse(lex::wcTokenStream &_tokens)
 			data.output += subs.statement.parse(data);
 			break;
 
-			//unexpected token
+		//unexpected token
 		default:
 			return wcParserOutput();
 		}
@@ -141,6 +159,11 @@ wc::parse::wcParseData::wcParseData(lex::wcTokenStream &tokens) : index(tokens),
 wc::parse::wcParserOutput::wcParserOutput()
 {
 
+}
+
+wc::parse::wcParserOutput::wcParserOutput(error::wcError _error)
+{
+	error = _error;
 }
 
 wcParserOutput wc::parse::wcParserOutput::operator+(wcParserOutput _output)
@@ -189,7 +212,7 @@ wcParserOutput wc::parse::wcStatementParser::parse(wcParseData &data)
 			break;
 
 		case tt_keyword_while:
-			data.output += subs.whi.parse(data);
+			data.output += subs.wloop.parse(data);
 			break;
 
 		default:
@@ -212,7 +235,6 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
 
-	int identLine, identColumn;
 	bool punctuationLexedLast = false, isFirstToken = true;
 	wcParserOutput output;
 
@@ -224,7 +246,7 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 		case tt_dcolon:
 		case tt_period:
 			if (!punctuationLexedLast && isFirstToken)
-				return wcParserOutput();	//opening token is not an identifier
+				return wcParserOutput(wcError(ec_par_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
 			punctuationLexedLast = true;
 			break;
 
@@ -233,15 +255,20 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 			break;
 
 		default:
-			output.ast.addChild(data.index.astIndex, wcParseNode(pn_ident, { wcToken(tt_ident, ident.fullIdentifier, identLine, identColumn) }));
+			if (isFirstToken)
+				return wcParserOutput(wcError(ec_par_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
+			else if (punctuationLexedLast)
+				return wcParserOutput(wcError(ec_par_malformedident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));	//malformed
+
+			output.ast.addChild(data.index.astIndex, wcParseNode(pn_ident, { wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column) }));
 			return output;
 		}
 
 		if (isFirstToken)
 		{
 			//save the line/column data for final token
-			identLine = tokens.get(tokenIndex).line;
-			identColumn = tokens.get(tokenIndex).column;
+			ident.line = tokens.get(tokenIndex).line;
+			ident.column = tokens.get(tokenIndex).column;
 			isFirstToken = false;
 		}
 		ident.fullIdentifier += tokens.get(tokenIndex++).data;

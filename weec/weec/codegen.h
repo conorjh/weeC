@@ -9,29 +9,7 @@ namespace wc
 {
 	namespace codegen
 	{
-		int genStatement(wc::parse::wcParseIndex&);
-		int genExpression(wc::parse::wcParseIndex&);
-		parse::wcParseIndex gen_initParseIndex(parse::wcParseIndex p_pi, parse::wcAST& p_ast);
-
-		struct wcGenParams
-		{
-			wcGenParams(wc::parse::wcParseIndex&, wc::parse::wcAST&, bytecode::wcExecContext&);
-			wc::parse::wcParseIndex& pindex;
-			wc::parse::wcAST& ast;
-			bytecode::wcExecContext& output;
-		};
-
-		class wcBaseBytecodeGen
-		{
-		public:
-			error::wcError getError();
-			void setError(error::wcError);
-
-			virtual bytecode::wcExecContext gen(parse::wcAST&);
-
-		private:
-			error::wcError error;
-		};
+		
 	}
 }
 

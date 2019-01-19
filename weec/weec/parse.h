@@ -117,14 +117,36 @@ namespace wc
 			tree<wcParseNode> parseTree;
 		};
 
+		enum wcParseSymbolType
+		{
+			st_var, st_func, st_type
+		};
+
+		struct wcParseSymbol
+		{
+
+			wcParseSymbolType type;
+		};
+
+		class wcParserSymbolTable
+		{
+		public:
+			bool exists(wcIdent);
+			wcParseSymbol find(wcIdent);
+
+			std::unordered_map<wcIdent, wcParseSymbol> lookup;
+		};
+
 		struct wcParserOutput
 		{
 			wcParserOutput();
+			wcParserOutput(error::wcError);
 
 			wcParserOutput operator+=(wcParserOutput),
 				operator+(wcParserOutput);
 
 			wcAST ast;
+			wcParserSymbolTable symTab;
 			error::wcError error;
 		};
 
@@ -158,6 +180,7 @@ namespace wc
 			bool isDeclared() const;
 			bool isValid() const;
 
+			int line, column;
 			std::string fullIdentifier;
 		};
 
@@ -254,7 +277,7 @@ namespace wc
 
 			wcNamespaceParser ns;
 			wcIfParser conditional;
-			wcWhileParser whi;
+			wcWhileParser wloop;
 			wcCodeBlockParser block;
 			wcReturnParser ret;
 			wcSColonParser scolon;

@@ -21,7 +21,9 @@ namespace wc
 
 			ec_par_eos,					//eos whilst parsing
 			ec_par_unexpectedtoken,		//unexpected token encountered
-			ec_par_malformedident,		//ident not syntactically correct
+			ec_par_ident_malformedident,//ident not syntactically correct
+			ec_par_ident_expectedident, //expected an identifier token
+
 			ec_par_undeclaredident,		//ident unknown at this point
 			ec_par_identoutofscope,		//ident used outside it's valid scope(s)
 			ec_par_invalidsymbol,		//symbol not valid in given context
@@ -43,7 +45,8 @@ namespace wc
 
 			{ec_par_eos,				"Unexpected end of input whilst parsing"},
 			{ec_par_unexpectedtoken,	"Unexpected token"},
-			{ec_par_malformedident,		"Malformed identifier"},
+			{ec_par_ident_malformedident,		"Malformed identifier"},
+			{ec_par_ident_expectedident,""},
 			{ec_par_undeclaredident,	"Undeclared identifier"},
 			{ec_par_identoutofscope,	"Identifier invalid in this scope"},
 			{ec_par_invalidsymbol,		"Symbol cannot be used in this context" },

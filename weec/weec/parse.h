@@ -184,11 +184,11 @@ namespace wc
 			std::string fullIdentifier;
 		};
 
+		struct wcParserSubParserCollection;
 		class wcSubParser
 		{
 		public:
 			wcParserOutput parse(wcParseData&);
-		protected:
 			wcParserSubParserCollection subs;
 		};
 

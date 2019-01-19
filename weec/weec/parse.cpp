@@ -246,7 +246,7 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 		case tt_dcolon:
 		case tt_period:
 			if (!punctuationLexedLast && isFirstToken)
-				return wcParserOutput(wcError(ec_par_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
+				return wcParserOutput(wcError(ec_par_ident_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
 			punctuationLexedLast = true;
 			break;
 
@@ -256,9 +256,9 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 
 		default:
 			if (isFirstToken)
-				return wcParserOutput(wcError(ec_par_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
+				return wcParserOutput(wcError(ec_par_ident_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
 			else if (punctuationLexedLast)
-				return wcParserOutput(wcError(ec_par_malformedident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));	//malformed
+				return wcParserOutput(wcError(ec_par_ident_malformedident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));	//malformed
 
 			output.ast.addChild(data.index.astIndex, wcParseNode(pn_ident, { wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column) }));
 			return output;
@@ -282,3 +282,50 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	else
 		return output;
 }
+
+wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data)
+{
+	//create our stream indexes, and space for output data, and a handy alias (tokens)
+	wcTokenStream& tokens = data.index.input;
+	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
+	wcParserSymbolTable& symTab = data.output.symTab;
+	wcParserOutput output;
+
+	//parse the declaration data type
+	wcIdent ident;
+	switch (tokens.get(tokenIndex).type)
+	{
+	case tt_ident:
+		output += subs.id.parse(data, ident);
+
+		if (!symTab.exists(ident))
+			return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+		if (symTab.find(ident).type!=st_type)
+			return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+		break;
+
+		//declarations
+	CASE_BASIC_TYPES_TT
+
+		break;
+	}
+	tokenIndex++;
+
+	//parse the identifier
+	wcTokenStreamIndex indexBeforeParsingIdent = tokenIndex;
+	wcParserOutput identOutput = subs.id.parse(data, ident);
+	if (identOutput.error)
+		return identOutput;
+	if(!symTab.exists(ident))
+		return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+	output += identOutput;
+	tokenIndex++;
+
+	//semi colon, or optional initial assignment 
+	if (tokens.get(tokenIndex).type == tt_scolon)
+		return (output += subs.scolon.parse(data));
+	else if (tokens.get(tokenIndex).type != tt_equal)
+		return output;
+	
+}
+

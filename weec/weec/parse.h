@@ -165,6 +165,8 @@ namespace wc
 		{
 		public:
 			wcParserOutput parse(wcParseData&);
+		protected:
+			wcParserSubParserCollection subs;
 		};
 
 		class wcExpressionParser : wcSubParser

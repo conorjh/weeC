@@ -75,7 +75,7 @@ tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcPars
 {
 	//append a child to the current node, dont set the index to it though
 	parseTree.append_child(index.get(), node);
-	
+
 	//then return the new addition
 	return parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1);
 }
@@ -93,59 +93,28 @@ wcParserOutput wc::parse::wcParser::parse(lex::wcTokenStream &_tokens)
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
 
 	//while there are tokens left and no parse errors
-	while(tokenIndex.isValid() && !data.output.error)
+	while (tokenIndex.isValid() && !data.output.error)
 		switch (tokens.get(tokenIndex).type)
 		{
-		CASE_BASIC_TYPES_TT
-			data.output += subs.dec.parse(data);
-			break;
-
+			//identifier - either dec or statement
 		case tt_ident:
-			identSym = tryParseKnownIdent(params, true, nullptr);
-			if (identSym != nullptr)
-				switch (identSym->type)
-				{
-				case st_function:
-				case st_var:
-					if (onlyAllowDeclarations || (!allowAnyDeclarations))
-						return setErrorReturn0(params.error, wcError(ec_par_illegalstatement, params.index.getToken()));
-					if (!parseExpression(params))
-						return 0;
-					if (!parseSColon(params))
-						return 0;
-					break;
-				case st_type:
-					parseDec(params);
-					break;
-				default:
-					break;
-				}
-			else
-				return wcParserOutput();			
 
-		CASE_ALL_LITERALS_TT
-			data.output += subs.exp.parse(data);
-			data.output += subs.scolon.parse(data);
+			//declarations
+			CASE_BASIC_TYPES_TT
+				data.output += subs.dec.parse(data);
 			break;
 
-		case tt_keyword_if:
-			data.output += subs.conditional.parse(data);
-			break;
-
-		case tt_keyword_namespace:
-			data.output += subs.ns.parse(data);
-			break;
-
+			//statements
+			CASE_ALL_LITERALS_TT
 		case tt_keyword_return:
-			data.output += subs.ret.parse(data);
-			break;
-
+		case tt_keyword_namespace:
+		case tt_keyword_if:
 		case tt_keyword_while:
-			data.output += subs.whi.parse(data);
+			data.output += subs.statement.parse(data);
 			break;
 
-		default:
 			//unexpected token
+		default:
 			return wcParserOutput();
 		}
 
@@ -185,11 +154,51 @@ wcParserOutput wc::parse::wcParserOutput::operator+(wcParserOutput _output)
 
 wcParserOutput wc::parse::wcParserOutput::operator+=(wcParserOutput _output)
 {
-	if(_output.error)
+	if (_output.error)
 		error = _output.error;
 
 	ast += _output.ast;
 	return *this;
+}
+
+wcParserOutput wc::parse::wcStatementParser::parse(wcParseData &data)
+{
+	//create our stream indexes, and space for output data, and a handy alias (tokens)
+	wcTokenStream& tokens = data.index.input;
+	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
+
+	//while there are tokens left and no parse errors
+	while (tokenIndex.isValid() && !data.output.error)
+		switch (tokens.get(tokenIndex).type)
+		{
+		case tt_ident:
+		CASE_ALL_LITERALS_TT
+				data.output += subs.exp.parse(data);
+			break;
+
+		case tt_keyword_return:
+			data.output += subs.ret.parse(data);
+			break;
+
+		case tt_keyword_namespace:
+			data.output += subs.ns.parse(data);
+			break;
+
+		case tt_keyword_if:
+			data.output += subs.conditional.parse(data);
+			break;
+
+		case tt_keyword_while:
+			data.output += subs.whi.parse(data);
+			break;
+
+		default:
+			return wcParserOutput();
+		}
+
+	if (data.output.error)
+		return wcParserOutput();
+	return data.output;
 }
 
 wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data)
@@ -203,14 +212,19 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
 
-	//while there are tokens left and no parse errors
-	bool punctuationLexedLast = false;
+	int identLine, identColumn;
+	bool punctuationLexedLast = false, isFirstToken = true;
+	wcParserOutput output;
+
+	//while there are no ident or punctuation tokens left 
 	while (tokenIndex.isValid())
 	{
 		switch (tokens.get(tokenIndex).type)
 		{
 		case tt_dcolon:
 		case tt_period:
+			if (!punctuationLexedLast && isFirstToken)
+				return wcParserOutput();	//opening token is not an identifier
 			punctuationLexedLast = true;
 			break;
 
@@ -219,15 +233,25 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 			break;
 
 		default:
-			punctuationLexedLast = false;
-			if (!wcTokenTypeDeriver().isDelim(tokens.get(tokenIndex).type))
-				if (wcTokenTypeDeriver().isPunctuation(tokens.get(tokenIndex).type))
-					punctuationLexedLast = true;
-			break;
+			output.ast.addChild(data.index.astIndex, wcParseNode(pn_ident, { wcToken(tt_ident, ident.fullIdentifier, identLine, identColumn) }));
+			return output;
+		}
+
+		if (isFirstToken)
+		{
+			//save the line/column data for final token
+			identLine = tokens.get(tokenIndex).line;
+			identColumn = tokens.get(tokenIndex).column;
+			isFirstToken = false;
 		}
 		ident.fullIdentifier += tokens.get(tokenIndex++).data;
-	}	
+	}
 
-	//if we get here, end of stream was reached earlier than expected
-	return wcParserOutput();
+	//if were here, input index is no longer valid, could be an error
+	if (isFirstToken)
+		return wcParserOutput();
+	else if (punctuationLexedLast)
+		return wcParserOutput();
+	else
+		return output;
 }

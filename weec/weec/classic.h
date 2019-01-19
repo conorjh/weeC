@@ -7,15 +7,6 @@
 
 namespace wc
 {
-	namespace codegen
-	{
-		class wcClassicBytecodeGen : public wcBaseBytecodeGen
-		{
-		public:
-			virtual bytecode::wcExecContext gen(parse::wcAST&);
-		};
-	}
-
 	namespace lex
 	{
 
@@ -31,18 +22,6 @@ namespace wc
 			virtual api::wcScript compile(std::vector<std::string> input, parse::wcAST* p_outputAST = nullptr);
 		};
 	}
-
-
-	namespace vm
-	{
-		class wcClassicVM : public wcBaseVM
-		{
-		public:
-			wcClassicVM();
-			virtual int execInstruction(bytecode::wcExecContext& context, bytecode::wcInstruction instr);
-		};
-	}
-	
 }
 
 

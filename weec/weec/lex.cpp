@@ -120,7 +120,7 @@ void wc::lex::wcTokenDefinitionBank::populateDelimiterTypes()
 			delimiterTypes.push_back(definitions[t].type);
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition() : type(tt_null), identifiers({}), delimiter(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition() : type(tt_null), identifiers({}), delimiter(false), punctuation(false)
 {
 
 }
@@ -860,7 +860,7 @@ bool wc::lex::wcLineColumnIndex::isValid()
 		return true;
 }
 
-bool wc::lex::wcTokenStreamIndex::isValid()
+bool wc::lex::wcTokenStreamIndex::isValid() const
 {
 	return false;
 }
@@ -903,7 +903,7 @@ wcTokenStream wc::lex::wcTokenStream::operator+=(wcToken token)
 	return *this + token;
 }
 
-bool wc::lex::wcTokenStream::isError()
+bool wc::lex::wcTokenStream::isError() const
 {
 	return false;
 }

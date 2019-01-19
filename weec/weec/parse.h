@@ -101,6 +101,7 @@ namespace wc
 			wcAST& ast;
 		};
 
+		struct wcParserOutput;
 		struct wcAST
 		{
 			wcAST();
@@ -109,12 +110,25 @@ namespace wc
 			wcAST operator+=(wcAST),
 				operator+(wcAST);
 
-			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode);	//add node and point pindex to the new child node
-			tree<wcParseNode>::iterator addChild(wcASTIndex&, wcParseNode);	//add node, but pindex remains on parent node
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode),
+				addNode(wcASTIndex&, wcParserOutput);	//add node and point pindex to the new child node
+			tree<wcParseNode>::iterator addChild(wcASTIndex&, wcParseNode),	//add node, but pindex remains on parent node
+				addChild(wcASTIndex&, wcParserOutput);	
 			void removeNode(wcASTIndex&);
 
-		protected:
 			tree<wcParseNode> parseTree;
+		};
+
+		struct wcIdent
+		{
+			wcIdent();
+			wcIdent(std::string);
+
+			bool isDeclared() const;
+			bool isValid() const;
+
+			int line, column;
+			std::string fullIdentifier;
 		};
 
 		enum wcParseSymbolType
@@ -122,9 +136,12 @@ namespace wc
 			st_var, st_func, st_type
 		};
 
+
 		struct wcParseSymbol
 		{
+			wcParseSymbol();
 
+			wcIdent ident;
 			wcParseSymbolType type;
 		};
 
@@ -132,7 +149,8 @@ namespace wc
 		{
 		public:
 			bool exists(wcIdent);
-			wcParseSymbol find(wcIdent);
+			wcParseSymbol& find(wcIdent);
+			wcParseSymbol& reg(wcIdent);
 
 			std::unordered_map<wcIdent, wcParseSymbol> lookup;
 		};
@@ -144,6 +162,9 @@ namespace wc
 
 			wcParserOutput operator+=(wcParserOutput),
 				operator+(wcParserOutput);
+
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput),
+				addChild(wcASTIndex&, wcParserOutput);	//add node, but pindex remains on parent node
 
 			wcAST ast;
 			wcParserSymbolTable symTab;
@@ -172,22 +193,37 @@ namespace wc
 			wcParserOutput output;
 		};
 
-		struct wcIdent
+		class wcStatementParser;	class wcDeclarationParser; 
+		class wcIdentParser;		class wcTypeParser;
+		class wcExpressionParser;	class wcIfParser;
+		class wcWhileParser;		class wcCodeBlockParser;
+		class wcReturnParser;		class wcSColonParser;
+		class wcNamespaceParser;
+		class wcParserSubParserCollection
 		{
-			wcIdent();
-			wcIdent(std::string);
+		public:
+			wcParserSubParserCollection();
 
-			bool isDeclared() const;
-			bool isValid() const;
+			wcStatementParser& statement;
+			wcDeclarationParser& dec;
 
-			int line, column;
-			std::string fullIdentifier;
+			wcIdentParser& ident;
+			wcTypeParser& type;
+			wcExpressionParser& exp;
+
+			wcNamespaceParser& ns;
+			wcIfParser& conditional;
+			wcWhileParser& wloop;
+			wcCodeBlockParser& block;
+			wcReturnParser& ret;
+			wcSColonParser& scolon;
 		};
 
-		struct wcParserSubParserCollection;
 		class wcSubParser
 		{
 		public:
+			wcSubParser();
+
 			wcParserOutput parse(wcParseData&);
 			wcParserSubParserCollection subs;
 		};
@@ -195,36 +231,42 @@ namespace wc
 		class wcExpressionParser : wcSubParser
 		{
 		public:
+			wcExpressionParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcNamespaceParser : wcSubParser
 		{
 		public:
+			wcNamespaceParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcIfParser : wcSubParser
 		{
 		public:
+			wcIfParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcWhileParser : wcSubParser
 		{
 		public:
+			wcWhileParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcSemiColonParser : wcSubParser
 		{
 		public:
+			wcSemiColonParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcIdentParser : wcSubParser
 		{
 		public:
+			wcIdentParser();
 			wcParserOutput parse(wcParseData&), 
 				parse(wcParseData&, wcIdent&);
 		};
@@ -232,56 +274,46 @@ namespace wc
 		class wcStatementParser : wcSubParser
 		{
 		public:
+			wcStatementParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcDeclarationParser : wcSubParser
 		{
 		public:
+			wcDeclarationParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcCodeBlockParser : wcSubParser
 		{
 		public:
+			wcCodeBlockParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcTypeParser : wcSubParser
 		{
 		public:
-			wcParserOutput parse(wcParseData&);
+			wcTypeParser();
+			wcParserOutput parse(wcParseData&),
+				parse(wcParseData&, wcIdent&);
 		};
 
 		class wcReturnParser : wcSubParser
 		{
 		public:
+			wcReturnParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
 		class wcSColonParser : wcSubParser
 		{
 		public:
+			wcSColonParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcParserSubParserCollection
-		{
-		public:
-			wcStatementParser statement;
-			wcDeclarationParser dec;
-
-			wcIdentParser id;
-			wcTypeParser type;
-			wcExpressionParser exp;
-
-			wcNamespaceParser ns;
-			wcIfParser conditional;
-			wcWhileParser wloop;
-			wcCodeBlockParser block;
-			wcReturnParser ret;
-			wcSColonParser scolon;
-		};
 
 		class wcParser
 		{

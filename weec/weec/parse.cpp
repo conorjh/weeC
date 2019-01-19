@@ -62,6 +62,15 @@ wc::parse::wcAST::wcAST(tree<wcParseNode> p_tree)
 	parseTree = p_tree;
 }
 
+tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcASTIndex& index, wcParserOutput pOutput)
+{
+	//append a child to the current node, then set the index to point at that new addition
+	index.set(parseTree.append_children(index.get(), pOutput.ast.parseTree.begin(), pOutput.ast.parseTree.end()));
+
+	//return the new addition
+	return index.get();
+}
+
 tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcASTIndex& index, wcParseNode node)
 {
 	//append a child to the current node, then set the index to point at that new addition
@@ -80,7 +89,16 @@ tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcPars
 	return parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1);
 }
 
-wc::parse::wcParser::wcParser()
+tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcParserOutput pOutput)
+{
+	//append a child to the current node, dont set the index to it though
+	parseTree.append_children(index.get(), pOutput.ast.parseTree.begin(), pOutput.ast.parseTree.end());
+
+	//then return the new addition
+	return parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1);
+}
+
+wc::parse::wcParser::wcParser() : subs()
 {
 
 }
@@ -100,7 +118,7 @@ wcParserOutput wc::parse::wcParser::parse(lex::wcTokenStream &_tokens)
 		{
 		//identifier - either dec or statement
 		case tt_ident:
-			subs.id.parse(data, ident);
+			subs.ident.parse(data, ident);
 			if (symTab.exists(ident))
 				switch (symTab.find(ident).type)
 				{
@@ -175,6 +193,22 @@ wcParserOutput wc::parse::wcParserOutput::operator+(wcParserOutput _output)
 	return *this;
 }
 
+tree<wcParseNode>::iterator wc::parse::wcParserOutput::addNode(wcASTIndex &index, wcParserOutput output)
+{
+	//symTab += output.symTab;
+	if (output.error)
+		error = output.error;
+	return ast.addNode(index, output);
+}
+
+tree<wcParseNode>::iterator wc::parse::wcParserOutput::addChild(wcASTIndex &index, wcParserOutput output)
+{
+	//symTab += output.symTab;
+	if (output.error)
+		error = output.error;
+	return ast.addChild(index, output);
+}
+
 wcParserOutput wc::parse::wcParserOutput::operator+=(wcParserOutput _output)
 {
 	if (_output.error)
@@ -234,11 +268,11 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	//handy aliases
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
-
-	bool punctuationLexedLast = false, isFirstToken = true;
 	wcParserOutput output;
+	wcASTIndex outputIndex = wcASTIndex(output.ast);
 
 	//while there are no ident or punctuation tokens left 
+	bool punctuationLexedLast = false, isFirstToken = true;
 	while (tokenIndex.isValid())
 	{
 		switch (tokens.get(tokenIndex).type)
@@ -260,7 +294,8 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 			else if (punctuationLexedLast)
 				return wcParserOutput(wcError(ec_par_ident_malformedident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));	//malformed
 
-			output.ast.addChild(data.index.astIndex, wcParseNode(pn_ident, { wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column) }));
+			//add a node to the output tree with the ident as an attached token
+			output.ast.addNode(outputIndex, wcParseNode(pn_ident, { wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column) }));
 			return output;
 		}
 
@@ -290,42 +325,74 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data)
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
 	wcParserSymbolTable& symTab = data.output.symTab;
 	wcParserOutput output;
-
-	//parse the declaration data type
+	wcASTIndex outputIndex = wcASTIndex(output.ast);
 	wcIdent ident;
-	switch (tokens.get(tokenIndex).type)
-	{
-	case tt_ident:
-		output += subs.id.parse(data, ident);
 
-		if (!symTab.exists(ident))
-			return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
-		if (symTab.find(ident).type!=st_type)
-			return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
-		break;
-
-		//declarations
-	CASE_BASIC_TYPES_TT
-
-		break;
-	}
-	tokenIndex++;
+	//parent node
+	output.addNode(outputIndex, subs.type.parse(data, ident));
 
 	//parse the identifier
-	wcTokenStreamIndex indexBeforeParsingIdent = tokenIndex;
-	wcParserOutput identOutput = subs.id.parse(data, ident);
-	if (identOutput.error)
-		return identOutput;
+	output.addChild(outputIndex, subs.ident.parse(data, ident));
+	if (output.error)
+		return output;
 	if(!symTab.exists(ident))
 		return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
-	output += identOutput;
 	tokenIndex++;
 
 	//semi colon, or optional initial assignment 
 	if (tokens.get(tokenIndex).type == tt_scolon)
 		return (output += subs.scolon.parse(data));
 	else if (tokens.get(tokenIndex).type != tt_equal)
-		return output;
-	
+		return output;	
 }
 
+wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
+{
+	//create our stream indexes, and space for output data, and a handy alias (tokens)
+	wcTokenStream& tokens = data.index.input;
+	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
+	wcParserSymbolTable& symTab = data.output.symTab;
+	wcParserOutput output;
+	wcASTIndex outputIndex = wcASTIndex(output.ast);
+
+	//parse the declaration data type
+	switch (tokens.get(tokenIndex).type)
+	{
+	case tt_ident:
+		output.ast.addChild(outputIndex, subs.ident.parse(data, ident));
+		if (!symTab.exists(ident))
+			return wcParserOutput(wcError(ec_par_type_undeclaredtype, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+		if (symTab.find(ident).type != st_type)
+			return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+		return output;
+
+	//declarations
+		CASE_BASIC_TYPES_TT
+			output.ast.addChild(outputIndex, wcParseNode(pn_type, {  tokens.get(tokenIndex) }));
+		return output;
+	}
+}
+
+wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data)
+{
+	wcIdent ident;
+	return parse(data, ident);
+}
+
+wc::parse::wcParserSubParserCollection::wcParserSubParserCollection() :
+	statement(wcStatementParser()),	 dec(wcDeclarationParser()),
+	ident( wcIdentParser()),		 type(wcTypeParser()),
+	exp(wcExpressionParser()),	 conditional(wcIfParser()),
+	wloop(wcWhileParser()),		 block(wcCodeBlockParser()),
+	ret(wcReturnParser()),		 scolon(wcSColonParser()),
+	ns(wcNamespaceParser())
+{
+}
+
+wc::parse::wcIdent::wcIdent()
+{
+}
+
+wc::parse::wcIdent::wcIdent(std::string)
+{
+}

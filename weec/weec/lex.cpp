@@ -33,6 +33,7 @@ wc::lex::wcTokenDefinitionBank::wcTokenDefinitionBank() : definitions
 	wcTokenDefinition(tt_cbracket, "]", true),
 
 	//arithmetic
+	wcTokenDefinition(tt_assign, "=", true),
 	wcTokenDefinition(tt_plus, "+", true),
 	wcTokenDefinition(tt_minus, "-", true),
 	wcTokenDefinition(tt_div, "/", true),
@@ -109,7 +110,7 @@ const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(string identToCheck
 {
 	for (int t = 0; t < definitions.size(); ++t)
 		for (int y = 0; y < definitions[t].identifiers.size(); ++y)
-			if (definitions[t].identifiers[y] == string(identToCheck))
+			if (definitions[t].identifiers[y] == identToCheck)
 				return definitions[t];
 	return wcTokenDefinition();
 }

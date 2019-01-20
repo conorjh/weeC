@@ -33,14 +33,17 @@ int wctest::lex::l_compare(vector<wcToken> p_correctVec, vector<wcToken> p_testV
 int wctest::lex::l_basic_1()
 {
 	wcTokenStream stream = wcLexer().lex(wcLexInputStream("int a = 2;"));
-	return 0;
+	return stream.error.code;
 }
 
 //lex some integers
 int wctest::lex::l_basic_2()
 {
-
-	return 0;
+	wcTokenStream stream = wcLexer().lex(wcLexInputStream(
+		"int a = 2;"
+		"a=22*(88+55);"
+	));
+	return stream.error.code;
 }
 
 //lex some floats

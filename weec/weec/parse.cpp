@@ -420,7 +420,7 @@ wcParserOutput wc::parse::wcReturnParser::parse(wcParseData &data)
 		return wcParserOutput(wcError(ec_par_unexpectedtoken, data.index.input.get(data.index.tokenIndex)));
 
 	wcParserOutput output;
-	output.addNode(wcASTIndex(output.ast), wcParseNode(pn_scolon));
+	output.addNode(wcASTIndex(output.ast), wcParseNode(pn_return));
 	data.index.tokenIndex++;
 
 	return output;
@@ -450,9 +450,8 @@ wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
 			output.addNode(outputIndex, subs.sub.parse(data));
 
 	//error no closing bracket
-	return data.output;
+	return wcParserOutput(wcError(ec_par_eos));
 }
-
 
 wc::parse::wcParserSubParserCollection::wcParserSubParserCollection() :
 	sub(wcSubParser()), 

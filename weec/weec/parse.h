@@ -203,7 +203,7 @@ namespace wc
 			wcIdent identifier;
 			wcParseExpression exp;
 		};
-
+		class wcSubParser;
 		class wcStatementParser;	class wcDeclarationParser; 
 		class wcIdentParser;		class wcTypeParser;
 		class wcExpressionParser;	class wcIfParser;

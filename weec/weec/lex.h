@@ -134,7 +134,8 @@ namespace wc
 		{
 			wcTokenDefinition();	//tt_null
 			wcTokenDefinition(wcTokenType _type, std::string);
-			wcTokenDefinition(wcTokenType _type, std::string, bool _isDelimiter);
+			wcTokenDefinition(wcTokenType _type, std::string, bool);
+			wcTokenDefinition(wcTokenType _type, std::string, bool, bool);
 			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers);
 			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter);
 			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation);
@@ -154,10 +155,10 @@ namespace wc
 			wcTokenDefinitionBank(const std::vector<wcTokenDefinition>&);
 
 			const bool exists(std::string),
-				exists(char);
+				exists(char), exists(wcTokenType);
 
 			const wcTokenDefinition find(std::string),
-				find(char);
+				find(char), find(wcTokenType);
 
 		private:
 			void populateDelimiterTypes();

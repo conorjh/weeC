@@ -351,13 +351,12 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 		return output;
 	if(!symTab.exists(ident))
 		return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
-	tokenIndex++;
 
 	//semi colon, or optional initial assignment 
-	if (tokens.get(tokenIndex).type == tt_scolon)
-		return (output += subs.scolon.parse(data));
-	else if (tokens.get(tokenIndex).type != tt_assign)
+	if (!tokenIndex.isValid() || tokens.get(tokenIndex).type != tt_assign)
 		return output;	
+	else if (tokens.get(tokenIndex).type == tt_scolon)
+		return (output += subs.scolon.parse(data));
 	tokenIndex++;
 
 	//expression node
@@ -373,7 +372,6 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 	//create our stream indexes, and space for output data, and a handy alias (tokens)
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
-	wcParserSymbolTable& symTab = data.output.symTab;
 	wcParserOutput output;
 	wcASTIndex outputIndex = wcASTIndex(output.ast);
 
@@ -382,9 +380,9 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 	{
 	case tt_ident:
 		output.ast.addChild(outputIndex, subs.ident.parse(data, ident));
-		if (!symTab.exists(ident))
+		if (!data.output.symTab.exists(ident))
 			return wcParserOutput(wcError(ec_par_type_undeclaredtype, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
-		if (symTab.find(ident).type != st_type)
+		if (data.output.symTab.find(ident).type != st_type)
 			return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 		return output;
 
@@ -441,7 +439,7 @@ wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
 		return wcParserOutput(wcError(ec_par_unexpectedtoken, tokens.get(tokenIndex)));
 	tokenIndex++;
 
-	//parse statements until we find 
+	//parse statements until we find closing bracket
 	while (tokenIndex.isValid() && !output.error)
 		if (tokens.get(tokenIndex).type == tt_cbracket)
 		{
@@ -451,6 +449,7 @@ wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
 		else
 			output.addNode(outputIndex, subs.sub.parse(data));
 
+	//error no closing bracket
 	return data.output;
 }
 

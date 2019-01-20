@@ -12,10 +12,10 @@ wc::lex::wcTokenDefinitionBank::wcTokenDefinitionBank() : definitions
 ({
 	//misc
 	wcTokenDefinition(tt_null, ""),
-	wcTokenDefinition(tt_ws, " ", true),
+	wcTokenDefinition(tt_ws, " ", true, true),
 	wcTokenDefinition(tt_newline, "\n", true),
 	wcTokenDefinition(tt_tab, "\t", true),
-	wcTokenDefinition(tt_period, ".", true),
+	wcTokenDefinition(tt_period, ".", true, true),
 	wcTokenDefinition(tt_comma, ",", true),
 	wcTokenDefinition(tt_scolon, ";", true),
 	wcTokenDefinition(tt_colon, ":", true),
@@ -97,12 +97,28 @@ const bool wc::lex::wcTokenDefinitionBank::exists(char identToCheck)
 	return exists(ss.str());
 }
 
+const bool wc::lex::wcTokenDefinitionBank::exists(wcTokenType typeToCheck)
+{
+	for (int t = 0; t < definitions.size(); ++t)
+		if (definitions[t].type == typeToCheck)
+			return true;
+	return false;
+}
+
 const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(string identToCheck)
 {
 	for (int t = 0; t < definitions.size(); ++t)
 		for (int y = 0; y < definitions[t].identifiers.size(); ++y)
 			if (definitions[t].identifiers[y] == string(identToCheck))
 				return definitions[t];
+	return wcTokenDefinition();
+}
+
+const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(wcTokenType typeToCheck)
+{
+	for (int t = 0; t < definitions.size(); ++t)
+		if (definitions[t].type == typeToCheck)
+			return definitions[t];
 	return wcTokenDefinition();
 }
 
@@ -131,6 +147,11 @@ wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifi
 }
 
 wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) : type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(false)
+{
+
+}
+
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim, bool _isPunc) : type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(_isPunc)
 {
 
 }
@@ -228,18 +249,24 @@ bool wc::lex::wcTokenTypeDeriver::isDelim(wcTokenType type)
 	return definitionsBank.find(type).delimiter;
 }
 
-bool wc::lex::wcTokenTypeDeriver::isPunctuation(char)
+bool wc::lex::wcTokenTypeDeriver::isPunctuation(char charToCheck)
 {
+	if (definitionsBank.exists(charToCheck))
+		return definitionsBank.find(charToCheck).punctuation;
 	return false;
 }
 
-bool wc::lex::wcTokenTypeDeriver::isPunctuation(wcTokenType)
+bool wc::lex::wcTokenTypeDeriver::isPunctuation(wcTokenType typeToCheck)
 {
+	if (definitionsBank.exists(typeToCheck))
+		return definitionsBank.find(typeToCheck).punctuation;
 	return false;
 }
 
-bool wc::lex::wcTokenTypeDeriver::isPunctuation(std::string)
+bool wc::lex::wcTokenTypeDeriver::isPunctuation(std::string stringToCheck)
 {
+	if (definitionsBank.exists(stringToCheck))
+		return definitionsBank.find(stringToCheck).punctuation;
 	return false;
 }
 
@@ -493,7 +520,7 @@ const unsigned int wc::lex::wcLexInputStream::lines()
 //do we have a source loaded, and are there still characters to read
 bool wc::lex::wcLexInputStreamIndex::isValid()
 {
-	if (source.size() && line > -1 && column > -1 && index > -1 && (column < source.size(line)))
+	if (source.size() && line > -1 && column > -1 && index > -1 && (column <= source.size(line)))
 		return true;
 	return false;
 }
@@ -571,7 +598,7 @@ wcTokenStream wc::lex::wcLexer::lex(wcLexInputStream& stream)
 
 			//whitespace
 			CASE_LEX_TT_WS
-				if ((out += lex_ws(lexIndex)).isError())
+				if ((lex_ws(lexIndex)).isError())
 					return wcTokenStream(out.error);
 			break;
 
@@ -586,7 +613,6 @@ wcTokenStream wc::lex::wcLexer::lex(wcLexInputStream& stream)
 			if ((out += lex_default(lexIndex)).isError())
 				return wcTokenStream(out.error);
 		}
-		lexIndex++;
 	}
 
 	return out;
@@ -765,8 +791,8 @@ wcTokenStream wc::lex::wcLexer::lex_default(wcLexInputStreamIndex& index)
 {
 	wcToken token(tt_null, "", index.line, index.column);
 
-	string dataBuffer = "";
 	//build up the token until we hit a delimiter or eos
+	string dataBuffer = "";
 	while (index.isValid() && !deriver.isDelim(index.get()))
 		dataBuffer += (index++).get();
 	
@@ -777,11 +803,13 @@ wcTokenStream wc::lex::wcLexer::lex_default(wcLexInputStreamIndex& index)
 	wcTokenStream out;
 	if (deriver.isDelim(index.get()))
 	{
-		if (token.type != tt_null)
+		if (token.type != tt_null && !deriver.isPunctuation(token.type))
 			out.container.push_back(token);
 
 		wcToken delim(deriver.derive(index.get()),string() += index.get(), index.line, index.column);
-		out.container.push_back(delim);
+		if (delim.type != tt_null && !deriver.isPunctuation(delim.type))
+			out.container.push_back(delim);
+		index++;
 	}
 	else
 	{
@@ -789,7 +817,6 @@ wcTokenStream wc::lex::wcLexer::lex_default(wcLexInputStreamIndex& index)
 		out.container.push_back(token);
 	}
 
-	++index;
 	return out;
 }
 
@@ -805,7 +832,7 @@ wc::lex::wcLineColumnIndex::wcLineColumnIndex(wcLexInputStream & _source, int _l
 
 bool wc::lex::wcLineColumnIndex::updateFromIndex(int newIndex)
 {
-	if ((newIndex < 0) || newIndex >= source.size())
+	if ((newIndex < 0) || newIndex > source.size())
 	{
 		index = line = column = -1;
 		return false;

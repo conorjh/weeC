@@ -32,7 +32,7 @@ int wctest::lex::l_compare(vector<wcToken> p_correctVec, vector<wcToken> p_testV
 //create a lexer, lex a simple string ,dispose of the lexer
 int wctest::lex::l_basic_1()
 {
-
+	wcTokenStream stream = wcLexer().lex(wcLexInputStream("int a = 2;"));
 	return 0;
 }
 
@@ -159,8 +159,7 @@ int wctest::lex::l_wcLexInputStreamIndex_2()
 	if ((++index1).get() != testString.substr(1,1) || (index1 - 1).get() != testString.substr(0,1))
 		return 2;
 
-	wcLexer l;
-	l.lex(wcLexInputStream("HE"));
+	wcLexer().lex(wcLexInputStream("HE"));
 
 	return 0;
 }

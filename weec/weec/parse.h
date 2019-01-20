@@ -110,10 +110,8 @@ namespace wc
 			wcAST operator+=(wcAST),
 				operator+(wcAST);
 
-			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode),
-				addNode(wcASTIndex&, wcParserOutput);	//add node and point pindex to the new child node
-			tree<wcParseNode>::iterator addChild(wcASTIndex&, wcParseNode),	//add node, but pindex remains on parent node
-				addChild(wcASTIndex&, wcParserOutput);	
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode),	addNode(wcASTIndex&, wcParserOutput),
+				addChild(wcASTIndex&, wcParseNode),	addChild(wcASTIndex&, wcParserOutput);	//add node, but pindex remains on parent node
 			void removeNode(wcASTIndex&);
 
 			tree<wcParseNode> parseTree;
@@ -136,7 +134,6 @@ namespace wc
 			st_var, st_func, st_type
 		};
 
-
 		struct wcParseSymbol
 		{
 			wcParseSymbol();
@@ -152,7 +149,7 @@ namespace wc
 			wcParseSymbol& find(wcIdent);
 			wcParseSymbol& reg(wcIdent);
 
-			std::unordered_map<wcIdent, wcParseSymbol> lookup;
+			std::unordered_map<std::string, wcParseSymbol> lookup;
 		};
 
 		struct wcParserOutput
@@ -163,8 +160,8 @@ namespace wc
 			wcParserOutput operator+=(wcParserOutput),
 				operator+(wcParserOutput);
 
-			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput),
-				addChild(wcASTIndex&, wcParserOutput);	//add node, but pindex remains on parent node
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput), addNode(wcASTIndex&, wcParseNode),
+				addChild(wcASTIndex&, wcParseNode),	addChild(wcASTIndex&, wcParserOutput);	//add node, but pindex remains on parent node
 
 			wcAST ast;
 			wcParserSymbolTable symTab;
@@ -193,6 +190,20 @@ namespace wc
 			wcParserOutput output;
 		};
 
+		struct wcParseExpression
+		{
+
+		};
+
+		struct wcParseDeclaration
+		{
+			wcParseDeclaration(wcParseSymbol&);
+
+			wcParseSymbol& type;
+			wcIdent identifier;
+			wcParseExpression exp;
+		};
+
 		class wcStatementParser;	class wcDeclarationParser; 
 		class wcIdentParser;		class wcTypeParser;
 		class wcExpressionParser;	class wcIfParser;
@@ -204,6 +215,7 @@ namespace wc
 		public:
 			wcParserSubParserCollection();
 
+			wcSubParser& sub;
 			wcStatementParser& statement;
 			wcDeclarationParser& dec;
 
@@ -282,7 +294,8 @@ namespace wc
 		{
 		public:
 			wcDeclarationParser();
-			wcParserOutput parse(wcParseData&);
+			wcParserOutput parse(wcParseData&),
+				parse(wcParseData&, wcParseDeclaration&);
 		};
 
 		class wcCodeBlockParser : wcSubParser
@@ -314,14 +327,14 @@ namespace wc
 			wcParserOutput parse(wcParseData&);
 		};
 
-
 		class wcParser
 		{
 		public:
 			wcParser();
 
 			virtual wcParserOutput parse(lex::wcTokenStream&);
-
+			
+			virtual wcParserOutput subParse(wcParseData&);
 			wcParserSubParserCollection subs;
 		};
 

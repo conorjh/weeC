@@ -40,7 +40,6 @@ int wctest::lex::l_basic_1()
 int wctest::lex::l_basic_2()
 {
 	wcTokenStream stream = wcLexer().lex(wcLexInputStream(
-		"int a = 2;"
 		"a=22*(88+55);"
 	));
 	return stream.error.code;

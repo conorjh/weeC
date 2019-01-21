@@ -521,7 +521,7 @@ const unsigned int wc::lex::wcLexInputStream::lines()
 //do we have a source loaded, and are there still characters to read
 bool wc::lex::wcLexInputStreamIndex::isValid()
 {
-	if (source.size() && line > -1 && column > -1 && index > -1 && (column <= source.size(line)))
+	if (source.size() && line > -1 && column > -1 && index > -1 && index < source.size() && (column <= source.size(line)) )
 		return true;
 	return false;
 }
@@ -712,9 +712,9 @@ wcTokenStream wc::lex::wcLexer::lex_2step(wcLexInputStreamIndex & index)
 
 	wcTokenType thisAndNext = deriver.derive(index.get() + index.peek());
 	wcTokenStream out;
-	if(	thisAndNext != tt_greaterequal && thisAndNext != tt_lessequal && thisAndNext != tt_notequal && thisAndNext != tt_equal &&
+	if(!(	thisAndNext != tt_greaterequal && thisAndNext != tt_lessequal && thisAndNext != tt_notequal && thisAndNext != tt_equal &&
 		thisAndNext != tt_incr && thisAndNext != tt_plusassign && thisAndNext != tt_decr && thisAndNext != tt_minusassign &&
-		thisAndNext != tt_logand && thisAndNext != tt_logor &&	thisAndNext != tt_dcolon )	
+		thisAndNext != tt_logand && thisAndNext != tt_logor &&	thisAndNext != tt_dcolon ))
 	{
 		out += wcToken(thisAndNext, index.get() + index.peek(), index.line, index.column);
 		index++;;
@@ -802,7 +802,7 @@ wcTokenStream wc::lex::wcLexer::lex_default(wcLexInputStreamIndex& index)
 
 	//create a token for the delimiter unless it was end of stream
 	wcTokenStream out;
-	if (deriver.isDelim(index.get()))
+	if (index.isValid() && deriver.isDelim(index.get()))
 	{
 		if (token.type != tt_null && !deriver.isPunctuation(token.type))
 			out.container.push_back(token);

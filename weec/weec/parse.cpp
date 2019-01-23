@@ -330,10 +330,8 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	//create our stream indexes, and space for output data, and a handy alias (tokens)
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
-	wcParserSymbolTable& symTab = data.output.symTab;
 	wcParserOutput output;
-	wcASTIndex outputIndex = wcASTIndex(output.ast);
-	wcIdent ident;
+	wcASTIndex outputIndex(output.ast);
 
 	//parent node
 	output.addNode(outputIndex, wcParseNode(pn_dec));
@@ -341,6 +339,7 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 		return output;
 
 	//parse the type
+	wcIdent ident;
 	output.addChild(outputIndex, subs.type.parse(data, ident));
 	if (output.error)
 		return output;
@@ -349,7 +348,7 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	output.addChild(outputIndex, subs.ident.parse(data, ident));
 	if (output.error)
 		return output;
-	if(!symTab.exists(ident))
+	if(!data.output.symTab.exists(ident))
 		return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 
 	//semi colon, or optional initial assignment 

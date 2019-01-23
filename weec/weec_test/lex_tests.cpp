@@ -39,17 +39,19 @@ int wctest::lex::l_basic_1()
 //lex some integers
 int wctest::lex::l_basic_2()
 {
-	wcTokenStream stream = wcLexer().lex(wcLexInputStream(
-		"a=22*(88+55);"
-	));
+	wcTokenStream stream = wcLexer().lex(wcLexInputStream("a=22*(88+55);"));
 	return stream.error.code;
 }
 
 //lex some floats
 int wctest::lex::l_basic_3()
 {
-
-	return 0;
+	wcTokenStream stream = wcLexer().lex(wcLexInputStream(
+		"//comment\n"
+		"int test;\n"
+		"string testString = \"herro\";\n"
+	));
+	return stream.error.code;
 }
 
 //lex with errors

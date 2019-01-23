@@ -457,9 +457,15 @@ bool wc::lex::wcLexInputStream::operator!=(const wcLexInputStream& otherStream) 
 	return false;
 }
 
-wcLexInputStream wc::lex::wcLexInputStream::operator=(wcLexInputStream &otherStream)
+wcLexInputStream& wc::lex::wcLexInputStream::operator=(wcLexInputStream &otherStream)
 {
 	this->container = otherStream.container;
+	return *this;
+}
+
+wcLexInputStream& wc::lex::wcLexInputStream::operator=(const char * input)
+{
+	this->container.push_back(input);
 	return *this;
 }
 
@@ -481,7 +487,7 @@ string wc::lex::wcLexInputStream::getLine(wcLexInputStreamIndex &index)
 string wc::lex::wcLexInputStream::get(wcLexInputStreamIndex &index)
 {
 	if (!index.isValid())
-		return 0;
+		return "";
 
 	return container[index.line].substr(index.column, 1);
 }
@@ -540,6 +546,12 @@ string wc::lex::wcToken::operator[](unsigned int index)
 wcToken wc::lex::wcToken::operator=(string input)
 {
 	data = input;
+	return *this;
+}
+
+wcToken wc::lex::wcToken::operator+=(std::string input)
+{
+	data += input;
 	return *this;
 }
 
@@ -605,7 +617,7 @@ wcTokenStream wc::lex::wcLexer::lex(wcLexInputStream& stream)
 
 			//comments
 		case tt_div:
-			if ((out += lex_comment(lexIndex)).isError())
+			if ((lex_comment(lexIndex)).isError())
 				return wcTokenStream(out.error);
 			break;
 
@@ -625,21 +637,22 @@ wcTokenStream wc::lex::wcLexer::lex_stringLiteral(wcLexInputStreamIndex & index)
 
 	//make sure we have an opening double quote
 	if (deriver.derive(index.get()) != tt_dquote)
-		return wcTokenStream(wcError(ec_lex_unexpectedtoken, "Expected '\"'", token.line, token.column));
+		return wcTokenStream(wcError(ec_lex_unexpectedtoken, token += "Expected '\"'"));
 	++index;
-
-	wcTokenStream out;
-	string dataBuffer = "";
+	
 	//loop through until we reach the closing quote, or end of stream
+	string dataBuffer = "";
 	while (index.isValid())
 		switch (deriver.derive(index.get()))
 		{
 		case tt_dquote:
+			index++;
 			token.data = dataBuffer;
-			return out += token;
+			return wcTokenStream() += token;
 
 		default:
-			dataBuffer += index.next();
+			//get current index string, but also increment the index
+			dataBuffer += (index++).get();
 			break;
 		}
 
@@ -805,18 +818,15 @@ wcTokenStream wc::lex::wcLexer::lex_default(wcLexInputStreamIndex& index)
 	if (index.isValid() && deriver.isDelim(index.get()))
 	{
 		if (token.type != tt_null && !deriver.isPunctuation(token.type))
-			out.container.push_back(token);
+			out += token;
 
 		wcToken delim(deriver.derive(index.get()),string() += index.get(), index.line, index.column);
 		if (delim.type != tt_null && !deriver.isPunctuation(delim.type))
-			out.container.push_back(delim);
+			out += delim;
 		index++;
 	}
 	else
-	{
-		dataBuffer += index.get();	//eos
-		out.container.push_back(token);
-	}
+		out += token += index.get();
 
 	return out;
 }
@@ -910,25 +920,36 @@ wc::lex::wcTokenStream::wcTokenStream(error::wcError _error)
 
 wcTokenStream wc::lex::wcTokenStream::operator+(wcTokenStream stream)
 {
+	wcTokenStream out(*this);
+
 	for (int t = 0; t < stream.container.size(); ++t)
-		container.push_back(stream.container[t]);
+		out.container.push_back(stream.container[t]);
 	
 	//transfer error data unless there were no errors
 	if (stream.error.code)
-		error = stream.error;
+		out.error = stream.error;
 
-	return *this;
+	return out;
 }
 
 wcTokenStream wc::lex::wcTokenStream::operator+(wcToken token)
+{
+	wcTokenStream out(*this);
+
+	out.container.push_back(token);
+
+	return out;
+}
+
+wcTokenStream wc::lex::wcTokenStream::operator+=(wcToken token)
 {
 	container.push_back(token);
 	return *this;
 }
 
-wcTokenStream wc::lex::wcTokenStream::operator+=(wcToken token)
-{
-	return *this + token;
+wcTokenStream wc::lex::wcTokenStream::operator+=(wcTokenStream stream)
+{	
+	return (*this = *this + stream);
 }
 
 bool wc::lex::wcTokenStream::isError() const
@@ -954,10 +975,6 @@ wcToken wc::lex::wcTokenStream::next(wcTokenStreamIndex &index)
 	return get(index++);
 }
 
-wcTokenStream wc::lex::wcTokenStream::operator+=(wcTokenStream stream)
-{
-	return *this + stream;
-}
 
 wc::lex::wcTokenStreamIndex::wcTokenStreamIndex(wcTokenStream &stream) : source(stream)
 {
@@ -987,21 +1004,21 @@ wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator++()
 
 wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator--()
 {
-	wcTokenStreamIndex preIndex = *this;
+	wcTokenStreamIndex preIndex(*this);
 	index--;
 	return preIndex;
 }
 
 wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(int addition)
 {
-	index += addition;
-	return *this;
+	wcTokenStreamIndex preIndex(*this);
+	return preIndex + addition;
 }
 
 wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator-(int subtraction)
 {
-	index = -subtraction;
-	return *this;
+	wcTokenStreamIndex preIndex(*this);
+	return preIndex - subtraction;
 }
 
 //pre

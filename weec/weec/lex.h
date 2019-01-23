@@ -94,7 +94,8 @@ namespace wc
 			wcLexInputStream(std::string);
 			wcLexInputStream(std::vector<std::string>);
 			std::string operator[](int);
-			wcLexInputStream operator=(wcLexInputStream&);
+			wcLexInputStream& operator=(wcLexInputStream&);
+			wcLexInputStream& operator=(const char *);
 			bool operator!=(const wcLexInputStream&) const;
 			bool operator==(const wcLexInputStream&) const;
 
@@ -122,6 +123,7 @@ namespace wc
 			bool operator==(const wcToken&) const;
 			std::string operator[](unsigned int);
 			wcToken operator=(std::string);
+			wcToken operator+=(std::string);
 			wcToken operator=(wcToken);
 
 			wcTokenType type;

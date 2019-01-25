@@ -57,8 +57,10 @@ int wctest::lex::l_basic_3()
 //lex with errors
 int wctest::lex::l_basic_4()
 {
-
-	return 0;
+	wcTokenStream stream = wcLexer().lex(wcLexInputStream(
+		"\"string literal that ends without a quote \n"
+	));
+	return stream.error.code;
 }
 
 //lex comments and numbers 

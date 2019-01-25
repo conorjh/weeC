@@ -591,37 +591,37 @@ wcTokenStream wc::lex::wcLexer::lex(wcLexInputStream& stream)
 	{
 		switch (deriver.derive(stream.get(lexIndex)))
 		{
-			//string literal
+		//string literal
 		case tt_dquote:
 			if ((out += lex_stringLiteral(lexIndex)).isError())
 				return wcTokenStream(out.error);
 			break;
 
-			//integer literals
+		//integer literals
 		case tt_intlit:
 			if ((out += lex_intOrFloatLiteral(lexIndex)).isError())
 				return wcTokenStream(out.error);
 			break;
 
-			//all 2 part tokens (operators etc)
-			CASE_LEX_ALL_2_PARTERS
+		//all 2 part tokens (operators etc)
+		CASE_LEX_ALL_2_PARTERS
 				if ((out += lex_2step(lexIndex)).isError())
 					return wcTokenStream(out.error);
 			break;
 
-			//whitespace
-			CASE_LEX_TT_WS
+		//whitespace
+		CASE_LEX_TT_WS
 				if ((lex_ws(lexIndex)).isError())
 					return wcTokenStream(out.error);
 			break;
 
-			//comments
+		//comments
 		case tt_div:
 			if ((lex_comment(lexIndex)).isError())
 				return wcTokenStream(out.error);
 			break;
 
-			//possible delimiter or identifier etc
+		//possible delimiter or identifier etc
 		default:
 			if ((out += lex_default(lexIndex)).isError())
 				return wcTokenStream(out.error);

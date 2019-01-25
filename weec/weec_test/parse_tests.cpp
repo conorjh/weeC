@@ -25,15 +25,7 @@ int wctest::parse::p_compare(wcAST p_correctAST, wcAST p_testAST)
 //compare two ASTS, 0 if theyre different
 int wctest::parse::standardParseTest(const char * p_source)
 {
-	wcLexer lexer;
-	wcParser parser;
-
-	wcAST testOutput = parser.parse(lexer.lex(p_source));
-	wcAST correctOutput;
-
-	if (parser.getError().code)
-		return parser.getError().code;
-	return 0;
+	return wcParser().parse(wcLexer().lex(wcLexInputStream(p_source))).error.code;
 }
 
 //create a lexer, lex a simple string ,dispose of the lexer

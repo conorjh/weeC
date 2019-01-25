@@ -84,7 +84,7 @@ wc::lex::wcTokenDefinitionBank::wcTokenDefinitionBank(const vector<wcTokenDefini
 
 const bool wc::lex::wcTokenDefinitionBank::exists(string identToCheck)
 {
-	for (int t = 0; t < definitions.size(); ++t)
+	for (unsigned int t = 0; t < definitions.size(); ++t)
 		for (int y = 0; t < definitions[t].identifiers.size(); ++y)
 			if (definitions[t].identifiers[y] == string(identToCheck))
 				return true;
@@ -100,7 +100,7 @@ const bool wc::lex::wcTokenDefinitionBank::exists(char identToCheck)
 
 const bool wc::lex::wcTokenDefinitionBank::exists(wcTokenType typeToCheck)
 {
-	for (int t = 0; t < definitions.size(); ++t)
+	for (unsigned int t = 0; t < definitions.size(); ++t)
 		if (definitions[t].type == typeToCheck)
 			return true;
 	return false;
@@ -108,7 +108,7 @@ const bool wc::lex::wcTokenDefinitionBank::exists(wcTokenType typeToCheck)
 
 const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(string identToCheck)
 {
-	for (int t = 0; t < definitions.size(); ++t)
+	for (unsigned int t = 0; t < definitions.size(); ++t)
 		for (int y = 0; y < definitions[t].identifiers.size(); ++y)
 			if (definitions[t].identifiers[y] == identToCheck)
 				return definitions[t];
@@ -117,7 +117,7 @@ const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(string identToCheck
 
 const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(wcTokenType typeToCheck)
 {
-	for (int t = 0; t < definitions.size(); ++t)
+	for (unsigned int t = 0; t < definitions.size(); ++t)
 		if (definitions[t].type == typeToCheck)
 			return definitions[t];
 	return wcTokenDefinition();
@@ -132,7 +132,7 @@ const wcTokenDefinition wc::lex::wcTokenDefinitionBank::find(char identToCheck)
 
 void wc::lex::wcTokenDefinitionBank::populateDelimiterTypes()
 {
-	for (int t = 0; t < definitions.size(); ++t)
+	for (unsigned int t = 0; t < definitions.size(); ++t)
 		if (definitions[t].delimiter)
 			delimiterTypes.push_back(definitions[t].type);
 }
@@ -186,7 +186,7 @@ bool wc::lex::wcTokenDefinition::isSingleCharacterToken() const
 		return false;
 
 	unsigned int largestIdentifierSize = 0;
-	for (int t = 0; t < identifiers.size(); ++t)
+	for (unsigned int t = 0; t < identifiers.size(); ++t)
 		if (identifiers[t].size() > largestIdentifierSize)
 			largestIdentifierSize = identifiers[t].size();
 
@@ -506,7 +506,7 @@ string wc::lex::wcLexInputStream::get(int _line, int _column)
 const unsigned int wc::lex::wcLexInputStream::size()
 {
 	unsigned int sizeAccumulator = 0;
-	for (int t = 0; t < lines(); ++t)
+	for (unsigned int t = 0; t < lines(); ++t)
 		sizeAccumulator += container[t].size();
 
 	return sizeAccumulator;
@@ -851,7 +851,7 @@ bool wc::lex::wcLineColumnIndex::updateFromIndex(int newIndex)
 
 	//progress through the input until we reach our given index
 	int tempIndex = 0, tempCol = 0;
-	for (int t = 0; t < source.lines(); ++t)
+	for (unsigned int t = 0; t < source.lines(); ++t)
 		if (tempIndex + source.size(t) < newIndex)
 		{
 			//havent reached the correct line yet
@@ -922,7 +922,7 @@ wcTokenStream wc::lex::wcTokenStream::operator+(wcTokenStream stream)
 {
 	wcTokenStream out(*this);
 
-	for (int t = 0; t < stream.container.size(); ++t)
+	for (unsigned int t = 0; t < stream.container.size(); ++t)
 		out.container.push_back(stream.container[t]);
 	
 	//transfer error data unless there were no errors
@@ -983,7 +983,7 @@ wc::lex::wcTokenStreamIndex::wcTokenStreamIndex(wcTokenStream &stream) : source(
 
 wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(wcTokenStreamIndex otherIndex)
 {
-	for (int t = 0; t < otherIndex.source.container.size(); ++t)
+	for (unsigned int t = 0; t < otherIndex.source.container.size(); ++t)
 		source.container.push_back(otherIndex.source.container[t]);
 	return *this;
 }

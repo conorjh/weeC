@@ -120,6 +120,7 @@
   <ItemGroup>
     <ClCompile Include="lex_tests.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="parse_tests.cpp" />
     <ClCompile Include="tests.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -50,17 +50,6 @@ namespace wc
 
 	namespace codegen
 	{
-		int genSimpStatement(wc::codegen::wcGenParams);
-		std::vector<std::shared_ptr<bytecode::wcInstruction>> genSimpExpression(wc::codegen::wcGenParams, std::vector<parse::wcParseNode>* rpnOutput = nullptr);
-		int genSimpIf(wc::codegen::wcGenParams);
-		int genSimpDecVar(wc::codegen::wcGenParams);
-		int genSimpNamespaceDec(wc::codegen::wcGenParams);
-
-		class wcSimpleBytecodeGen : public wcBaseBytecodeGen
-		{
-		public:
-			virtual bytecode::wcSimpleExecContext genSimple(parse::wcAST&);
-		};
 	}
 
 	namespace vm

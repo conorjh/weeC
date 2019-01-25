@@ -334,7 +334,6 @@ namespace wc
 
 			virtual wcParserOutput parse(lex::wcTokenStream&);
 			
-			virtual wcParserOutput subParse(wcParseData&);
 			wcParserSubParserCollection subs;
 		};
 

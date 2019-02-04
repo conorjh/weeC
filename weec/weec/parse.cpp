@@ -79,6 +79,16 @@ wc::parse::wcAST::wcAST(tree<wcParseNode> p_tree)
 	parseTree = p_tree;
 }
 
+wcAST wc::parse::wcAST::operator+=(wcAST)
+{
+	return wcAST();
+}
+
+wcAST wc::parse::wcAST::operator+(wcAST)
+{
+	return wcAST();
+}
+
 tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcASTIndex& index, wcParserOutput pOutput)
 {
 	//append a child to the current node, then set the index to point at that new addition
@@ -115,7 +125,11 @@ tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcPars
 	return parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1);
 }
 
-wc::parse::wcParser::wcParser() : subs()
+void wc::parse::wcAST::removeNode(wcASTIndex &)
+{
+}
+
+wc::parse::wcParser::wcParser() 
 {
 
 }
@@ -167,6 +181,11 @@ tree<wcParseNode>::iterator wc::parse::wcParserOutput::addNode(wcASTIndex &index
 	return ast.addNode(index, output);
 }
 
+tree<wcParseNode>::iterator wc::parse::wcParserOutput::addNode(wcASTIndex &index, wcParseNode node)
+{
+	return ast.addNode(index, node);
+}
+
 tree<wcParseNode>::iterator wc::parse::wcParserOutput::addChild(wcASTIndex &index, wcParserOutput output)
 {
 	//symTab += output.symTab;
@@ -190,21 +209,11 @@ wcParserOutput wc::parse::wcParser::parse(wcTokenStream &_tokens)
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
 
 	while (tokenIndex.isValid() && !data.output.error)
-		data.output += subs.sub.parse(data);
+		data.output += wcSubParser().parse(data);
 
 	return data.output;
 }
 
-wc::parse::wcParserSubParserCollection::wcParserSubParserCollection() :
-	sub(wcSubParser()),
-	statement(wcStatementParser()), dec(wcDeclarationParser()),
-	ident(wcIdentParser()), type(wcTypeParser()),
-	exp(wcExpressionParser()), conditional(wcIfParser()),
-	wloop(wcWhileParser()), block(wcCodeBlockParser()),
-	ret(wcReturnParser()), scolon(wcSColonParser()),
-	ns(wcNamespaceParser())
-{
-}
 
 wc::parse::wcSubParser::wcSubParser()
 {
@@ -219,7 +228,7 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 	{
 		//identifier - either dec or statement
 	case tt_ident:
-		subs.ident.parse(data, ident);
+		wcIdentParser().parse(data, ident);
 		if (data.output.symTab.exists(ident))
 			switch (data.output.symTab.find(ident).type)
 			{
@@ -237,7 +246,7 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 		//declarations
 	_wcParser_parse_declarations:
 	CASE_BASIC_TYPES_TT
-		output.addNode(wcASTIndex(output.ast), subs.dec.parse(data));
+		output.addNode(wcASTIndex(output.ast), wcDeclarationParser().parse(data));
 		break;
 
 		//statements
@@ -247,7 +256,7 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 	case tt_keyword_namespace:
 	case tt_keyword_if:
 	case tt_keyword_while:
-		output.addNode(wcASTIndex(output.ast), subs.statement.parse(data));
+		output.addNode(wcASTIndex(output.ast), wcStatementParser().parse(data));
 		break;
 
 		//unexpected token
@@ -273,23 +282,23 @@ wcParserOutput wc::parse::wcStatementParser::parse(wcParseData &data)
 	{
 	case tt_ident:
 	CASE_ALL_LITERALS_TT
-		output += subs.exp.parse(data);
+		output += wcExpressionParser().parse(data);
 		break;
 
 	case tt_keyword_return:
-		output += subs.ret.parse(data);
+		output += wcReturnParser().parse(data);
 		break;
 
 	case tt_keyword_namespace:
-		output += subs.ns.parse(data);
+		output += wcNamespaceParser().parse(data);
 		break;
 
 	case tt_keyword_if:
-		output += subs.conditional.parse(data);
+		output += wcIfParser().parse(data);
 		break;
 
 	case tt_keyword_while:
-		output += subs.wloop.parse(data);
+		output += wcWhileParser().parse(data);
 		break;
 
 	default:
@@ -389,12 +398,12 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 
 	//parse the type
 	wcIdent ident;
-	output.addChild(outputIndex, subs.type.parse(data, ident));
+	output.addChild(outputIndex, wcTypeParser().parse(data, ident));
 	if (output.error)
 		return output;
 
 	//parse the identifier
-	output.addChild(outputIndex, subs.ident.parse(data, ident));
+	output.addChild(outputIndex, wcIdentParser().parse(data, ident));
 	if (output.error)
 		return output;
 	if(!data.output.symTab.exists(ident))
@@ -404,11 +413,11 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	if (!tokenIndex.isValid() || tokens.get(tokenIndex).type != tt_assign)
 		return output;	
 	else if (tokens.get(tokenIndex).type == tt_scolon)
-		return (output += subs.scolon.parse(data));
+		return (output += wcSColonParser().parse(data));
 	tokenIndex++;
 
 	//expression node
-	output.addNode(outputIndex, subs.exp.parse(data));
+	output.addNode(outputIndex, wcExpressionParser().parse(data));
 	if (output.error)
 		return output;
 
@@ -430,7 +439,7 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 	switch (tokens.get(tokenIndex).type)
 	{
 	case tt_ident:
-		output.ast.addChild(outputIndex, subs.ident.parse(data, ident));
+		output.ast.addChild(outputIndex, wcIdentParser().parse(data, ident));
 		if (!data.output.symTab.exists(ident))
 			return wcParserOutput(wcError(ec_par_type_undeclaredtype, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 		if (data.output.symTab.find(ident).type != st_type)
@@ -510,7 +519,7 @@ wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
 			return output;
 		}
 		else
-			output.addNode(outputIndex, subs.sub.parse(data));
+			output.addNode(outputIndex, wcSubParser().parse(data));
 
 	//error no closing bracket
 	return wcParserOutput(wcError(ec_par_eos));
@@ -520,6 +529,10 @@ wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
 wc::parse::wcParseDeclaration::wcParseDeclaration(wcParseSymbol &_symbol) : type(_symbol)
 {
 
+}
+
+wc::parse::wcSColonParser::wcSColonParser()
+{
 }
 
 wcParserOutput wc::parse::wcSColonParser::parse(wcParseData &)
@@ -583,12 +596,13 @@ wcASTIndex wc::parse::wcASTIndex::operator-(int subtraction)
 
 wcASTIndex wc::parse::wcASTIndex::operator+(int addition)
 {
-
+	return *this;
 }
 
 wcASTIndex wc::parse::wcASTIndex::operator=(tree<wcParseNode>::iterator _index)
 {
 	index = _index;
+	return *this;
 }
 
 tree<wcParseNode>::iterator wc::parse::wcASTIndex::operator[](tree<wcParseNode>::iterator _index)
@@ -612,6 +626,7 @@ wcASTIndex wc::parse::wcASTIndex::operator=(wcASTIndex otherIndex)
 {
 	ast = otherIndex.ast;
 	index = otherIndex.index;
+	return *this;
 }
 
 
@@ -654,10 +669,29 @@ tree<wcParseNode>::iterator wc::parse::wcASTIndex::up()
 
 int wc::parse::wcASTIndex::depth()
 {
-	return parseTree;
+	return ast.parseTree.depth(index);
 }
 
 int wc::parse::wcASTIndex::depth(tree<wcParseNode>::iterator)
 {
 	return 0;
+}
+
+wc::parse::wcParseSymbol::wcParseSymbol()
+{
+}
+
+bool wc::parse::wcParserSymbolTable::exists(wcIdent)
+{
+	return false;
+}
+
+wcParseSymbol& wc::parse::wcParserSymbolTable::find(wcIdent _ident)
+{
+	return wcParseSymbol();
+}
+
+wcParseSymbol& wc::parse::wcParserSymbolTable::reg(wcIdent _ident)
+{
+	return wcParseSymbol();
 }

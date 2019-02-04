@@ -147,8 +147,7 @@ namespace wc
 		{
 		public:
 			bool exists(wcIdent);
-			wcParseSymbol& find(wcIdent);
-			wcParseSymbol& reg(wcIdent);
+			wcParseSymbol& find(wcIdent), &reg(wcIdent);
 
 			std::unordered_map<std::string, wcParseSymbol> lookup;
 		};
@@ -204,41 +203,13 @@ namespace wc
 			wcIdent identifier;
 			wcParseExpression exp;
 		};
-		class wcSubParser;
-		class wcStatementParser;	class wcDeclarationParser; 
-		class wcIdentParser;		class wcTypeParser;
-		class wcExpressionParser;	class wcIfParser;
-		class wcWhileParser;		class wcCodeBlockParser;
-		class wcReturnParser;		class wcSColonParser;
-		class wcNamespaceParser;
-		class wcParserSubParserCollection
-		{
-		public:
-			wcParserSubParserCollection();
-
-			wcSubParser& sub;
-			wcStatementParser& statement;
-			wcDeclarationParser& dec;
-
-			wcIdentParser& ident;
-			wcTypeParser& type;
-			wcExpressionParser& exp;
-
-			wcNamespaceParser& ns;
-			wcIfParser& conditional;
-			wcWhileParser& wloop;
-			wcCodeBlockParser& block;
-			wcReturnParser& ret;
-			wcSColonParser& scolon;
-		};
-
+		
 		class wcSubParser
 		{
 		public:
 			wcSubParser();
 
 			wcParserOutput parse(wcParseData&);
-			wcParserSubParserCollection subs;
 		};
 
 		class wcExpressionParser : wcSubParser
@@ -334,8 +305,6 @@ namespace wc
 			wcParser();
 
 			virtual wcParserOutput parse(lex::wcTokenStream&);
-			
-			wcParserSubParserCollection subs;
 		};
 
 		int getPrecedence(lex::wcToken);

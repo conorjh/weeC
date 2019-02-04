@@ -286,61 +286,57 @@ wc::lex::wcLexInputStreamIndex::wcLexInputStreamIndex(wcLexInputStream &stream) 
 	line = column = index = 0;
 }
 
-//postdecrement
-wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator--(int)
+wc::lex::wcLexInputStreamIndex::wcLexInputStreamIndex(wcLexInputStream &stream, int _index) : source(stream)
 {
-	wcLexInputStreamIndex retVal = *this;
-	wcLineColumnIndex newLineColumnIndex(source, index - 1);
-	*this = newLineColumnIndex;
-	return retVal;
+	*this = wcLineColumnIndex(source, _index);
 }
 
-//postincrement
-wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator++(int)
+//postdecrement lvalue--
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator--(int)
 {
-	wcLexInputStreamIndex retVal = *this;
-	*this =	*this + 1;
-	return retVal;
+	wcLexInputStreamIndex preDecrementValue = *this;
+	*this = *this - 1;
+	return preDecrementValue;
 }
 
-//predecrement
-wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator-(int subtraction)
+//postincrement lvalue++
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator++(int)
 {
-
-	wcLexInputStreamIndex retVal = *this;
-	wcLineColumnIndex newLineColumnIndex(source, index + 1);
-	*this = newLineColumnIndex;
-	return retVal;
+	wcLexInputStreamIndex preIncrementValue = *this;
+	*this = *this + 1;
+	return preIncrementValue;
 }
 
-//preincrement
+//preincrement ++lvalue
 wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator++()
 {
-	return *this + 1;
+	return *this = *this + 1;
 }
 
+//predecrement --lvalue
 wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator--()
 {
-	return *this - 1;
+	return *this = *this - 1;
 }
 
-wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator+(int addition)
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator-(int subtraction)
 {
-	return wcLineColumnIndex(source, index + addition);
+	return wcLexInputStreamIndex(*this) = wcLineColumnIndex(source, index - subtraction);
 }
 
-wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator-(wcLexInputStreamIndex newIndex)
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator+(int addition)
 {
-	int currentIntIndex = index, newIntIndex = newIndex.index;
-	wcLineColumnIndex newLineColumnIndex(source, currentIntIndex - newIntIndex);
-	return *this = newLineColumnIndex;
+	return wcLexInputStreamIndex(*this) = wcLineColumnIndex(source, index + addition);
 }
 
-wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator+(wcLexInputStreamIndex newIndex)
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator-(wcLexInputStreamIndex newIndex)
 {
-	int currentIntIndex = index, newIntIndex = newIndex.index;
-	wcLineColumnIndex newLineColumnIndex(source, currentIntIndex + newIntIndex);
-	return *this = newLineColumnIndex;
+	return wcLexInputStreamIndex(*this) = *this + newIndex;
+}
+
+wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator+(wcLexInputStreamIndex newIndex)
+{
+	return wcLexInputStreamIndex(*this) = *this - newIndex;
 }
 
 wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator=(wcLexInputStreamIndex input)
@@ -352,7 +348,7 @@ wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator=(wcLexInputStrea
 	return *this;
 }
 
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator=(int newIndex)
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator=(int newIndex)
 {
 	return *this = wcLineColumnIndex(source, newIndex);
 }
@@ -413,6 +409,14 @@ string wc::lex::wcLexInputStreamIndex::get()
 unsigned int wc::lex::wcLexInputStreamIndex::size()
 {
 	return source.size();
+}
+
+//do we have a source loaded, and are there still characters to read
+bool wc::lex::wcLexInputStreamIndex::isValid()
+{
+	if (source.size() && line > -1 && column > -1 && index > -1 && index < source.size() && (column <= source.size(line)))
+		return true;
+	return false;
 }
 
 wc::lex::wcLexInputStream::wcLexInputStream()
@@ -525,13 +529,6 @@ const unsigned int wc::lex::wcLexInputStream::lines()
 	return container.size();
 }
 
-//do we have a source loaded, and are there still characters to read
-bool wc::lex::wcLexInputStreamIndex::isValid()
-{
-	if (source.size() && line > -1 && column > -1 && index > -1 && index < source.size() && (column <= source.size(line)) )
-		return true;
-	return false;
-}
 
 bool wc::lex::wcToken::operator==(const wcToken& token) const
 {
@@ -899,16 +896,6 @@ bool wc::lex::wcLineColumnIndex::isValid()
 		return true;
 }
 
-bool wc::lex::wcTokenStreamIndex::isValid() const
-{
-	return false;
-}
-
-void wc::lex::wcTokenStreamIndex::reset()
-{
-	index = 0;
-}
-
 wc::lex::wcTokenStream::wcTokenStream()
 {
 
@@ -919,7 +906,7 @@ wc::lex::wcTokenStream::wcTokenStream(error::wcError _error)
 	error = _error;
 }
 
-wcTokenStream& wc::lex::wcTokenStream::operator+(wcTokenStream stream)
+wcTokenStream wc::lex::wcTokenStream::operator+(wcTokenStream stream)
 {
 	wcTokenStream out(*this);
 
@@ -932,7 +919,7 @@ wcTokenStream& wc::lex::wcTokenStream::operator+(wcTokenStream stream)
 	return out;
 }
 
-wcTokenStream& wc::lex::wcTokenStream::operator+(wcToken token)
+wcTokenStream wc::lex::wcTokenStream::operator+(wcToken token)
 {
 	wcTokenStream out(*this);
 
@@ -985,11 +972,34 @@ wc::lex::wcTokenStreamIndex::wcTokenStreamIndex(wcTokenStream &_source, int _ind
 	index = _index;
 }
 
-wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator+(wcTokenStreamIndex otherIndex)
+bool wc::lex::wcTokenStreamIndex::isValid() const
 {
+	if(!source.container.size() && index < source.container.size())
+		return false;
+	return true;
+}
+
+void wc::lex::wcTokenStreamIndex::reset()
+{
+	index = 0;
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(wcTokenStreamIndex otherIndex)
+{
+	wcTokenStreamIndex output(*this);
 	for (unsigned int t = 0; t < otherIndex.source.container.size(); ++t)
-		source.container.push_back(otherIndex.source.container[t]);
-	return *this;
+		output.source.container.push_back(otherIndex.source.container[t]);
+	return output;
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(int addition)
+{
+	return wcTokenStreamIndex(source, index + addition);
+}
+
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator-(int subtraction)
+{
+	return wcTokenStreamIndex(source, index - subtraction);
 }
 
 wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator=(wcTokenStreamIndex otherIndex)
@@ -999,40 +1009,31 @@ wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator=(wcTokenStreamIndex ot
 	return *this;
 }
 
+//postincrement lvalue++
 wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator++()
 {
-	wcTokenStreamIndex preIndex = *this;
-	index++;
-	return preIndex;
+	return *this = *this + 1;
 }
 
+//postdecrement lvalue--
 wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator--()
 {
-	wcTokenStreamIndex preIndex(*this);
-	index--;
-	return preIndex;
+	return *this = *this - 1;
 }
 
-wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator+(int addition)
+//preincrement ++lvalue
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator++(int)
 {
-	return wcTokenStreamIndex(source, index + addition);
+	wcTokenStreamIndex preIncrementValue = *this;
+	*this = *this + 1;
+	return preIncrementValue;
 }
 
-wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator-(int subtraction)
+//predecrement --lvalue
+wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator--(int)
 {
-	return wcTokenStreamIndex(source, index - subtraction);
+	wcTokenStreamIndex preDecrementValue = *this;
+	*this = *this + 1;
+	return preDecrementValue;
 }
 
-//pre
-wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator++(int)
-{
-	index++;
-	return *this;
-}
-
-//pre
-wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator--(int)
-{
-	index--;
-	return *this;
-}

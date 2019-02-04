@@ -45,16 +45,16 @@ namespace wc
 		struct wcLexInputStreamIndex
 		{
 			wcLexInputStreamIndex(wcLexInputStream&);
+			wcLexInputStreamIndex(wcLexInputStream&, int _index);
 
 			wcLexInputStreamIndex &operator=(wcLexInputStreamIndex),
 				&operator=(int),
 				&operator=(wcLineColumnIndex),
-				&operator--(), &operator--(int),
-				&operator++(), &operator++(int),
-				&operator-(int),
-				&operator+(int),
-				&operator-(wcLexInputStreamIndex),
-				&operator+(wcLexInputStreamIndex);
+				&operator--(), operator--(int),
+				&operator++(), operator++(int),
+				operator-(int),operator+(int),
+				operator-(wcLexInputStreamIndex),
+				operator+(wcLexInputStreamIndex);
 			std::string operator[](int);
 
 			std::string next(),	get(),
@@ -195,11 +195,11 @@ namespace wc
 			wcTokenStreamIndex(wcTokenStream&);
 			wcTokenStreamIndex(wcTokenStream&, int _index);
 
-			wcTokenStreamIndex &operator-(int),
-				&operator+(int),
-				&operator+(wcTokenStreamIndex),
-				&operator--(), &operator--(int),
-				&operator++(), &operator++(int),
+			wcTokenStreamIndex operator-(int),
+				operator+(int),
+				operator+(wcTokenStreamIndex),
+				&operator--(), operator--(int),
+				&operator++(), operator++(int),
 				&operator=(wcTokenStreamIndex);
 
 			bool isValid() const;
@@ -215,8 +215,8 @@ namespace wc
 		{
 			wcTokenStream();
 			wcTokenStream(error::wcError);
-			wcTokenStream &operator+(wcTokenStream),
-				&operator+(wcToken),
+			wcTokenStream operator+(wcTokenStream),
+				operator+(wcToken),
 				&operator+=(wcTokenStream),
 				&operator+=(wcToken);
 

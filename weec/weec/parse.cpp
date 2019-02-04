@@ -6,6 +6,15 @@ using namespace wc::parse;
 using namespace wc::error;
 using namespace std;
 
+
+wc::parse::wcIdent::wcIdent()
+{
+}
+
+wc::parse::wcIdent::wcIdent(std::string)
+{
+}
+
 int wc::parse::getPrecedence(wcToken p_token)
 {
 	switch (p_token.type)
@@ -49,6 +58,14 @@ bool wc::parse::isRightAssociative(wcToken token)
 wc::parse::wcParseNode::wcParseNode()
 {
 
+}
+
+wc::parse::wcParseNode::wcParseNode(wcParseNodeType)
+{
+}
+
+wc::parse::wcParseNode::wcParseNode(wcParseNodeType, std::vector<lex::wcToken>)
+{
 }
 
 wc::parse::wcAST::wcAST()
@@ -118,6 +135,11 @@ wc::parse::wcParseData::wcParseData(lex::wcTokenStream &tokens) : index(tokens),
 
 }
 
+wc::parse::wcParseData::wcParseData(lex::wcTokenStream &tokens, wcAST &ast) : index(tokens, ast), output()
+{
+
+}
+
 wc::parse::wcParserOutput::wcParserOutput()
 {
 
@@ -173,6 +195,21 @@ wcParserOutput wc::parse::wcParser::parse(wcTokenStream &_tokens)
 	return data.output;
 }
 
+wc::parse::wcParserSubParserCollection::wcParserSubParserCollection() :
+	sub(wcSubParser()),
+	statement(wcStatementParser()), dec(wcDeclarationParser()),
+	ident(wcIdentParser()), type(wcTypeParser()),
+	exp(wcExpressionParser()), conditional(wcIfParser()),
+	wloop(wcWhileParser()), block(wcCodeBlockParser()),
+	ret(wcReturnParser()), scolon(wcSColonParser()),
+	ns(wcNamespaceParser())
+{
+}
+
+wc::parse::wcSubParser::wcSubParser()
+{
+}
+
 wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 {
 	wcParserOutput output;
@@ -221,6 +258,10 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 	return output;
 }
 
+wc::parse::wcStatementParser::wcStatementParser()
+{
+}
+
 wcParserOutput wc::parse::wcStatementParser::parse(wcParseData &data)
 {
 	//create our stream indexes, and space for output data, and a handy alias (tokens)
@@ -261,6 +302,10 @@ wcParserOutput wc::parse::wcStatementParser::parse(wcParseData &data)
 wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data)
 {
 	return parse(data, wcIdent());
+}
+
+wc::parse::wcIdentParser::wcIdentParser()
+{
 }
 
 wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident)
@@ -319,6 +364,10 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	return output;
 }
 
+wc::parse::wcDeclarationParser::wcDeclarationParser()
+{
+}
+
 wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data)
 {
 	wcParseSymbol sym;
@@ -366,6 +415,10 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	return output;
 }
 
+wc::parse::wcTypeParser::wcTypeParser()
+{
+}
+
 wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 {
 	//create our stream indexes, and space for output data, and a handy alias (tokens)
@@ -374,7 +427,6 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 	wcParserOutput output;
 	wcASTIndex outputIndex = wcASTIndex(output.ast);
 
-	//parse the declaration data type
 	switch (tokens.get(tokenIndex).type)
 	{
 	case tt_ident:
@@ -395,6 +447,10 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 	return wcParserOutput(wcError(ec_par_type_eos));
 }
 
+wc::parse::wcSemiColonParser::wcSemiColonParser()
+{
+}
+
 wcParserOutput wc::parse::wcSemiColonParser::parse(wcParseData &data)
 {
 	if (data.index.input.get(data.index.tokenIndex).type != tt_scolon)
@@ -413,6 +469,10 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data)
 	return parse(data, ident);
 }
 
+wc::parse::wcReturnParser::wcReturnParser()
+{
+}
+
 wcParserOutput wc::parse::wcReturnParser::parse(wcParseData &data)
 {
 	if (data.index.input.get(data.index.tokenIndex).type != tt_keyword_return)
@@ -423,6 +483,10 @@ wcParserOutput wc::parse::wcReturnParser::parse(wcParseData &data)
 	data.index.tokenIndex++;
 
 	return output;
+}
+
+wc::parse::wcCodeBlockParser::wcCodeBlockParser()
+{
 }
 
 wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
@@ -452,27 +516,148 @@ wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
 	return wcParserOutput(wcError(ec_par_eos));
 }
 
-wc::parse::wcParserSubParserCollection::wcParserSubParserCollection() :
-	sub(wcSubParser()), 
-	statement(wcStatementParser()),	 dec(wcDeclarationParser()),
-	ident( wcIdentParser()),		 type(wcTypeParser()),
-	exp(wcExpressionParser()),	 conditional(wcIfParser()),
-	wloop(wcWhileParser()),		 block(wcCodeBlockParser()),
-	ret(wcReturnParser()),		 scolon(wcSColonParser()),
-	ns(wcNamespaceParser())
-{
-}
-
-wc::parse::wcIdent::wcIdent()
-{
-}
-
-wc::parse::wcIdent::wcIdent(std::string)
-{
-}
 
 wc::parse::wcParseDeclaration::wcParseDeclaration(wcParseSymbol &_symbol) : type(_symbol)
 {
 
 }
 
+wcParserOutput wc::parse::wcSColonParser::parse(wcParseData &)
+{
+	return wcParserOutput();
+}
+
+wc::parse::wcWhileParser::wcWhileParser()
+{
+}
+
+wcParserOutput wc::parse::wcWhileParser::parse(wcParseData &)
+{
+	return wcParserOutput();
+}
+
+wc::parse::wcIfParser::wcIfParser()
+{
+}
+
+wcParserOutput wc::parse::wcIfParser::parse(wcParseData &)
+{
+	return wcParserOutput();
+}
+
+wc::parse::wcNamespaceParser::wcNamespaceParser()
+{
+}
+
+wcParserOutput wc::parse::wcNamespaceParser::parse(wcParseData &)
+{
+	return wcParserOutput();
+}
+
+wc::parse::wcExpressionParser::wcExpressionParser()
+{
+}
+
+wcParserOutput wc::parse::wcExpressionParser::parse(wcParseData &)
+{
+	return wcParserOutput();
+}
+
+wc::parse::wcASTIndex::wcASTIndex(wcAST &_ast) : ast(_ast)
+{
+	index = ast.parseTree.begin();
+}
+
+wc::parse::wcASTIndex::wcASTIndex(wcAST &_ast, tree<wcParseNode>::iterator _index) : ast(_ast)
+{
+	index = _index;
+}
+
+wcASTIndex wc::parse::wcASTIndex::operator-(int subtraction)
+{
+	tree<wcParseNode>::iterator newIndex = index;
+	for (int t = 0; t < subtraction; ++t)
+		newIndex--;
+	return wcASTIndex(ast, newIndex);
+}
+
+wcASTIndex wc::parse::wcASTIndex::operator+(int addition)
+{
+
+}
+
+wcASTIndex wc::parse::wcASTIndex::operator=(tree<wcParseNode>::iterator _index)
+{
+	index = _index;
+}
+
+tree<wcParseNode>::iterator wc::parse::wcASTIndex::operator[](tree<wcParseNode>::iterator _index)
+{
+	return tree<wcParseNode>::iterator();
+}
+
+wcASTIndex wc::parse::wcASTIndex::operator++()
+{
+	index++;
+	return *this;
+}
+
+wcASTIndex wc::parse::wcASTIndex::operator--()
+{
+	index--;
+	return *this;
+}
+
+wcASTIndex wc::parse::wcASTIndex::operator=(wcASTIndex otherIndex)
+{
+	ast = otherIndex.ast;
+	index = otherIndex.index;
+}
+
+
+wcASTIndex wc::parse::wcASTIndex::operator++(int)
+{
+	return *this = *this + 1;
+}
+
+wcASTIndex wc::parse::wcASTIndex::operator--(int)
+{
+	return *this = *this - 1;
+}
+
+tree<wcParseNode>::iterator wc::parse::wcASTIndex::get()
+{
+	return index;
+}
+
+tree<wcParseNode>::iterator wc::parse::wcASTIndex::next()
+{
+	return index++;
+}
+
+tree<wcParseNode>::iterator wc::parse::wcASTIndex::prev()
+{
+	return index--;
+}
+
+tree<wcParseNode>::iterator wc::parse::wcASTIndex::set(tree<wcParseNode>::iterator newIndex)
+{
+	return index = newIndex;
+}
+
+tree<wcParseNode>::iterator wc::parse::wcASTIndex::up()
+{
+	if (index->parent != nullptr)
+		return (index = index->parent);
+	return index;
+}
+
+int wc::parse::wcASTIndex::depth()
+{
+	return parseTree;
+}
+
+int wc::parse::wcASTIndex::depth(tree<wcParseNode>::iterator)
+{
+	return 0;
+}

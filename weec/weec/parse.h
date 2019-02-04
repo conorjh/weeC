@@ -84,6 +84,7 @@ namespace wc
 		struct wcASTIndex
 		{
 			wcASTIndex(wcAST&);
+			wcASTIndex(wcAST&, tree<wcParseNode>::iterator);
 
 			wcASTIndex operator=(wcASTIndex),
 				operator=(tree<wcParseNode>::iterator),

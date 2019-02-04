@@ -12,8 +12,6 @@ namespace wc
 {
 	namespace lex
 	{
-		const bool wc_lexer_dropWS = true;
-
 		enum wcTokenType
 		{
 			tt_null, 
@@ -48,15 +46,15 @@ namespace wc
 		{
 			wcLexInputStreamIndex(wcLexInputStream&);
 
-			wcLexInputStreamIndex operator=(wcLexInputStreamIndex),
-				operator=(int),
-				operator=(wcLineColumnIndex),
-				operator--(),	operator--(int),
-				operator++(),	operator++(int),
-				operator-(int),
-				operator+(int),
-				operator-(wcLexInputStreamIndex),
-				operator+(wcLexInputStreamIndex);
+			wcLexInputStreamIndex &operator=(wcLexInputStreamIndex),
+				&operator=(int),
+				&operator=(wcLineColumnIndex),
+				&operator--(), &operator--(int),
+				&operator++(), &operator++(int),
+				&operator-(int),
+				&operator+(int),
+				&operator-(wcLexInputStreamIndex),
+				&operator+(wcLexInputStreamIndex);
 			std::string operator[](int);
 
 			std::string next(),	get(),
@@ -195,13 +193,14 @@ namespace wc
 		struct wcTokenStreamIndex
 		{
 			wcTokenStreamIndex(wcTokenStream&);
+			wcTokenStreamIndex(wcTokenStream&, int _index);
 
-			wcTokenStreamIndex operator-(int),
-				operator+(int),
-				operator+(wcTokenStreamIndex),
-				operator--(),	operator--(int),
-				operator++(),	operator++(int),
-				operator=(wcTokenStreamIndex);
+			wcTokenStreamIndex &operator-(int),
+				&operator+(int),
+				&operator+(wcTokenStreamIndex),
+				&operator--(), &operator--(int),
+				&operator++(), &operator++(int),
+				&operator=(wcTokenStreamIndex);
 
 			bool isValid() const;
 			void reset();
@@ -216,10 +215,10 @@ namespace wc
 		{
 			wcTokenStream();
 			wcTokenStream(error::wcError);
-			wcTokenStream operator+(wcTokenStream),
-				operator+(wcToken),
-				operator+=(wcTokenStream),
-				operator+=(wcToken);
+			wcTokenStream &operator+(wcTokenStream),
+				&operator+(wcToken),
+				&operator+=(wcTokenStream),
+				&operator+=(wcToken);
 
 			bool isError() const;
 

@@ -287,63 +287,63 @@ wc::lex::wcLexInputStreamIndex::wcLexInputStreamIndex(wcLexInputStream &stream) 
 }
 
 //postdecrement
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator--(int)
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator--(int)
 {
 	wcLexInputStreamIndex retVal = *this;
 	wcLineColumnIndex newLineColumnIndex(source, index - 1);
 	*this = newLineColumnIndex;
 	return retVal;
 }
+
 //postincrement
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator++(int)
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator++(int)
 {
+	wcLexInputStreamIndex retVal = *this;
+	*this =	*this + 1;
+	return retVal;
+}
+
+//predecrement
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator-(int subtraction)
+{
+
 	wcLexInputStreamIndex retVal = *this;
 	wcLineColumnIndex newLineColumnIndex(source, index + 1);
 	*this = newLineColumnIndex;
 	return retVal;
 }
 
-//predecrement
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator-(int subtraction)
-{
-	wcLineColumnIndex newLineColumnIndex(source, index - subtraction);
-	return *this = newLineColumnIndex;
-}
-
 //preincrement
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator++()
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator++()
 {
-	wcLineColumnIndex newLineColumnIndex(source, index + 1);
-	return *this = newLineColumnIndex;
+	return *this + 1;
 }
 
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator--()
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator--()
 {
-	wcLineColumnIndex newLineColumnIndex(source, index + 1);
-	return *this = newLineColumnIndex;
+	return *this - 1;
 }
 
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator+(int addition)
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator+(int addition)
 {
-	wcLineColumnIndex newLineColumnIndex(source, index + addition);
-	return *this = newLineColumnIndex;
+	return wcLineColumnIndex(source, index + addition);
 }
 
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator-(wcLexInputStreamIndex newIndex)
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator-(wcLexInputStreamIndex newIndex)
 {
 	int currentIntIndex = index, newIntIndex = newIndex.index;
 	wcLineColumnIndex newLineColumnIndex(source, currentIntIndex - newIntIndex);
 	return *this = newLineColumnIndex;
 }
 
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator+(wcLexInputStreamIndex newIndex)
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator+(wcLexInputStreamIndex newIndex)
 {
 	int currentIntIndex = index, newIntIndex = newIndex.index;
 	wcLineColumnIndex newLineColumnIndex(source, currentIntIndex + newIntIndex);
 	return *this = newLineColumnIndex;
 }
 
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator=(wcLexInputStreamIndex input)
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator=(wcLexInputStreamIndex input)
 {
 	index = input.index;
 	column = input.column;
@@ -357,7 +357,7 @@ wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator=(int newIndex)
 	return *this = wcLineColumnIndex(source, newIndex);
 }
 
-wcLexInputStreamIndex wc::lex::wcLexInputStreamIndex::operator=(wcLineColumnIndex newLineColumnIndex)
+wcLexInputStreamIndex& wc::lex::wcLexInputStreamIndex::operator=(wcLineColumnIndex newLineColumnIndex)
 {
 	line = newLineColumnIndex.line;
 	column = newLineColumnIndex.column;
@@ -506,6 +506,7 @@ string wc::lex::wcLexInputStream::get(int _line, int _column)
 const unsigned int wc::lex::wcLexInputStream::size()
 {
 	unsigned int sizeAccumulator = 0;
+
 	for (unsigned int t = 0; t < lines(); ++t)
 		sizeAccumulator += container[t].size();
 
@@ -918,21 +919,20 @@ wc::lex::wcTokenStream::wcTokenStream(error::wcError _error)
 	error = _error;
 }
 
-wcTokenStream wc::lex::wcTokenStream::operator+(wcTokenStream stream)
+wcTokenStream& wc::lex::wcTokenStream::operator+(wcTokenStream stream)
 {
 	wcTokenStream out(*this);
 
 	for (unsigned int t = 0; t < stream.container.size(); ++t)
 		out.container.push_back(stream.container[t]);
 	
-	//transfer error data unless there were no errors
 	if (stream.error.code)
 		out.error = stream.error;
 
 	return out;
 }
 
-wcTokenStream wc::lex::wcTokenStream::operator+(wcToken token)
+wcTokenStream& wc::lex::wcTokenStream::operator+(wcToken token)
 {
 	wcTokenStream out(*this);
 
@@ -941,20 +941,19 @@ wcTokenStream wc::lex::wcTokenStream::operator+(wcToken token)
 	return out;
 }
 
-wcTokenStream wc::lex::wcTokenStream::operator+=(wcToken token)
+wcTokenStream& wc::lex::wcTokenStream::operator+=(wcToken token)
 {
-	container.push_back(token);
-	return *this;
+	return *this = *this + token;
 }
 
-wcTokenStream wc::lex::wcTokenStream::operator+=(wcTokenStream stream)
+wcTokenStream& wc::lex::wcTokenStream::operator+=(wcTokenStream stream)
 {	
-	return (*this = *this + stream);
+	return *this = *this + stream;
 }
 
 bool wc::lex::wcTokenStream::isError() const
 {
-	return false;
+	return error.code > 0;
 }
 
 wcToken wc::lex::wcTokenStream::get(wcTokenStreamIndex &index)
@@ -981,55 +980,58 @@ wc::lex::wcTokenStreamIndex::wcTokenStreamIndex(wcTokenStream &stream) : source(
 	index = 0;
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(wcTokenStreamIndex otherIndex)
+wc::lex::wcTokenStreamIndex::wcTokenStreamIndex(wcTokenStream &_source, int _index) : source(_source)
+{
+	index = _index;
+}
+
+wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator+(wcTokenStreamIndex otherIndex)
 {
 	for (unsigned int t = 0; t < otherIndex.source.container.size(); ++t)
 		source.container.push_back(otherIndex.source.container[t]);
 	return *this;
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator=(wcTokenStreamIndex otherIndex)
+wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator=(wcTokenStreamIndex otherIndex)
 {
 	index = otherIndex.index;
 	source = otherIndex.source;
 	return *this;
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator++()
+wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator++()
 {
 	wcTokenStreamIndex preIndex = *this;
 	index++;
 	return preIndex;
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator--()
+wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator--()
 {
 	wcTokenStreamIndex preIndex(*this);
 	index--;
 	return preIndex;
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator+(int addition)
+wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator+(int addition)
 {
-	wcTokenStreamIndex preIndex(*this);
-	return preIndex + addition;
+	return wcTokenStreamIndex(source, index + addition);
 }
 
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator-(int subtraction)
+wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator-(int subtraction)
 {
-	wcTokenStreamIndex preIndex(*this);
-	return preIndex - subtraction;
+	return wcTokenStreamIndex(source, index - subtraction);
 }
 
 //pre
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator++(int)
+wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator++(int)
 {
 	index++;
 	return *this;
 }
 
 //pre
-wcTokenStreamIndex wc::lex::wcTokenStreamIndex::operator--(int)
+wcTokenStreamIndex& wc::lex::wcTokenStreamIndex::operator--(int)
 {
 	index--;
 	return *this;

@@ -145,6 +145,7 @@ namespace wc
 
 			const wcTokenType type;
 			const bool delimiter, punctuation;
+			const unsigned int precedence;
 			const std::vector<std::string> identifiers;
 		};
 

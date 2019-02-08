@@ -108,13 +108,15 @@ namespace wc
 			wcAST();
 			wcAST(tree<wcParseNode>);
 
-			wcAST operator+=(wcAST),
-				operator+(wcAST);
+			wcAST operator+=(wcAST), operator+=(wcParseNode), operator+=(wcParserOutput),
+				operator+(wcAST), operator+(wcParseNode), operator+(wcParserOutput);
 
-			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode),	addNode(wcASTIndex&, wcParserOutput),
-				addChild(wcASTIndex&, wcParseNode),	addChild(wcASTIndex&, wcParserOutput);	//add node, but pindex remains on parent node
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode), addNode(wcASTIndex&, wcParserOutput), 
+				addNode(wcParseNode), addNode(wcParserOutput),
+				addChild(wcASTIndex&, wcParseNode),	addChild(wcASTIndex&, wcParserOutput);	
 			void removeNode(wcASTIndex&);
 
+			tree<wcParseNode>::iterator head;
 			tree<wcParseNode> parseTree;
 		};
 
@@ -158,10 +160,11 @@ namespace wc
 			wcParserOutput(error::wcError);
 
 			wcParserOutput operator+=(wcParserOutput),
-				operator+(wcParserOutput);
+				operator+(wcParserOutput), operator+=(wcParseNode),
+				operator+(wcParseNode);
 
-			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput), addNode(wcASTIndex&, wcParseNode),
-				addChild(wcASTIndex&, wcParseNode),	addChild(wcASTIndex&, wcParserOutput);	//add node, but pindex remains on parent node
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput), addNode(wcASTIndex&, wcParseNode), addNode(wcParserOutput), addNode(wcParseNode),
+				addChild(wcASTIndex&, wcParseNode),	addChild(wcASTIndex&, wcParserOutput);	
 
 			wcAST ast;
 			wcParserSymbolTable symTab;

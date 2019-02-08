@@ -49,6 +49,8 @@ int wctest::lex::l_basic_3()
 	wcTokenStream stream = wcLexer().lex(wcLexInputStream(
 		"//comment\n"
 		"int test;\n"
+		"3.1456;\n"
+		"39865.63549645\n"
 		"string testString = \"herro\";\n"
 	));
 	return stream.error.code;
@@ -165,7 +167,9 @@ int wctest::lex::l_wcLexInputStreamIndex_2()
 	if ((++index1).get() != testString.substr(1,1) || (index1 - 1).get() != testString.substr(0,1))
 		return 2;
 
-	wcLexer().lex(wcLexInputStream("HE"));
+	index2 = index2 + 7;
+	if (index2.index != 7 || index2.get() != "i")
+		return 3;
 
 	return 0;
 }

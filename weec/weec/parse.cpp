@@ -57,36 +57,82 @@ bool wc::parse::isRightAssociative(wcToken token)
 
 wc::parse::wcParseNode::wcParseNode()
 {
-
+	type = pn_null;
 }
 
-wc::parse::wcParseNode::wcParseNode(wcParseNodeType)
+wc::parse::wcParseNode::wcParseNode(wcParseNodeType _type)
 {
+	type = _type;
 }
 
-wc::parse::wcParseNode::wcParseNode(wcParseNodeType, std::vector<lex::wcToken>)
+wc::parse::wcParseNode::wcParseNode(wcParseNodeType _type, std::vector<lex::wcToken>)
 {
+	type = _type;
 }
 
 wc::parse::wcAST::wcAST()
 {
-	parseTree = tree<wcParseNode>(wcParseNode(pn_head));
+	head = parseTree.insert(parseTree.begin(), wcParseNode(pn_head));
 }
 
 wc::parse::wcAST::wcAST(tree<wcParseNode> p_tree)
 {
-	parseTree = tree<wcParseNode>(wcParseNode(pn_head));
 	parseTree = p_tree;
+	head = parseTree.begin();
 }
 
-wcAST wc::parse::wcAST::operator+=(wcAST)
+wcAST wc::parse::wcAST::operator+=(wcAST otherAST)
 {
-	return wcAST();
+	return *this = *this + otherAST;
 }
 
-wcAST wc::parse::wcAST::operator+(wcAST)
+wcAST wc::parse::wcAST::operator+(wcParserOutput parserOutput)
 {
-	return wcAST();
+	wcAST tempAST(*this);
+
+	tempAST.parseTree.append_children(head, parserOutput.ast.parseTree.begin(), parserOutput.ast.parseTree.end());
+
+	return tempAST;
+}
+
+wcAST wc::parse::wcAST::operator+=(wcParserOutput parserOutput)
+{
+	return *this = *this + parserOutput;
+}
+
+wcAST wc::parse::wcAST::operator+(wcParseNode otherNode)
+{
+	wcAST tempAST(*this);
+
+	tempAST.parseTree.append_child(head, otherNode);
+
+	return tempAST;
+}
+
+wcAST wc::parse::wcAST::operator+=(wcParseNode otherNode)
+{
+	return *this = *this + otherNode;
+}
+
+wcAST wc::parse::wcAST::operator+(wcAST otherAST)
+{
+	wcAST tempAST(*this);
+
+	tempAST.parseTree.append_children(head, otherAST.parseTree.begin(), otherAST.parseTree.end());
+
+	return tempAST;
+}
+
+tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcParserOutput pOutput)
+{
+	//add the tree as a child of the head node
+	return addChild(wcASTIndex(*this, head), pOutput);
+}
+
+tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcParseNode node)
+{
+	//add the tree as a child of the head node
+	return addChild(wcASTIndex(*this, head), node);
 }
 
 tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcASTIndex& index, wcParserOutput pOutput)
@@ -166,11 +212,30 @@ wc::parse::wcParserOutput::wcParserOutput(error::wcError _error)
 
 wcParserOutput wc::parse::wcParserOutput::operator+(wcParserOutput _output)
 {
-	if (_output.error)
-		error = _output.error;
+	wcParserOutput tempOutput(*this);
 
-	ast = ast + _output.ast;
-	return *this;
+	if (_output.error)
+		tempOutput.error = _output.error;
+	tempOutput.ast += _output.ast;
+	//tempOutput.symTab += _output.symTab;
+
+	return tempOutput;
+}
+
+wcParserOutput wc::parse::wcParserOutput::operator+=(wcParseNode node)
+{
+	return *this = *this + node;
+}
+
+wcParserOutput wc::parse::wcParserOutput::operator+(wcParseNode node)
+{
+	wcParserOutput tempOutput(*this);
+
+	tempOutput.ast += node;
+	tempOutput.error = error;
+	//tempOutput.symTab += symTab;
+
+	return tempOutput;
 }
 
 tree<wcParseNode>::iterator wc::parse::wcParserOutput::addNode(wcASTIndex &index, wcParserOutput output)
@@ -196,11 +261,7 @@ tree<wcParseNode>::iterator wc::parse::wcParserOutput::addChild(wcASTIndex &inde
 
 wcParserOutput wc::parse::wcParserOutput::operator+=(wcParserOutput _output)
 {
-	if (_output.error)
-		error = _output.error;
-
-	ast += _output.ast;
-	return *this;
+	return *this = *this + _output;
 }
 
 wcParserOutput wc::parse::wcParser::parse(wcTokenStream &_tokens)
@@ -226,14 +287,13 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 	wcIdent ident;
 	switch (data.index.input.get(data.index.tokenIndex).type)
 	{
-		//identifier - either dec or statement
+	//identifier - either dec or statement
 	case tt_ident:
 		wcIdentParser().parse(data, ident);
 		if (data.output.symTab.exists(ident))
 			switch (data.output.symTab.find(ident).type)
 			{
-			case st_var:
-			case st_func:
+			case st_var:	case st_func:
 				goto _wcParser_parse_statements;
 			case st_type:
 				goto _wcParser_parse_declarations;
@@ -243,13 +303,13 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 		else
 			return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 
-		//declarations
+	//declarations
 	_wcParser_parse_declarations:
 	CASE_BASIC_TYPES_TT
 		output.addNode(wcASTIndex(output.ast), wcDeclarationParser().parse(data));
 		break;
 
-		//statements
+	//statements
 	_wcParser_parse_statements:
 	CASE_ALL_LITERALS_TT
 	case tt_keyword_return:
@@ -259,7 +319,7 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 		output.addNode(wcASTIndex(output.ast), wcStatementParser().parse(data));
 		break;
 
-		//unexpected token
+	//unexpected token
 	default:
 		return output;
 	}
@@ -317,7 +377,7 @@ wc::parse::wcIdentParser::wcIdentParser()
 {
 }
 
-wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident)
+wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &identOutput)
 {
 	//handy aliases
 	wcTokenStream& tokens = data.index.input;
@@ -346,30 +406,30 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 			if (isFirstToken)
 				return wcParserOutput(wcError(ec_par_ident_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
 			else if (punctuationLexedLast)
-				return wcParserOutput(wcError(ec_par_ident_malformedident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));	//malformed
+				return wcParserOutput(wcError(ec_par_ident_malformedident, wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column)));	//malformed
 
 			//add a node to the output tree with the ident as an attached token
-			output.ast.addNode(outputIndex, wcParseNode(pn_ident, { wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column) }));
+			output.ast.addNode(outputIndex, wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
 			return output;
 		}
 
 		if (isFirstToken)
 		{
 			//save the line/column data for final token
-			ident.line = tokens.get(tokenIndex).line;
-			ident.column = tokens.get(tokenIndex).column;
+			identOutput.line = tokens.get(tokenIndex).line;
+			identOutput.column = tokens.get(tokenIndex).column;
 			isFirstToken = false;
 		}
-		ident.fullIdentifier += tokens.get(tokenIndex++).data;
+		identOutput.fullIdentifier += tokens.get(tokenIndex++).data;
 	}
 
 	//if were here, input index is no longer valid, could be an error
 	if (isFirstToken)
-		return wcParserOutput();
+		return wcParserOutput(wcError(ec_par_ident_malformedident, identOutput.fullIdentifier));
 	else if (punctuationLexedLast)
-		return wcParserOutput();
+		return wcParserOutput(wcError(ec_par_ident_malformedident, identOutput.fullIdentifier));
 	
-	output.ast.addNode(outputIndex, wcParseNode(pn_ident, { wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column) }));
+	output.ast.addNode(outputIndex, wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
 	return output;
 }
 
@@ -406,11 +466,11 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	output.addChild(outputIndex, wcIdentParser().parse(data, ident));
 	if (output.error)
 		return output;
-	if(!data.output.symTab.exists(ident))
-		return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+	if(data.output.symTab.exists(ident))
+		return wcParserOutput(wcError(ec_par_identredeclaration, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 
 	//semi colon, or optional initial assignment 
-	if (!tokenIndex.isValid() || tokens.get(tokenIndex).type != tt_assign)
+	if (!tokenIndex.isValid() || (tokens.get(tokenIndex).type != tt_assign && ))
 		return output;	
 	else if (tokens.get(tokenIndex).type == tt_scolon)
 		return (output += wcSColonParser().parse(data));
@@ -596,7 +656,10 @@ wcASTIndex wc::parse::wcASTIndex::operator-(int subtraction)
 
 wcASTIndex wc::parse::wcASTIndex::operator+(int addition)
 {
-	return *this;
+	tree<wcParseNode>::iterator newIndex = index;
+	for (int t = 0; t < addition; ++t)
+		newIndex++;
+	return wcASTIndex(ast, newIndex);
 }
 
 wcASTIndex wc::parse::wcASTIndex::operator=(tree<wcParseNode>::iterator _index)

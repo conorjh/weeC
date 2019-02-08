@@ -137,37 +137,37 @@ void wc::lex::wcTokenDefinitionBank::populateDelimiterTypes()
 			delimiterTypes.push_back(definitions[t].type);
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition() : type(tt_null), identifiers({}), delimiter(false), punctuation(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition() : type(tt_null), identifiers({}), delimiter(false), punctuation(false), precedence(0)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) : type(_type), identifiers({ identifier }), delimiter(false), punctuation(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) : type(_type), identifiers({ identifier }), delimiter(false), punctuation(false), precedence(0)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) : type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) : type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(false), precedence(0)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim, bool _isPunc) : type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(_isPunc)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim, bool _isPunc) : type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(_isPunc), precedence(0)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) : type(_type), identifiers(_identifiers), delimiter(false), punctuation(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) : type(_type), identifiers(_identifiers), delimiter(false), punctuation(false), precedence(0)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(false)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(false), precedence(0)
 {
 
 }
 
-wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(_isPunctuation)
+wc::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation) : type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(_isPunctuation), precedence(0)
 {
 
 }
@@ -731,7 +731,7 @@ wcTokenStream wc::lex::wcLexer::lex_2step(wcLexInputStreamIndex & index)
 		index++;;
 	}
 	else
-		out += wcToken(thisAndNext, index.get(), index.line, index.column);
+		out += wcToken(deriver.derive(index.get()), index.get(), index.line, index.column);
 
 	index++;
 	return out;

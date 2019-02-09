@@ -148,8 +148,12 @@ namespace wc
 		class wcParserSymbolTable
 		{
 		public:
+			wcParserSymbolTable& operator+=(wcParserSymbolTable),
+				operator+(wcParserSymbolTable), &operator+=(wcParseSymbol),
+				operator+(wcParseSymbol);
+
 			bool exists(wcIdent);
-			wcParseSymbol& find(wcIdent), &reg(wcIdent);
+			wcParseSymbol find(wcIdent), &reg(wcIdent);
 
 			std::unordered_map<std::string, wcParseSymbol> lookup;
 		};

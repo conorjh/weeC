@@ -175,7 +175,7 @@ void wc::parse::wcAST::removeNode(wcASTIndex &)
 {
 }
 
-wc::parse::wcParser::wcParser() 
+wc::parse::wcParser::wcParser()
 {
 
 }
@@ -287,7 +287,7 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 	wcIdent ident;
 	switch (data.index.input.get(data.index.tokenIndex).type)
 	{
-	//identifier - either dec or statement
+		//identifier - either dec or statement
 	case tt_ident:
 		wcIdentParser().parse(data, ident);
 		if (data.output.symTab.exists(ident))
@@ -303,15 +303,15 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 		else
 			return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 
-	//declarations
+		//declarations
 	_wcParser_parse_declarations:
-	CASE_BASIC_TYPES_TT
-		output.addNode(wcASTIndex(output.ast), wcDeclarationParser().parse(data));
+		CASE_BASIC_TYPES_TT
+			output.addNode(wcASTIndex(output.ast), wcDeclarationParser().parse(data));
 		break;
 
-	//statements
+		//statements
 	_wcParser_parse_statements:
-	CASE_ALL_LITERALS_TT
+		CASE_ALL_LITERALS_TT
 	case tt_keyword_return:
 	case tt_keyword_namespace:
 	case tt_keyword_if:
@@ -319,7 +319,7 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 		output.addNode(wcASTIndex(output.ast), wcStatementParser().parse(data));
 		break;
 
-	//unexpected token
+		//unexpected token
 	default:
 		return output;
 	}
@@ -341,8 +341,8 @@ wcParserOutput wc::parse::wcStatementParser::parse(wcParseData &data)
 	switch (tokens.get(tokenIndex).type)
 	{
 	case tt_ident:
-	CASE_ALL_LITERALS_TT
-		output += wcExpressionParser().parse(data);
+		CASE_ALL_LITERALS_TT
+			output += wcExpressionParser().parse(data);
 		break;
 
 	case tt_keyword_return:
@@ -428,7 +428,7 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 		return wcParserOutput(wcError(ec_par_ident_malformedident, identOutput.fullIdentifier));
 	else if (punctuationLexedLast)
 		return wcParserOutput(wcError(ec_par_ident_malformedident, identOutput.fullIdentifier));
-	
+
 	output.ast.addNode(outputIndex, wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
 	return output;
 }
@@ -466,12 +466,12 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	output.addChild(outputIndex, wcIdentParser().parse(data, ident));
 	if (output.error)
 		return output;
-	if(data.output.symTab.exists(ident))
+	if (data.output.symTab.exists(ident))
 		return wcParserOutput(wcError(ec_par_identredeclaration, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 
 	//semi colon, or optional initial assignment 
-	if (!tokenIndex.isValid() || (tokens.get(tokenIndex).type != tt_assign && ))
-		return output;	
+	if (!tokenIndex.isValid() || (tokens.get(tokenIndex).type != tt_assign && tokens.get(tokenIndex).type != tt_scolon))
+		return output;
 	else if (tokens.get(tokenIndex).type == tt_scolon)
 		return (output += wcSColonParser().parse(data));
 	tokenIndex++;
@@ -506,9 +506,9 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 			return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
 		return output;
 
-	//declarations
-	CASE_BASIC_TYPES_TT
-		output.ast.addChild(outputIndex, wcParseNode(pn_type, { tokens.get(tokenIndex) }));
+		//declarations
+		CASE_BASIC_TYPES_TT
+			output.ast.addChild(outputIndex, wcParseNode(pn_type, { tokens.get(tokenIndex) }));
 		tokenIndex++;
 		return output;
 	}
@@ -744,17 +744,52 @@ wc::parse::wcParseSymbol::wcParseSymbol()
 {
 }
 
-bool wc::parse::wcParserSymbolTable::exists(wcIdent)
+wcParserSymbolTable & wc::parse::wcParserSymbolTable::operator+=(wcParserSymbolTable otherTable)
 {
-	return false;
+	return *this = *this + otherTable;
 }
 
-wcParseSymbol& wc::parse::wcParserSymbolTable::find(wcIdent _ident)
+wcParserSymbolTable wc::parse::wcParserSymbolTable::operator+(wcParserSymbolTable otherTable)
 {
-	return wcParseSymbol();
+	wcParserSymbolTable tempTable(*this);
+
+	for (auto iter = otherTable.lookup.begin(); iter != otherTable.lookup.end(); ++iter)
+		if (tempTable.exists(iter->first))
+			tempTable.reg(iter->second.ident);
+
+	return tempTable;
 }
 
-wcParseSymbol& wc::parse::wcParserSymbolTable::reg(wcIdent _ident)
+wcParserSymbolTable & wc::parse::wcParserSymbolTable::operator+=(wcParseSymbol symbol)
 {
-	return wcParseSymbol();
+	return *this = *this + symbol;
+}
+
+wcParserSymbolTable wc::parse::wcParserSymbolTable::operator+(wcParseSymbol symbol)
+{
+	wcParserSymbolTable tempTable(*this);
+
+	if (!tempTable.exists(symbol.ident))
+		tempTable.reg(symbol.ident);
+
+	return tempTable;
+}
+
+bool wc::parse::wcParserSymbolTable::exists(wcIdent ident)
+{
+	if (lookup.find(ident.fullIdentifier) == lookup.end())
+		return false;
+	else
+		return true;
+}
+
+wcParseSymbol wc::parse::wcParserSymbolTable::find(wcIdent ident)
+{
+	return lookup.find(ident.fullIdentifier)->second;
+}
+
+wcParseSymbol& wc::parse::wcParserSymbolTable::reg(wcIdent ident)
+{
+	lookup.insert(make_pair(ident.fullIdentifier, wcParseSymbol()));
+	return find(ident.fullIdentifier);
 }

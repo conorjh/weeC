@@ -541,19 +541,19 @@ string wc::lex::wcToken::operator[](unsigned int index)
 	return data.substr(index, 1);
 }
 
-wcToken wc::lex::wcToken::operator=(string input)
+wcToken& wc::lex::wcToken::operator=(string input)
 {
 	data = input;
 	return *this;
 }
 
-wcToken wc::lex::wcToken::operator+=(std::string input)
+wcToken& wc::lex::wcToken::operator+=(std::string input)
 {
 	data += input;
 	return *this;
 }
 
-wcToken wc::lex::wcToken::operator=(wcToken input)
+wcToken& wc::lex::wcToken::operator=(wcToken input)
 {
 	line = input.line;
 	column = input.column;
@@ -974,9 +974,9 @@ wc::lex::wcTokenStreamIndex::wcTokenStreamIndex(wcTokenStream &_source, int _ind
 
 bool wc::lex::wcTokenStreamIndex::isValid() const
 {
-	if(!source.container.size() && index < source.container.size())
-		return false;
-	return true;
+	if(index < source.container.size() && source.container.size())
+		return true;
+	return false;
 }
 
 void wc::lex::wcTokenStreamIndex::reset()

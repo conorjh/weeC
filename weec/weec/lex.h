@@ -120,9 +120,9 @@ namespace wc
 			bool operator!=(const wcToken&) const;
 			bool operator==(const wcToken&) const;
 			std::string operator[](unsigned int);
-			wcToken operator=(std::string);
-			wcToken operator+=(std::string);
-			wcToken operator=(wcToken);
+			wcToken& operator=(std::string);
+			wcToken& operator+=(std::string);
+			wcToken& operator=(wcToken);
 
 			wcTokenType type;
 			std::string data;
@@ -239,7 +239,6 @@ namespace wc
 			~wcLexer();
 
 			wcTokenStream lex(wcLexInputStream&);
-
 		protected:
 			wcTokenTypeDeriver deriver;
 			wcTokenDefinitionBank definitionsBank;

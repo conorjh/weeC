@@ -70,18 +70,17 @@ wc::parse::wcParseNode::wcParseNode(wcParseNodeType _type, std::vector<lex::wcTo
 	type = _type;
 }
 
-wc::parse::wcAST::wcAST()
+wc::parse::wcAST::wcAST() : parseTree(wcParseNode(pn_head))
 {
-	head = parseTree.insert(parseTree.begin(), wcParseNode(pn_head));
+	head = parseTree.head;
 }
 
-wc::parse::wcAST::wcAST(tree<wcParseNode> p_tree)
+wc::parse::wcAST::wcAST(tree<wcParseNode> p_tree) : parseTree(p_tree)
 {
-	parseTree = p_tree;
-	head = parseTree.begin();
+	head = parseTree.head;
 }
 
-wcAST wc::parse::wcAST::operator+=(wcAST otherAST)
+wcAST& wc::parse::wcAST::operator+=(wcAST otherAST)
 {
 	return *this = *this + otherAST;
 }
@@ -95,7 +94,7 @@ wcAST wc::parse::wcAST::operator+(wcParserOutput parserOutput)
 	return tempAST;
 }
 
-wcAST wc::parse::wcAST::operator+=(wcParserOutput parserOutput)
+wcAST& wc::parse::wcAST::operator+=(wcParserOutput parserOutput)
 {
 	return *this = *this + parserOutput;
 }
@@ -109,7 +108,7 @@ wcAST wc::parse::wcAST::operator+(wcParseNode otherNode)
 	return tempAST;
 }
 
-wcAST wc::parse::wcAST::operator+=(wcParseNode otherNode)
+wcAST& wc::parse::wcAST::operator+=(wcParseNode otherNode)
 {
 	return *this = *this + otherNode;
 }
@@ -118,6 +117,7 @@ wcAST wc::parse::wcAST::operator+(wcAST otherAST)
 {
 	wcAST tempAST(*this);
 
+	if(otherAST.parseTree.size())
 	tempAST.parseTree.append_children(head, otherAST.parseTree.begin(), otherAST.parseTree.end());
 
 	return tempAST;
@@ -205,6 +205,10 @@ wc::parse::wcParserOutput::wcParserOutput()
 
 }
 
+wc::parse::wcParserOutput::wcParserOutput(wcParseNode)
+{
+}
+
 wc::parse::wcParserOutput::wcParserOutput(error::wcError _error)
 {
 	error = _error;
@@ -222,7 +226,7 @@ wcParserOutput wc::parse::wcParserOutput::operator+(wcParserOutput _output)
 	return tempOutput;
 }
 
-wcParserOutput wc::parse::wcParserOutput::operator+=(wcParseNode node)
+wcParserOutput& wc::parse::wcParserOutput::operator+=(wcParseNode node)
 {
 	return *this = *this + node;
 }
@@ -259,7 +263,7 @@ tree<wcParseNode>::iterator wc::parse::wcParserOutput::addChild(wcASTIndex &inde
 	return ast.addChild(index, output);
 }
 
-wcParserOutput wc::parse::wcParserOutput::operator+=(wcParserOutput _output)
+wcParserOutput& wc::parse::wcParserOutput::operator+=(wcParserOutput _output)
 {
 	return *this = *this + _output;
 }
@@ -336,36 +340,30 @@ wcParserOutput wc::parse::wcStatementParser::parse(wcParseData &data)
 	//create our stream indexes, and space for output data, and a handy alias (tokens)
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
-	wcParserOutput output;
 
 	switch (tokens.get(tokenIndex).type)
 	{
 	case tt_ident:
-		CASE_ALL_LITERALS_TT
-			output += wcExpressionParser().parse(data);
-		break;
+	CASE_ALL_LITERALS_TT
+		return wcExpressionParser().parse(data);
 
 	case tt_keyword_return:
-		output += wcReturnParser().parse(data);
-		break;
+		return wcReturnParser().parse(data);
 
 	case tt_keyword_namespace:
-		output += wcNamespaceParser().parse(data);
-		break;
+		return wcNamespaceParser().parse(data);
 
 	case tt_keyword_if:
-		output += wcIfParser().parse(data);
-		break;
+		return wcIfParser().parse(data);
 
 	case tt_keyword_while:
-		output += wcWhileParser().parse(data);
-		break;
+		return wcWhileParser().parse(data);
 
 	default:
 		return wcParserOutput();
 	}
 
-	return output;
+	return wcParserOutput();
 }
 
 wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data)
@@ -382,8 +380,6 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	//handy aliases
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
-	wcParserOutput output;
-	wcASTIndex outputIndex = wcASTIndex(output.ast);
 
 	//while there are no ident or punctuation tokens left 
 	bool punctuationLexedLast = false, isFirstToken = true;
@@ -391,8 +387,7 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	{
 		switch (tokens.get(tokenIndex).type)
 		{
-		case tt_dcolon:
-		case tt_period:
+		case tt_dcolon:		case tt_period:
 			if (!punctuationLexedLast && isFirstToken)
 				return wcParserOutput(wcError(ec_par_ident_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
 			punctuationLexedLast = true;
@@ -407,10 +402,7 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 				return wcParserOutput(wcError(ec_par_ident_malformedident, tokens.get(tokenIndex)));	//opening token is not an identifier
 			else if (punctuationLexedLast)
 				return wcParserOutput(wcError(ec_par_ident_malformedident, wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column)));	//malformed
-
-			//add a node to the output tree with the ident as an attached token
-			output.ast.addNode(outputIndex, wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
-			return output;
+			return wcParserOutput( wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
 		}
 
 		if (isFirstToken)
@@ -429,8 +421,7 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	else if (punctuationLexedLast)
 		return wcParserOutput(wcError(ec_par_ident_malformedident, identOutput.fullIdentifier));
 
-	output.ast.addNode(outputIndex, wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
-	return output;
+	return wcParserOutput(wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
 }
 
 wc::parse::wcDeclarationParser::wcDeclarationParser()
@@ -473,7 +464,7 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	if (!tokenIndex.isValid() || (tokens.get(tokenIndex).type != tt_assign && tokens.get(tokenIndex).type != tt_scolon))
 		return output;
 	else if (tokens.get(tokenIndex).type == tt_scolon)
-		return (output += wcSColonParser().parse(data));
+		return (output += wcSemiColonParser().parse(data));
 	tokenIndex++;
 
 	//expression node
@@ -525,11 +516,9 @@ wcParserOutput wc::parse::wcSemiColonParser::parse(wcParseData &data)
 	if (data.index.input.get(data.index.tokenIndex).type != tt_scolon)
 		return wcParserOutput(wcError(ec_par_unexpectedtoken, data.index.input.get(data.index.tokenIndex)));
 
-	wcParserOutput output;
-	output.addNode(wcASTIndex(output.ast), wcParseNode(pn_scolon));
 	data.index.tokenIndex++;
 
-	return output;
+	return wcParserOutput() += wcParseNode(pn_scolon);
 }
 
 wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data)
@@ -547,11 +536,9 @@ wcParserOutput wc::parse::wcReturnParser::parse(wcParseData &data)
 	if (data.index.input.get(data.index.tokenIndex).type != tt_keyword_return)
 		return wcParserOutput(wcError(ec_par_unexpectedtoken, data.index.input.get(data.index.tokenIndex)));
 
-	wcParserOutput output;
-	output.addNode(wcASTIndex(output.ast), wcParseNode(pn_return));
 	data.index.tokenIndex++;
 
-	return output;
+	return wcParserOutput() += wcParseNode(pn_return);
 }
 
 wc::parse::wcCodeBlockParser::wcCodeBlockParser()
@@ -579,7 +566,7 @@ wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
 			return output;
 		}
 		else
-			output.addNode(outputIndex, wcSubParser().parse(data));
+			output.addChild(outputIndex, wcSubParser().parse(data));
 
 	//error no closing bracket
 	return wcParserOutput(wcError(ec_par_eos));
@@ -589,15 +576,6 @@ wcParserOutput wc::parse::wcCodeBlockParser::parse(wcParseData &data)
 wc::parse::wcParseDeclaration::wcParseDeclaration(wcParseSymbol &_symbol) : type(_symbol)
 {
 
-}
-
-wc::parse::wcSColonParser::wcSColonParser()
-{
-}
-
-wcParserOutput wc::parse::wcSColonParser::parse(wcParseData &)
-{
-	return wcParserOutput();
 }
 
 wc::parse::wcWhileParser::wcWhileParser()
@@ -662,7 +640,7 @@ wcASTIndex wc::parse::wcASTIndex::operator+(int addition)
 	return wcASTIndex(ast, newIndex);
 }
 
-wcASTIndex wc::parse::wcASTIndex::operator=(tree<wcParseNode>::iterator _index)
+wcASTIndex& wc::parse::wcASTIndex::operator=(tree<wcParseNode>::iterator _index)
 {
 	index = _index;
 	return *this;
@@ -673,19 +651,19 @@ tree<wcParseNode>::iterator wc::parse::wcASTIndex::operator[](tree<wcParseNode>:
 	return tree<wcParseNode>::iterator();
 }
 
-wcASTIndex wc::parse::wcASTIndex::operator++()
+wcASTIndex& wc::parse::wcASTIndex::operator++()
 {
 	index++;
 	return *this;
 }
 
-wcASTIndex wc::parse::wcASTIndex::operator--()
+wcASTIndex& wc::parse::wcASTIndex::operator--()
 {
 	index--;
 	return *this;
 }
 
-wcASTIndex wc::parse::wcASTIndex::operator=(wcASTIndex otherIndex)
+wcASTIndex& wc::parse::wcASTIndex::operator=(wcASTIndex otherIndex)
 {
 	ast = otherIndex.ast;
 	index = otherIndex.index;
@@ -740,10 +718,6 @@ int wc::parse::wcASTIndex::depth(tree<wcParseNode>::iterator)
 	return 0;
 }
 
-wc::parse::wcParseSymbol::wcParseSymbol()
-{
-}
-
 wcParserSymbolTable & wc::parse::wcParserSymbolTable::operator+=(wcParserSymbolTable otherTable)
 {
 	return *this = *this + otherTable;
@@ -755,7 +729,7 @@ wcParserSymbolTable wc::parse::wcParserSymbolTable::operator+(wcParserSymbolTabl
 
 	for (auto iter = otherTable.lookup.begin(); iter != otherTable.lookup.end(); ++iter)
 		if (tempTable.exists(iter->first))
-			tempTable.reg(iter->second.ident);
+			tempTable.reg(iter->second);
 
 	return tempTable;
 }
@@ -770,7 +744,7 @@ wcParserSymbolTable wc::parse::wcParserSymbolTable::operator+(wcParseSymbol symb
 	wcParserSymbolTable tempTable(*this);
 
 	if (!tempTable.exists(symbol.ident))
-		tempTable.reg(symbol.ident);
+		tempTable.reg(symbol);
 
 	return tempTable;
 }
@@ -783,13 +757,13 @@ bool wc::parse::wcParserSymbolTable::exists(wcIdent ident)
 		return true;
 }
 
-wcParseSymbol wc::parse::wcParserSymbolTable::find(wcIdent ident)
+wcParseSymbol& wc::parse::wcParserSymbolTable::find(wcIdent ident)
 {
 	return lookup.find(ident.fullIdentifier)->second;
 }
 
-wcParseSymbol& wc::parse::wcParserSymbolTable::reg(wcIdent ident)
+wcParseSymbol wc::parse::wcParserSymbolTable::reg(wcParseSymbol symbol)
 {
-	lookup.insert(make_pair(ident.fullIdentifier, wcParseSymbol()));
-	return find(ident.fullIdentifier);
+	lookup.insert(make_pair(symbol.ident.fullIdentifier, symbol));
+	return find(symbol.ident.fullIdentifier);
 }

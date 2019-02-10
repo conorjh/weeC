@@ -86,10 +86,10 @@ namespace wc
 			wcASTIndex(wcAST&);
 			wcASTIndex(wcAST&, tree<wcParseNode>::iterator);
 
-			wcASTIndex operator=(wcASTIndex),
-				operator=(tree<wcParseNode>::iterator),
-				operator--(), operator--(int),
-				operator++(), operator++(int),
+			wcASTIndex &operator=(wcASTIndex),
+				&operator=(tree<wcParseNode>::iterator),
+				&operator--(), operator--(int),
+				&operator++(), operator++(int),
 				operator-(int),
 				operator+(int);
 			tree<wcParseNode>::iterator operator[](tree<wcParseNode>::iterator);
@@ -108,7 +108,7 @@ namespace wc
 			wcAST();
 			wcAST(tree<wcParseNode>);
 
-			wcAST operator+=(wcAST), operator+=(wcParseNode), operator+=(wcParserOutput),
+			wcAST &operator+=(wcAST), &operator+=(wcParseNode), &operator+=(wcParserOutput),
 				operator+(wcAST), operator+(wcParseNode), operator+(wcParserOutput);
 
 			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode), addNode(wcASTIndex&, wcParserOutput), 
@@ -139,9 +139,10 @@ namespace wc
 
 		struct wcParseSymbol
 		{
-			wcParseSymbol();
+			wcParseSymbol(wcParseSymbol&, wcParseSymbolType, wcIdent);
 
 			wcIdent ident;
+			wcParseSymbol& scope;
 			wcParseSymbolType type;
 		};
 
@@ -153,7 +154,7 @@ namespace wc
 				operator+(wcParseSymbol);
 
 			bool exists(wcIdent);
-			wcParseSymbol find(wcIdent), &reg(wcIdent);
+			wcParseSymbol& find(wcIdent), reg(wcParseSymbol);
 
 			std::unordered_map<std::string, wcParseSymbol> lookup;
 		};
@@ -161,10 +162,11 @@ namespace wc
 		struct wcParserOutput
 		{
 			wcParserOutput();
+			wcParserOutput(wcParseNode);
 			wcParserOutput(error::wcError);
 
-			wcParserOutput operator+=(wcParserOutput),
-				operator+(wcParserOutput), operator+=(wcParseNode),
+			wcParserOutput& operator+=(wcParserOutput),
+				operator+(wcParserOutput), &operator+=(wcParseNode),
 				operator+(wcParseNode);
 
 			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput), addNode(wcASTIndex&, wcParseNode), addNode(wcParserOutput), addNode(wcParseNode),
@@ -247,13 +249,6 @@ namespace wc
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcSemiColonParser : wcSubParser
-		{
-		public:
-			wcSemiColonParser();
-			wcParserOutput parse(wcParseData&);
-		};
-
 		class wcIdentParser : wcSubParser
 		{
 		public:
@@ -299,10 +294,10 @@ namespace wc
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcSColonParser : wcSubParser
+		class wcSemiColonParser : wcSubParser
 		{
 		public:
-			wcSColonParser();
+			wcSemiColonParser();
 			wcParserOutput parse(wcParseData&);
 		};
 

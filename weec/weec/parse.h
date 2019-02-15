@@ -134,12 +134,13 @@ namespace wc
 
 		enum wcParseSymbolType
 		{
-			st_var, st_func, st_type
+			st_var, st_func, st_type, st_namespace
 		};
 
 		struct wcParseSymbol
 		{
 			wcParseSymbol(wcParseSymbol&, wcParseSymbolType, wcIdent);
+			wcParseSymbol& operator=(wcParseSymbol);
 
 			wcIdent ident;
 			wcParseSymbol& scope;
@@ -149,6 +150,7 @@ namespace wc
 		class wcParserSymbolTable
 		{
 		public:
+			wcParserSymbolTable();
 			wcParserSymbolTable& operator+=(wcParserSymbolTable),
 				operator+(wcParserSymbolTable), &operator+=(wcParseSymbol),
 				operator+(wcParseSymbol);
@@ -157,6 +159,7 @@ namespace wc
 			wcParseSymbol& find(wcIdent), reg(wcParseSymbol);
 
 			std::unordered_map<std::string, wcParseSymbol> lookup;
+			wcParseSymbol global;
 		};
 
 		struct wcParserOutput
@@ -197,6 +200,7 @@ namespace wc
 
 			wcParserIndex index;
 			wcParserOutput output;
+			wcParseSymbol& currentScope;
 		};
 
 		struct wcParseExpression

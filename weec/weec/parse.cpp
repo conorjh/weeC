@@ -195,7 +195,7 @@ wc::parse::wcParseData::wcParseData(lex::wcTokenStream &tokens) : index(tokens),
 
 }
 
-wc::parse::wcParseData::wcParseData(lex::wcTokenStream &tokens, wcAST &ast) : index(tokens, ast), output()
+wc::parse::wcParseData::wcParseData(lex::wcTokenStream &tokens, wcAST &ast) : index(tokens, ast), output(), currentScope(output.symTab.global)
 {
 
 }
@@ -221,7 +221,7 @@ wcParserOutput wc::parse::wcParserOutput::operator+(wcParserOutput _output)
 	if (_output.error)
 		tempOutput.error = _output.error;
 	tempOutput.ast += _output.ast;
-	//tempOutput.symTab += _output.symTab;
+	tempOutput.symTab += _output.symTab;
 
 	return tempOutput;
 }
@@ -237,7 +237,7 @@ wcParserOutput wc::parse::wcParserOutput::operator+(wcParseNode node)
 
 	tempOutput.ast += node;
 	tempOutput.error = error;
-	//tempOutput.symTab += symTab;
+	tempOutput.symTab += symTab;
 
 	return tempOutput;
 }
@@ -430,7 +430,7 @@ wc::parse::wcDeclarationParser::wcDeclarationParser()
 
 wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data)
 {
-	wcParseSymbol sym;
+	wcParseSymbol sym(data.currentScope);
 	return parse(data, wcParseDeclaration(sym));
 }
 
@@ -464,7 +464,7 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	if (!tokenIndex.isValid() || (tokens.get(tokenIndex).type != tt_assign && tokens.get(tokenIndex).type != tt_scolon))
 		return output;
 	else if (tokens.get(tokenIndex).type == tt_scolon)
-		return (output += wcSemiColonParser().parse(data));
+		return output += wcSemiColonParser().parse(data);
 	tokenIndex++;
 
 	//expression node
@@ -718,6 +718,12 @@ int wc::parse::wcASTIndex::depth(tree<wcParseNode>::iterator)
 	return 0;
 }
 
+wc::parse::wcParserSymbolTable::wcParserSymbolTable() 
+	 :lookup({ "$global" , global }), global(global, st_namespace, wcIdent("$global"))
+{
+	global.scope = global;
+}
+
 wcParserSymbolTable & wc::parse::wcParserSymbolTable::operator+=(wcParserSymbolTable otherTable)
 {
 	return *this = *this + otherTable;
@@ -766,4 +772,17 @@ wcParseSymbol wc::parse::wcParserSymbolTable::reg(wcParseSymbol symbol)
 {
 	lookup.insert(make_pair(symbol.ident.fullIdentifier, symbol));
 	return find(symbol.ident.fullIdentifier);
+}
+
+wc::parse::wcParseSymbol::wcParseSymbol(wcParseSymbol &_scope, wcParseSymbolType _type, wcIdent _ident) : scope(_scope)
+{
+	type = _type;
+	ident = _ident;
+}
+
+wcParseSymbol & wc::parse::wcParseSymbol::operator=(wcParseSymbol otherSymbol)
+{
+	ident = otherSymbol.ident;
+	type = otherSymbol.type;
+	scope = otherSymbol.scope;
 }

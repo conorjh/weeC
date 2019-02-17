@@ -190,7 +190,7 @@ wc::parse::wcParserIndex::wcParserIndex(lex::wcTokenStream &_input, wcAST &_ast)
 
 }
 
-wc::parse::wcParseData::wcParseData(lex::wcTokenStream &tokens) : index(tokens), output()
+wc::parse::wcParseData::wcParseData(lex::wcTokenStream &tokens) : index(tokens), output(), currentScope(output.symTab.global)
 {
 
 }
@@ -718,10 +718,8 @@ int wc::parse::wcASTIndex::depth(tree<wcParseNode>::iterator)
 	return 0;
 }
 
-wc::parse::wcParserSymbolTable::wcParserSymbolTable() 
-	 :lookup({ "$global" , global }), global(global, st_namespace, wcIdent("$global"))
+wc::parse::wcParserSymbolTable::wcParserSymbolTable() : lookup({ {"$global" , global } , }), global(global, st_namespace, wcIdent("$global"))
 {
-	global.scope = global;
 }
 
 wcParserSymbolTable & wc::parse::wcParserSymbolTable::operator+=(wcParserSymbolTable otherTable)
@@ -784,5 +782,7 @@ wcParseSymbol & wc::parse::wcParseSymbol::operator=(wcParseSymbol otherSymbol)
 {
 	ident = otherSymbol.ident;
 	type = otherSymbol.type;
-	scope = otherSymbol.scope;
+	if(otherSymbol.scope.ident != "$global")
+		scope = otherSymbol.scope;
+	return *this;
 }

@@ -720,6 +720,11 @@ int wc::parse::wcASTIndex::depth(tree<wcParseNode>::iterator)
 
 wc::parse::wcParserSymbolTable::wcParserSymbolTable() : lookup({ {"$global" , global } , }), global(global, st_namespace, wcIdent("$global"))
 {
+	//built in types
+	reg(wcParseSymbol(global, st_type, wcIdent("int")));
+	reg(wcParseSymbol(global, st_type, wcIdent("char")));
+	reg(wcParseSymbol(global, st_type, wcIdent("float")));
+	reg(wcParseSymbol(global, st_type, wcIdent("string")));
 }
 
 wcParserSymbolTable & wc::parse::wcParserSymbolTable::operator+=(wcParserSymbolTable otherTable)
@@ -782,7 +787,7 @@ wcParseSymbol & wc::parse::wcParseSymbol::operator=(wcParseSymbol otherSymbol)
 {
 	ident = otherSymbol.ident;
 	type = otherSymbol.type;
-	if(otherSymbol.scope.ident != "$global")
+	if(otherSymbol.scope.ident.fullIdentifier != "$global")
 		scope = otherSymbol.scope;
 	return *this;
 }

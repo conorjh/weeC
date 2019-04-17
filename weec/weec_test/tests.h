@@ -24,9 +24,11 @@ namespace wctest
 	namespace parse
 	{
 		int p_basic_1(), p_basic_2(), p_basic_3(), p_basic_4(), p_basic_5(), p_basic_6(), p_basic_7(), p_basic_8(), p_basic_9();
+		int p_exp_1(), p_exp_2(), p_exp_3(), p_exp_4(), p_exp_5(), p_exp_6(), p_exp_7(), p_exp_8(), p_exp_9();
 
 		const std::vector<int(*)()> allParseTests =
 		{
+			&p_exp_1, &p_exp_2, &p_exp_3, &p_exp_4, &p_exp_5, &p_exp_6, &p_exp_7,
 			&p_basic_1, &p_basic_2, &p_basic_3, &p_basic_4, &p_basic_5, &p_basic_6, &p_basic_7
 		};
 	}

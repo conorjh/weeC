@@ -69,10 +69,47 @@ namespace wc
 			{ pn_continue ,"pn_continue" },		{ pn_negate ,"pn_negate" }
 		};
 
+		
+
+		class wcParseNodeTypeDeriver
+		{
+		public:
+			wcParseNodeType derive(lex::wcTokenType);
+		
+		private:
+			const std::unordered_multimap<lex::wcTokenType, wcParseNodeType> pnTypeLookup =
+			{
+				{	lex::tt_null, pn_null	},			
+				{ lex::tt_keyword_string,pn_str },
+				{ lex::tt_keyword_int,pn_int },				{ lex::tt_keyword_float,pn_flt},		
+				{ lex::tt_keyword_var,pn_var},					{ lex::tt_keyword_bool, pn_bool},			{ lex::tt_scolon,pn_scolon},
+				{ lex::tt_colon,pn_colon},				{ lex::tt_comma,pn_comma},			{ lex::tt_period,pn_period},
+				{ lex::tt_squote, pn_squote},			{ lex::tt_dquote,pn_dquote},			{ lex::tt_qmark,pn_qmark},
+				{ lex::tt_minus, pn_minus},			{ lex::tt_plus,pn_plus},
+				{ lex::tt_pipe,pn_pipe},				{ lex::tt_div,pn_div},			{ lex::tt_mult,pn_mult},
+				{ lex::tt_mod, pn_mod},				{ lex::tt_expo ,pn_expo },			{ lex::tt_assign ,pn_assign },
+				{ lex::tt_underscore ,pn_underscore },	{ lex::tt_tilde ,pn_tilde  },			{ lex::tt_oparen,pn_oparen },
+				{ lex::tt_cparen,pn_cparen },			{ lex::tt_obracket, pn_obracket },			{lex::tt_cbracket,pn_cbracket},
+				{ lex::tt_obrace, pn_cbracket},		{ lex::tt_cbrace, pn_cbrace}, 			{ lex::tt_bslash,pn_bslash },
+					{ lex::tt_newline,pn_newline },			{ lex::tt_dollar ,pn_dollar },
+				{ lex::tt_amper ,pn_amper },			{ lex::tt_greater ,pn_greater },			{ lex::tt_less ,pn_less },
+				{ lex::tt_greaterequal ,pn_greaterequal },	{ lex::tt_lessequal ,pn_lessequal },			{ lex::tt_equal ,pn_equal },
+				{ lex::tt_notequal ,pn_notequal },		{ lex::tt_logand, pn_logand},			{ lex::tt_logor ,pn_logor },
+				{ lex::tt_lognot ,pn_lognot },			{ lex::tt_intlit ,pn_intlit },			{ lex::tt_strlit ,pn_strlit },
+				{ lex::tt_fltlit ,pn_fltlit },			{ lex::tt_ident ,pn_ident },			{ lex::tt_comment ,pn_comment },
+						{ lex::tt_incr ,pn_incr },
+				{ lex::tt_decr ,pn_decr },				{ lex::tt_plusassign ,pn_plusassign },			{ lex::tt_minusassign ,pn_minusassign },
+				{ lex::tt_multassign ,pn_multassign },	{ lex::tt_divassign ,pn_divassign },			
+				
+			};
+		};
+
 		struct wcParseNode
 		{
 			wcParseNode();
 			wcParseNode(wcParseNodeType);
+			wcParseNode(lex::wcToken);
+			wcParseNode(wcParseNodeType, lex::wcToken);
 			wcParseNode(wcParseNodeType, std::vector<lex::wcToken>);
 
 			std::vector<lex::wcToken> tokens;
@@ -111,9 +148,9 @@ namespace wc
 			wcAST &operator+=(wcAST), &operator+=(wcParseNode), &operator+=(wcParserOutput),
 				operator+(wcAST), operator+(wcParseNode), operator+(wcParserOutput);
 
-			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode), addNode(wcASTIndex&, wcParserOutput), 
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParseNode), addNode(wcASTIndex&, wcParserOutput),
 				addNode(wcParseNode), addNode(wcParserOutput),
-				addChild(wcASTIndex&, wcParseNode),	addChild(wcASTIndex&, wcParserOutput);	
+				addChild(wcASTIndex&, wcParseNode), addChild(wcASTIndex&, wcParserOutput);
 			void removeNode(wcASTIndex&);
 
 			tree<wcParseNode>::iterator head;
@@ -139,6 +176,7 @@ namespace wc
 
 		struct wcParseSymbol
 		{
+			wcParseSymbol(wcParseSymbolType, wcIdent);	//use this for global, ses scope to self
 			wcParseSymbol(wcParseSymbol&, wcParseSymbolType, wcIdent);
 			wcParseSymbol& operator=(wcParseSymbol);
 
@@ -153,13 +191,13 @@ namespace wc
 			wcParserSymbolTable();
 			wcParserSymbolTable& operator+=(wcParserSymbolTable),
 				operator+(wcParserSymbolTable), &operator+=(wcParseSymbol),
-				operator+(wcParseSymbol);
+				operator+(wcParseSymbol), &operator=(wcParserSymbolTable);
 
 			bool exists(wcIdent);
-			wcParseSymbol& find(wcIdent), reg(wcParseSymbol);
+			wcParseSymbol& find(wcIdent), &reg(wcParseSymbol);
 
 			std::unordered_map<std::string, wcParseSymbol> lookup;
-			wcParseSymbol global;
+			wcParseSymbol& global;
 		};
 
 		struct wcParserOutput
@@ -173,7 +211,7 @@ namespace wc
 				operator+(wcParseNode);
 
 			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput), addNode(wcASTIndex&, wcParseNode), addNode(wcParserOutput), addNode(wcParseNode),
-				addChild(wcASTIndex&, wcParseNode),	addChild(wcASTIndex&, wcParserOutput);	
+				addChild(wcASTIndex&, wcParseNode), addChild(wcASTIndex&, wcParserOutput);
 
 			wcAST ast;
 			wcParserSymbolTable symTab;
@@ -201,6 +239,7 @@ namespace wc
 			wcParserIndex index;
 			wcParserOutput output;
 			wcParseSymbol& currentScope;
+			int parenCount;
 		};
 
 		struct wcParseExpression
@@ -216,13 +255,15 @@ namespace wc
 			wcIdent identifier;
 			wcParseExpression exp;
 		};
-		
+
 		class wcSubParser
 		{
 		public:
 			wcSubParser();
 
 			wcParserOutput parse(wcParseData&);
+
+			lex::wcToken currentToken(wcParseData&);
 		};
 
 		class wcExpressionParser : wcSubParser
@@ -230,6 +271,13 @@ namespace wc
 		public:
 			wcExpressionParser();
 			wcParserOutput parse(wcParseData&);
+		private:
+			wcParserOutput parseExpression(wcParseData&, lex::wcToken& outputToken);
+			wcParserOutput parseSubExpression(wcParseData&, lex::wcToken& outputToken);
+			wcParserOutput parseTerm(wcParseData&, lex::wcToken& outputToken);
+			wcParserOutput parseFactor(wcParseData&, lex::wcToken& outputToken);
+			wcParserOutput parseFactor_oparen(wcParseData&);
+			wcParserOutput parseFactor_identifer(wcParseData&);
 		};
 
 		class wcNamespaceParser : wcSubParser
@@ -257,7 +305,7 @@ namespace wc
 		{
 		public:
 			wcIdentParser();
-			wcParserOutput parse(wcParseData&), 
+			wcParserOutput parse(wcParseData&),
 				parse(wcParseData&, wcIdent&);
 		};
 

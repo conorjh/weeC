@@ -100,3 +100,49 @@ int wctest::parse::p_basic_9()
 		"	int outerVar = 33;"
 		"}");
 }
+
+//create a lexer, lex a simple string ,dispose of the lexer
+int wctest::parse::p_exp_1()
+{
+	return standardParseTest("22+33;");
+}
+
+int wctest::parse::p_exp_2()
+{
+	return standardParseTest("(22+33)");
+}
+
+int wctest::parse::p_exp_3()
+{
+	return standardParseTest("22+(33);");
+}
+
+int wctest::parse::p_exp_4()
+{
+	return standardParseTest("22*33;");
+}
+
+int wctest::parse::p_exp_5()
+{
+	return standardParseTest("22 * (33 + 44);");
+}
+
+int wctest::parse::p_exp_6()
+{
+	return standardParseTest("22 * (33 + (44));");
+}
+
+int wctest::parse::p_exp_7()
+{
+	return standardParseTest("22 * (33 + -(44));");
+}
+
+int wctest::parse::p_exp_8()
+{
+	return standardParseTest("(22 * (33 + -(44))) * 55;");
+}
+
+int wctest::parse::p_exp_9()
+{
+	return standardParseTest("22 || (33 < 44)");
+}

@@ -327,10 +327,10 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 			case st_type:
 				goto _wcParser_parse_declarations;
 			default:
-				return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+				return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident)));
 			}
 		else
-			return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+			return wcParserOutput(wcError(ec_par_undeclaredident, wcToken(tt_ident, ident)));
 
 		//declarations
 	_wcParser_parse_declarations:
@@ -431,8 +431,8 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 			if (isFirstToken)
 				return wcParserOutput(wcError(ec_par_ident_malformedident, currentToken(data)));	//opening token is not an identifier
 			else if (punctuationLexedLast)
-				return wcParserOutput(wcError(ec_par_ident_malformedident, wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column)));	//malformed
-			return wcParserOutput(wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
+				return wcParserOutput(wcError(ec_par_ident_malformedident, wcToken(tt_ident, identOutput)));	//malformed
+			return wcParserOutput(wcParseNode(pn_ident, { wcToken(tt_ident, identOutput) }));
 		}
 
 		if (isFirstToken)
@@ -451,7 +451,7 @@ wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data, wcIdent &ident
 	else if (punctuationLexedLast)
 		return wcParserOutput(wcError(ec_par_ident_malformedident, identOutput.fullIdentifier));
 
-	return wcParserOutput(wcParseNode(pn_ident, { wcToken(tt_ident, identOutput.fullIdentifier, identOutput.line, identOutput.column) }));
+	return wcParserOutput(wcParseNode(pn_ident, { wcToken(tt_ident, identOutput) }));
 }
 
 wc::parse::wcDeclarationParser::wcDeclarationParser()
@@ -488,7 +488,7 @@ wcParserOutput wc::parse::wcDeclarationParser::parse(wcParseData &data, wcParseD
 	if (output.error)
 		return output;
 	if (data.output.symTab.exists(decIdentifier))
-		return wcParserOutput(wcError(ec_par_identredeclaration, wcToken(tt_ident, decIdentifier.fullIdentifier, decIdentifier.line, decIdentifier.column)));
+		return wcParserOutput(wcError(ec_par_identredeclaration, wcToken(tt_ident, decIdentifier)));
 
 	//semi colon, or optional initial assignment 
 	if (!tokenIndex.isValid() || (currentToken(data).type != tt_assign && currentToken(data).type != tt_scolon))
@@ -522,9 +522,9 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 	case tt_ident:
 		output.ast.addChild(outputIndex, wcIdentParser().parse(data, ident));
 		if (!data.output.symTab.exists(ident))
-			return wcParserOutput(wcError(ec_par_type_undeclaredtype, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+			return wcParserOutput(wcError(ec_par_type_undeclaredtype, wcToken(tt_ident, ident)));
 		if (data.output.symTab.find(ident).type != st_type)
-			return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident.fullIdentifier, ident.line, ident.column)));
+			return wcParserOutput(wcError(ec_par_unexpectedtoken, wcToken(tt_ident, ident)));
 		return output;
 
 		//declarations

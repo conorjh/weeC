@@ -566,6 +566,14 @@ wc::lex::wcToken::wcToken()
 {
 }
 
+wc::lex::wcToken::wcToken(wcTokenType _type, wcIdent ident)
+{
+	type = _type;
+	data = ident.identifierAsSeen;
+	line = ident.line;
+	column = ident.column;
+}
+
 wc::lex::wcToken::wcToken(wcTokenType _type, string _data, int _line, int _column)
 {
 	type = _type;

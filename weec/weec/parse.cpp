@@ -179,7 +179,7 @@ tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcPars
 	parseTree.append_child(index.get(), node);
 
 	//then return the new addition
-	return parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1);
+	return  index.set(parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1));
 }
 
 tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcParserOutput pOutput)
@@ -188,7 +188,7 @@ tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcPars
 	parseTree.append_children(index.get(), pOutput.ast.parseTree.begin(), pOutput.ast.parseTree.end());
 
 	//then return the new addition
-	return parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1);
+	return index.set(parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1));
 }
 
 void wc::parse::wcAST::removeNode(wcASTIndex &)
@@ -780,7 +780,7 @@ wcParserOutput wc::parse::wcExpressionParser::parseFactor(wcParseData &data, wcT
 		
 		break;
 	CASE_ALL_LITERALS_TT
-		output.addChild(outputIndex, wcParseNode(wcParseNodeTypeDeriver().derive(currentToken(data).type), currentToken(data)));
+		output.addChild(outputIndex, wcParseNode(currentToken(data)));
 		tokenIndex++;
 		break;
 
@@ -799,7 +799,7 @@ wcParserOutput wc::parse::wcExpressionParser::parseFactor_oparen(wcParseData &da
 
 	//opening (
 	data.parenCount++;
-	output.addChild(outputIndex, wcParseNode(wcParseNodeTypeDeriver().derive(currentToken(data).type),currentToken(data)));
+	output.addChild(outputIndex, wcParseNode(currentToken(data)));
 	data.index.tokenIndex++;
 
 	//expression within
@@ -811,7 +811,7 @@ wcParserOutput wc::parse::wcExpressionParser::parseFactor_oparen(wcParseData &da
 	if (currentToken(data).type != tt_cparen)
 		return output;
 	data.parenCount--;
-	output.addChild(outputIndex, wcParseNode(wcParseNodeTypeDeriver().derive(currentToken(data).type), currentToken(data)));
+	output.addChild(outputIndex, wcParseNode(currentToken(data)));
 	data.index.tokenIndex++;
 
 	return output;

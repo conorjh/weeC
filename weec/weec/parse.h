@@ -166,7 +166,7 @@ namespace wc
 			bool isValid() const;
 
 			int line, column;
-			std::string fullIdentifier;
+			std::string fullIdentifier, identifierAsSeen;
 		};
 
 		enum wcParseSymbolType

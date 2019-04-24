@@ -10,6 +10,10 @@
 
 namespace wc
 {
+	namespace parse
+	{
+		struct wcIdent;
+	}
 	namespace lex
 	{
 		enum wcTokenType
@@ -115,6 +119,7 @@ namespace wc
 		struct wcToken
 		{
 			wcToken();	//tt_null
+			wcToken(wcTokenType, parse::wcIdent);
 			wcToken(wcTokenType, std::string, int, int);
 
 			bool operator!=(const wcToken&) const;

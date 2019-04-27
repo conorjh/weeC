@@ -210,7 +210,8 @@ namespace wc
 				operator+(wcParserOutput), &operator+=(wcParseNode),
 				operator+(wcParseNode);
 
-			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput), addNode(wcASTIndex&, wcParseNode), addNode(wcParserOutput), addNode(wcParseNode),
+			tree<wcParseNode>::iterator addNode(wcASTIndex&, wcParserOutput), addNode(wcASTIndex&, wcParseNode),
+				addNode(wcParserOutput), addNode(wcParseNode),
 				addChild(wcASTIndex&, wcParseNode), addChild(wcASTIndex&, wcParserOutput);
 
 			wcAST ast;

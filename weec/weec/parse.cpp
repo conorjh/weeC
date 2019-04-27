@@ -336,7 +336,7 @@ wcParserOutput wc::parse::wcSubParser::parse(wcParseData &data)
 	_wcParser_parse_declarations:
 	CASE_BASIC_TYPES_TT
 		output.addNode(wcASTIndex(output.ast), wcDeclarationParser().parse(data));
-	break;
+		break;
 
 		//statements
 	_wcParser_parse_statements:
@@ -643,9 +643,9 @@ wcParserOutput wc::parse::wcExpressionParser::parse(wcParseData &data)
 {
 	wcParserOutput output;
 	wcASTIndex outputIndex(output.ast);
-	output.addNode(outputIndex, wcParseNode(pn_exp));
 
-	output += parseExpression(data, wcToken());
+	output.addNode(outputIndex, wcParseNode(pn_exp));
+	output.addChild(outputIndex, parseExpression(data, wcToken()));
 
 	return output;
 }
@@ -653,14 +653,13 @@ wcParserOutput wc::parse::wcExpressionParser::parse(wcParseData &data)
 wcParserOutput wc::parse::wcExpressionParser::parseExpression(wcParseData &data, wcToken& outputToken)
 {
 	wcParserOutput output;
-	wcASTIndex outputIndex(output.ast);
 	wcTokenStream& tokens = data.index.input;
 	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
 
 	wcToken operandRight, operatorToken, operandLeft;
 
 	//get the left hand side of the expression
-	output += parseSubExpression(data, operandLeft);
+	output.addNode(parseSubExpression(data, operandLeft));
 
 	while (tokenIndex.isValid() && !output.error)
 	{
@@ -668,8 +667,8 @@ wcParserOutput wc::parse::wcExpressionParser::parseExpression(wcParseData &data,
 		switch (currentToken(data).type)
 		{
 		case tt_assign:
-			CASE_ALL_BOOLEAN_OPERATORS_TT
-				output.ast.addChild(outputIndex, wcParseNode(wcParseNodeTypeDeriver().derive(currentToken(data).type), currentToken(data)));
+		CASE_ALL_BOOLEAN_OPERATORS_TT
+			output.addChild(wcParseNode(currentToken(data)));
 			tokenIndex++;
 			break;
 
@@ -702,7 +701,7 @@ wcParserOutput wc::parse::wcExpressionParser::parseSubExpression(wcParseData &da
 		{
 		case tt_plus:
 		case tt_minus:
-			output.ast.addChild(outputIndex, wcParseNode(wcParseNodeTypeDeriver().derive(currentToken(data).type), currentToken(data)));
+			output.ast.addChild(outputIndex, wcParseNode(currentToken(data)));
 			tokenIndex++;
 
 		default:	//one sided expression
@@ -736,7 +735,7 @@ wcParserOutput wc::parse::wcExpressionParser::parseTerm(wcParseData &data, wcTok
 		case tt_mult:
 		case tt_expo:
 		case tt_mod:
-			output.ast.addChild(outputIndex, wcParseNode(wcParseNodeTypeDeriver().derive(currentToken(data).type), currentToken(data)));
+			output.ast.addChild(outputIndex, wcParseNode(currentToken(data)));
 			tokenIndex++;
 			break;
 

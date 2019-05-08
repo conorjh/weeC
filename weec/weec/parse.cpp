@@ -176,19 +176,15 @@ tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcASTIndex& index, wcParse
 tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcParseNode node)
 {
 	//append a child to the current node, dont set the index to it though
-	parseTree.append_child(index.get(), node);
-
 	//then return the new addition
-	return  index.set(parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1));
+	return parseTree.append_child(index.get(), node);
 }
 
 tree<wcParseNode>::iterator wc::parse::wcAST::addChild(wcASTIndex& index, wcParserOutput pOutput)
 {
 	//append a child to the current node, dont set the index to it though
-	parseTree.append_children(index.get(), pOutput.ast.parseTree.begin(), pOutput.ast.parseTree.end());
-
 	//then return the new addition
-	return index.set(parseTree.child(index.get(), parseTree.number_of_children(index.get()) - 1));
+	return 	parseTree.append_children(index.get(), pOutput.ast.parseTree.begin(), pOutput.ast.parseTree.end());
 }
 
 void wc::parse::wcAST::removeNode(wcASTIndex &)
@@ -225,8 +221,9 @@ wc::parse::wcParserOutput::wcParserOutput()
 
 }
 
-wc::parse::wcParserOutput::wcParserOutput(wcParseNode)
+wc::parse::wcParserOutput::wcParserOutput(wcParseNode node)
 {
+	addNode(node);
 }
 
 wc::parse::wcParserOutput::wcParserOutput(error::wcError _error)
@@ -286,6 +283,16 @@ tree<wcParseNode>::iterator wc::parse::wcParserOutput::addChild(wcASTIndex &inde
 tree<wcParseNode>::iterator wc::parse::wcParserOutput::addChild(wcASTIndex &index, wcParseNode node)
 {
 	return ast.addChild(index, node);
+}
+
+tree<wcParseNode>::iterator wc::parse::wcParserOutput::addNode(wcParserOutput)
+{
+	return tree<wcParseNode>::iterator();
+}
+
+tree<wcParseNode>::iterator wc::parse::wcParserOutput::addNode(wcParseNode)
+{
+	return tree<wcParseNode>::iterator();
 }
 
 wcParserOutput& wc::parse::wcParserOutput::operator+=(wcParserOutput _output)
@@ -366,34 +373,39 @@ wc::parse::wcStatementParser::wcStatementParser()
 }
 
 wcParserOutput wc::parse::wcStatementParser::parse(wcParseData &data)
-{
-	//create our stream indexes, and space for output data, and a handy alias (tokens)
-	wcTokenStream& tokens = data.index.input;
-	wcTokenStreamIndex& tokenIndex = data.index.tokenIndex;
+{	
+	wcParserOutput output;
+	wcASTIndex outputIndex(output.ast);
+	output.addNode(outputIndex, wcParseNode(pn_statement));
 
 	switch (currentToken(data).type)
 	{
 	case tt_ident:
 	CASE_ALL_LITERALS_TT
-		return wcExpressionParser().parse(data);
+		output.addChild(outputIndex, wcExpressionParser().parse(data));
+		break;
 
 	case tt_keyword_return:
-		return wcReturnParser().parse(data);
+		output.addChild(outputIndex, wcReturnParser().parse(data));
+		break;
 
 	case tt_keyword_namespace:
-		return wcNamespaceParser().parse(data);
+		output.addChild(outputIndex, wcNamespaceParser().parse(data));
+		break;
 
 	case tt_keyword_if:
-		return wcIfParser().parse(data);
+		output.addChild(outputIndex, wcIfParser().parse(data));
+		break;
 
 	case tt_keyword_while:
-		return wcWhileParser().parse(data);
+		output.addChild(outputIndex, wcWhileParser().parse(data));
+		break;
 
 	default:
 		return wcParserOutput();
 	}
 
-	return wcParserOutput();
+	return output;
 }
 
 wcParserOutput wc::parse::wcIdentParser::parse(wcParseData &data)
@@ -528,8 +540,8 @@ wcParserOutput wc::parse::wcTypeParser::parse(wcParseData &data, wcIdent &ident)
 		return output;
 
 		//declarations
-		CASE_BASIC_TYPES_TT
-			output.ast.addChild(outputIndex, wcParseNode(pn_type, currentToken(data)));
+	CASE_BASIC_TYPES_TT
+		output.ast.addChild(outputIndex, wcParseNode(pn_type, currentToken(data)));
 		tokenIndex++;
 		return output;
 	}
@@ -668,7 +680,7 @@ wcParserOutput wc::parse::wcExpressionParser::parseExpression(wcParseData &data,
 		{
 		case tt_assign:
 		CASE_ALL_BOOLEAN_OPERATORS_TT
-			output.addChild(wcParseNode(currentToken(data)));
+			//output.addChild(wcParseNode(currentToken(data)));
 			tokenIndex++;
 			break;
 

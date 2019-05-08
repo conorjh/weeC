@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "parse.h"
 #include "simple.h"
+#include <iostream>
 
 using namespace wc;
 using namespace wc::lex;
@@ -13,6 +14,8 @@ namespace wctest
 	{
 		int p_compare(wcAST p_correctAST, wcAST p_testAST);
 		int standardParseTest(const char *);
+		int standardExpParseTest(const char *);
+		void printAST(wcAST);
 	}
 }
 
@@ -23,21 +26,48 @@ int wctest::parse::p_compare(wcAST p_correctAST, wcAST p_testAST)
 	return 1;
 }
 
-//compare two ASTS, 0 if theyre different
 int wctest::parse::standardParseTest(const char * p_source)
 {
 	return wcParser().parse(wcLexer().lex(wcLexInputStream(p_source))).error.code;
 }
 
+int wctest::parse::standardExpParseTest(const char * p_source)
+{
+	auto lexOutput = wcLexer().lex(wcLexInputStream(p_source));
+	auto parseOutput = wcParser().parse(lexOutput);
+
+	//print the AST
+	printAST(parseOutput.ast);
+
+	return parseOutput.error.code;
+}
+
+void wctest::parse::printAST(wcAST ast)
+{
+	tree<wcParseNode>::iterator iter = ast.parseTree.begin();
+
+	string tabbing = "";
+	while (iter != ast.parseTree.end())
+	{
+		for (int t = 0; t < ast.parseTree.depth(iter); t = t + 2)
+			tabbing += " ";
+
+		cout << tabbing << wc::parse::pnTypeStrings.find(iter.node->data.type)->second << endl;
+
+		iter++;
+	}
+}
+
+
 //create a lexer, lex a simple string ,dispose of the lexer
 int wctest::parse::p_basic_1()
 {
-	return standardParseTest("int a;");
+	return standardExpParseTest("int a;");
 }
 
 int wctest::parse::p_basic_2()
 {
-	return standardParseTest("int fooBar = 2;");
+	return standardExpParseTest("int fooBar = 2;");
 }
 
 int wctest::parse::p_basic_3()
@@ -104,45 +134,45 @@ int wctest::parse::p_basic_9()
 //create a lexer, lex a simple string ,dispose of the lexer
 int wctest::parse::p_exp_1()
 {
-	return standardParseTest("22+33;");
+	return standardExpParseTest("int a;");
 }
 
 int wctest::parse::p_exp_2()
 {
-	return standardParseTest("(22+33)");
+	return standardExpParseTest("(22+33)");
 }
 
 int wctest::parse::p_exp_3()
 {
-	return standardParseTest("22+(33);");
+	return standardExpParseTest("22+(33);");
 }
 
 int wctest::parse::p_exp_4()
 {
-	return standardParseTest("22*33;");
+	return standardExpParseTest("22*33;");
 }
 
 int wctest::parse::p_exp_5()
 {
-	return standardParseTest("22 * (33 + 44);");
+	return standardExpParseTest("22 * (33 + 44);");
 }
 
 int wctest::parse::p_exp_6()
 {
-	return standardParseTest("22 * (33 + (44));");
+	return standardExpParseTest("22 * (33 + (44));");
 }
 
 int wctest::parse::p_exp_7()
 {
-	return standardParseTest("22 * (33 + -(44));");
+	return standardExpParseTest("22 * (33 + -(44));");
 }
 
 int wctest::parse::p_exp_8()
 {
-	return standardParseTest("(22 * (33 + -(44))) * 55;");
+	return standardExpParseTest("(22 * (33 + -(44))) * 55;");
 }
 
 int wctest::parse::p_exp_9()
 {
-	return standardParseTest("22 || (33 < 44)");
+	return standardExpParseTest("22 || (33 < 44)");
 }

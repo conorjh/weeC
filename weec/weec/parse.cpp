@@ -90,14 +90,14 @@ wc::parse::wcParseNode::wcParseNode(wcParseNodeType _type, std::vector<lex::wcTo
 	type = _type;
 }
 
-wc::parse::wcAST::wcAST() : parseTree(wcParseNode(pn_head))
+wc::parse::wcAST::wcAST() : parseTree()
 {
-	head = parseTree.head;
+	head = parseTree.begin();
 }
 
 wc::parse::wcAST::wcAST(tree<wcParseNode> p_tree) : parseTree(p_tree)
 {
-	head = parseTree.head;
+	head = parseTree.begin();
 }
 
 wcAST& wc::parse::wcAST::operator+=(wcAST otherAST)
@@ -109,7 +109,7 @@ wcAST wc::parse::wcAST::operator+(wcParserOutput parserOutput)
 {
 	wcAST tempAST(*this);
 
-	tempAST.parseTree.append_children(head, parserOutput.ast.parseTree.begin(), parserOutput.ast.parseTree.end());
+	tempAST.parseTree.append_children(tempAST.parseTree.begin(), parserOutput.ast.parseTree.begin(), parserOutput.ast.parseTree.end());
 
 	return tempAST;
 }
@@ -123,7 +123,7 @@ wcAST wc::parse::wcAST::operator+(wcParseNode otherNode)
 {
 	wcAST tempAST(*this);
 
-	tempAST.parseTree.append_child(head, otherNode);
+	tempAST.parseTree.append_child(tempAST.parseTree.begin(), otherNode);
 
 	return tempAST;
 }
@@ -138,7 +138,7 @@ wcAST wc::parse::wcAST::operator+(wcAST otherAST)
 	wcAST tempAST(*this);
 
 	if (otherAST.parseTree.size())
-		tempAST.parseTree.append_children(head, otherAST.parseTree.begin(), otherAST.parseTree.end());
+		tempAST.parseTree.append_children(tempAST.parseTree.begin(), otherAST.parseTree.begin(), otherAST.parseTree.end());
 
 	return tempAST;
 }
@@ -146,13 +146,13 @@ wcAST wc::parse::wcAST::operator+(wcAST otherAST)
 tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcParserOutput pOutput)
 {
 	//add the tree as a child of the head node
-	return addChild(wcASTIndex(*this, head), pOutput);
+	return addChild(wcASTIndex(*this, parseTree.begin()), pOutput);
 }
 
 tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcParseNode node)
 {
 	//add the tree as a child of the head node
-	return addChild(wcASTIndex(*this, head), node);
+	return addChild(wcASTIndex(*this, parseTree.begin()), node);
 }
 
 tree<wcParseNode>::iterator wc::parse::wcAST::addNode(wcASTIndex& index, wcParserOutput pOutput)

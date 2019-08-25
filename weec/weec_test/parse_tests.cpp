@@ -49,7 +49,7 @@ void wctest::parse::printAST(wcAST ast)
 	string tabbing = "";
 	while (iter != ast.parseTree.end())
 	{
-		for (int t = 0; t < ast.parseTree.depth(iter); t = t + 2)
+		for (int t = 0; t < ast.parseTree.depth(iter); t++)
 			tabbing += " ";
 
 		cout << tabbing << wc::parse::pnTypeStrings.find(iter.node->data.type)->second << endl;

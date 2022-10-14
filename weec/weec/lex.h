@@ -1,164 +1,229 @@
-#ifndef WC_LEX_H
-#define WC_LEX_H
+#ifndef WC_LEX
+#define WC_LEX
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include "error.h"
 
-#define CASE_TT_WS case tt_ws: case tt_newline: case tt_tab:
+#define WC_SWITCHCASE_TOKENS_OPERATORS_ALL	case wcTokenType::MinusOperator: case wcTokenType::PlusOperator: case wcTokenType::DivideOperator: case wcTokenType::MultiplyOperator: \
+		case wcTokenType::ModulusOperator: case wcTokenType::ExponentOperator: case wcTokenType::IncrementOperator: case wcTokenType::DecrementOperator: \
+		case wcTokenType::AssignOperator: case wcTokenType::PlusAssignOperator: case wcTokenType::MinusAssignOperator: case wcTokenType::MultAssignOperator: \
+		case wcTokenType::DivAssignOperator: case wcTokenType::GreaterOperator: case wcTokenType::LessOperator: case wcTokenType::EqualOperator:\
+		case wcTokenType::NotEqualOperator: case wcTokenType::GreaterEqualOperator: case wcTokenType::LessEqualOperator: case wcTokenType::LogNotOperator: \
+		case wcTokenType::LogOrOperator: case wcTokenType::LogAndOperator: 
+#define WC_SWITCHCASE_TOKENS_OPERATORS_ARITHMETIC case wcTokenType::MinusOperator: case wcTokenType::PlusOperator: case wcTokenType::DivideOperator:\
+		case wcTokenType::MultiplyOperator: case wcTokenType::ModulusOperator: case wcTokenType::ExponentOperator: case wcTokenType::IncrementOperator:\
+		case wcTokenType::DecrementOperator: 
+#define WC_SWITCHCASE_TOKENS_OPERATORS_KEYWORD case wcTokenType::TrueKeyword: case wcTokenType::FalseKeyword: case wcTokenType::StringKeyword: case wcTokenType::IntKeyword: \
+		case wcTokenType::FloatKeyword: case wcTokenType::BoolKeyword: case wcTokenType::CharKeyword: case wcTokenType::ObjectKeyword: case wcTokenType::VarKeyword: \
+		case wcTokenType::NamespaceKeyword: case wcTokenType::FunctionKeyword: case wcTokenType::IfKeyword: case wcTokenType::ElseKeyword: case wcTokenType::ElseIfKeyword:\
+		case wcTokenType::WhileKeyword: case wcTokenType::BreakKeyword: case wcTokenType::ContinueKeyword: case wcTokenType::ReturnKeyword: case wcTokenType::ConstKeyword: 
+#define WC_SWITCHCASE_TOKENS_LITERAL case wcTokenType::IntLiteral: case wcTokenType::StringLiteral: case wcTokenType::FloatLiteral: case wcTokenType::CharLiteral: 
+#define WC_SWITCHCASE_TOKENS_BUILTIN_TYPES case wcTokenType::IntKeyword: case wcTokenType::StringKeyword: case wcTokenType::FloatKeyword: case wcTokenType::CharKeyword: case wcTokenType::UIntKeyword: 
 
-namespace wc
+namespace weec
 {
-	namespace parse
-	{
-		struct wcSymbol;
-	}
-
 	namespace lex
 	{
-		const bool wc_lexer_dropWS = true;
-
-		enum wcTokenType
+		enum class wcStringTokenType
 		{
-			tt_null, tt_string, tt_int, tt_float, tt_object, tt_var, tt_bool, tt_scolon, tt_colon, tt_dcolon, tt_comma, tt_period, tt_squote,
-			tt_dquote, tt_qmark, tt_pipe, tt_minus, tt_plus, tt_div, tt_mult, tt_mod, tt_expo, tt_assign, tt_underscore, tt_tilde,
-			tt_oparen, tt_cparen, tt_obracket, tt_cbracket, tt_obrace, tt_cbrace, tt_bslash, tt_percent, tt_newline,
-			tt_dollar, tt_amper, tt_greater, tt_less, tt_equal, tt_notequal, tt_greaterequal, tt_lessequal,
-			tt_lognot, tt_logor, tt_logand, tt_incr, tt_decr, tt_plusassign, tt_minusassign, tt_multassign, tt_divassign,
-			tt_intlit, tt_strlit, tt_fltlit, tt_ident, tt_comment, tt_chr, tt_const,
-			tt_true, tt_false, tt_namespace, tt_function, tt_if, tt_else, tt_elseif, tt_while, tt_break, tt_key_return, tt_continue,
-			tt_varident, tt_funcident, tt_lvalue,
-			
-			tt_asm_key_add, tt_asm_key_sub, tt_asm_key_mul,
-			tt_asm_key_div, tt_asm_key_mov, tt_asm_key_cmp,
-			tt_asm_key_inc, tt_asm_key_dec, tt_asm_key_and,
-			tt_asm_key_or, tt_asm_key_not, tt_asm_key_jmp,
-			tt_asm_key_je, tt_asm_key_jne, tt_asm_key_jz,
-			tt_asm_key_jg, tt_asm_key_jge, tt_asm_key_jl,
-			tt_asm_key_jle, tt_asm_key_call,
-			tt_asm_key_ret, tt_asm_key_push, tt_asm_key_pop,
-
-			tt_tab, tt_ws, tt_eos
+			Null, Whitespace, NewLine, Number, FloatNumber, Alpha, Punctuation, Special
 		};
 
-		
-		struct wcLexIndex
+		struct wcStringToken
 		{
-			wcLexIndex();
+			wcStringToken();
+			wcStringToken(std::string _data, wcStringTokenType _type, int _line, int _column);
+			wcStringToken& operator=(wcStringToken);
+			bool operator==(const wcStringToken&);
+;
+			wcStringTokenType Type;
+			std::string Data;
+			unsigned int Line, Column;
+		};
 
-			std::string nextChar();
-			std::string getChar();
-			std::string peekChar();
+		enum class wcTokenType
+		{
+			Null,
 
-			bool isValid();
-			void reset();
-			unsigned int getSize();
+			//value types
+			IntLiteral, StringLiteral, FloatLiteral, CharLiteral,
 
-			int line, column, index;
-			std::vector<std::string>* source;
+			//operators
+			MinusOperator, PlusOperator, DivideOperator, MultiplyOperator, ModulusOperator, ExponentOperator, IncrementOperator, DecrementOperator,
+			AssignOperator, PlusAssignOperator, MinusAssignOperator, MultAssignOperator, DivAssignOperator,
+			GreaterOperator, LessOperator, EqualOperator, NotEqualOperator, GreaterEqualOperator, LessEqualOperator,
+			LogNotOperator, LogOrOperator, LogAndOperator,
+
+			//reserved words
+			TrueKeyword, FalseKeyword,
+			StringKeyword, IntKeyword, UIntKeyword, FloatKeyword, BoolKeyword, CharKeyword, ObjectKeyword, VarKeyword,
+			NamespaceKeyword, FunctionKeyword, IfKeyword, ElseKeyword, ElseIfKeyword,
+			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, ConstKeyword,
+
+			//misc
+			Comment, MultiLineCommentStart, MultiLineCommentEnd, Identifier,
+			OpenParenthesis, CloseParenthesis, OpenBracket, CloseBracket, OpenBrace, CloseBrace,
+			SemiColon, Colon, DoubleColon, Comma, Period, SingleQuote, DoubleQuote,
+			Dollar, Amper, BackSlash, QMark, Pipe, Underscore, Tilde, Hash,
+			Tab, Whitespace, NewLine, Eos, Eof
+		};
+
+		std::string wcTokenTypeToString(wcTokenType);
+		
+		//matches string literals to wcTokenTypes
+		struct wcTokenDefinition
+		{
+			wcTokenDefinition();	//tt_null
+			wcTokenDefinition(wcTokenType _type, std::string);
+			wcTokenDefinition(wcTokenType _type, std::string, bool);
+			wcTokenDefinition(wcTokenType _type, std::string, bool, bool);
+			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers);
+			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter);
+			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation);
+			wcTokenDefinition(const wcTokenDefinition&);
+
+			bool isSingleCharacterToken() const;
+			bool isNull() const;
+
+			const wcTokenType Type;
+			const bool delimiter, punctuation;
+			const unsigned int precedence;
+			const std::vector<std::string> identifiers;
+		};
+
+		extern const wcTokenDefinition definitions[];
+		const unsigned int WC_VAR_DEFINITIONCOUNT = 63;
+
+		//definitions used for creating wcToken
+		struct wcTokenDefinitionsBank
+		{
+			wcTokenDefinitionsBank();
+			wcTokenDefinitionsBank(const std::vector<wcTokenDefinition>&);
+
+			bool exists(std::string),
+				exists(char), exists(wcTokenType);
+
+			const wcTokenDefinition find(std::string) const,
+				find(char) const, find(wcTokenType) const;
+
+		private:
+			const wcTokenDefinition* cache;
+			void populateDelimiterTypes();
+			std::vector<wcTokenType> delimiterTypes;
 		};
 
 		struct wcToken
 		{
 			wcToken();
-			wcToken(wcTokenType);
-			wcToken(wcTokenType, std::string);
-			wcToken(wcTokenType, std::string, int, int);
-			wcToken(wc::parse::wcSymbol);
-			wcToken(std::string);
+			wcToken(wcStringToken _string);
 
-			bool operator==(const wcToken&) const;
-			bool operator!=(const wcToken&) const;
+			wcToken& operator=(const wcToken&);
+			bool operator==(const wcToken&), operator==(wcToken&);
 
-			wcTokenType type;
-			std::string data;
-			int line, col;
+			bool IsOperator() const, IsBuiltinType() const;
+
+			wcTokenType Type;
+			wcStringToken StringToken;
+		};
+		bool operator==(const wcToken&, wcToken&);
+		bool operator==(wcToken&, const wcToken&);
+
+		struct wcStringTokenTypeAlizer
+		{
+			wcStringTokenType Get(char) const;
+			wcStringTokenType Get(std::string) const;
+		};
+
+		class wcLineFeeder
+		{
+			friend class wcStringTokenizer;
+
+			std::string& Source, Buffer;
+			int Index, Line;
+		public:
+			wcLineFeeder(std::string& _source);
+			wcLineFeeder& operator=(wcLineFeeder);
+
+			int GetLineNum() { return Line; }
+			std::string GetLine();
+			bool NextLine();
+		};
+
+		class wcStringTokenizer
+		{
+			std::string Line;
+			wcStringToken TokenBuffer;
+			wcLineFeeder Feeder;
+			unsigned int Index;
+			std::string deliminators[WC_VAR_DEFINITIONCOUNT];
+
+			bool IsDelimiter(std::string);
+			bool IncIndex();
+			bool Match(wcStringTokenType), Match(char), Match(std::string);
+
+		public:
+			wcStringTokenizer(std::string& _source);
+			wcStringTokenizer& operator=(wcStringTokenizer&);
+
+			wcStringToken GetStringToken() const;
+			bool NextStringToken(), NextStringToken(wcStringTokenType),
+				NextStringToken(char), NextStringToken(std::string);
+
+			bool Lookahead(wcStringToken& output), Lookahead(wcStringToken& output, int lookaheadCount),
+				LookaheadAndMatch(wcStringToken& output, int lookaheadCount, char matchChar),
+				LookaheadAndMatch(wcStringToken& output, int lookaheadCount, std::string matchString),
+				LookaheadAndMatch(wcStringToken& output, int lookaheadCount, wcStringTokenType matchType);
+		};
+
+		class wcTokenTypeAlizer
+		{
+			wcTokenDefinitionsBank definitionsBank;
+			bool IsPartValidIdent(std::string);
+
+		public:
+			wcTokenType Get(std::string);
+			bool IsValidIdent(std::string), IsIdentQualified(std::string);
+		};
+
+		enum class wcTokenizerError
+		{
+			None, FuckKnows, NewLineInStringLiteral, UnclosedStringLiteral, NewLineInCharLiteral, UnclosedCharLiteral, MalformedIdentifier
+		};
+
+		class wcTokenizer
+		{
+			wcStringTokenizer stringTokenizer;
+			wcStringToken lookaheadBuffer;
+			wcToken TokenBuffer;
+			wcTokenTypeAlizer tokenTypeAlizer;
+
+			bool NextToken_StringLiteral(), NextToken_CharLiteral(),
+				NextToken_Number(), NextToken_Alpha(), NextToken_Ident(),
+				NextToken_Punctuation(), NextToken_Special(), NextToken_SingleLineComment(), NextToken_MultiLineComment();
+
+		public:
+			wcTokenizerError error;
+			wcTokenizer(std::string& _source);
+
+
+			wcToken GetToken() const;
+			bool NextToken(), IsErrored();
 		};
 
 		class wcLexer
 		{
+			int error;
+
 		public:
-			wcLexer();
-			~wcLexer();
-
-			void reset();
-
-			std::vector<wcToken> lex(const char *);
-			std::vector<wcToken> lex(std::string);
-			virtual std::vector<wcToken> lex(std::vector<std::string>);
-
-			bool isDelim(std::string);
-			virtual bool isDelim(wcTokenType);
-			bool isDelimDroppable(wcToken);
-			virtual bool isDelimDroppable(wcTokenType);
-			virtual bool isPunctuation(wcTokenType);
-
-			virtual wcTokenType deriveTokenType(const char *);
-			virtual wcTokenType deriveTokenType(char);
-			virtual wcTokenType deriveTokenType(std::string);
-
-			bool isError();
-			error::wcError getError();
-			void setError(error::wcError);
-
-		protected:
-			wcLexIndex lexIndex;
-			error::wcError error;
-
-
-			const std::vector<wcTokenType> delimTypes =
-			{
-				tt_ws,	 tt_newline,	 tt_tab,	 tt_period,
-				tt_comma,	 tt_plus,	 tt_minus,	 tt_div,
-				tt_mult,	 tt_expo, 	 tt_mod, 	 tt_squote,
-				tt_assign,	 tt_pipe, 	 tt_dollar,	 tt_amper,
-				tt_greater, tt_less, 	 tt_lognot,	 tt_dquote,
-				tt_bslash,	 tt_scolon,	 tt_percent, tt_oparen,
-				tt_cparen,  tt_obrace,  tt_cbrace,  tt_obracket,
-				tt_cbracket, tt_tilde,  tt_colon
-			};
-
-			const std::unordered_multimap<std::string, wcTokenType> tokenStrings =
-			{
-				{ "" , tt_null },
-				{ "\n" , tt_newline },{ " ", tt_ws },{ "0", tt_intlit },
-				{ "1", tt_intlit },{ "2", tt_intlit },{ "3", tt_intlit },
-				{ "4", tt_intlit },{ "5", tt_intlit },{ "6", tt_intlit },
-				{ "7", tt_intlit },{ "8", tt_intlit },{ "9", tt_intlit },
-				{ "\t", tt_tab },{ ".", tt_period },{ ",", tt_comma },
-				{ "+", tt_plus, },{ "-", tt_minus },{ "/", tt_div },
-				{ "*", tt_mult },{ "%", tt_mod },{ "^", tt_expo },
-				{ "'", tt_squote },{ "\"", tt_dquote },{ "=",tt_assign },
-				{ "|",tt_pipe },{ "$",tt_dollar },{ "&",tt_amper },
-				{ "!", tt_lognot },{ ">",tt_greater },{ "<",tt_less },
-				{ ";",tt_scolon },{ ":",tt_colon },{ "(",tt_oparen },
-				{ ")",tt_cparen },{ "_",tt_underscore },{ "{",tt_obrace },
-				{ "}",tt_cbrace },{ "[",tt_obracket },{ "]",tt_cbracket },
-				{ "++", tt_incr },{ "--", tt_decr },{ "+=", tt_plusassign },
-				{ "-=", tt_minusassign },{ "*=", tt_multassign },{ "/=", tt_divassign },
-				{ "==", tt_equal },{ "!=", tt_notequal },{ ">=", tt_greaterequal },
-				{ "<=", tt_lessequal },{ "!",  tt_lognot },{ "||", tt_logor },
-				{ "&&", tt_logand },{ "::", tt_dcolon },{ "\\", tt_bslash },
-				{ "chr", tt_chr },{ "var", tt_var },{ "obj", tt_object },
-				{ "int", tt_int },{ "str", tt_string },{ "flt", tt_float },
-				{ "bool", tt_bool },{ "true", tt_true },{ "false", tt_false },
-				{ "const", tt_const },{ "namespace", tt_namespace },{ "func", tt_function },
-				{ "if", tt_if },{ "else", tt_else },{ "return", tt_key_return },{ "`",tt_tilde },
-				{ "while", tt_while },{ "break", tt_break },{ "continue", tt_continue },
-			};
+			wcLexer(std::string& _source);
 		};
 
-		//free floating lexer helpers
-		bool lex_stringLiteral(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
-		bool lex_intLiteral(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
-		bool lex_ws(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
-		bool lex_2step(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
-		bool lex_default(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
-		bool lex_comment(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
-		bool lex_commentMultiLine(std::vector<wcToken>& p_output, wcLexIndex& p_index, error::wcError& p_error);
-		bool setErrorReturnFalse(error::wcError& p_error, error::wcError p_newError);
-		std::vector<std::string> tokenizeString(std::string);
-	}
 
+
+		namespace misc
+		{
+			extern wcStringToken NullToken;
+		}
+	}
 }
+
 #endif

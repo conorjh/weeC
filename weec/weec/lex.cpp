@@ -1,563 +1,804 @@
-#include "parse.h"
 #include "lex.h"
+#include <ctype.h>
 #include <sstream>
+#include "token_definitions.h"
 
-using namespace std;
-using namespace wc;
-using namespace wc::lex;
-using namespace wc::parse;
-using namespace wc::error;
+using std::vector;
+using std::string;
+using std::stringstream;
 
-namespace wc
+using namespace weec;
+using namespace weec::lex;
+using weec::lex::wcToken;
+
+//used by default constructors
+wcStringToken weec::lex::misc::NullToken;
+
+weec::lex::wcStringToken::wcStringToken()
 {
-	namespace lex
-	{
-		
-		wcLexer lexingLexer;
-	}
+	Column = Line = 0;
+	Data = "";
+	Type = wcStringTokenType::Null;
 }
 
-bool wc::lex::setErrorReturnFalse(wcError& p_error, wcError p_newError)
+weec::lex::wcStringToken::wcStringToken(std::string _data, wcStringTokenType _type, int _line, int _column)
 {
-	p_error = p_newError;
-	return false;
+	Data = _data;
+	Type = _type;
+	Line = _line;
+	Column = _column;
 }
 
-vector<string> wc::lex::tokenizeString(string p_input)
+wcStringToken& weec::lex::wcStringToken::operator=(wcStringToken input)
 {
-	vector<string> output;
-	auto tokens = lexingLexer.lex(p_input);
-	for (int t = 0; t < tokens.size(); ++t)
-		output.push_back(tokens[t].data);
-	return output;
+	this->Column = input.Column;
+	this->Data = input.Data;
+	this->Line = input.Line;
+	this->Type = input.Type;
+	return *this;
 }
 
-wcTokenType wc::lex::wcLexer::deriveTokenType(string p_input)
+bool weec::lex::wcStringToken::operator==(const wcStringToken& Other)
 {
-	return lexingLexer.deriveTokenType(p_input.c_str());
-}
-
-//returns the the token type of a given string
-wcTokenType wc::lex::wcLexer::deriveTokenType(char p_input)
-{
-	stringstream ss;
-	ss << p_input;
-	return lexingLexer.deriveTokenType(ss.str().c_str());
-}
-
-//returns the the token type of a given string
-wcTokenType wc::lex::wcLexer::deriveTokenType(const char * p_input)
-{
-	if (p_input == "")	
-		return tt_null;
-
-	auto result = tokenStrings.find(p_input);
-
-	if (result == tokenStrings.end())
-		return tt_ident;	//no match, treat as identifier (variable name etc)
-
-	return result->second;	//matches a known token string
-}
-
-bool wc::lex::wcLexer::isPunctuation(wcTokenType p_type)
-{
-	if (p_type == tt_period || p_type == tt_dcolon)
+	if (Other.Data == Data && Other.Type == Type)
 		return true;
 	return false;
 }
 
-//is a given string a delimiter
-bool wc::lex::wcLexer::isDelim(string p_input)
+weec::lex::wcToken::wcToken() : StringToken(misc::NullToken)
 {
-	return isDelim(lexingLexer.deriveTokenType(p_input));
+	Type = wcTokenType::Null;
 }
 
-bool wc::lex::wcLexer::isDelim(wcTokenType p_type)
+weec::lex::wcToken::wcToken(wcStringToken _string)
 {
-	if (p_type != tt_null)
-	{
-		auto result = std::find(delimTypes.begin(), delimTypes.end(), p_type);
-		if (result != delimTypes.end())
-			return true;
-		else
-			return false;
-	}
+	Type = wcTokenType::Null;  //todo get type from _string.Type;
+	StringToken = _string;
+}
+
+bool weec::lex::wcToken::IsOperator() const
+{
+	if (Type == wcTokenType::AssignOperator || Type == wcTokenType::DecrementOperator || Type == wcTokenType::DivAssignOperator || Type == wcTokenType::DivideOperator ||
+		Type == wcTokenType::EqualOperator || Type == wcTokenType::ExponentOperator || Type == wcTokenType::GreaterEqualOperator || Type == wcTokenType::GreaterOperator ||
+		Type == wcTokenType::IncrementOperator || Type == wcTokenType::LessEqualOperator || Type == wcTokenType::LessOperator || Type == wcTokenType::LogAndOperator ||
+		Type == wcTokenType::LogOrOperator || Type == wcTokenType::MinusAssignOperator || Type == wcTokenType::MinusOperator || Type == wcTokenType::ModulusOperator ||
+		Type == wcTokenType::MultAssignOperator || Type == wcTokenType::MultiplyOperator || Type == wcTokenType::NotEqualOperator || Type == wcTokenType::PlusAssignOperator ||
+		Type == wcTokenType::PlusOperator)
+		return true;
 	return false;
 }
 
-//whether or not to add a given token to the output
-bool wc::lex::wcLexer::isDelimDroppable(wcTokenType p_tokenType)
+bool weec::lex::wcToken::IsBuiltinType() const
 {
-	switch (p_tokenType)
-	{
-	CASE_TT_WS
-		if (wc_lexer_dropWS)
+	if (Type == wcTokenType::IntKeyword || Type == wcTokenType::FloatKeyword || Type == wcTokenType::CharKeyword || Type == wcTokenType::StringKeyword ||
+		Type == wcTokenType::UIntKeyword || Type == wcTokenType::StringKeyword)
+		return true;
+	return false;
+}
+
+weec::lex::wcStringTokenizer::wcStringTokenizer(std::string& _source) : Feeder(_source)
+{
+	Index = 0;
+	Line = "";
+}
+
+wcStringTokenizer& weec::lex::wcStringTokenizer::operator=(wcStringTokenizer& input)
+{
+	this->Feeder = input.Feeder;
+	this->Index = input.Index;
+	this->Line = input.Line;
+	this->TokenBuffer = input.TokenBuffer;
+	return *this;
+}
+
+bool weec::lex::wcStringTokenizer::IsDelimiter(std::string _testString)
+{
+	for (auto var : deliminators)
+		if (var == _testString)
 			return true;
-		else
+	return false;
+}
+
+wcStringToken weec::lex::wcStringTokenizer::GetStringToken() const
+{
+	return TokenBuffer;
+}
+
+bool weec::lex::wcStringTokenizer::Lookahead(wcStringToken& output)
+{
+	return Lookahead(output, 1);
+}
+
+bool weec::lex::wcStringTokenizer::Lookahead(wcStringToken& output, int lookaheadCount)
+{
+	//save state
+	wcStringTokenizer state = *this;
+
+	for (int t = 0; t < lookaheadCount; ++t)
+		if (!IncIndex())
+		{
+			*this = state;
 			return false;
+		}
+
+	output = this->TokenBuffer;
+
+	//restore state
+	*this = state;
+	return true;
+}
+
+bool weec::lex::wcStringTokenizer::LookaheadAndMatch(wcStringToken& output, int lookaheadCount, char matchChar)
+{
+	if (!Lookahead(output, lookaheadCount))
+		return false;
+	return (output.Data.size() < 1 && output.Data.at(0) == matchChar);
+}
+
+bool weec::lex::wcStringTokenizer::LookaheadAndMatch(wcStringToken& output, int lookaheadCount, string matchString)
+{
+	if (!Lookahead(output, lookaheadCount))
+		return false;
+	return (output.Data == matchString);
+}
+
+bool weec::lex::wcStringTokenizer::LookaheadAndMatch(wcStringToken& output, int lookaheadCount, wcStringTokenType matchType)
+{
+	if (!Lookahead(output, lookaheadCount))
+		return false;
+	return (wcStringTokenTypeAlizer().Get(output.Data) == matchType);
+}
+
+bool weec::lex::wcStringTokenizer::NextStringToken()
+{
+	return NextStringToken(wcStringTokenType::Null);
+}
+
+bool weec::lex::wcStringTokenizer::Match(wcStringTokenType _expectedType)
+{
+	if (_expectedType != wcStringTokenType::Null && TokenBuffer.Type != _expectedType)
+		return false;
+	return true;
+}
+
+bool weec::lex::wcStringTokenizer::Match(char _expectedChar)
+{
+	if (TokenBuffer.Data.size() && _expectedChar != '\0' && TokenBuffer.Data.at(TokenBuffer.Data.size() - 1) != _expectedChar)
+		return false;
+	return true;
+}
+
+bool weec::lex::wcStringTokenizer::Match(string _expectedString)
+{
+	if (!_expectedString.empty() && TokenBuffer.Data != _expectedString)
+		return false;
+	return true;
+}
+
+bool weec::lex::wcStringTokenizer::IncIndex()
+{
+	//feed in the next line if needed
+	if (Index >= Line.size())
+	{
+		if (!Feeder.NextLine())
+			return false;
+		else
+			Index = 0;
+		Line = Feeder.GetLine();
+	}
+
+	TokenBuffer.Column = Index;
+	TokenBuffer.Line = Feeder.GetLineNum();
+	TokenBuffer.Data = "";
+
+	wcStringTokenType thisType = wcStringTokenType::Null, lastType = wcStringTokenType::Null;
+	while (Index < Line.size())
+	{
+		thisType = wcStringTokenTypeAlizer().Get(Line.at(Index));
+
+		if ((lastType != wcStringTokenType::Null && lastType != thisType) || lastType == wcStringTokenType::Punctuation || lastType == wcStringTokenType::Special)
+			break;
+
+		TokenBuffer.Data += Line.at(Index);
+		TokenBuffer.Type = thisType;
+		Index++;
+		lastType = thisType;
+	}
+
+	return true;
+}
+
+bool weec::lex::wcStringTokenizer::NextStringToken(wcStringTokenType _expectedType)
+{
+	if (!IncIndex())
+		return false;
+
+	//match with an expected type
+	return Match(_expectedType);
+}
+
+bool weec::lex::wcStringTokenizer::NextStringToken(char _expectedChar)
+{
+	if (!IncIndex())
+		return false;
+
+	//match with an expected type
+	return Match(_expectedChar);
+}
+
+bool weec::lex::wcStringTokenizer::NextStringToken(string _expectedString)
+{
+	if (!IncIndex())
+		return false;
+
+	//match with an expected type
+	return Match(_expectedString);
+}
+
+wcStringTokenType weec::lex::wcStringTokenTypeAlizer::Get(char test) const
+{
+	if (test == '\n')
+		return wcStringTokenType::NewLine;
+	else if (isspace(test))
+		return wcStringTokenType::Whitespace;
+	else if (isdigit(test))
+		return wcStringTokenType::Number;
+	else if (isalpha(test))
+		return wcStringTokenType::Alpha;
+	else if (ispunct(test))
+		return wcStringTokenType::Punctuation;
+	else
+		return wcStringTokenType::Special;
+}
+
+wcStringTokenType weec::lex::wcStringTokenTypeAlizer::Get(string test) const
+{
+	if (test == "\n")
+		return wcStringTokenType::NewLine;
+	else if (isspace(test[0]))
+		return wcStringTokenType::Whitespace;
+	else if (isdigit(test[0]))
+		return wcStringTokenType::Number;
+	else if (isalpha(test[0]))
+		return wcStringTokenType::Alpha;
+	else if (ispunct(test[0]))
+		return wcStringTokenType::Punctuation;
+	else
+		return wcStringTokenType::Special;
+}
+
+bool weec::lex::wcTokenTypeAlizer::IsValidIdent(std::string Ident)
+{
+	//get each part in between seperators (:: and .), and make sure that is a valid ident
+	//each part inbetween seperators must be valid as an ident for the whole ident (seperators and all) to be valid
+	unsigned int index = 0; string PartBuffer;
+	while (index < Ident.size())
+	{
+		PartBuffer = "";
+
+		//increment until we find a seperator
+		while (index < Ident.size() && (Ident[index] != '.' && Ident[index] != ':'))
+		{
+			PartBuffer += Ident[index];
+			index++;
+		}
+
+		//check this part is valid
+		if (PartBuffer.size() == 0)
+			return false;	//empty ident before seperator
+		if (!IsPartValidIdent(PartBuffer))
+			return false;
+
+		//handle double colon seperators by reading ahead and consuming the second colon
+		if (Ident[index] == ':' && index + 1 < Ident.size() && Ident[index + 1] == ':')
+			index++;
+		else if (Ident[index] == ':' && index + 1 < Ident.size() && Ident[index + 1] != ':')
+			return false;	//incomplete seperator
+
+		index++;
+	}
+
+	//check this final (or possibly only) part is valid
+	if (PartBuffer.size() == 0)
+		return false;	//empty ident before seperator
+	if (!IsPartValidIdent(PartBuffer))
+		return false;
+
+	return true;
+}
+
+bool weec::lex::wcTokenTypeAlizer::IsIdentQualified(std::string Ident)
+{
+	if (!IsValidIdent(Ident))
+		return false;
+
+	if (Ident.find("::") != std::string::npos || Ident.find(".") != std::string::npos)
+		return true;
+	return false;
+}
+
+bool  weec::lex::wcTokenTypeAlizer::IsPartValidIdent(std::string Ident)
+{
+	if (Ident.size() == 0)
+		return false;	//cant be empty
+	if (Ident[0] != '_' && !isalpha(Ident[0]))
+		return false;	//must start with an underscore or letter
+	return true;
+
+}
+
+wcTokenType weec::lex::wcTokenTypeAlizer::Get(std::string _testString)
+{
+	if (definitionsBank.exists(_testString))
+		return definitionsBank.find(_testString).Type;
+	if (IsValidIdent(_testString))
+		return wcTokenType::Identifier;
+	return wcTokenType::Null;
+}
+
+wcToken& weec::lex::wcToken::operator=(const wcToken& _rvalue)
+{
+	StringToken = _rvalue.StringToken;
+	Type = _rvalue.Type;
+	return *this;
+}
+
+bool weec::lex::wcToken::operator==(const wcToken& Other)
+{
+	if (Other.StringToken == StringToken && Other.Type == Type)
+		return true;
+	return false;
+}
+
+bool weec::lex::wcToken::operator==(wcToken& Other)
+{
+	if (Other.StringToken == StringToken && Other.Type == Type)
+		return true;
+	return false;
+}
+
+bool weec::lex::operator==(const wcToken& lhs, wcToken& rhs)
+{
+	if (lhs.StringToken == rhs.StringToken && lhs.Type == rhs.Type)
+		return true;
+	return false;
+}
+bool weec::lex::operator==(wcToken& lhs, const wcToken& rhs)
+{
+	if (lhs.StringToken == rhs.StringToken && lhs.Type == rhs.Type)
+		return true;
+	return false;
+}
+
+wcLineFeeder::wcLineFeeder(std::string& _source) : Source(_source)
+{
+	Index = Line = 0;
+	Buffer = "";
+}
+
+wcLineFeeder& weec::lex::wcLineFeeder::operator=(wcLineFeeder input)
+{
+	this->Buffer = input.Buffer;
+	this->Index = input.Index;
+	this->Line = input.Line;
+	this->Source = input.Source;
+	return *this;
+}
+
+std::string weec::lex::wcLineFeeder::GetLine()
+{
+	return Buffer;
+}
+
+bool weec::lex::wcLineFeeder::NextLine()
+{
+	if (!Source.size() || Index >= Source.size())
+		return false;
+
+	Buffer = "";
+	while (Index < Source.size())
+	{
+		Buffer += Source.at(Index);
+		if (Source.at(Index) == '\n')
+		{
+			Line++;
+			Index++;
+			return true;
+		}
+		Index++;
+	}
+
+	return true;
+}
+
+weec::lex::wcTokenizer::wcTokenizer(std::string& _source) : stringTokenizer(_source)
+{
+	error = wcTokenizerError::None;
+}
+
+wcToken weec::lex::wcTokenizer::GetToken() const
+{
+	return TokenBuffer;
+}
+
+bool weec::lex::wcTokenizer::NextToken()
+{
+	if (!stringTokenizer.NextStringToken())
+		return false;
+
+	TokenBuffer.StringToken = stringTokenizer.GetStringToken();
+	TokenBuffer.Type = tokenTypeAlizer.Get(TokenBuffer.StringToken.Data);
+
+	switch (TokenBuffer.StringToken.Type)
+	{
+	case wcStringTokenType::Number:
+		return NextToken_Number();
+
+	case wcStringTokenType::Special:
+		return NextToken_Special();
+
+	case wcStringTokenType::Alpha:
+		return NextToken_Alpha();
+
+	case wcStringTokenType::Punctuation:
+		if (TokenBuffer.Type == wcTokenType::DoubleQuote)
+			return NextToken_StringLiteral();
+		else if (TokenBuffer.Type == wcTokenType::SingleQuote)
+			return NextToken_CharLiteral();
+		else
+			return NextToken_Punctuation();
+
+		//skip over whitespace
+	case wcStringTokenType::Whitespace:
+	case wcStringTokenType::NewLine:
+		return NextToken();
+
 	default:
 		return false;
 	}
-}
 
-bool wc::lex::wcLexer::isDelimDroppable(wcToken p_token)
-{
-	return isDelimDroppable(deriveTokenType(p_token.data));
-}
-
-wc::lex::wcToken::wcToken()
-{
-	type = tt_null;
-	line = col = 0;
-	data = "";
-}
-
-wc::lex::wcToken::wcToken(wc::parse::wcSymbol p_sym)
-{
-	*this = wcToken();
-	type = tt_ident;
-	data = p_sym.fullyQualifiedIdent;
-}
-
-wc::lex::wcToken::wcToken(wcTokenType p_tt)
-{
-	*this = wcToken();
-	type = p_tt;
-}
-
-wc::lex::wcToken::wcToken(wcTokenType p_tt, string p_data)
-{
-	*this = wcToken();
-	type = p_tt;
-	data = p_data;
-}
-
-wc::lex::wcToken::wcToken(wcTokenType p_tt, string p_data, int p_line, int p_col)
-{
-	type = p_tt;
-	data = p_data;
-	line = p_line;
-	col = p_col;
-}
-
-wc::lex::wcToken::wcToken(string p_data)
-{
-	*this = wcToken();
-	type = lexingLexer.deriveTokenType(p_data);
-	data = p_data;
-}
-
-wc::lex::wcLexer::wcLexer()
-{
-
-}
-
-wc::lex::wcLexer::~wcLexer()
-{
-
-}
-
-wc::lex::wcLexIndex::wcLexIndex()
-{
-	index = line = column = 0;
-	source = nullptr;
-}
-
-//reset the index back to the first line and column
-void wc::lex::wcLexIndex::reset()
-{
-	index = line = column = 0;
-}
-
-//return the character currently pointed to by the index
-string wc::lex::wcLexIndex::getChar()
-{
-	string out = source->at(line);
-	if (isValid())
-		return out.substr(column,1);
-	return "";
-}
-
-//move the index to the next character in the stream, updating info as we go
-string wc::lex::wcLexIndex::nextChar()
-{
-	if (!isValid())
-		return "";
-	
-	++index;	++column;
-	if (column >= source->at(line).size())
-		if (line + 1 < source->size())
-		{
-			line++;
-			column = 0;
-			return getChar();	//next character from the new line
-		}
-		else
-		{
-			return "";	//end of stream
-		}
-
-	return getChar();	//next character
-}
-
-//retrieve the next character from the stream without moving the index ahead
-string wc::lex::wcLexIndex::peekChar()
-{
-	if (!isValid())
-		return "";
-
-	//check theres another character
-	if (column + 1 >= source->at(line).size())
-		if (line + 1 >= source->size())
-			return "";	//eos
-		else
-			return source->at(line + 1).substr(0, 1);	//next character is on a newline
-	else
-		return source->at(line).substr(column + 1,1); //next character
-}
-
-//do we have a source loaded, and are there still character to read
-bool wc::lex::wcLexIndex::isValid()
-{
-	if(source != nullptr && line > -1 && column > -1 && index > -1 && (column < getSize()))
-		return true;
+	//shouldnt get here
+	error = wcTokenizerError::FuckKnows;
 	return false;
 }
 
-unsigned int wc::lex::wcLexIndex::getSize()
+bool weec::lex::wcTokenizer::NextToken_StringLiteral()
 {
-	string s = source->at(line);
-	if (!source->size())
-		return 0;
-	return s.size();
-}
+	string Buffer = "";
 
-bool wc::lex::wcToken::operator==(const wcToken& p_token) const
-{
-	return (this->type == p_token.type && this->data == p_token.data);
-}
-
-bool wc::lex::wcToken::operator!=(const wcToken& p_token) const
-{
-	return !(this->type == p_token.type && this->data == p_token.data);
-}
-
-bool wc::lex::wcLexer::isError()
-{
-	return error != ec_null;
-}
-
-wc::error::wcError wc::lex::wcLexer::getError()
-{
-	return error;
-}
-
-void wc::lex::wcLexer::setError(wcError p_err)
-{
-	error = p_err;
-}
-
-vector<wcToken> wc::lex::wcLexer::lex(vector<string> p_input)
-{
-	vector<wcToken> out;
-	lexIndex.source = &p_input;
-
-	//loop through characters making tokens until end of stream
-	while (lexIndex.isValid())
-		switch (lexingLexer.deriveTokenType(lexIndex.getChar()))
+	while (stringTokenizer.NextStringToken())
+		if (wcTokenTypeAlizer().Get(stringTokenizer.GetStringToken().Data) != wcTokenType::DoubleQuote)
+			Buffer += stringTokenizer.GetStringToken().Data;
+		else if (wcTokenTypeAlizer().Get(stringTokenizer.GetStringToken().Data) == wcTokenType::NewLine)
 		{
-			//string literal
-		case tt_dquote:
-			if (!lex_stringLiteral(out, lexIndex, error))
-				return out;
-			break;
-
-			//integer literals
-		case tt_intlit:
-			if (!lex_intLiteral(out, lexIndex, error))
-				return out;
-			break;
-
-			//all 2 part tokens (operators etc)
-		case tt_greater: case tt_less: case tt_lognot:
-		case tt_assign:	case tt_plus: case tt_minus:
-		case tt_amper: case tt_pipe: case tt_colon:
-			if (!lex_2step(out, lexIndex, error))
-				return out;
-			break;
-
-			//whitespace
-		CASE_TT_WS
-			if (!lex_ws(out, lexIndex, error))
-				return out;
-			break;
-
-			//comments
-		case tt_div:
-			if (!lex_comment(out, lexIndex, error))
-				return out;
-			break;
-
-			//possible delimiter or identifier etc
-		default:
-			if (!lex_default(out, lexIndex, error))
-				return out;
-			break;
+			//error, newline in string literal, can only be on one line
+			error = wcTokenizerError::NewLineInStringLiteral;
+			return false;
 		}
-
-	return out;
-}
-
-vector<wcToken> wc::lex::wcLexer::lex(string p_input)
-{
-	return lex(p_input.c_str());
-}
-
-vector<wcToken> wc::lex::wcLexer::lex(const char * p_input)
-{
-	vector<string> inputHolder = { p_input };
-	vector<wcToken> out;
-	lexIndex.source = &inputHolder;
-
-	return lex(inputHolder);
-}
-
-bool wc::lex::lex_default(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
-{
-	string strBuff;
-	int origLine = p_index.line;
-	int origCol = p_index.column;
-
-	//build up the token until we hit a delimiter or eos
-	while (p_index.isValid() && !lexingLexer.isDelim(p_index.getChar()))
-	{
-		strBuff += p_index.getChar();
-		p_index.nextChar();
-	}
-	
-	//create a token for the delimiter unless it was end of stream
-	wcToken preDelim(lexingLexer.deriveTokenType(strBuff), strBuff, origLine, origCol);
-	if (lexingLexer.isDelim(p_index.getChar()))
-	{
-		if(preDelim.type != tt_null)
-			p_output.push_back(preDelim);
-		
-		wcToken delim(lexingLexer.deriveTokenType(p_index.getChar()), p_index.getChar(), p_index.line, p_index.column);
-		if(!lexingLexer.isDelimDroppable(delim))
-			p_output.push_back(delim);
-	}
-	else
-	{
-		strBuff += p_index.getChar();	//eos
-		p_output.push_back(preDelim);
-	}
-
-	p_index.nextChar();
-	return true;
-}
-
-bool wc::lex::lex_2step(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
-{
-	//dual step tokens	
-
-	if (!(
-		( lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar())) ) != tt_greaterequal && (lexingLexer.deriveTokenType( (p_index.getChar() + p_index.peekChar() ))) != tt_lessequal &&
-		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_notequal && (lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_equal &&
-		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_incr && (lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_plusassign &&
-		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_decr && (lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_minusassign &&
-		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_logand && (lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_logor &&
-		(lexingLexer.deriveTokenType((p_index.getChar() + p_index.peekChar()))) != tt_dcolon
-		))
-	{
-		wcToken twoStep(lexingLexer.deriveTokenType(p_index.getChar() + p_index.peekChar()), p_index.getChar() + p_index.peekChar(),p_index.line, p_index.column);
-		p_output.push_back(twoStep);
-		p_index.nextChar();
-		p_index.nextChar();
-	}
-	else
-	{
-		p_output.push_back(wcToken(lexingLexer.deriveTokenType(p_index.getChar()), p_index.getChar(), p_index.line, p_index.column));
-		p_index.nextChar();
-	}
-	return true;
-}
-
-bool wc::lex::lex_intLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
-{
-	string leftValue,rightValue;
-	int origCol = p_index.column;
-	int origLine = p_index.line;
-	bool firstHalf = true; 
-	bool breakWhile = false;
-
-	//make sure we have an opening int
-	if (lexingLexer.deriveTokenType(p_index.getChar()) != tt_intlit)
-		return setErrorReturnFalse(p_error, wcError(ec_lex_unexpectedtoken, "Expected a numeric value (0-9)", origLine, origCol));
-
-	//get all the numbers til we hit not a number
-	while (p_index.isValid() && !breakWhile)
-		switch (lexingLexer.deriveTokenType(p_index.getChar()))
+		else
 		{
-		case tt_intlit:
-			if(firstHalf)
-				leftValue += p_index.getChar();
-			else
-				rightValue += p_index.getChar();
-			p_index.nextChar();
-			break;
-
-		case tt_period:
-			if (!leftValue.size() && firstHalf)
-				return setErrorReturnFalse(p_error, wcError(ec_lex_unexpectedtoken, "Expected a numeric value (0-9)", p_index.line, p_index.column));
-			else if (!firstHalf)
-				return setErrorReturnFalse(p_error, wcError(ec_lex_unexpectedtoken, "Encountered a second period", p_index.line, p_index.column));
-
-			//float encountered, continue lexing the second half after the decimal
-			firstHalf = false;
-			p_index.nextChar();
-			break;
-
-		default:
-			breakWhile = true;
-			break;
-		}
-
-	//check what we found
-	if (firstHalf && leftValue.size() && (!rightValue.size()))
-		p_output.push_back(wcToken(tt_intlit, leftValue, origLine, origCol));
-	else if (!firstHalf && leftValue.size() && rightValue.size())
-		p_output.push_back(wcToken(tt_fltlit, leftValue + "." + rightValue, origLine, origCol));
-	else
-		return setErrorReturnFalse(p_error, wcError(ec_lex_somekindoferror, "Some kind of error lexing a float", origLine, origCol));
-	return true;
-}
-
-//parse a string literal within double quotes
-bool wc::lex::lex_stringLiteral(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
-{
-	string strBuff;
-	int origLine = p_index.line;
-	int origCol = p_index.column;
-
-	//make sure we have an opening double quote
-	if (lexingLexer.deriveTokenType(p_index.getChar()) != tt_dquote)
-	{
-		p_error = wcError(ec_lex_unexpectedtoken, "Expected '\"'", origLine, origCol);
-		return false;
-	}
-	p_index.nextChar();
-
-	//loop through until we reach the closing quote, or end of stream
-	while (p_index.isValid())
-		switch (lexingLexer.deriveTokenType(p_index.getChar()))
-		{
-		case tt_dquote:
-			p_output.push_back(wcToken(tt_strlit, strBuff, origLine, origCol));
-			p_index.nextChar();
+			TokenBuffer.StringToken.Data = Buffer;
+			TokenBuffer.Type = wcTokenType::StringLiteral;
 			return true;
-
-		default:
-			strBuff += p_index.getChar();
-			p_index.nextChar();
-			break;
 		}
 
-	//end of stream before end of string, error
-	return setErrorReturnFalse(p_error, wcError(ec_lex_eos_strlit, strBuff, origLine, origCol));
+	//end of file reached before closing double quote
+	error = wcTokenizerError::UnclosedStringLiteral;
+	return false;
 }
 
-//parse whitespace, tabs and newlines as one solid block. no token produced if wc_lexer_dropWS == true
-bool wc::lex::lex_ws(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool weec::lex::wcTokenizer::NextToken_CharLiteral()
 {
-	string strBuff;
-	bool breakWhile = false;
-	int origLine = p_index.line;
-	int origCol = p_index.column;
-	wcTokenType tt = lexingLexer.deriveTokenType(p_index.getChar());
+	string Buffer = "";
 
-	//make sure we have an opening whitespace
-	if (tt != tt_ws && tt!= tt_tab && tt!= tt_newline)
-		return setErrorReturnFalse(p_error, wcError(ec_lex_unexpectedtoken, "Expected '\"'", origLine, origCol));
-
-	//clump all consecutive whitespace together
-	while (p_index.isValid() && !breakWhile)
-		switch (lexingLexer.deriveTokenType(p_index.getChar()))
+	while (stringTokenizer.NextStringToken())
+		if (wcTokenTypeAlizer().Get(stringTokenizer.GetStringToken().Data) != wcTokenType::SingleQuote)
+			Buffer += stringTokenizer.GetStringToken().Data;
+		else if (wcTokenTypeAlizer().Get(stringTokenizer.GetStringToken().Data) == wcTokenType::NewLine)
 		{
-		CASE_TT_WS
-			if (!wc_lexer_dropWS)
-				strBuff += p_index.getChar();		//preserve whitespace tokens
-			p_index.nextChar();
-			break;
-
-		//end of whitespace as soon as we reach another token or eos
-		default:
-			breakWhile = true;
-			break;
+			//error, newline encountered in char literal, can only be on one line
+			error = wcTokenizerError::NewLineInCharLiteral;
+			return false;
+		}
+		else
+		{
+			TokenBuffer.StringToken.Data = Buffer;
+			TokenBuffer.Type = wcTokenType::CharLiteral;
+			return true;
 		}
 
-	if (!wc_lexer_dropWS)
-		p_output.push_back(wcToken(lexingLexer.deriveTokenType(strBuff), strBuff, origLine, origCol));
+	//end of file reached before closing single quote
+	error = wcTokenizerError::UnclosedCharLiteral;
+	return false;
+}
+
+bool weec::lex::wcTokenizer::NextToken_Number()
+{
+	wcStringToken buffer1;
+	if (stringTokenizer.Lookahead(buffer1, 1) && buffer1.Data == ".")
+		if (stringTokenizer.LookaheadAndMatch(buffer1, 2, wcStringTokenType::Number))
+		{
+			//float literal
+			stringTokenizer.NextStringToken();
+			stringTokenizer.NextStringToken();
+			TokenBuffer.StringToken = wcStringToken(TokenBuffer.StringToken.Data + "." + buffer1.Data,
+				wcStringTokenType::FloatNumber, TokenBuffer.StringToken.Line, TokenBuffer.StringToken.Column);
+			TokenBuffer.Type = wcTokenType::FloatLiteral;
+			return true;
+		}
+
+	//int literal
+	TokenBuffer.Type = wcTokenType::IntLiteral;
 	return true;
 }
 
-//parse single (//) and multi-line (/*  */) comments, no token produced
-bool wc::lex::lex_comment(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool weec::lex::wcTokenizer::NextToken_Special()
 {
-	//make sure we have an opening / 
-	if (lexingLexer.deriveTokenType(p_index.getChar()) != tt_div)
-		return setErrorReturnFalse(p_error, wcError(ec_lex_unexpectedtoken, "Expected '/'", p_index.line, p_index.column));
+	return true;
+}
 
-	//handle multi line elsewhere
-	if (lexingLexer.deriveTokenType(p_index.peekChar()) == tt_mult)
-		return lex_commentMultiLine(p_output, p_index, p_error);
-	else if (lexingLexer.deriveTokenType(p_index.peekChar()) != tt_div)
-	{
-		//just a single division symbol (/) not actually a comment (//)
-		p_output.push_back(wcToken(tt_div, p_index.getChar(), p_index.line, p_index.column));
-		p_index.nextChar();
+bool weec::lex::wcTokenizer::NextToken_Alpha()
+{
+	if (TokenBuffer.Type == wcTokenType::Identifier)
+		return NextToken_Ident();
+	return true;
+}
+
+bool weec::lex::wcTokenizer::NextToken_Punctuation()
+{
+	if (!stringTokenizer.Lookahead(lookaheadBuffer))
 		return true;
+
+	//handle ::, >=, == etc
+	auto possibleOperatorType = tokenTypeAlizer.Get(TokenBuffer.StringToken.Data + lookaheadBuffer.Data);
+
+	if (possibleOperatorType == wcTokenType::Comment)
+		return NextToken_SingleLineComment();
+	else if (possibleOperatorType == wcTokenType::MultiLineCommentStart)
+		return NextToken_MultiLineComment();
+	else if (possibleOperatorType != wcTokenType::Null)
+	{
+		stringTokenizer.NextStringToken();
+		TokenBuffer.StringToken.Data += lookaheadBuffer.Data;
+		TokenBuffer.Type = possibleOperatorType;
 	}
-
-	//go through until end of line or eos
-	while(p_index.isValid())
-		switch (lexingLexer.deriveTokenType(p_index.getChar()))
-		{
-		default:
-			p_index.nextChar();
-			break;
-
-		case tt_newline:
-			p_index.nextChar();
-			return true;
-		}
-
-	//end of stream
 	return true;
 }
 
-//lex and drop any multi line comments
-//assume first token is / (tt_div), and second token is tt_mult
-bool wc::lex::lex_commentMultiLine(vector<wcToken>& p_output, wcLexIndex& p_index, wcError& p_error)
+bool weec::lex::wcTokenizer::NextToken_Ident()
 {
-	//skip past tt_mult
-	p_index.nextChar();
+	TokenBuffer.Type = wcTokenType::Identifier;
 
-	//go through until */ or eos
-	while (p_index.isValid())
-		switch (lexingLexer.deriveTokenType(p_index.getChar()))
+	bool LastPartWasASeperator = false; wcStringToken Buffer, ColonBuffer;
+	while (stringTokenizer.Lookahead(Buffer, 1))
+		switch (wcTokenTypeAlizer().Get(Buffer.Data))
 		{
-		case tt_mult:
-				if (lexingLexer.deriveTokenType(p_index.nextChar()) == tt_div)
+		case wcTokenType::Colon:
+			if (stringTokenizer.Lookahead(ColonBuffer, 2))
+				if (wcTokenTypeAlizer().Get(ColonBuffer.Data) == wcTokenType::Colon)
 				{
-					p_index.nextChar();
-					return true;	//end of comment found
+					TokenBuffer.StringToken.Data += ColonBuffer.Data;
+					stringTokenizer.NextStringToken();	//actualy part of a double colon, so fallthrough
 				}
+				else
+					goto _wcTokenizer_NextToken_Ident_End_Of_Ident;
 
+		case wcTokenType::DoubleColon:
+		case wcTokenType::Period:
+			if (LastPartWasASeperator)
+			{
+				error = wcTokenizerError::MalformedIdentifier;
+				return false;	//two seperators in a row, error
+			}
+
+			TokenBuffer.StringToken.Data += Buffer.Data;
+			LastPartWasASeperator = true;
+			stringTokenizer.NextStringToken();
+			continue;
+
+			WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
+		case wcTokenType::Identifier:
+			if (!LastPartWasASeperator)
+				return true;	//two idents in a row somehow, possible error?
+
+			TokenBuffer.StringToken.Data += Buffer.Data;
+			LastPartWasASeperator = false;
+			stringTokenizer.NextStringToken();
+			continue;
+
+		case wcTokenType::Whitespace:
 		default:
-			p_index.nextChar();
-			break;
+			return true;
 		}
 
-	//end of stream
+	//end of stream/ident
+_wcTokenizer_NextToken_Ident_End_Of_Ident:
+	if (LastPartWasASeperator)
+	{
+		error = wcTokenizerError::MalformedIdentifier;
+		return false;	//incomplete ident
+	}
+	else
+		return true;	//end of stream, but valid ident parsed
+
+}
+
+bool weec::lex::wcTokenizer::NextToken_SingleLineComment()
+{
+	while (stringTokenizer.GetStringToken().Type != wcStringTokenType::NewLine)
+		if (!stringTokenizer.NextStringToken())
+			return false;
+	return NextToken();		//skip over comments
+}
+
+bool weec::lex::wcTokenizer::NextToken_MultiLineComment()
+{
+	stringTokenizer.NextStringToken();
+
+	while (stringTokenizer.NextStringToken())
+		if (tokenTypeAlizer.Get(stringTokenizer.GetStringToken().Data) == wcTokenType::MultiplyOperator)
+			if (stringTokenizer.Lookahead(lookaheadBuffer) && tokenTypeAlizer.Get(lookaheadBuffer.Data) == wcTokenType::DivideOperator)
+			{
+				stringTokenizer.NextStringToken();
+				return NextToken();		//skip over comments
+			}
+
+	//error, never found a closing comment token
+	return false;
+}
+
+bool weec::lex::wcTokenizer::IsErrored()
+{
+	return (error != wcTokenizerError::None);
+}
+
+weec::lex::wcTokenDefinition::wcTokenDefinition() : Type(wcTokenType::Null), identifiers({}), delimiter(false), punctuation(false), precedence(0)
+{
+}
+
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) : Type(_type), identifiers({ identifier }), delimiter(false), punctuation(false), precedence(0)
+{
+}
+
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) : Type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(false), precedence(0)
+{
+}
+
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim, bool _isPunc) : Type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(_isPunc), precedence(0)
+{
+}
+
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) : Type(_type), identifiers(_identifiers), delimiter(false), punctuation(false), precedence(0)
+{
+}
+
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) : Type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(false), precedence(0)
+{
+}
+
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation) : Type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(_isPunctuation), precedence(0)
+{
+}
+
+weec::lex::wcTokenDefinition::wcTokenDefinition(const wcTokenDefinition& input) : Type(input.Type), identifiers(input.identifiers), delimiter(input.delimiter), punctuation(input.punctuation), precedence(input.precedence)
+{
+}
+
+
+bool weec::lex::wcTokenDefinition::isNull() const
+{
+	if (Type == wcTokenType::Null && !delimiter && !identifiers.size())
+		return true;
+	else
+		return false;
+}
+
+bool weec::lex::wcTokenDefinition::isSingleCharacterToken() const
+{
+	if (identifiers.size() == 0)
+		return false;
+
+	for (unsigned int t = 0; t < identifiers.size(); ++t)
+		if (identifiers[t].size() > 1)
+			return false;
+
 	return true;
+}
+
+
+weec::lex::wcTokenDefinitionsBank::wcTokenDefinitionsBank()
+{
+	cache = nullptr;
+	populateDelimiterTypes();
+}
+
+weec::lex::wcTokenDefinitionsBank::wcTokenDefinitionsBank(const std::vector<wcTokenDefinition>&)
+{
+	cache = nullptr;
+	populateDelimiterTypes();
+}
+
+bool weec::lex::wcTokenDefinitionsBank::exists(string identToCheck)
+{
+	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
+		for (int y = 0; y < definitions[t].identifiers.size(); ++y)
+			if (definitions[t].identifiers[y] == string(identToCheck))
+			{
+				cache = &definitions[t];
+				return true;
+			}
+	return false;
+}
+
+bool weec::lex::wcTokenDefinitionsBank::exists(char identToCheck)
+{
+	stringstream ss;
+	ss << identToCheck;
+	return exists(ss.str());
+}
+
+bool weec::lex::wcTokenDefinitionsBank::exists(wcTokenType typeToCheck)
+{
+	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
+		if (definitions[t].Type == typeToCheck)
+		{
+			cache = &definitions[t];
+			return true;
+		}
+	return false;
+}
+
+const wcTokenDefinition weec::lex::wcTokenDefinitionsBank::find(string identToCheck) const
+{
+	//check cache
+	if (cache != nullptr)
+		for (int y = 0; y < cache->identifiers.size(); ++y)
+			if (cache->identifiers[y] == identToCheck)
+				return *cache;
+
+	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
+		for (unsigned int y = 0; y < definitions[t].identifiers.size(); ++y)
+			if (definitions[t].identifiers[y] == identToCheck)
+				return definitions[t];
+	return wcTokenDefinition();
+}
+
+const wcTokenDefinition weec::lex::wcTokenDefinitionsBank::find(wcTokenType typeToCheck) const
+{
+	//check cache
+	if (cache != nullptr)
+		if (cache->Type == typeToCheck)
+			return *cache;
+
+	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
+		if (definitions[t].Type == typeToCheck)
+			return definitions[t];
+	return wcTokenDefinition();
+}
+
+const wcTokenDefinition weec::lex::wcTokenDefinitionsBank::find(char identToCheck) const
+{
+	stringstream ss;
+	ss << identToCheck;
+	return find(ss.str());
+}
+
+void weec::lex::wcTokenDefinitionsBank::populateDelimiterTypes()
+{
+	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
+		if (definitions[t].delimiter)
+			delimiterTypes.push_back(definitions[t].Type);
+}
+
+std::string weec::lex::wcTokenTypeToString(wcTokenType Type)
+{
+	switch (Type)
+	{
+	case wcTokenType::Amper:
+		return "wcTokenType::Amper";
+	case wcTokenType::AssignOperator:
+		return "wcTokenType::AssignOperator";
+	default:
+		return "";
+	}
 }

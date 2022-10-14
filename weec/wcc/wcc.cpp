@@ -279,15 +279,15 @@ void wcc::print()
 	print("");
 }
 
-void wcc::print(string p_input)
+void wcc::print(string input)
 {
 	if (!data.displayOutput)
 		return;
 
-	cout << p_input;
-	if (p_input.size() && p_input[p_input.length() - 1] != '\n')
+	cout << input;
+	if (input.size() && input[input.length() - 1] != '\n')
 		cout << "\n";
-	else if (!p_input.size())
+	else if (!input.size())
 		cout << "\n";
 }
 
@@ -329,24 +329,24 @@ string wcc::getSourceLine(int p_line)
 	return importSource(data.filenameSource)[p_line];
 }
 
-string wcc::getFilenameWithoutExt(string p_input)
+string wcc::getFilenameWithoutExt(string input)
 {
-	if (p_input.size() < 3)
-		return p_input;
+	if (input.size() < 3)
+		return input;
 
 	//work backwards to find the final period
-	int index = p_input.size() - 1;
+	int index = input.size() - 1;
 	while (index != 0)
-		if (p_input[index] == '.')
+		if (input[index] == '.')
 			break;
 		else
 			index--;
 
 	//no . found, return whole input
-	if (index == p_input.size())
-		return p_input;
+	if (index == input.size())
+		return input;
 
-	return p_input.substr(0, p_input.size() - (p_input.size() - index));
+	return input.substr(0, input.size() - (input.size() - index));
 }
 
 //takes a CompileTarget, returns the string rep of it
@@ -365,12 +365,12 @@ string wcc::getExtensionFromTargetPlatform(CompileTarget p_target)
 	}
 }
 
-string wcc::getFilenameExtension(string p_input)
+string wcc::getFilenameExtension(string input)
 {
-	int index = p_input.size();
-	while (index > 0 && p_input[index] != '.')
+	int index = input.size();
+	while (index > 0 && input[index] != '.')
 		index--;
-	return p_input.substr(index);
+	return input.substr(index);
 }
 
 //display compile settings
@@ -394,15 +394,15 @@ void wcc::displayPreCompileInfo()
 }
 
 //
-void wcc::displayCompileResult(CompilerOutput p_input)
+void wcc::displayCompileResult(CompilerOutput input)
 {
-	wcError err = p_input.compiler->getError();
+	wcError err = input.compiler->getError();
 	if (err.code)
 	{
 		print("Compilation failed...");
 		print("- - - - - - - - - - - -");
-		print(itos((int)err.line + 1) + "," + itos((int)err.col) + ": \"" + getSourceLine(err.line) + "\"");
-		print("Error " + itos((int)err.code) + " " + errorStrings.find((int)err.code)->second + ":  \"" + err.text + "\"");
+		print(string((int)err.line + 1) + "," + string((int)err.col) + ": \"" + getSourceLine(err.line) + "\"");
+		print("Error " + string((int)err.code) + " " + errorStrings.find((int)err.code)->second + ":  \"" + err.text + "\"");
 		print("- - - - - - - - - - - -");
 	}
 	else

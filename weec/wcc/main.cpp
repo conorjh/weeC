@@ -4,11 +4,11 @@ using namespace wcc;
 
 int main_test_exportast(char *argv[]);
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	return main_test_exportast(argv);
 
-	init(argc,argv);
+	init(argc, argv);
 
 	//do
 	exec();
@@ -19,9 +19,9 @@ int main(int argc, char *argv[])
 }
 
 
-int main_test_exportast(char *argv[])
+int main_test_exportast(const char *argv[])
 {
-	char *a[] = { argv[0], "-s", "exportast.wc", "-ast", "exportast.ast"};
+	const char *a[] = { argv[0], "-s", "exportast.wc", "-ast", "exportast.ast" };
 
 	init(5, a);
 
@@ -31,4 +31,4 @@ int main_test_exportast(char *argv[])
 	//exit
 	cleanup();
 	return 0;
-}
+} 

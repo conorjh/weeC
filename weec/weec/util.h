@@ -1,24 +1,15 @@
-#ifndef WC_UTIL_H
-#define WC_UTIL_H
-#include <vector>
+#ifndef WC_UTIL
+#define WC_UTIL
 #include <string>
+#include <vector>
 
-namespace wc
+namespace weec
 {
 	namespace util
 	{
-		 std::vector<std::string> loadFileAsText(std::string filename);
-		 bool fileExists(std::string filename);
-		 int randomInt();
-		 unsigned int randomUInt();
-		 std::string itos(int);
-		 std::string ftos(float);
-		 int stoi(std::string);
-		 int stoi(char);
-		 bool stob(std::string);
-		 bool stob(char);
+		int stoi(std::string);
+		std::string itos(int);
 	}
 }
-
 
 #endif

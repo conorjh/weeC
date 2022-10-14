@@ -2,12 +2,13 @@
 #define WCC_WCC_H
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include "weec.h"
 
 namespace wcc
 {
 	void exec();
-	void init(int argc, char *argv[]);
+	void init(int argc, const char *argv[]);
 	void cleanup();
 
 	struct CompilerOutput

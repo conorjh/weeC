@@ -424,7 +424,7 @@ wcToken weec::lex::wcTokenizer::GetToken() const
 bool weec::lex::wcTokenizer::NextToken()
 {
 	if (!stringTokenizer.NextStringToken())
-		return false;
+		return false;	//end of file
 
 	TokenBuffer.StringToken = stringTokenizer.GetStringToken();
 	TokenBuffer.Type = tokenTypeAlizer.Get(TokenBuffer.StringToken.Data);

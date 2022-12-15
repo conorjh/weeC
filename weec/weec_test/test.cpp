@@ -24,8 +24,6 @@ namespace weec
 	}
 }
 
-
-
 void printTree(tree<wcParseNode> pTree)
 {
 	auto it = pTree.begin();
@@ -79,6 +77,7 @@ int weec::test::lex::Test_StringTokenizer1()
 {
 	string input = listing::list_stringtokenizer4;
 	wcStringTokenizer stringTokenizer(input);
+
 
 	if (!stringTokenizer.NextStringToken() || stringTokenizer.GetStringToken().Data != "Hello")
 		return 1;
@@ -194,7 +193,7 @@ int weec::test::lex::Test_Tokenizer5()
 	string input = listing::list_tokenizer5;
 	wcTokenizer tokenizer(input);
 
-	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier || tokenizer.GetToken().StringToken.Data != "std::string")
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier || tokenizer.GetToken().StringToken.Data != "string")
 		return 1;
 
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier || tokenizer.GetToken().StringToken.Data != "TestIdent")
@@ -428,7 +427,7 @@ int weec::test::lex::Test_Tokenizer11()
 	return 0;
 }
 
-
+/*
 int weec::test::lex::Test_wcParseNode_1()
 {
 	//x = 88 + (42 / 99)
@@ -510,6 +509,21 @@ int weec::test::lex::Test_wcParseNode_5()
 	return 0;
 }
 
+int weec::test::lex::Test_wcParseNode_6()
+{
+	//x = 88 + (42 / 99)
+	string input = listing::list_tokenizer16;
+
+	wcTokenizer tokenizer(input);
+	wcParser Parser(tokenizer);
+
+	auto Output = Parser.Parse();
+	cout << listing::list_tokenizer16 << endl;
+	printTree(Output.AST);
+
+	return 0;
+}
+*/
 int Test_ExpressionParserTemplate(string Listing)
 {
 	wcTokenizer tokenizer(Listing); tokenizer.NextToken();
@@ -520,7 +534,7 @@ int Test_ExpressionParserTemplate(string Listing)
 
 	printTree(Expr.AST);
 
-	return 0;
+	return Expr.Error.Code == wcParserErrorCode::None ? 0 : 1;
 }
 
 int weec::test::lex::Test_wcExpressionParser_1()
@@ -553,23 +567,196 @@ int weec::test::lex::Test_wcExpressionParser_6()
 	return Test_ExpressionParserTemplate(listing::list_expression6);
 }
 
-int weec::test::lex::Test_wcParseNode_6()
+int weec::test::lex::Test_wcExpressionParser_7()
 {
-	//x = 88 + (42 / 99)
-	string input = listing::list_tokenizer16;
+	return Test_ExpressionParserTemplate(listing::list_expression7);
+}
 
-	wcTokenizer tokenizer(input);
-	wcParser Parser(tokenizer);
+int weec::test::lex::Test_wcExpressionParser_8()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression8);
+}
 
-	auto Output = Parser.Parse();
-	cout << listing::list_tokenizer16 << endl;
-	printTree(Output.AST);
+int weec::test::lex::Test_wcExpressionParser_9()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression9);
+}
 
-	return 0;
+int weec::test::lex::Test_wcExpressionParser_10()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression10);
+}
+
+int weec::test::lex::Test_wcExpressionParser_11()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression11);
+}
+
+int weec::test::lex::Test_wcExpressionParser_12()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression12);
+}
+
+int weec::test::lex::Test_wcExpressionParser_13()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression13);
+}
+
+int weec::test::lex::Test_wcExpressionParser_14()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression14);
+}
+
+int weec::test::lex::Test_wcExpressionParser_15()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression15);
+}
+int weec::test::lex::Test_wcExpressionParser_16()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression16);
+}
+int weec::test::lex::Test_wcExpressionParser_17()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression17);
+}
+int weec::test::lex::Test_wcExpressionParser_18()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression18);
+}
+int weec::test::lex::Test_wcExpressionParser_19()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression19);
 }
 
 
+int weec::test::lex::Test_wcExpressionParser_20()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression20);
+}
+
+int weec::test::lex::Test_wcExpressionParser_21()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression21);
+}
+
+int weec::test::lex::Test_wcExpressionParser_22()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression22);
+}
+
+int weec::test::lex::Test_wcExpressionParser_23()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression23);
+}
+
+int weec::test::lex::Test_wcExpressionParser_24()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression24);
+}
+
+int weec::test::lex::Test_wcExpressionParser_25()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression25);
+}
+int weec::test::lex::Test_wcExpressionParser_26()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression26);
+}
+int weec::test::lex::Test_wcExpressionParser_27()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression27);
+}
+int weec::test::lex::Test_wcExpressionParser_28()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression28);
+}
+int weec::test::lex::Test_wcExpressionParser_29()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression29);
+}
+
+int weec::test::lex::Test_wcExpressionParser_30()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression30);
+}
+
+int weec::test::lex::Test_wcExpressionParser_31()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression31);
+}
+
+int weec::test::lex::Test_wcExpressionParser_32()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression32);
+}
+
+int weec::test::lex::Test_wcExpressionParser_33()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression33);
+}
+
+int weec::test::lex::Test_wcExpressionParser_34()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression34);
+}
+
+int weec::test::lex::Test_wcExpressionParser_35()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression35);
+}
+int weec::test::lex::Test_wcExpressionParser_36()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression36);
+}
+int weec::test::lex::Test_wcExpressionParser_37()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression37);
+}
+int weec::test::lex::Test_wcExpressionParser_38()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression38);
+}
+int weec::test::lex::Test_wcExpressionParser_39()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression39);
+}
+int weec::test::lex::Test_wcExpressionParser_40()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression40);
+}
+int weec::test::lex::Test_wcExpressionParser_41()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression41);
+}
+int weec::test::lex::Test_wcExpressionParser_42()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression42);
+}
+
+
+
 /*
+* Parser
+- should compute 5 when given 2 + 3
+- should compute 6 when given 2 * 3
+- should compute 89 when given 89
+- should raise an error when input is empty
+- should omit white spaces
+- should treat dot separated floating point numbers as a valid input
+- should handle tight expressions
+- should calculate long additive expressions from left to right
+- should calculate long multiplicative expressions from left to right
+- should calculate long, mixed additive and multiplicative expressions from left to right
+- should return float pointing numbers when division result is not an integer
+- should raise an error on wrong token
+- should raise an error on syntax error
+- should return Infinity when attempt to divide by zero occurs
+- should compute 2 when given (2)
+- should compute complex expressions enclosed in parenthesis
+- should compute expressions with many subexpressions enclosed in parenthesis
+- should handle nested parenthesis
+- should raise an error on unbalanced parenthesis
+*
 describe Parser do
   before(:each) do
 	@parser = Parser.new

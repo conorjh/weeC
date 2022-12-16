@@ -184,10 +184,22 @@ namespace weec
 			bool IsValidIdent(std::string), IsIdentQualified(std::string);
 		};
 
-		enum class wcTokenizerError
+		enum class wcTokenizerErrorCode
 		{
-			None, FuckKnows, NewLineInStringLiteral, UnclosedStringLiteral, NewLineInCharLiteral, UnclosedCharLiteral, MalformedIdentifier
+			None, FuckKnows, NewLineInStringLiteral, UnclosedStringLiteral, NewLineInCharLiteral, UnclosedCharLiteral, MalformedIdentifier, UnknownToken, UnexpectedToken
 		};
+
+		struct wcTokenizerError
+		{
+			wcTokenizerError();
+			wcTokenizerError(wcTokenizerErrorCode _Code, wcStringToken _Data);
+			wcTokenizerError(wcTokenizerErrorCode _Code, wcStringToken _Data, std::string _Msg);
+
+			wcTokenizerErrorCode Code;
+			wcStringToken Data;
+			std::string Msg;
+		};
+
 
 		class wcTokenizer
 		{
@@ -203,10 +215,10 @@ namespace weec
 		public:
 			wcTokenizerError error;
 			wcTokenizer(std::string& _source);
-
+			wcTokenizer& operator=(wcTokenizer&);
 
 			wcToken GetToken() const;
-			bool NextToken(), IsErrored();
+			bool NextToken(), NextToken(wcTokenType Type), IsErrored();
 		};
 
 		class wcLexer

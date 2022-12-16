@@ -411,9 +411,36 @@ bool weec::lex::wcLineFeeder::NextLine()
 	return true;
 }
 
+weec::lex::wcTokenizerError::wcTokenizerError()
+{
+	Code = wcTokenizerErrorCode::None;
+}
+
+weec::lex::wcTokenizerError::wcTokenizerError(wcTokenizerErrorCode _Code, wcStringToken _Data)
+{
+	Code = _Code;
+	Data = _Data;
+}
+
+weec::lex::wcTokenizerError::wcTokenizerError(wcTokenizerErrorCode _Code, wcStringToken _Data, std::string _Msg)
+{
+	Code = _Code;
+	Data = _Data;
+	Msg = _Msg;
+}
+
 weec::lex::wcTokenizer::wcTokenizer(std::string& _source) : stringTokenizer(_source)
 {
-	error = wcTokenizerError::None;
+
+}
+
+wcTokenizer& weec::lex::wcTokenizer::operator=(wcTokenizer& Other)
+{
+	error = Other.error;
+	stringTokenizer = Other.stringTokenizer;
+	lookaheadBuffer = Other.lookaheadBuffer;
+	TokenBuffer = Other.TokenBuffer;
+	tokenTypeAlizer = Other.tokenTypeAlizer;
 }
 
 wcToken weec::lex::wcTokenizer::GetToken() const
@@ -421,10 +448,29 @@ wcToken weec::lex::wcTokenizer::GetToken() const
 	return TokenBuffer;
 }
 
+bool weec::lex::wcTokenizer::NextToken(wcTokenType Type)
+{
+	//brute force lookahead, save the entire state, restore it if no match found
+	auto OldState = *this;
+
+	if (!NextToken())
+	{
+		//end of stream
+		*this = OldState;
+		return false;
+	}
+
+	if (GetToken().Type != Type)
+	{
+		error = wcTokenizerError(wcTokenizerErrorCode::UnexpectedToken, stringTokenizer.GetStringToken());
+	}
+}
+
+//returns false for unknown tokens, or if we reached end of input
 bool weec::lex::wcTokenizer::NextToken()
 {
 	if (!stringTokenizer.NextStringToken())
-		return false;	//end of file
+		return false;	//end of input
 
 	TokenBuffer.StringToken = stringTokenizer.GetStringToken();
 	TokenBuffer.Type = tokenTypeAlizer.Get(TokenBuffer.StringToken.Data);
@@ -454,11 +500,12 @@ bool weec::lex::wcTokenizer::NextToken()
 		return NextToken();
 
 	default:
-		return false;
+		error = wcTokenizerError(wcTokenizerErrorCode::UnknownToken, stringTokenizer.GetStringToken());
+		return false;	//unknown token
 	}
 
 	//shouldnt get here
-	error = wcTokenizerError::FuckKnows;
+	error = wcTokenizerError(wcTokenizerErrorCode::FuckKnows, stringTokenizer.GetStringToken());
 	return false;
 }
 
@@ -472,18 +519,23 @@ bool weec::lex::wcTokenizer::NextToken_StringLiteral()
 		else if (wcTokenTypeAlizer().Get(stringTokenizer.GetStringToken().Data) == wcTokenType::NewLine)
 		{
 			//error, newline in string literal, can only be on one line
-			error = wcTokenizerError::NewLineInStringLiteral;
+			auto ErrorStringToken = TokenBuffer.StringToken;	
+			ErrorStringToken.Data = Buffer;
+			error = wcTokenizerError(wcTokenizerErrorCode::NewLineInStringLiteral, ErrorStringToken);
 			return false;
 		}
 		else
 		{
+			//string literal token initialised in NextToken(), finish it here
 			TokenBuffer.StringToken.Data = Buffer;
 			TokenBuffer.Type = wcTokenType::StringLiteral;
 			return true;
 		}
 
 	//end of file reached before closing double quote
-	error = wcTokenizerError::UnclosedStringLiteral;
+	auto ErrorStringToken = TokenBuffer.StringToken;
+	ErrorStringToken.Data = Buffer;
+	error = wcTokenizerError(wcTokenizerErrorCode::UnclosedStringLiteral, ErrorStringToken);
 	return false;
 }
 
@@ -497,7 +549,9 @@ bool weec::lex::wcTokenizer::NextToken_CharLiteral()
 		else if (wcTokenTypeAlizer().Get(stringTokenizer.GetStringToken().Data) == wcTokenType::NewLine)
 		{
 			//error, newline encountered in char literal, can only be on one line
-			error = wcTokenizerError::NewLineInCharLiteral;
+			auto ErrorStringToken = TokenBuffer.StringToken;
+			ErrorStringToken.Data = Buffer;
+			error = wcTokenizerError(wcTokenizerErrorCode::NewLineInCharLiteral, ErrorStringToken);
 			return false;
 		}
 		else
@@ -508,7 +562,9 @@ bool weec::lex::wcTokenizer::NextToken_CharLiteral()
 		}
 
 	//end of file reached before closing single quote
-	error = wcTokenizerError::UnclosedCharLiteral;
+	auto ErrorStringToken = TokenBuffer.StringToken;
+	ErrorStringToken.Data = Buffer;
+	error = wcTokenizerError(wcTokenizerErrorCode::UnclosedCharLiteral, ErrorStringToken);
 	return false;
 }
 
@@ -587,7 +643,9 @@ bool weec::lex::wcTokenizer::NextToken_Ident()
 		case wcTokenType::Period:
 			if (LastPartWasASeperator)
 			{
-				error = wcTokenizerError::MalformedIdentifier;
+				auto ErrorStringToken = TokenBuffer.StringToken;
+				ErrorStringToken.Data += Buffer.Data;
+				error = wcTokenizerError(wcTokenizerErrorCode::MalformedIdentifier, ErrorStringToken);
 				return false;	//two seperators in a row, error
 			}
 
@@ -615,7 +673,9 @@ bool weec::lex::wcTokenizer::NextToken_Ident()
 _wcTokenizer_NextToken_Ident_End_Of_Ident:
 	if (LastPartWasASeperator)
 	{
-		error = wcTokenizerError::MalformedIdentifier;
+		auto ErrorStringToken = TokenBuffer.StringToken;
+		ErrorStringToken.Data += Buffer.Data;
+		error = wcTokenizerError(wcTokenizerErrorCode::MalformedIdentifier, ErrorStringToken);
 		return false;	//incomplete ident
 	}
 	else
@@ -651,6 +711,7 @@ bool weec::lex::wcTokenizer::IsErrored()
 {
 	return (error != wcTokenizerError::None);
 }
+
 
 weec::lex::wcTokenDefinition::wcTokenDefinition() : Type(wcTokenType::Null), identifiers({}), delimiter(false), punctuation(false), precedence(0)
 {
@@ -802,3 +863,4 @@ std::string weec::lex::wcTokenTypeToString(wcTokenType Type)
 		return "";
 	}
 }
+

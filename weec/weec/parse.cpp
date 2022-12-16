@@ -214,6 +214,8 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseExpression& OtherExpres
 
 	for (auto t = OtherExpression.Tokens.begin(); t != OtherExpression.Tokens.end(); ++t)
 		Tokens.push_back(*t);
+
+	Error = OtherExpression.Error;
 }
 
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, wcToken Operator, wcParseExpression RightHand)
@@ -234,6 +236,7 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcPa
 	Tokens.push_back(Operator);
 	for (auto t = RightHand.Tokens.begin(); t != RightHand.Tokens.end(); ++t)
 		Tokens.push_back(*t);
+
 }
 
 weec::parse::wcParseExpression::wcParseExpression(lex::wcToken Operator, wcParseExpression RightHand)
@@ -244,6 +247,8 @@ weec::parse::wcParseExpression::wcParseExpression(lex::wcToken Operator, wcParse
 
 	for (auto t = RightHand.Tokens.begin(); t != RightHand.Tokens.end(); ++t)
 		Tokens.push_back(*t);
+
+	Error = RightHand.Error;
 }
 
 
@@ -436,7 +441,13 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 
 	case OpenParenthesis:
 		//consume opening parenthesis
-		Tokenizer.NextToken();
+		if(!Tokenizer.NextToken())
+		{
+			//end of file before last paren
+			Output.Error = wcParserError(wcParserErrorCode::Experession_UnexpectedEOF, Tokenizer.GetToken());
+			return Output;
+
+		}
 
 		Output = ParseExpression_SubExpression();
 
@@ -444,6 +455,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 		if (Tokenizer.GetToken().Type != CloseParenthesis)
 		{
 			//didnt find one, madness
+			Output.Error = wcParserError(wcParserErrorCode::Experession_MissingClosingParenthesis, Tokenizer.GetToken());
 			return Output;
 		}
 		Tokenizer.NextToken();
@@ -451,6 +463,8 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 
 	default:
 		//error
+		Output.Error = wcParserError(wcParserErrorCode::Experession_UnexpectedToken, Tokenizer.GetToken());
+		return Output;
 		break;
 	}
 

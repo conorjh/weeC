@@ -33,7 +33,11 @@ namespace weec
 
 			UnexpectedToken,
 
-			UnexpectedEOF
+			UnexpectedEOF,
+
+			Experession_UnexpectedToken,
+			Experession_MissingClosingParenthesis,
+			Experession_UnexpectedEOF
 		};
 
 		struct wcParserError
@@ -158,6 +162,7 @@ namespace weec
 			tree<wcParseNode>::pre_order_iterator GetExpressionNodeBegin(), GetExpressionNodeEnd(), GetExpressionRootNodeBegin(), GetExpressionRootNodeEnd();
 
 		public:
+			wcParserError Error;
 			std::vector<lex::wcToken> Tokens;
 			tree<wcParseNode> AST;
 
@@ -166,6 +171,7 @@ namespace weec
 			wcParseExpression(lex::wcToken Operator, wcParseExpression RightHand);								//unary
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken OperatorOrLiteral);						//literal/operator
 			wcParseExpression(wcParseExpression& OtherExpression);												//grouping
+
 			void Eval();
 		};
 
@@ -173,6 +179,7 @@ namespace weec
 		{
 			wcParseSymbolTable& SymbolTable;
 			lex::wcTokenizer& Tokenizer;
+			wcParserError Error;
 
 			wcParseExpression ParseExpression_Expression(), ParseExpression_SubExpression(), 
 				ParseExpression_Equality(), ParseExpression_Assignment(), ParseExpression_LogicOr(),

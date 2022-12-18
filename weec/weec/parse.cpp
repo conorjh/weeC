@@ -207,7 +207,7 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex:
 
 	Tokens.push_back(OperatorOrLiteral);
 }
-
+/*
 weec::parse::wcParseExpression::wcParseExpression(wcParseExpression& OtherExpression)
 {
 	AST = tree<wcParseNode>(OtherExpression.AST);
@@ -217,7 +217,7 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseExpression& OtherExpres
 
 	Error = OtherExpression.Error;
 }
-
+*/
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, wcToken Operator, wcParseExpression RightHand)
 {
 	//build the ast
@@ -241,7 +241,13 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcPa
 
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand)
 {
-	//AST.set_head(*new wcParseNode(wcParseNodeType::Head));
+	auto ExpRootNode = AST.insert(AST.begin(), *new wcParseNode(Expression));
+
+	auto OpNode = AST.append_child(ExpRootNode, wcParseNode(HeadType, Operator));
+	auto OpNodeChild = AST.append_child(OpNode);
+
+	AST.insert_subtree(OpNodeChild, RightHand.GetExpressionNodeBegin());
+	AST.erase(OpNodeChild);
 
 	Tokens.push_back(Operator);
 
@@ -411,7 +417,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Unary()
 	//wcParseExpression Output = ParseExpression_Primary();
 
 	auto Operator = Tokenizer.GetToken();
-	if (Operator.Type == MinusOperator || Operator.Type == LogNotOperator)
+	if (Operator.Type == MinusOperator || Operator.Type == PlusOperator || Operator.Type == LogNotOperator)
 	{
 		Tokenizer.NextToken();
 		auto RightExp = ParseExpression_Unary();

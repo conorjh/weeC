@@ -102,15 +102,14 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecUnary()
 	PC++;
 
 	auto Lh = ChoosePath(PC->Type, Expression);
-	auto Rh = ChoosePath(PC->Type, Expression);
 
 	switch (OpType)
 	{
 	case wcTokenType::PlusOperator:
-		return std::any_cast<int>(Lh) + std::any_cast<int>(Rh);
+		return +std::any_cast<int>(Lh);
 
 	case wcTokenType::MinusOperator:
-		return std::any_cast<int>(Lh) - std::any_cast<int>(Rh);
+		return -std::any_cast<int>(Lh);
 	}
 
 	return std::any();

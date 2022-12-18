@@ -363,6 +363,7 @@ bool weec::lex::operator==(const wcToken& lhs, wcToken& rhs)
 		return true;
 	return false;
 }
+
 bool weec::lex::operator==(wcToken& lhs, const wcToken& rhs)
 {
 	if (lhs.StringToken == rhs.StringToken && lhs.Type == rhs.Type)
@@ -436,11 +437,12 @@ weec::lex::wcTokenizer::wcTokenizer(std::string& _source) : stringTokenizer(_sou
 
 wcTokenizer& weec::lex::wcTokenizer::operator=(wcTokenizer& Other)
 {
-	error = Other.error;
+	Error = Other.Error;
 	stringTokenizer = Other.stringTokenizer;
 	lookaheadBuffer = Other.lookaheadBuffer;
 	TokenBuffer = Other.TokenBuffer;
 	tokenTypeAlizer = Other.tokenTypeAlizer;
+	return *this;
 }
 
 wcToken weec::lex::wcTokenizer::GetToken() const
@@ -462,8 +464,11 @@ bool weec::lex::wcTokenizer::NextToken(wcTokenType Type)
 
 	if (GetToken().Type != Type)
 	{
-		error = wcTokenizerError(wcTokenizerErrorCode::UnexpectedToken, stringTokenizer.GetStringToken());
+		Error = wcTokenizerError(wcTokenizerErrorCode::UnexpectedToken, stringTokenizer.GetStringToken());
+		return false;
 	}
+
+	return true;
 }
 
 //returns false for unknown tokens, or if we reached end of input
@@ -500,12 +505,12 @@ bool weec::lex::wcTokenizer::NextToken()
 		return NextToken();
 
 	default:
-		error = wcTokenizerError(wcTokenizerErrorCode::UnknownToken, stringTokenizer.GetStringToken());
+		Error = wcTokenizerError(wcTokenizerErrorCode::UnknownToken, stringTokenizer.GetStringToken());
 		return false;	//unknown token
 	}
 
 	//shouldnt get here
-	error = wcTokenizerError(wcTokenizerErrorCode::FuckKnows, stringTokenizer.GetStringToken());
+	Error = wcTokenizerError(wcTokenizerErrorCode::FuckKnows, stringTokenizer.GetStringToken());
 	return false;
 }
 
@@ -521,7 +526,7 @@ bool weec::lex::wcTokenizer::NextToken_StringLiteral()
 			//error, newline in string literal, can only be on one line
 			auto ErrorStringToken = TokenBuffer.StringToken;	
 			ErrorStringToken.Data = Buffer;
-			error = wcTokenizerError(wcTokenizerErrorCode::NewLineInStringLiteral, ErrorStringToken);
+			Error = wcTokenizerError(wcTokenizerErrorCode::NewLineInStringLiteral, ErrorStringToken);
 			return false;
 		}
 		else
@@ -535,7 +540,7 @@ bool weec::lex::wcTokenizer::NextToken_StringLiteral()
 	//end of file reached before closing double quote
 	auto ErrorStringToken = TokenBuffer.StringToken;
 	ErrorStringToken.Data = Buffer;
-	error = wcTokenizerError(wcTokenizerErrorCode::UnclosedStringLiteral, ErrorStringToken);
+	Error = wcTokenizerError(wcTokenizerErrorCode::UnclosedStringLiteral, ErrorStringToken);
 	return false;
 }
 
@@ -551,7 +556,7 @@ bool weec::lex::wcTokenizer::NextToken_CharLiteral()
 			//error, newline encountered in char literal, can only be on one line
 			auto ErrorStringToken = TokenBuffer.StringToken;
 			ErrorStringToken.Data = Buffer;
-			error = wcTokenizerError(wcTokenizerErrorCode::NewLineInCharLiteral, ErrorStringToken);
+			Error = wcTokenizerError(wcTokenizerErrorCode::NewLineInCharLiteral, ErrorStringToken);
 			return false;
 		}
 		else
@@ -564,7 +569,7 @@ bool weec::lex::wcTokenizer::NextToken_CharLiteral()
 	//end of file reached before closing single quote
 	auto ErrorStringToken = TokenBuffer.StringToken;
 	ErrorStringToken.Data = Buffer;
-	error = wcTokenizerError(wcTokenizerErrorCode::UnclosedCharLiteral, ErrorStringToken);
+	Error = wcTokenizerError(wcTokenizerErrorCode::UnclosedCharLiteral, ErrorStringToken);
 	return false;
 }
 
@@ -645,7 +650,7 @@ bool weec::lex::wcTokenizer::NextToken_Ident()
 			{
 				auto ErrorStringToken = TokenBuffer.StringToken;
 				ErrorStringToken.Data += Buffer.Data;
-				error = wcTokenizerError(wcTokenizerErrorCode::MalformedIdentifier, ErrorStringToken);
+				Error = wcTokenizerError(wcTokenizerErrorCode::MalformedIdentifier, ErrorStringToken);
 				return false;	//two seperators in a row, error
 			}
 
@@ -675,7 +680,7 @@ _wcTokenizer_NextToken_Ident_End_Of_Ident:
 	{
 		auto ErrorStringToken = TokenBuffer.StringToken;
 		ErrorStringToken.Data += Buffer.Data;
-		error = wcTokenizerError(wcTokenizerErrorCode::MalformedIdentifier, ErrorStringToken);
+		Error = wcTokenizerError(wcTokenizerErrorCode::MalformedIdentifier, ErrorStringToken);
 		return false;	//incomplete ident
 	}
 	else
@@ -709,7 +714,7 @@ bool weec::lex::wcTokenizer::NextToken_MultiLineComment()
 
 bool weec::lex::wcTokenizer::IsErrored()
 {
-	return (error != wcTokenizerError::None);
+	return (Error.Code != wcTokenizerErrorCode::None);
 }
 
 

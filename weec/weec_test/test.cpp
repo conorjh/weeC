@@ -50,9 +50,9 @@ int weec::test::lex::Test_AllLex()
 	{
 		int testResult = allLexTests[t]();
 		if (testResult)
-			std::cout << "\tTest #" << t + 1 << " failed: " << testResult << std::endl;
+			std::cout << "Test #" << t + 1 << " failed: " << testResult << std::endl;
 		else
-			std::cout << "\tTest #" << t + 1 << " passed" << std::endl;
+			std::cout << "Test #" << t + 1 << " passed" << std::endl;
 	}
 
 	return 0;
@@ -193,7 +193,7 @@ int weec::test::lex::Test_Tokenizer5()
 	string input = listing::list_tokenizer5;
 	wcTokenizer tokenizer(input);
 
-	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier || tokenizer.GetToken().StringToken.Data != "string")
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::StringKeyword || tokenizer.GetToken().StringToken.Data != "string")
 		return 1;
 
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier || tokenizer.GetToken().StringToken.Data != "TestIdent")
@@ -330,7 +330,7 @@ int weec::test::lex::Test_Tokenizer8()
 	//  /* multi 
 	//  line 
 	//  comment */
-
+	//	with extra line //then comment at the end
 
 	if (tokenizer.NextToken())
 		return 1;
@@ -356,6 +356,9 @@ int weec::test::lex::Test_Tokenizer9()
 		return 2;
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier)
 		return 3;
+
+	if (tokenizer.NextToken())
+		return 4;
 
 	return 0;
 }
@@ -530,10 +533,21 @@ int Test_ExpressionParserTemplate(string Listing)
 
 	auto Expr = wcExpressionParser(tokenizer, *new wcParseSymbolTable()).ParseExpression();
 
-	cout << Listing << endl;
+	cout << endl << endl << Listing << endl;
 
 	printTree(Expr.AST);
 
+	if (Expr.Error.Code != wcParserErrorCode::None)
+		cout << std::endl << "Error code: " << (int)Expr.Error.Code << std::endl;
+
+	auto Interp = wcInterpreter(Expr);
+	auto Result = Interp.Exec();
+
+	if (strcmp(Result.type().name(),"int") == 0)
+		cout << "Out: " << std::any_cast<int>(Result) << std::endl;
+	else if (strcmp(Result.type().name(), "float") == 0)
+		cout << "Out: " << std::any_cast<float>(Result) << std::endl;
+	cout << "Type: " << Result.type().name() << std::endl;
 	return Expr.Error.Code == wcParserErrorCode::None ? 0 : 1;
 }
 

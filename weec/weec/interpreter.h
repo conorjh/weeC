@@ -10,6 +10,7 @@
 #include "tree.hh"
 #include "lex.h"
 #include "parse.h"
+#include <typeindex>
 
 namespace weec
 {
@@ -21,8 +22,12 @@ namespace weec
 
 			parse::wcParseOutput& Input;
 			tree<parse::wcParseNode>::iterator PC;
-			std::any ChoosePath(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom);
 			parse::wcParseSymbolTable& SymTab;
+
+			std::unordered_map<std::string, std::string> ImplementationTypeNames;
+			void SetupImplementationTypeNames();
+
+			std::any ChoosePath(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom);
 
 		public:
 			wcExpressionInterpeter(parse::wcParseSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator PC);
@@ -34,7 +39,7 @@ namespace weec
 				ExecUnary(), ExecPrimary(),
 				ExecOperator();
 
-			bool Exec();
+			std::any Exec();
 		};
 
 		class wcInterpreter
@@ -46,10 +51,11 @@ namespace weec
 			bool ExecExpression();
 
 		public:
+			wcExpressionInterpeter ExpressionInterp;
 			wcInterpreter(parse::wcParseOutput Input);
 
 			void Reset();
-			bool Exec(), ExecStatement();
+			std::any Exec(), ExecStatement();
 
 			bool Halt;
 		};

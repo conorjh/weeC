@@ -213,7 +213,7 @@ namespace weec
 				NextToken_Punctuation(), NextToken_Special(), NextToken_SingleLineComment(), NextToken_MultiLineComment();
 
 		public:
-			wcTokenizerError error;
+			wcTokenizerError Error;
 			wcTokenizer(std::string& _source);
 			wcTokenizer& operator=(wcTokenizer&);
 

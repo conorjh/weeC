@@ -257,6 +257,7 @@ wcParseOutput weec::parse::wcExpressionParser::ParseExpression()
 	auto Expression = ParseExpression_Expression();
 	wcParseOutput Output;
 	Output.AST = Expression.AST;
+	Output.Error = Expression.Error;
 	return Output;
 }
 wcParseOutput weec::parse::wcExpressionParser::ParseExpression(wcParseSymbol Symbol)
@@ -264,6 +265,7 @@ wcParseOutput weec::parse::wcExpressionParser::ParseExpression(wcParseSymbol Sym
 	auto Expression = ParseExpression_Expression();
 	wcParseOutput Output;
 	Output.AST = Expression.AST;
+	Output.Error = Expression.Error;
 	return Output;
 }
 
@@ -413,7 +415,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Unary()
 	{
 		Tokenizer.NextToken();
 		auto RightExp = ParseExpression_Primary();
-		Output = wcParseExpression(Expression_Primary, Output, Operator, RightExp);
+		Output = wcParseExpression(Expression_Unary, Output, Operator, RightExp);
 
 		Operator = Tokenizer.GetToken();
 	}

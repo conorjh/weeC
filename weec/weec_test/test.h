@@ -17,8 +17,8 @@ namespace weec
 			std::string list_tokenizer5 = "string TestIdent = \"Hello World\"";
 			std::string list_tokenizer6 = "- + += * / + ( ) { } [ ] # \\ / % & ^ ? |";
 			std::string list_tokenizer7 = "int main(int argc, char* argv[])\n{\nreturn 0;\n}";
-			std::string list_tokenizer8 = "// comment  \n /* multi \n  line \n comment */\n with extra line //then comment at the end";
-			std::string list_tokenizer9 = "// comment  \n /* multi \n  line \n comment */";
+			std::string list_tokenizer8 = "// comment  \n /* multi \n  line \n comment */";
+			std::string list_tokenizer9 = "// comment  \n /* multi \n  line \n comment */\n with extra line //then comment at the end";
 
 			std::string list_tokenizer10 = "int IdentTest; char IdentTest::WithNamespace";
 			std::string list_tokenizer11 = "x = 88 + (42 / 99)";

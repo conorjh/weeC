@@ -168,7 +168,7 @@ namespace weec
 
 			wcParseExpression();
 			wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken Operator, wcParseExpression RightHand);	//binary
-			wcParseExpression(lex::wcToken Operator, wcParseExpression RightHand);								//unary
+			wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand);								//unary
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken OperatorOrLiteral);						//literal/operator
 			wcParseExpression(wcParseExpression& OtherExpression);												//grouping
 

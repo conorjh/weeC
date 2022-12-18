@@ -239,7 +239,7 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcPa
 
 }
 
-weec::parse::wcParseExpression::wcParseExpression(lex::wcToken Operator, wcParseExpression RightHand)
+weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand)
 {
 	//AST.set_head(*new wcParseNode(wcParseNodeType::Head));
 
@@ -408,19 +408,17 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Factor()
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Unary()
 {
-	wcParseExpression Output = ParseExpression_Primary();
+	//wcParseExpression Output = ParseExpression_Primary();
 
 	auto Operator = Tokenizer.GetToken();
-	while (Operator.Type == MinusOperator || Operator.Type == LogNotOperator)
+	if (Operator.Type == MinusOperator || Operator.Type == LogNotOperator)
 	{
 		Tokenizer.NextToken();
-		auto RightExp = ParseExpression_Primary();
-		Output = wcParseExpression(Expression_Unary, Output, Operator, RightExp);
-
-		Operator = Tokenizer.GetToken();
+		auto RightExp = ParseExpression_Unary();
+		return wcParseExpression(Expression_Unary, Operator, RightExp);
 	}
 
-	return Output;
+	return ParseExpression_Primary();
 }
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()

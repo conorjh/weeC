@@ -527,7 +527,7 @@ int weec::test::lex::Test_wcParseNode_6()
 	return 0;
 }
 */
-int Test_ExpressionParserTemplate(string Listing)
+int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 {
 	wcTokenizer tokenizer(Listing); tokenizer.NextToken();
 
@@ -543,208 +543,225 @@ int Test_ExpressionParserTemplate(string Listing)
 	auto Interp = wcInterpreter(Expr);
 	auto Result = Interp.Exec();
 
-	if (strcmp(Result.type().name(),"int") == 0)
+	bool IsExpected = false;
+	if (strcmp(Result.type().name(), "int") == 0)
+	{
+		IsExpected = std::any_cast<int>(Result) == std::any_cast<int>(ExpectedResult);
+		cout << "Expected: " << std::any_cast<int>(ExpectedResult) << "   ";
 		cout << "Out: " << std::any_cast<int>(Result) << std::endl;
+	}
 	else if (strcmp(Result.type().name(), "float") == 0)
+	{
+		IsExpected = std::any_cast<float>(Result) == std::any_cast<float>(ExpectedResult);
+		cout << "Expected: " << std::any_cast<float>(ExpectedResult) << "   ";
 		cout << "Out: " << std::any_cast<float>(Result) << std::endl;
+	}
+	else if (strcmp(Result.type().name(), "double") == 0)
+	{
+		IsExpected = std::any_cast<double>(Result) == std::any_cast<double>(ExpectedResult);
+		cout << "Expected: " << std::any_cast<double>(ExpectedResult) << "   ";
+		cout << "Out: " << std::any_cast<double>(Result) << std::endl;
+	}
+	
 	cout << "Type: " << Result.type().name() << std::endl;
-	return Expr.Error.Code == wcParserErrorCode::None ? 0 : 1;
+
+	return (Expr.Error.Code == wcParserErrorCode::None && IsExpected)? 0 : 1;
 }
 
 int weec::test::lex::Test_wcExpressionParser_1()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression1);
+	return Test_ExpressionParserTemplate(listing::list_expression1, 5);
 }
 
 int weec::test::lex::Test_wcExpressionParser_2()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression2);
+	return Test_ExpressionParserTemplate(listing::list_expression2, 6);
 }
 
 int weec::test::lex::Test_wcExpressionParser_3()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression3);
+	return Test_ExpressionParserTemplate(listing::list_expression3, 89);
 }
 
 int weec::test::lex::Test_wcExpressionParser_4()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression4);
+	return Test_ExpressionParserTemplate(listing::list_expression4, 4);
 }
 
 int weec::test::lex::Test_wcExpressionParser_5()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression5);
+	return Test_ExpressionParserTemplate(listing::list_expression5, 133);
 }
 
 int weec::test::lex::Test_wcExpressionParser_6()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression6);
+	return Test_ExpressionParserTemplate(listing::list_expression6, 87);
 }
 
 int weec::test::lex::Test_wcExpressionParser_7()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression7);
+	return Test_ExpressionParserTemplate(listing::list_expression7, 48);
 }
 
 int weec::test::lex::Test_wcExpressionParser_8()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression8);
+	return Test_ExpressionParserTemplate(listing::list_expression8, 5);
 }
 
 int weec::test::lex::Test_wcExpressionParser_9()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression9);
+	return Test_ExpressionParserTemplate(listing::list_expression9, (float)2.5);
 }
 
 int weec::test::lex::Test_wcExpressionParser_10()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression10);
+	return Test_ExpressionParserTemplate(listing::list_expression10, (float)(4 * 2.5 + 8.5 + 1.5 / 3.0));
 }
 
 int weec::test::lex::Test_wcExpressionParser_11()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression11);
+	return Test_ExpressionParserTemplate(listing::list_expression11, (float)(5.0005 + 0.0095));
 }
 
 int weec::test::lex::Test_wcExpressionParser_12()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression12);
+	return Test_ExpressionParserTemplate(listing::list_expression12, 69);
 }
 
 int weec::test::lex::Test_wcExpressionParser_13()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression13);
+	return Test_ExpressionParserTemplate(listing::list_expression13, -5);
 }
 
 int weec::test::lex::Test_wcExpressionParser_14()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression14);
+	return Test_ExpressionParserTemplate(listing::list_expression14, 35);
 }
 
 int weec::test::lex::Test_wcExpressionParser_15()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression15);
+	return Test_ExpressionParserTemplate(listing::list_expression15, 2);
 }
 int weec::test::lex::Test_wcExpressionParser_16()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression16);
+	return Test_ExpressionParserTemplate(listing::list_expression16, 10);
 }
 int weec::test::lex::Test_wcExpressionParser_17()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression17);
+	return Test_ExpressionParserTemplate(listing::list_expression17, 6);
 }
 int weec::test::lex::Test_wcExpressionParser_18()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression18);
+	return Test_ExpressionParserTemplate(listing::list_expression18, 10);
 }
 int weec::test::lex::Test_wcExpressionParser_19()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression19);
+	return Test_ExpressionParserTemplate(listing::list_expression19,6);
 }
 
 
 int weec::test::lex::Test_wcExpressionParser_20()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression20);
+	return Test_ExpressionParserTemplate(listing::list_expression20, (2 * 3 - 4 * 5 + 6 / 3));
 }
 
 int weec::test::lex::Test_wcExpressionParser_21()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression21);
+	return Test_ExpressionParserTemplate(listing::list_expression21, (2 * 3 * 4 / 8 - 5 / 2 * 4 + 6 + 0 / 3));
 }
 
 int weec::test::lex::Test_wcExpressionParser_22()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression22);
+	return Test_ExpressionParserTemplate(listing::list_expression22,(10 / 4));
 }
 
 int weec::test::lex::Test_wcExpressionParser_23()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression23);
+	return Test_ExpressionParserTemplate(listing::list_expression23,(5 / 3));
 }
 
 int weec::test::lex::Test_wcExpressionParser_24()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression24);
+	return Test_ExpressionParserTemplate(listing::list_expression24,(3 + 8 / 5 - 1 - 2 * 5));
 }
 
 int weec::test::lex::Test_wcExpressionParser_25()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression25);
+	return Test_ExpressionParserTemplate(listing::list_expression25,0);
 }
 int weec::test::lex::Test_wcExpressionParser_26()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression26);
+	return Test_ExpressionParserTemplate(listing::list_expression26,0);
 }
 int weec::test::lex::Test_wcExpressionParser_27()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression27);
+	return Test_ExpressionParserTemplate(listing::list_expression27,0);
 }
 int weec::test::lex::Test_wcExpressionParser_28()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression28);
+	return Test_ExpressionParserTemplate(listing::list_expression28,(5 + +6));
 }
 int weec::test::lex::Test_wcExpressionParser_29()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression29);
+	return Test_ExpressionParserTemplate(listing::list_expression29,(-5 + 2));
 }
 
 int weec::test::lex::Test_wcExpressionParser_30()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression30);
+	return Test_ExpressionParserTemplate(listing::list_expression30,0);
 }
 
 int weec::test::lex::Test_wcExpressionParser_31()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression31);
+	return Test_ExpressionParserTemplate(listing::list_expression31,0);
 }
 
 int weec::test::lex::Test_wcExpressionParser_32()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression32);
+	return Test_ExpressionParserTemplate(listing::list_expression32,0);
 }
 
 int weec::test::lex::Test_wcExpressionParser_33()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression33);
+	return Test_ExpressionParserTemplate(listing::list_expression33,0);
 }
 
 int weec::test::lex::Test_wcExpressionParser_34()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression34);
+	return Test_ExpressionParserTemplate(listing::list_expression34,0);
 }
 
 int weec::test::lex::Test_wcExpressionParser_35()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression35);
+	return Test_ExpressionParserTemplate(listing::list_expression35,0);
 }
 int weec::test::lex::Test_wcExpressionParser_36()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression36);
+	return Test_ExpressionParserTemplate(listing::list_expression36,0);
 }
 int weec::test::lex::Test_wcExpressionParser_37()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression37);
+	return Test_ExpressionParserTemplate(listing::list_expression37,0);
 }
 int weec::test::lex::Test_wcExpressionParser_38()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression38);
+	return Test_ExpressionParserTemplate(listing::list_expression38,0);
 }
 int weec::test::lex::Test_wcExpressionParser_39()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression39);
+	return Test_ExpressionParserTemplate(listing::list_expression39,0);
 }
 int weec::test::lex::Test_wcExpressionParser_40()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression40);
+	return Test_ExpressionParserTemplate(listing::list_expression40,0);
 }
 int weec::test::lex::Test_wcExpressionParser_41()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression41);
+	return Test_ExpressionParserTemplate(listing::list_expression41,0);
 }
 int weec::test::lex::Test_wcExpressionParser_42()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression42);
+	return Test_ExpressionParserTemplate(listing::list_expression42,0);
 }
 
 

@@ -11,6 +11,7 @@ void weec::interpreter::wcExpressionInterpeter::SetupImplementationTypeNames()
 	ImplementationTypeNames.insert(make_pair("int", std::type_index(typeid(int)).name()));
 	ImplementationTypeNames.insert(make_pair("unsigned int", std::type_index(typeid(unsigned int)).name()));
 	ImplementationTypeNames.insert(make_pair("float", std::type_index(typeid(float)).name()));
+	ImplementationTypeNames.insert(make_pair("double", std::type_index(typeid(double)).name()));
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ChoosePath(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom)

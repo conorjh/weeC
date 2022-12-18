@@ -152,20 +152,20 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecFactor()
 		if (string(Lh.type().name()) == ImplementationTypeNames["int"])
 		{
 			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-				return std::any_cast<int>(Lh) / std::any_cast<int>(Rh);
+				return (std::any_cast<int>(Lh) / std::any_cast<int>(Rh));
 			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-				return std::any_cast<int>(Lh) / std::any_cast<float>(Rh);
+				return (std::any_cast<int>(Lh) / std::any_cast<float>(Rh));
 			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-				return std::any_cast<int>(Lh) / std::any_cast<unsigned int>(Rh);
+				return (std::any_cast<int>(Lh) / std::any_cast<unsigned int>(Rh));
 		}
 		else if (string(Lh.type().name()) == ImplementationTypeNames["float"])
 		{
 			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-				return std::any_cast<float>(Lh) / std::any_cast<int>(Rh);
+				return float(std::any_cast<float>(Lh) / std::any_cast<int>(Rh));
 			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-				return std::any_cast<float>(Lh) / std::any_cast<float>(Rh);
+				return float(std::any_cast<float>(Lh) / std::any_cast<float>(Rh));
 			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-				return std::any_cast<float>(Lh) / std::any_cast<unsigned int>(Rh);
+				return float(std::any_cast<float>(Lh) / std::any_cast<unsigned int>(Rh));
 		}
 		return std::any();	//error
 	}

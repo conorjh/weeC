@@ -708,36 +708,36 @@ int weec::test::lex::Test_wcExpressionParser_29()
 
 int weec::test::lex::Test_wcExpressionParser_30()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression30,0);
+	return Test_ExpressionParserTemplate(listing::list_expression30,5/1);
 }
 
 int weec::test::lex::Test_wcExpressionParser_31()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression31,0);
+	return Test_ExpressionParserTemplate(listing::list_expression31, 2 - 1 + 14 / 1 + 7);
 }
 
 int weec::test::lex::Test_wcExpressionParser_32()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression32,0);
+	return Test_ExpressionParserTemplate(listing::list_expression32, (2));
 }
 
 int weec::test::lex::Test_wcExpressionParser_33()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression33,0);
+	return Test_ExpressionParserTemplate(listing::list_expression33, (5 + 2 * 3 - 1 + 7 * 8));
 }
 
 int weec::test::lex::Test_wcExpressionParser_34()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression34,0);
+	return Test_ExpressionParserTemplate(listing::list_expression34, (67 + 2 * 3 - 67 + 2 / 1 - 7));
 }
 
 int weec::test::lex::Test_wcExpressionParser_35()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression35,0);
+	return Test_ExpressionParserTemplate(listing::list_expression35, ((2) + (17 * 2 - 30) * (5) + 2 - (8 / 2) * 4));
 }
 int weec::test::lex::Test_wcExpressionParser_36()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression36,0);
+	return Test_ExpressionParserTemplate(listing::list_expression36,( (5 * 7 / 5) + (23) - 5 * (98 - 4) / (6 * 7 - 42) ));
 }
 int weec::test::lex::Test_wcExpressionParser_37()
 {

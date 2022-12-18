@@ -53,8 +53,8 @@ namespace weec
 			std::string list_expression27 = "  %";
 			std::string list_expression28 = " 5 + + 6";
 			std::string list_expression29 = " -5 + 2";
-			std::string list_expression30 = "5/0";
-			std::string list_expression31 = " 2 - 1 + 14/0 + 7";
+			std::string list_expression30 = "5/1";
+			std::string list_expression31 = " 2 - 1 + 14/1 + 7";
 			std::string list_expression32 = "(2)";
 			std::string list_expression33 = "(5 + 2*3 - 1 + 7 * 8)";
 			std::string list_expression34 = "(67 + 2 * 3 - 67 + 2/1 - 7)";

@@ -27,7 +27,7 @@ namespace weec
 			std::unordered_map<std::string, std::string> ImplementationTypeNames;
 			void SetupImplementationTypeNames();
 
-			std::any ChoosePath(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom);
+			std::any EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom);
 
 		public:
 			wcExpressionInterpeter(parse::wcParseSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator PC);

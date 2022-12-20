@@ -14,7 +14,7 @@ void weec::interpreter::wcExpressionInterpeter::SetupImplementationTypeNames()
 	ImplementationTypeNames.insert(make_pair("double", std::type_index(typeid(double)).name()));
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ChoosePath(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom)
+std::any weec::interpreter::wcExpressionInterpeter::EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom)
 {
 	switch (PC->Type)
 	{
@@ -58,12 +58,12 @@ weec::interpreter::wcExpressionInterpeter::wcExpressionInterpeter(parse::wcParse
 std::any weec::interpreter::wcExpressionInterpeter::ExecSubExpression()
 {
 	PC++;
-	return ChoosePath(PC->Type, Expression);
+	return EvalNode(PC->Type, Expression);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecOperator()
 {
-	return ChoosePath(PC->Type, Expression);
+	return EvalNode(PC->Type, Expression);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::Exec()
@@ -72,7 +72,7 @@ std::any weec::interpreter::wcExpressionInterpeter::Exec()
 
 	while (PC.node != nullptr)
 	{
-		ExpressionResult = ChoosePath(PC->Type, Expression);
+		ExpressionResult = EvalNode(PC->Type, Expression);
 
 		PC++;
 	}
@@ -101,7 +101,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecUnary()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = ChoosePath(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression);
 
 	switch (OpType)
 	{
@@ -120,8 +120,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecFactor()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = ChoosePath(PC->Type, Expression);
-	auto Rh = ChoosePath(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression);
+	auto Rh = EvalNode(PC->Type, Expression);
 	string name;
 	switch (OpType)
 	{
@@ -178,8 +178,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecTerm()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = ChoosePath(PC->Type, Expression);
-	auto Rh = ChoosePath(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression);
+	auto Rh = EvalNode(PC->Type, Expression);
 
 	switch (OpType)
 	{
@@ -234,8 +234,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecComparison()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = ChoosePath(PC->Type, Expression);
-	auto Rh = ChoosePath(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression);
+	auto Rh = EvalNode(PC->Type, Expression);
 
 	switch (OpType)
 	{
@@ -254,8 +254,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecLogicAnd()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = ChoosePath(PC->Type, Expression);
-	auto Rh = ChoosePath(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression);
+	auto Rh = EvalNode(PC->Type, Expression);
 
 	switch (OpType)
 	{
@@ -275,8 +275,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecLogicOr()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = ChoosePath(PC->Type, Expression);
-	auto Rh = ChoosePath(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression);
+	auto Rh = EvalNode(PC->Type, Expression);
 
 	switch (OpType)
 	{
@@ -295,8 +295,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecAssignment()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = ChoosePath(PC->Type, Expression);
-	auto Rh = ChoosePath(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression);
+	auto Rh = EvalNode(PC->Type, Expression);
 
 	switch (OpType)
 	{
@@ -315,8 +315,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecEquality()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = ChoosePath(PC->Type, Expression);
-	auto Rh = ChoosePath(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression);
+	auto Rh = EvalNode(PC->Type, Expression);
 
 	switch (OpType)
 	{

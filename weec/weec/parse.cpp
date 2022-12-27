@@ -57,7 +57,14 @@ wcParseOutput weec::parse::wcParser::ParseDeclaration()
 	if (!Tokenizer.NextToken(Identifier))
 		return wcParseOutput(wcParserError(UnexpectedToken, TypeToken));
 	auto IdentToken = Tokenizer.GetToken();
+	auto FullIdent = wcFullIdent(IdentToken.StringToken.Data, SymbolTable.GetCurrentScope().FullIdent.Scope.Get());
+	if (SymbolTable.Exists(FullIdent))
+		return wcParseOutput(wcParserError(IdentRedeclaration, IdentToken));
 	Output.AddAsChild(wcParseNode(wcParseNodeType::Declaration_Ident, IdentToken));
+
+	//add to symbol table
+	auto SymbolType = SymbolTable.ClassifyIdent(IdentToken).Type;
+	SymbolTable.Add(SymbolType, FullIdent);
 
 	//semi colon/optional assignment
 	if (!Tokenizer.NextToken())
@@ -70,10 +77,6 @@ wcParseOutput weec::parse::wcParser::ParseDeclaration()
 	else if (Tokenizer.GetToken().Type != wcTokenType::AssignOperator)
 		return Output;
 	Tokenizer.NextToken();
-
-	//add to symbol table
-	auto SymbolType = SymbolTable.ClassifyIdent(IdentToken).Type;
-	SymbolTable.Add(SymbolType, wcIdent(IdentToken.StringToken.Data));
 
 	//optional assignment expression;
 	auto InitExpression = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
@@ -139,17 +142,21 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 
 	Output.AddAsChild(wcParseNode(wcParseNodeType::Statement), true);
 
-	wcParseOutput t;
+	wcParseOutput Buffer;
 	switch (ThisToken.Type)
 	{
 	WC_SWITCHCASE_TOKENS_LITERAL
 	WC_SWITCHCASE_TOKENS_OPERATORS_ALL
 	case OpenParenthesis:
-		Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression());
+		Buffer = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
 		break;
 
 	WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
-		Output.AddAsChild(ParseDeclaration());
+		Buffer = ParseDeclaration();
+		break;
+
+	case wcTokenType::IfKeyword:
+		Buffer = ParseIf();
 		break;
 
 	default:
@@ -162,11 +169,15 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 		switch (Ident.Type)
 		{
 		case wcParseSymbolType::Type:
-			Output.AddAsChild(ParseDeclaration(Ident));
+			Buffer = ParseDeclaration(Ident);
+			break;
 
 		case wcParseSymbolType::Variable:
 		case wcParseSymbolType::Function:
-			Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression(Ident));
+			Buffer = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression(Ident);
+			if (Buffer.Error.Code != None)
+				return Buffer;
+
 			if (Tokenizer.GetToken().Type != SemiColon)
 			{
 				//error
@@ -187,9 +198,84 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 			break;
 		}
 		break;
-
-
 	}
+
+	Output.AddAsChild(Buffer);
+	return Output;
+}
+
+wcParseOutput weec::parse::wcParser::ParseBlock()
+{
+	wcParseOutput Output;
+
+	if(Tokenizer.GetToken().Type != OpenBrace)
+		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));
+
+	if(!Tokenizer.NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
+
+	Output.AddAsChild(wcParseNode(wcParseNodeType::Block), true);
+
+	while (Tokenizer.GetToken().Type != CloseBrace)
+	{
+		Output.AddAsChild(ParseStatement());
+
+		if (Tokenizer.IsErrored() || Output.Error.Code != None)
+			return Output;
+	}
+
+	return Output;
+}
+
+wcParseOutput weec::parse::wcParser::ParseIf()
+{
+	wcParseOutput Output;
+
+	Output.AddAsChild(wcParseNode(wcParseNodeType::IfStatement), true);
+
+	//if keyword
+	if (Tokenizer.GetToken().Type != IfKeyword)
+		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));		//error - expected built in or user type
+
+	// ( 
+	if (!Tokenizer.NextToken(OpenParenthesis))
+		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));
+	if (!Tokenizer.NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
+
+	//expression
+	auto IfExpression = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
+	if (IfExpression.Error.Code != None)
+		return IfExpression;
+	Output.AddAsChild(IfExpression);
+
+	// )
+	if (Tokenizer.GetToken().Type != wcTokenType::CloseParenthesis)
+		return wcParseOutput(wcParserError(If_MissingClosingParenthesis, Tokenizer.GetToken()));
+	if (!Tokenizer.NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
+
+	//block/statement
+	Output.AddAsChild(ParseBlock());
+
+	//optional else keyword
+	if (!Tokenizer.NextToken())
+		return Output;
+	if (Tokenizer.GetToken().Type == wcTokenType::SemiColon)
+	{
+		Tokenizer.NextToken();
+		return Output;
+	}
+	else if (Tokenizer.GetToken().Type != wcTokenType::AssignOperator)
+		return Output;
+	Tokenizer.NextToken();
+
+	//optional else block/statement
+	auto InitExpression = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
+	if (InitExpression.Error.Code != None)
+		return InitExpression;
+	Output.AddAsChild(InitExpression);
+
 	return Output;
 }
 
@@ -531,6 +617,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 	wcParseExpression Output;
 
 	auto Operand = Tokenizer.GetToken();
+	wcParseSymbol Ident;
 	switch (Operand.Type)
 	{
 	case TrueKeyword:
@@ -539,7 +626,17 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 	case FloatLiteral:
 	case CharLiteral:
 	case IntLiteral:
+		Output = wcParseExpression(Expression_Primary, Operand);
+		Tokenizer.NextToken();
+		return Output;
+
 	case Identifier:
+		Ident = wcIdentParser(Tokenizer, SymbolTable).ParseIdent();
+		if (!SymbolTable.Exists(Ident.FullIdent))
+		{
+			Output.Error = wcParserError(wcParserErrorCode::UndeclaredIdent, Tokenizer.GetToken());
+			return Output;
+		}
 		Output = wcParseExpression(Expression_Primary, Operand);
 		Tokenizer.NextToken();
 		return Output;
@@ -707,6 +804,56 @@ wcParseNode& weec::parse::wcParseNode::operator=(const wcParseNode& Other)
 	Type = Other.Type;
 	return *this;
 }
+/*
+None, FuckKnows,
+
+UnexpectedToken,
+
+InvalidType,
+
+IdentRedeclaration, UndeclaredIdent,
+
+UnexpectedEOF,
+
+Experession_Empty,
+Experession_UnexpectedToken,
+Experession_MissingClosingParenthesis,
+Experession_UnexpectedEOF
+*/
+
+std::string weec::parse::wcParserErrorCodeToString(wcParserErrorCode Code)
+{
+	switch (Code)
+	{
+	case None:
+		return "Head";
+	case FuckKnows:
+		return "FuckKnows";
+	case UnexpectedToken:
+		return "UnexpectedToken";
+	case If_MissingClosingParenthesis:
+		return "If_MissingClosingParenthesis";
+	case InvalidType:
+		return "InvalidType";
+	case IdentRedeclaration:
+		return "IdentRedeclaration";
+	case UndeclaredIdent:
+		return "UndeclaredIdent";
+	case UnexpectedEOF:
+		return "UnexpectedEOF";
+	case Experession_Empty:
+		return "Experession_Empty";
+	case Experession_UnexpectedToken:
+		return "Experession_UnexpectedToken";
+	case Experession_MissingClosingParenthesis:
+		return "Experession_MissingClosingParenthesis";
+	case Experession_UnexpectedEOF:
+		return "Experession_UnexpectedEOF";
+	default:
+		return "";
+	}
+}
+
 
 std::string weec::parse::wcParseNodeTypeToString(wcParseNodeType Type)
 {
@@ -716,6 +863,14 @@ std::string weec::parse::wcParseNodeTypeToString(wcParseNodeType Type)
 		return "Head";
 	case wcParseNodeType::Empty:
 		return "Empty";
+	case wcParseNodeType::IfStatement:
+		return "IfStatement";
+	case wcParseNodeType::IfExpression:
+		return "IfExpression";
+	case wcParseNodeType::IfBlock:
+		return "IfBlock";
+	case wcParseNodeType::ElseBlock:
+		return "ElseBlock";
 	case wcParseNodeType::Declaration:
 		return "Declaration";
 	case wcParseNodeType::Declaration_Ident:
@@ -724,6 +879,8 @@ std::string weec::parse::wcParseNodeTypeToString(wcParseNodeType Type)
 		return "Declaration_Type";
 	case wcParseNodeType::Statement:
 		return "Statement";
+	case wcParseNodeType::Block:
+		return "Block";
 	case wcParseNodeType::Variable:
 		return "Variable";
 	case wcParseNodeType::Type:

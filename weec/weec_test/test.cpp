@@ -536,7 +536,7 @@ int Test_ParserTemplate(string Listing)
 	printTree(Parsed.AST);
 
 	if (Parsed.Error.Code != wcParserErrorCode::None)
-		cout << std::endl << "Error code: " << (int)Parsed.Error.Code << std::endl;
+		cout << std::endl << "Error code: " << (int)Parsed.Error.Code << "  " << wcParserErrorCodeToString(Parsed.Error.Code) << std::endl;
 
 	return (Parsed.Error.Code == wcParserErrorCode::None) ? 0 : 1;
 }
@@ -552,7 +552,7 @@ int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 	printTree(Expr.AST);
 
 	if (Expr.Error.Code != wcParserErrorCode::None)
-		cout << std::endl << "Error code: " << (int)Expr.Error.Code << std::endl;
+		cout << std::endl << "Error code: " << (int)Expr.Error.Code << "  " << wcParserErrorCodeToString(Expr.Error.Code) << std::endl;
 
 	auto Interp = wcInterpreter(Expr);
 	auto Result = Interp.Exec();
@@ -694,22 +694,22 @@ int weec::test::lex::Test_wcParser_11()
 
 int weec::test::lex::Test_wcParser_10()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser10);
 }
 
 int weec::test::lex::Test_wcParser_9()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser9);
 }
 
 int weec::test::lex::Test_wcParser_8()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser8);
 }
 
 int weec::test::lex::Test_wcParser_7()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser7);
 }
 
 int weec::test::lex::Test_wcParser_6()

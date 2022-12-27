@@ -17,8 +17,10 @@ namespace weec
 		{
 			Empty, Head,
 
-			Statement, 
+			Statement, Block,
 			
+			IfStatement, IfExpression, IfBlock, ElseBlock,
+
 			Declaration, Declaration_Type, Declaration_Ident,
 
 			Expression, Expression_Equality, Expression_Assignment, Expression_LogicOr, Expression_LogicAnd, Expression_Comparison, Expression_Term,
@@ -35,7 +37,11 @@ namespace weec
 
 			UnexpectedToken,
 
-			InvalidType,
+			InvalidType, 
+			
+			If_MissingClosingParenthesis,
+
+			IdentRedeclaration, UndeclaredIdent,
 
 			UnexpectedEOF,
 
@@ -44,6 +50,7 @@ namespace weec
 			Experession_MissingClosingParenthesis,
 			Experession_UnexpectedEOF
 		};
+		std::string wcParserErrorCodeToString(wcParserErrorCode);
 
 		struct wcParserError
 		{
@@ -217,6 +224,8 @@ namespace weec
 			wcParseSymbolTable SymbolTable;
 
 			wcParseOutput ParseStatement();
+			wcParseOutput ParseBlock();
+			wcParseOutput ParseIf();
 			wcParseOutput ParseDeclaration(), ParseDeclaration_Function(), ParseDeclaration_Variable();
 			wcParseOutput ParseDeclaration(wcParseSymbol), ParseDeclaration_Function(wcParseSymbol), ParseDeclaration_Variable(wcParseSymbol);
 

@@ -30,10 +30,10 @@ namespace weec
 			std::string list_parser4 = "int a = (22 + 6);";
 			std::string list_parser5 = "int a; int b = a * 2;";
 			std::string list_parser6 = "int a = 2; int b = a * 2;";
-			std::string list_parser7 = " 12*  4";
-			std::string list_parser8 = " 50/10";
+			std::string list_parser7 = " int a; int a;";	//error
+			std::string list_parser8 = " a * b;";			//error
 			std::string list_parser9 = "2.5";
-			std::string list_parser10 = "4*2.5 + 8.5+1.5 / 3.0";
+			std::string list_parser10 = "if(1 == 10-9)\n{\nint a;\n}";
 			std::string list_parser11 = "5.0005 + 0.0095";
 			std::string list_parser12 = "67+2";
 			std::string list_parser13 = " 2-7";

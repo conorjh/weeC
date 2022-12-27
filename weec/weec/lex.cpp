@@ -80,6 +80,7 @@ weec::lex::wcStringTokenizer::wcStringTokenizer(std::string& _source) : Feeder(_
 {
 	Index = 0;
 	Line = "";
+	Finished = false;
 }
 
 wcStringTokenizer& weec::lex::wcStringTokenizer::operator=(wcStringTokenizer& input)
@@ -88,6 +89,7 @@ wcStringTokenizer& weec::lex::wcStringTokenizer::operator=(wcStringTokenizer& in
 	this->Index = input.Index;
 	this->Line = input.Line;
 	this->TokenBuffer = input.TokenBuffer;
+	this->Finished = input.Finished;
 	return *this;
 }
 
@@ -154,6 +156,11 @@ bool weec::lex::wcStringTokenizer::NextStringToken()
 	return NextStringToken(wcStringTokenType::Null);
 }
 
+bool weec::lex::wcStringTokenizer::IsFinished()
+{
+	return Finished;
+}
+
 bool weec::lex::wcStringTokenizer::Match(wcStringTokenType _expectedType)
 {
 	if (_expectedType != wcStringTokenType::Null && TokenBuffer.Type != _expectedType)
@@ -181,7 +188,10 @@ bool weec::lex::wcStringTokenizer::IncIndex()
 	if (Index >= Line.size())
 	{
 		if (!Feeder.NextLine())
+		{
+			Finished = true;
 			return false;
+		}
 		else
 			Index = 0;
 		Line = Feeder.GetLine();
@@ -211,7 +221,10 @@ bool weec::lex::wcStringTokenizer::IncIndex()
 bool weec::lex::wcStringTokenizer::NextStringToken(wcStringTokenType _expectedType)
 {
 	if (!IncIndex())
+	{
+		Finished = true;
 		return false;
+	}
 
 	//match with an expected type
 	return Match(_expectedType);
@@ -220,7 +233,10 @@ bool weec::lex::wcStringTokenizer::NextStringToken(wcStringTokenType _expectedTy
 bool weec::lex::wcStringTokenizer::NextStringToken(char _expectedChar)
 {
 	if (!IncIndex())
+	{
+		Finished = true;
 		return false;
+	}
 
 	//match with an expected type
 	return Match(_expectedChar);
@@ -229,7 +245,10 @@ bool weec::lex::wcStringTokenizer::NextStringToken(char _expectedChar)
 bool weec::lex::wcStringTokenizer::NextStringToken(string _expectedString)
 {
 	if (!IncIndex())
+	{
+		Finished = true;
 		return false;
+	}
 
 	//match with an expected type
 	return Match(_expectedString);
@@ -432,7 +451,6 @@ weec::lex::wcTokenizerError::wcTokenizerError(wcTokenizerErrorCode _Code, wcStri
 
 weec::lex::wcTokenizer::wcTokenizer(std::string& _source) : stringTokenizer(_source)
 {
-
 }
 
 wcTokenizer& weec::lex::wcTokenizer::operator=(wcTokenizer& Other)
@@ -470,6 +488,12 @@ bool weec::lex::wcTokenizer::NextToken(wcTokenType Type)
 
 	return true;
 }
+
+bool weec::lex::wcTokenizer::IsFinished()
+{
+	return stringTokenizer.IsFinished();
+}
+
 
 //returns false for unknown tokens, or if we reached end of input
 bool weec::lex::wcTokenizer::NextToken()

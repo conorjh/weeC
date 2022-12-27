@@ -27,10 +27,12 @@ wcParseOutput weec::parse::wcParser::Parse()
 {
 	wcParseOutput Output;
 
-	while (Tokenizer.NextToken())
+	Tokenizer.NextToken();
+
+	while (!Tokenizer.IsFinished() && !Tokenizer.IsErrored() && Output.Error.Code == None)
 	{
 		auto ThisToken = Tokenizer.GetToken();
-
+		 
 		Output.AddAsChild(ParseStatement());
 	}
 
@@ -41,29 +43,56 @@ wcParseOutput weec::parse::wcParser::Parse()
 
 wcParseOutput weec::parse::wcParser::ParseDeclaration()
 {
-	return wcParseOutput();
+	wcParseOutput Output;
+
+	Output.AddAsChild(wcParseNode(wcParseNodeType::Declaration), true);
+
+	//Declaration_Type
+	auto TypeToken = Tokenizer.GetToken();
+	if (!TypeToken.IsBuiltinType() && TypeToken.Type != Identifier)
+		return wcParseOutput(wcParserError(InvalidType, TypeToken));		//error - expected built in or user type
+	Output.AddAsChild(wcParseNode(wcParseNodeType::Declaration_Type, TypeToken));
+
+	//Declaration_Ident
+	if (!Tokenizer.NextToken(Identifier))
+		return wcParseOutput(wcParserError(UnexpectedToken, TypeToken));
+	auto IdentToken = Tokenizer.GetToken();
+	Output.AddAsChild(wcParseNode(wcParseNodeType::Declaration_Ident, IdentToken));
+
+	//add to symbol table
+	auto SymbolType = SymbolTable.ClassifyIdent(IdentToken).Type;
+	SymbolTable.Add(SymbolType, wcIdent(IdentToken.StringToken.Data));
+
+	//semi colon/optional assignment
+	if (!Tokenizer.NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
+	if (Tokenizer.GetToken().Type == wcTokenType::SemiColon)
+	{
+		Tokenizer.NextToken();
+		return Output;
+	}
+	else if (Tokenizer.GetToken().Type != wcTokenType::AssignOperator)
+		return Output;
+	Tokenizer.NextToken();
+
+	//optional assignment expression;
+	auto InitExpression = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
+	if (InitExpression.Error.Code != None)
+		return InitExpression;
+	Output.AddAsChild(InitExpression);
+
+	//semi colon
+	if (Tokenizer.GetToken().Type != wcTokenType::SemiColon)
+		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));
+
+	Tokenizer.NextToken();
+
+	return Output;
 }
 
 wcParseOutput weec::parse::wcParser::ParseDeclaration(wcParseSymbol)
 {
-	//expect a type
-	auto TypeToken = Tokenizer.GetToken();
-	if (!TypeToken.IsBuiltinType() && TypeToken.Type != Identifier)
-	{
-		//error - expected built in or user type
-		return wcParseOutput(wcParserError(UnexpectedToken, TypeToken));
-	}
-
-	if (!Tokenizer.NextToken())
-	{
-
-	}
-
-	//optional assignment
-
-	//optional
-
-
+	
 	return wcParseOutput();
 }
 
@@ -110,6 +139,7 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 
 	Output.AddAsChild(wcParseNode(wcParseNodeType::Statement), true);
 
+	wcParseOutput t;
 	switch (ThisToken.Type)
 	{
 	WC_SWITCHCASE_TOKENS_LITERAL
@@ -119,8 +149,14 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 		break;
 
 	WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
-		Output.AddAsChild(ParseDeclaration());
+		t = ParseDeclaration();
+		Output.AddAsChild(t);
 		break;
+
+	default:
+		//error
+		Output.Error = wcParserError(wcParserErrorCode::UnexpectedToken, Tokenizer.GetToken());
+		return Output;
 
 	case Identifier:
 		auto Ident = wcIdentParser(Tokenizer, SymbolTable).ParseIdent();
@@ -143,16 +179,18 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 
 		case wcParseSymbolType::Namespace:
 		case wcParseSymbolType::Null:
+			break;
+
 		default:
 			//error
+			Output.Error = wcParserError(wcParserErrorCode::UnexpectedToken, Tokenizer.GetToken());
+			return Output;
 			break;
 		}
 		break;
 
+
 	}
-
-	Tokenizer.NextToken();
-
 	return Output;
 }
 
@@ -185,6 +223,11 @@ tree<wcParseNode>::pre_order_iterator weec::parse::wcParseExpression::GetExpress
 void weec::parse::wcParseExpression::Eval()
 {
 	//tree<wcParseNode>::iterator
+}
+
+bool weec::parse::wcParseExpression::IsErrored()
+{
+	return false;
 }
 
 tree<wcParseNode>::pre_order_iterator weec::parse::wcParseExpression::GetExpressionNodeBegin()
@@ -237,6 +280,10 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcPa
 	for (auto t = RightHand.Tokens.begin(); t != RightHand.Tokens.end(); ++t)
 		Tokens.push_back(*t);
 
+
+	Error = LeftHand.Error;
+	if(LeftHand.Error.Code == None && RightHand.Error.Code != None)
+		Error = RightHand.Error;
 }
 
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand)
@@ -260,16 +307,35 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex:
 
 wcParseOutput weec::parse::wcExpressionParser::ParseExpression()
 {
-	auto Expression = ParseExpression_Expression();
+	if (Tokenizer.IsFinished())
+		return wcParserError(wcParserErrorCode::Experession_Empty, Tokenizer.GetToken());
+
+	auto eExpression = ParseExpression_Expression();
 	wcParseOutput Output;
-	Output.AST = Expression.AST;
-	Output.Error = Expression.Error;
+	Output.AST = eExpression.AST;
+	Output.Error = eExpression.Error;
 	return Output;
 }
 wcParseOutput weec::parse::wcExpressionParser::ParseExpression(wcParseSymbol Symbol)
 {
-	auto Expression = ParseExpression_Expression();
+
+	if (Tokenizer.IsFinished())
+		return wcParserError(wcParserErrorCode::Experession_Empty, Tokenizer.GetToken());
+
 	wcParseOutput Output;
+	auto Expression = ParseExpression_Expression();
+	if (Expression.Error.Code != wcParserErrorCode::None)
+	{
+		Output.Error = Expression.Error;
+		return Output;
+	}
+
+	if (Tokenizer.GetToken().Type != wcTokenType::SemiColon)
+	{
+		Output.Error = wcParserError(wcParserErrorCode::Experession_UnexpectedToken, Tokenizer.GetToken());
+		return Output;
+	}
+
 	Output.AST = Expression.AST;
 	Output.Error = Expression.Error;
 	return Output;
@@ -290,12 +356,16 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_SubExpression
 {
 	auto Expression = ParseExpression_Equality();
 
+	//if(!Tokenizer.IsFinished())
+
 	return Expression;
 }
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Equality()
 {
 	wcParseExpression Output = ParseExpression_Assignment();
+	if (Output.Error.Code != None)
+		return Output;
 
 	auto Operator = Tokenizer.GetToken();
 	while (Operator.Type == NotEqualOperator || Operator.Type == EqualOperator)
@@ -310,9 +380,32 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Equality()
 	return Output;
 }
 
+/*
+
+ private Expr assignment() {
+	Expr expr = equality();
+
+	if (match(EQUAL)) {
+	  Token equals = previous();
+	  Expr value = assignment();
+
+	  if (expr instanceof Expr.Variable) {
+		Token name = ((Expr.Variable)expr).name;
+		return new Expr.Assign(name, value);
+	  }
+
+	  error(equals, "Invalid assignment target.");
+	}
+
+	return expr;
+
+*/
+
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
 {
 	wcParseExpression Output = ParseExpression_LogicOr();
+	if (Output.Error.Code != None)
+		return Output;
 
 	auto Operator = Tokenizer.GetToken();
 	while (Operator.Type == AssignOperator)
@@ -330,6 +423,8 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_LogicOr()
 {
 	wcParseExpression Output = ParseExpression_LogicAnd();
+	if (Output.Error.Code != None)
+		return Output;
 
 	auto Operator = Tokenizer.GetToken();
 	while (Operator.Type == wcTokenType::LogOrOperator)
@@ -346,6 +441,8 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_LogicOr()
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_LogicAnd()
 {
 	wcParseExpression Output = ParseExpression_Comparison();
+	if (Output.Error.Code != None)
+		return Output;
 
 	auto Operator = Tokenizer.GetToken();
 	while (Operator.Type == wcTokenType::LogAndOperator)
@@ -363,6 +460,8 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_LogicAnd()
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Comparison()
 {
 	wcParseExpression Output = ParseExpression_Term();
+	if (Output.Error.Code != None)
+		return Output;
 
 	auto Operator = Tokenizer.GetToken();
 	while (Operator.Type == GreaterEqualOperator || Operator.Type == GreaterOperator ||
@@ -380,13 +479,22 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Comparison()
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Term()
 {
-	wcParseExpression Output = ParseExpression_Factor();
+	wcParseExpression Output = ParseExpression_Factor(); 
+	if (Output.Error.Code != None)
+		return Output;
 
 	auto Operator = Tokenizer.GetToken();
 	while (Operator.Type == MinusOperator || Operator.Type == PlusOperator)
 	{
-		Tokenizer.NextToken();
+		if (!Tokenizer.NextToken())
+		{
+			Output.Error = wcParserError(wcParserErrorCode::Experession_UnexpectedEOF, Tokenizer.GetToken());
+			return Output;
+		}
+
 		auto RightExp = ParseExpression_Factor();
+		//if(RightExp.Error)
+
 		Output = wcParseExpression(Expression_Term, Output, Operator, RightExp);
 
 		Operator = Tokenizer.GetToken();
@@ -398,6 +506,8 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Term()
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Factor()
 {
 	wcParseExpression Output = ParseExpression_Unary();
+	if (Output.Error.Code != None)
+		return Output;
 
 	auto Operator = Tokenizer.GetToken();
 	while (Operator.Type == DivideOperator || Operator.Type == MultiplyOperator)
@@ -447,18 +557,19 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 
 	case OpenParenthesis:
 		//consume opening parenthesis
-		if(!Tokenizer.NextToken())
+		if (Tokenizer.IsFinished() || !Tokenizer.NextToken())
 		{
 			//end of file before last paren
-			Output.Error = wcParserError(wcParserErrorCode::Experession_UnexpectedEOF, Tokenizer.GetToken());
+			Output.Error = wcParserError(wcParserErrorCode::UnexpectedEOF, Tokenizer.GetToken());
 			return Output;
-
 		}
 
 		Output = ParseExpression_SubExpression();
+		if (Output.Error.Code != None)
+			return Output;
 
 		//consume closing parenthesis
-		if (Tokenizer.GetToken().Type != CloseParenthesis)
+		if (Tokenizer.IsFinished() || Tokenizer.GetToken().Type != CloseParenthesis)
 		{
 			//didnt find one, madness
 			Output.Error = wcParserError(wcParserErrorCode::Experession_MissingClosingParenthesis, Tokenizer.GetToken());
@@ -492,19 +603,44 @@ weec::parse::wcParseOutput::wcParseOutput(wcParserError _Error)
 void weec::parse::wcParseOutput::AddAsChild(wcParseOutput Child, bool PointToChild)
 {
 	if (PointToChild)
-		NodeIndex = AST.append_child(NodeIndex, Child.AST.begin());
+		NodeIndex = AST.append_child(NodeIndex, Child.GetSubHead());
 	else
-		AST.append_child(NodeIndex, Child.AST.begin());
+		AST.append_child(NodeIndex, Child.GetSubHead());
+
+	Error = Child.Error;
 }
 
 void weec::parse::wcParseOutput::AddAsChild(wcParseNode Node, bool PointToChild)
 {
-	auto t = NodeIndex;
-
 	if (PointToChild)
 		NodeIndex = AST.append_child(NodeIndex, Node);
 	else
 		AST.append_child(NodeIndex, Node);
+}
+
+tree<wcParseNode>::pre_order_iterator weec::parse::wcParseOutput::GetSubHead()
+{
+	auto HeadPtr = AST.begin(),t = AST.begin();
+
+	//search for a head pointer
+	while (t != AST.end())
+	{
+		if (t->Type == Head)
+		{
+			HeadPtr = t;
+			break;
+		}
+		++t;
+	}
+	
+	//if (HeadPtr == AST.begin())
+	//	return HeadPtr;		//no head pointer
+
+	t = HeadPtr;
+	while (++t != AST.end())
+		return t;
+
+	return HeadPtr; //no children/only siblings
 }
 
 
@@ -588,6 +724,12 @@ std::string weec::parse::wcParseNodeTypeToString(wcParseNodeType Type)
 		return "Head";
 	case wcParseNodeType::Empty:
 		return "Empty";
+	case wcParseNodeType::Declaration:
+		return "Declaration";
+	case wcParseNodeType::Declaration_Ident:
+		return "Declaration_Ident";
+	case wcParseNodeType::Declaration_Type:
+		return "Declaration_Type";
 	case wcParseNodeType::Statement:
 		return "Statement";
 	case wcParseNodeType::Variable:
@@ -649,7 +791,7 @@ weec::parse::wcParseSymbolTable::wcParseSymbolTable() : NullSymbol(wcParseSymbol
 wcParseSymbolTable& weec::parse::wcParseSymbolTable::operator=(const wcParseSymbolTable& Other)
 {
 	Container = Other.Container;
-	this->CurrentScopeFullIdent = Other.CurrentScopeFullIdent; 
+	this->CurrentScopeFullIdent = Other.CurrentScopeFullIdent;
 	return *this;
 }
 

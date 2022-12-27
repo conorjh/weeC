@@ -17,7 +17,9 @@ namespace weec
 		{
 			Empty, Head,
 
-			Statement,
+			Statement, 
+			
+			Declaration, Declaration_Type, Declaration_Ident,
 
 			Expression, Expression_Equality, Expression_Assignment, Expression_LogicOr, Expression_LogicAnd, Expression_Comparison, Expression_Term,
 			Expression_Factor, Expression_Unary, Expression_Primary, Expression_Operator,
@@ -33,8 +35,11 @@ namespace weec
 
 			UnexpectedToken,
 
+			InvalidType,
+
 			UnexpectedEOF,
 
+			Experession_Empty,
 			Experession_UnexpectedToken,
 			Experession_MissingClosingParenthesis,
 			Experession_UnexpectedEOF
@@ -148,7 +153,9 @@ namespace weec
 
 			void AddAsChild(wcParseOutput, bool PointToChild = false);
 			void AddAsChild(wcParseNode, bool PointToChild = false);
+
 			tree<wcParseNode>::pre_order_iterator GetHead() { return UnofficialHead; }
+			tree<wcParseNode>::pre_order_iterator GetSubHead();
 
 			wcParseOutput operator+(wcParseOutput), operator+=(wcParseOutput), operator=(wcParseOutput);
 
@@ -173,6 +180,7 @@ namespace weec
 			//wcParseExpression(wcParseExpression& OtherExpression);												//grouping
 
 			void Eval();
+			bool IsErrored();
 		};
 
 		class wcExpressionParser

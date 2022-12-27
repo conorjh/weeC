@@ -155,6 +155,7 @@ namespace weec
 			wcLineFeeder Feeder;
 			unsigned int Index;
 			std::string deliminators[WC_VAR_DEFINITIONCOUNT];
+			bool Finished;
 
 			bool IsDelimiter(std::string);
 			bool IncIndex();
@@ -166,7 +167,7 @@ namespace weec
 
 			wcStringToken GetStringToken() const;
 			bool NextStringToken(), NextStringToken(wcStringTokenType),
-				NextStringToken(char), NextStringToken(std::string);
+				NextStringToken(char), NextStringToken(std::string), IsFinished();
 
 			bool Lookahead(wcStringToken& output), Lookahead(wcStringToken& output, int lookaheadCount),
 				LookaheadAndMatch(wcStringToken& output, int lookaheadCount, char matchChar),
@@ -218,7 +219,7 @@ namespace weec
 			wcTokenizer& operator=(wcTokenizer&);
 
 			wcToken GetToken() const;
-			bool NextToken(), NextToken(wcTokenType Type), IsErrored();
+			bool NextToken(), NextToken(wcTokenType Type), IsErrored(), IsFinished();
 		};
 
 		class wcLexer

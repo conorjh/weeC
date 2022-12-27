@@ -24,6 +24,38 @@ namespace weec
 			std::string list_tokenizer11 = "x = 88 + (42 / 99)";
 			std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember";
 
+			std::string list_parser1 = "int a;";
+			std::string list_parser2 = "float a;";
+			std::string list_parser3 = "int a = 2;";
+			std::string list_parser4 = "int a = (22 + 6);";
+			std::string list_parser5 = "int a = 2; int b = a * 2;";
+			std::string list_parser6 = "72+  15";
+			std::string list_parser7 = " 12*  4";
+			std::string list_parser8 = " 50/10";
+			std::string list_parser9 = "2.5";
+			std::string list_parser10 = "4*2.5 + 8.5+1.5 / 3.0";
+			std::string list_parser11 = "5.0005 + 0.0095";
+			std::string list_parser12 = "67+2";
+			std::string list_parser13 = " 2-7";
+			std::string list_parser14 = "5*7 ";
+			std::string list_parser15 = "8/4";
+			std::string list_parser16 = "2 -4 +6 -1 -1- 0 +8";
+			std::string list_parser17 = "1 -1   + 2   - 2   +  4 - 4 +    6";
+			std::string list_parser18 = "2 -4 +6 -1 -1- 0 +8";
+			std::string list_parser19 = "1 -1   + 2   - 2   +  4 - 4 +    6";
+			std::string list_parser20 = " 2*3 - 4*5 + 6/3 ";
+			std::string list_parser21 = "2*3*4/8 -   5/2*4 +  6 + 0/3   ";
+			std::string list_parser22 = "10/4";
+			std::string list_parser23 = "5/3";
+			std::string list_parser24 = "3 + 8/5 -1 -2*5";
+			std::string list_parser25 = "  6 + c";
+			std::string list_parser26 = "  7 & 2";
+			std::string list_parser27 = "  %";
+			std::string list_parser28 = " 5 + + 6";
+			std::string list_parser29 = " -5 + 2";
+			std::string list_parser30 = "5/1";
+
+
 			std::string list_expression1 = "2 + 3";
 			std::string list_expression2 = "2 * 3";
 			std::string list_expression3 = "89";
@@ -66,6 +98,7 @@ namespace weec
 			std::string list_expression40 = "(((((4))))";
 			std::string list_expression41 = "((2)) * ((3";
 			std::string list_expression42 = "((9)) * ((1)";
+			std::string list_expression43 = "1 == +(-1) == 1.00";
 
 			std::string list_stringtokenizer4 = "Hello\nWorld\nLonger sentence\nFinishing with newline\n";
 		}
@@ -79,6 +112,13 @@ namespace weec
 
 			int Test_StringTokenizer1();
 
+			int Test_wcParser_1(), Test_wcParser_2(), Test_wcParser_3(), Test_wcParser_4(), Test_wcParser_5(),
+				Test_wcParser_6(), Test_wcParser_7(), Test_wcParser_8(), Test_wcParser_9(), Test_wcParser_10(),
+				Test_wcParser_11(), Test_wcParser_12(), Test_wcParser_13(), Test_wcParser_14(), Test_wcParser_15(),
+				Test_wcParser_16(), Test_wcParser_17(), Test_wcParser_18(), Test_wcParser_19(), Test_wcParser_20(),
+				Test_wcParser_21(), Test_wcParser_22(), Test_wcParser_23(), Test_wcParser_24(), Test_wcParser_25(),
+				Test_wcParser_26(), Test_wcParser_27(), Test_wcParser_28(), Test_wcParser_29(), Test_wcParser_30();
+
 			int Test_wcExpressionParser_1(), Test_wcExpressionParser_2(), Test_wcExpressionParser_3(), Test_wcExpressionParser_4(), Test_wcExpressionParser_5(),
 				Test_wcExpressionParser_6(), Test_wcExpressionParser_7(), Test_wcExpressionParser_8(), Test_wcExpressionParser_9(), Test_wcExpressionParser_10(),
 				Test_wcExpressionParser_11(), Test_wcExpressionParser_12(), Test_wcExpressionParser_13(), Test_wcExpressionParser_14(), Test_wcExpressionParser_15(),
@@ -87,7 +127,7 @@ namespace weec
 				Test_wcExpressionParser_26(), Test_wcExpressionParser_27(), Test_wcExpressionParser_28(), Test_wcExpressionParser_29(), Test_wcExpressionParser_30(),
 				Test_wcExpressionParser_31(), Test_wcExpressionParser_32(), Test_wcExpressionParser_33(), Test_wcExpressionParser_34(), Test_wcExpressionParser_35(),
 				Test_wcExpressionParser_36(), Test_wcExpressionParser_37(), Test_wcExpressionParser_38(), Test_wcExpressionParser_39(), Test_wcExpressionParser_40(), 
-				Test_wcExpressionParser_41(), Test_wcExpressionParser_42();
+				Test_wcExpressionParser_41(), Test_wcExpressionParser_42(), Test_wcExpressionParser_43();
 
 
 			//int Test_wcParseNode_1(), Test_wcParseNode_2(), Test_wcParseNode_3(), Test_wcParseNode_4(), Test_wcParseNode_5(), Test_wcParseNode_6();
@@ -106,6 +146,13 @@ namespace weec
 			{
 				//Test_wcParseNode_1, Test_wcParseNode_2, Test_wcParseNode_3, Test_wcParseNode_4, Test_wcParseNode_5, Test_wcParseNode_6,
 
+				Test_wcParser_1, Test_wcParser_2, Test_wcParser_3, Test_wcParser_4, Test_wcParser_5,
+				Test_wcParser_6, Test_wcParser_7, Test_wcParser_8, Test_wcParser_9, Test_wcParser_10,
+				Test_wcParser_11, Test_wcParser_12, Test_wcParser_13, Test_wcParser_14, Test_wcParser_15,
+				Test_wcParser_16, Test_wcParser_17, Test_wcParser_18, Test_wcParser_19, Test_wcParser_20,
+				Test_wcParser_21, Test_wcParser_22, Test_wcParser_23, Test_wcParser_24, Test_wcParser_25,
+				Test_wcParser_26, Test_wcParser_27, Test_wcParser_28, Test_wcParser_29, Test_wcParser_30,
+
 				Test_wcExpressionParser_1, Test_wcExpressionParser_2, Test_wcExpressionParser_3, Test_wcExpressionParser_4, Test_wcExpressionParser_5,
 				Test_wcExpressionParser_6, Test_wcExpressionParser_7, Test_wcExpressionParser_8, Test_wcExpressionParser_9, Test_wcExpressionParser_10,
 				Test_wcExpressionParser_11, Test_wcExpressionParser_12, Test_wcExpressionParser_13, Test_wcExpressionParser_14, Test_wcExpressionParser_15,
@@ -114,7 +161,7 @@ namespace weec
 				Test_wcExpressionParser_26, Test_wcExpressionParser_27, Test_wcExpressionParser_28, Test_wcExpressionParser_29, Test_wcExpressionParser_30,
 				Test_wcExpressionParser_31, Test_wcExpressionParser_32, Test_wcExpressionParser_33, Test_wcExpressionParser_34, Test_wcExpressionParser_35,
 				Test_wcExpressionParser_36, Test_wcExpressionParser_37, Test_wcExpressionParser_38, Test_wcExpressionParser_39, Test_wcExpressionParser_40,
-				Test_wcExpressionParser_41, Test_wcExpressionParser_42
+				Test_wcExpressionParser_41, Test_wcExpressionParser_42, Test_wcExpressionParser_43
 			};
 			int Test_AllParse();
 			

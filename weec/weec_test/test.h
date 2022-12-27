@@ -25,11 +25,11 @@ namespace weec
 			std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember";
 
 			std::string list_parser1 = "int a;";
-			std::string list_parser2 = "float a;";
+			std::string list_parser2 = "float a";
 			std::string list_parser3 = "int a = 2;";
 			std::string list_parser4 = "int a = (22 + 6);";
-			std::string list_parser5 = "int a = 2; int b = a * 2;";
-			std::string list_parser6 = "72+  15";
+			std::string list_parser5 = "int a; int b = a * 2;";
+			std::string list_parser6 = "int a = 2; int b = a * 2;";
 			std::string list_parser7 = " 12*  4";
 			std::string list_parser8 = " 50/10";
 			std::string list_parser9 = "2.5";

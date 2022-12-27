@@ -416,10 +416,8 @@ int weec::test::lex::Test_Tokenizer11()
 		return 4;
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::OpenParenthesis)
 		return 5;
-
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::IntLiteral)
 		return 6;
-
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::DivideOperator)
 		return 7;
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::IntLiteral)
@@ -527,6 +525,22 @@ int weec::test::lex::Test_wcParseNode_6()
 	return 0;
 }
 */
+int Test_ParserTemplate(string Listing)
+{
+	wcTokenizer tokenizer(Listing); //tokenizer.NextToken();
+
+	auto Parsed = wcParser(tokenizer).Parse();
+
+	cout << endl << endl << Listing << endl;
+
+	printTree(Parsed.AST);
+
+	if (Parsed.Error.Code != wcParserErrorCode::None)
+		cout << std::endl << "Error code: " << (int)Parsed.Error.Code << std::endl;
+
+	return (Parsed.Error.Code == wcParserErrorCode::None) ? 0 : 1;
+}
+
 int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 {
 	wcTokenizer tokenizer(Listing); //tokenizer.NextToken();
@@ -562,10 +576,10 @@ int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 		cout << "Expected: " << std::any_cast<double>(ExpectedResult) << "   ";
 		cout << "Out: " << std::any_cast<double>(Result) << std::endl;
 	}
-	
+
 	cout << "Type: " << Result.type().name() << std::endl;
 
-	return (Expr.Error.Code == wcParserErrorCode::None && IsExpected)? 0 : 1;
+	return (Expr.Error.Code == wcParserErrorCode::None && IsExpected) ? 0 : 1;
 }
 
 int weec::test::lex::Test_wcExpressionParser_1()
@@ -700,32 +714,32 @@ int weec::test::lex::Test_wcParser_7()
 
 int weec::test::lex::Test_wcParser_6()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser6);
 }
 
 int weec::test::lex::Test_wcParser_5()
 {
-	return Test_ExpressionParserTemplate(listing::list_parser5, 0);
+	return Test_ParserTemplate(listing::list_parser5);
 }
 
 int weec::test::lex::Test_wcParser_4()
 {
-	return Test_ExpressionParserTemplate(listing::list_parser4, 0);
+	return Test_ParserTemplate(listing::list_parser4);
 }
 
 int weec::test::lex::Test_wcParser_3()
 {
-	return Test_ExpressionParserTemplate(listing::list_parser3, 0);
+	return Test_ParserTemplate(listing::list_parser3);
 }
 
 int weec::test::lex::Test_wcParser_2()
 {
-	return Test_ExpressionParserTemplate(listing::list_parser2, 0);
+	return Test_ParserTemplate(listing::list_parser2);
 }
 
 int weec::test::lex::Test_wcParser_1()
 {
-	return Test_ExpressionParserTemplate(listing::list_parser1, 0);
+	return Test_ParserTemplate(listing::list_parser1);
 }
 
 int weec::test::lex::Test_wcExpressionParser_3()

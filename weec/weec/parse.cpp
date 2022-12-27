@@ -59,10 +59,6 @@ wcParseOutput weec::parse::wcParser::ParseDeclaration()
 	auto IdentToken = Tokenizer.GetToken();
 	Output.AddAsChild(wcParseNode(wcParseNodeType::Declaration_Ident, IdentToken));
 
-	//add to symbol table
-	auto SymbolType = SymbolTable.ClassifyIdent(IdentToken).Type;
-	SymbolTable.Add(SymbolType, wcIdent(IdentToken.StringToken.Data));
-
 	//semi colon/optional assignment
 	if (!Tokenizer.NextToken())
 		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
@@ -74,6 +70,10 @@ wcParseOutput weec::parse::wcParser::ParseDeclaration()
 	else if (Tokenizer.GetToken().Type != wcTokenType::AssignOperator)
 		return Output;
 	Tokenizer.NextToken();
+
+	//add to symbol table
+	auto SymbolType = SymbolTable.ClassifyIdent(IdentToken).Type;
+	SymbolTable.Add(SymbolType, wcIdent(IdentToken.StringToken.Data));
 
 	//optional assignment expression;
 	auto InitExpression = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
@@ -149,8 +149,7 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 		break;
 
 	WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
-		t = ParseDeclaration();
-		Output.AddAsChild(t);
+		Output.AddAsChild(ParseDeclaration());
 		break;
 
 	default:
@@ -250,17 +249,7 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex:
 
 	Tokens.push_back(OperatorOrLiteral);
 }
-/*
-weec::parse::wcParseExpression::wcParseExpression(wcParseExpression& OtherExpression)
-{
-	AST = tree<wcParseNode>(OtherExpression.AST);
 
-	for (auto t = OtherExpression.Tokens.begin(); t != OtherExpression.Tokens.end(); ++t)
-		Tokens.push_back(*t);
-
-	Error = OtherExpression.Error;
-}
-*/
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, wcToken Operator, wcParseExpression RightHand)
 {
 	//build the ast
@@ -632,9 +621,9 @@ tree<wcParseNode>::pre_order_iterator weec::parse::wcParseOutput::GetSubHead()
 		}
 		++t;
 	}
-	
-	//if (HeadPtr == AST.begin())
-	//	return HeadPtr;		//no head pointer
+
+	if (HeadPtr->Type != Head)
+		return HeadPtr;
 
 	t = HeadPtr;
 	while (++t != AST.end())
@@ -648,6 +637,7 @@ tree<wcParseNode>::pre_order_iterator weec::parse::wcParseOutput::GetSubHead()
 wcParseOutput weec::parse::wcParseOutput::operator+(wcParseOutput other)
 {
 	AST.insert_subtree(AST.begin(), other.AST.begin());
+	Error = other.Error;
 
 	return *this;
 }
@@ -655,6 +645,8 @@ wcParseOutput weec::parse::wcParseOutput::operator+(wcParseOutput other)
 wcParseOutput weec::parse::wcParseOutput::operator=(wcParseOutput other)
 {
 	AST = other.AST;
+	Error = other.Error;
+	SymbolTable = other.SymbolTable;
 
 	return *this;
 }

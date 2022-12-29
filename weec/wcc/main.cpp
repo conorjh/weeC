@@ -1,34 +1,18 @@
-#include "wcc.h"
+#include "App.h"
 
-using namespace wcc;
+using namespace App;
 
-int main_test_exportast(char *argv[]);
-
-int main(int argc, const char *argv[])
+int main(int argc, char* argv[])
 {
-	return main_test_exportast(argv);
+	Application App(argc, argv);
 
-	init(argc, argv);
+	if (!App.Init())
+		return 0;
 
-	//do
-	exec();
+	while (!App.Ended())
+	{
+		App.Update();
+	}
 
-	//exit
-	cleanup();
 	return 0;
 }
-
-
-int main_test_exportast(const char *argv[])
-{
-	const char *a[] = { argv[0], "-s", "exportast.wc", "-ast", "exportast.ast" };
-
-	init(5, a);
-
-	//do
-	exec();
-
-	//exit
-	cleanup();
-	return 0;
-} 

@@ -654,42 +654,42 @@ int weec::test::lex::Test_wcParser_19()
 
 int weec::test::lex::Test_wcParser_18()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser18);
 }
 
 int weec::test::lex::Test_wcParser_17()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser17);
 }
 
 int weec::test::lex::Test_wcParser_16()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser16);
 }
 
 int weec::test::lex::Test_wcParser_15()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser15);
 }
 
 int weec::test::lex::Test_wcParser_14()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser14);
 }
 
 int weec::test::lex::Test_wcParser_13()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser13);
 }
 
 int weec::test::lex::Test_wcParser_12()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser12);
 }
 
 int weec::test::lex::Test_wcParser_11()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser11);
 }
 
 int weec::test::lex::Test_wcParser_10()
@@ -822,7 +822,6 @@ int weec::test::lex::Test_wcExpressionParser_19()
 {
 	return Test_ExpressionParserTemplate(listing::list_expression19,6);
 }
-
 
 int weec::test::lex::Test_wcExpressionParser_20()
 {

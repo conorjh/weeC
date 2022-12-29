@@ -19,7 +19,7 @@ namespace weec
 
 			Statement, Block,
 			
-			IfStatement, IfExpression, IfBlock, ElseBlock,
+			IfStatement, If_Expression, If_TrueBlock, If_ElseBlock,
 
 			Declaration, Declaration_Type, Declaration_Ident,
 
@@ -226,6 +226,7 @@ namespace weec
 			wcParseOutput ParseStatement();
 			wcParseOutput ParseBlock();
 			wcParseOutput ParseIf();
+			wcParseOutput ParseSemiColon();
 			wcParseOutput ParseDeclaration(), ParseDeclaration_Function(), ParseDeclaration_Variable();
 			wcParseOutput ParseDeclaration(wcParseSymbol), ParseDeclaration_Function(wcParseSymbol), ParseDeclaration_Variable(wcParseSymbol);
 

@@ -34,11 +34,11 @@ namespace weec
 			std::string list_parser8 = " a * b;";			//error
 			std::string list_parser9 = "2.5";
 			std::string list_parser10 = "if(1 == 10-9)\n{\nint a;\n}";
-			std::string list_parser11 = "5.0005 + 0.0095";
-			std::string list_parser12 = "67+2";
-			std::string list_parser13 = " 2-7";
-			std::string list_parser14 = "5*7 ";
-			std::string list_parser15 = "8/4";
+			std::string list_parser11 = "if(1 == 10-9)\n{\n\tint a;\n}\nelse\n{\n\tint b;\n}";
+			std::string list_parser12 = "if(1 == 10-9)\n\tint a;";
+			std::string list_parser13 = "if(1 == 10-9\n\tint a;";	//error
+			std::string list_parser14 = "if(1 == 10-9)\n{\n\tint a;\n\nelse\n{\n\tint b;\n} "; //error
+			std::string list_parser15 = "if(1)\n\t55+55;\nelse\n\t66+ +66;";
 			std::string list_parser16 = "2 -4 +6 -1 -1- 0 +8";
 			std::string list_parser17 = "1 -1   + 2   - 2   +  4 - 4 +    6";
 			std::string list_parser18 = "2 -4 +6 -1 -1- 0 +8";

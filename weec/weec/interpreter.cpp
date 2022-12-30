@@ -8,10 +8,11 @@ using namespace weec::parse;
 
 void weec::interpreter::wcExpressionInterpeter::SetupImplementationTypeNames()
 {
-	ImplementationTypeNames.insert(make_pair("int", std::type_index(typeid(int)).name()));
-	ImplementationTypeNames.insert(make_pair("unsigned int", std::type_index(typeid(unsigned int)).name()));
-	ImplementationTypeNames.insert(make_pair("float", std::type_index(typeid(float)).name()));
-	ImplementationTypeNames.insert(make_pair("double", std::type_index(typeid(double)).name()));
+	ImplementationTypes.insert(make_pair("int", ImplementationType("int", std::type_index(typeid(int)))));
+	ImplementationTypes.insert(make_pair("unsigned int", ImplementationType("unsigned int", std::type_index(typeid(unsigned int)))));
+	ImplementationTypes.insert(make_pair("float", ImplementationType("float", std::type_index(typeid(float)))));
+	ImplementationTypes.insert(make_pair("double", ImplementationType("double", std::type_index(typeid(double)))));
+	ImplementationTypes.insert(make_pair("bool", ImplementationType("bool", std::type_index(typeid(bool)))));
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom)
@@ -47,6 +48,102 @@ std::any weec::interpreter::wcExpressionInterpeter::EvalNode(parse::wcParseNodeT
 
 	return std::any();
 }
+
+std::any weec::interpreter::wcExpressionInterpeter::DoOp(lex::wcTokenType Op, std::any a, std::any b)
+{
+	auto FindA = ImplementationTypes.find(a.type().name());
+	auto FindB = ImplementationTypes.find(b.type().name());
+	if (FindA == ImplementationTypes.end() || FindB == ImplementationTypes.end())
+		return std::any();
+
+	if (FindA->first == "int")
+	{
+		if (FindB->first == "int")
+			return AnyOperator<int, int>().DoOp(Op, a, b);
+		else if (FindB->first == "unsigned int")
+			return AnyOperator<int, unsigned int>().DoOp(Op, a, b);
+		else if (FindB->first == "float")
+			return AnyOperator<int, float>().DoOp(Op, a, b);
+		else if (FindB->first == "double")
+			return AnyOperator<int, double>().DoOp(Op, a, b);
+		else if (FindB->first == "bool")
+			return AnyOperator<int, bool>().DoOp(Op, a, b);
+	}
+	else if (FindA->first == "unsigned int")
+	{
+		if (FindB->first == "int")
+			return AnyOperator<unsigned int, int>().DoOp(Op, a, b);
+		else if (FindB->first == "unsigned int")
+			return AnyOperator<unsigned int, unsigned int>().DoOp(Op, a, b);
+		else if (FindB->first == "float")
+			return AnyOperator<unsigned int, float>().DoOp(Op, a, b);
+		else if (FindB->first == "double")
+			return AnyOperator<unsigned int, double>().DoOp(Op, a, b);
+		else if (FindB->first == "bool")
+			return AnyOperator<unsigned int, bool>().DoOp(Op, a, b);
+	}
+	else if (FindA->first == "float")
+	{
+		if (FindB->first == "int")
+			return AnyOperator<float, int>().DoOp(Op, a, b);
+		else if (FindB->first == "unsigned int")
+			return AnyOperator<float, unsigned int>().DoOp(Op, a, b);
+		else if (FindB->first == "float")
+			return AnyOperator<float, float>().DoOp(Op, a, b);
+		else if (FindB->first == "double")
+			return AnyOperator<float, double>().DoOp(Op, a, b);
+		else if (FindB->first == "bool")
+			return AnyOperator<float, bool>().DoOp(Op, a, b);
+	}
+	else if (FindA->first == "double")
+	{
+		if (FindB->first == "int")
+			return AnyOperator<double, int>().DoOp(Op, a, b);
+		else if (FindB->first == "unsigned int")
+			return AnyOperator<double, unsigned int>().DoOp(Op, a, b);
+		else if (FindB->first == "float")
+			return AnyOperator<double, float>().DoOp(Op, a, b);
+		else if (FindB->first == "double")
+			return AnyOperator<double, double>().DoOp(Op, a, b);
+		else if (FindB->first == "bool")
+			return AnyOperator<double, bool>().DoOp(Op, a, b);
+	}
+	else if (FindA->first == "bool")
+	{
+		if (FindB->first == "int")
+			return AnyOperator<bool, int>().DoOp(Op, a, b);
+		else if (FindB->first == "unsigned int")
+			return AnyOperator<bool, unsigned int>().DoOp(Op, a, b);
+		else if (FindB->first == "float")
+			return AnyOperator<bool, float>().DoOp(Op, a, b);
+		else if (FindB->first == "double")
+			return AnyOperator<bool, double>().DoOp(Op, a, b);
+		else if (FindB->first == "bool")
+			return AnyOperator<bool, bool>().DoOp(Op, a, b);
+	}
+	return std::any();
+}
+
+std::any weec::interpreter::wcExpressionInterpeter::DoOp(lex::wcTokenType Op, std::any a)
+{
+	auto FindA = ImplementationTypes.find(a.type().name());
+	if (FindA == ImplementationTypes.end())
+		return std::any();
+
+	if (FindA->first == "int")
+		return AnyOperatorUnary<int>().DoOp(Op, a);
+	else if (FindA->first == "unsigned int")
+		return AnyOperatorUnary<unsigned int>().DoOp(Op, a);
+	else if (FindA->first == "float")
+		return AnyOperatorUnary<float>().DoOp(Op, a);
+	else if (FindA->first == "double")
+		return AnyOperatorUnary<double>().DoOp(Op, a);
+	else if (FindA->first == "bool")
+		return AnyOperatorUnary<bool>().DoOp(Op, a);
+	return std::any();
+}
+
+
 
 weec::interpreter::wcExpressionInterpeter::wcExpressionInterpeter(parse::wcParseSymbolTable& _SymTab, parse::wcParseOutput _Input, tree<parse::wcParseNode>::iterator _PC)
 	: Input(_Input), SymTab(_SymTab)
@@ -92,6 +189,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecPrimary()
 		return Result->Token.StringToken.Data;
 	case wcTokenType::FloatLiteral:
 		return stof(Result->Token.StringToken.Data);
+	case wcTokenType::Identifier:
+		return stof(Result->Token.StringToken.Data);
 	}
 	return std::any();
 }
@@ -103,16 +202,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecUnary()
 
 	auto Lh = EvalNode(PC->Type, Expression);
 
-	switch (OpType)
-	{
-	case wcTokenType::PlusOperator:
-		return +std::any_cast<int>(Lh);
-
-	case wcTokenType::MinusOperator:
-		return -std::any_cast<int>(Lh);
-	}
-
-	return std::any();
+	return DoOp(OpType, Lh);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecFactor()
@@ -122,80 +212,8 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecFactor()
 
 	auto Lh = EvalNode(PC->Type, Expression);
 	auto Rh = EvalNode(PC->Type, Expression);
-	string name;
-	switch (OpType)
-	{
-	case wcTokenType::MultiplyOperator:
-		if (string(Lh.type().name()) == ImplementationTypeNames["int"])
-		{
-			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-				return std::any_cast<int>(Lh) * std::any_cast<int>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-				return std::any_cast<int>(Lh) * std::any_cast<float>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-				return std::any_cast<int>(Lh) * std::any_cast<unsigned int>(Rh);
-		}
-		else if (string(Lh.type().name()) == ImplementationTypeNames["float"])
-		{
-			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-				return std::any_cast<float>(Lh) * std::any_cast<int>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-				return std::any_cast<float>(Lh) * std::any_cast<float>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-				return std::any_cast<float>(Lh) * std::any_cast<unsigned int>(Rh);
-		}
-		name = Rh.type().name();
 
-		return std::any();	//error
-
-	case wcTokenType::DivideOperator:
-		if (string(Lh.type().name()) == ImplementationTypeNames["int"])
-		{
-			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-			{
-				if(std::any_cast<int>(Rh) != 0)
-					return (std::any_cast<int>(Lh) / std::any_cast<int>(Rh));
-				break;
-			}
-			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-			{
-				if (std::any_cast<float>(Rh) != 0)
-					return (std::any_cast<int>(Lh) / std::any_cast<float>(Rh));
-				break;
-			}
-			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-			{
-				if (std::any_cast<unsigned int>(Rh) != 0)
-					return (std::any_cast<int>(Lh) / std::any_cast<unsigned int>(Rh));
-				break;
-			}
-		}
-		else if (string(Lh.type().name()) == ImplementationTypeNames["float"])
-		{
-			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-			{
-				if (std::any_cast<int>(Rh) != 0)
-					return float(std::any_cast<float>(Lh) / std::any_cast<int>(Rh));
-				break;
-			}
-			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-			{
-				if (std::any_cast<float>(Rh) != 0)
-					return float(std::any_cast<float>(Lh) / std::any_cast<float>(Rh));
-				break;
-			}
-			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-			{
-				if (std::any_cast<unsigned int>(Rh) != 0)
-					return float(std::any_cast<float>(Lh) / std::any_cast<unsigned int>(Rh));
-				break;
-			}
-		}
-
-		return std::any();	//error
-	}
-
-	return std::any();
+	return DoOp(OpType, Lh, Rh);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecTerm()
@@ -206,52 +224,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecTerm()
 	auto Lh = EvalNode(PC->Type, Expression);
 	auto Rh = EvalNode(PC->Type, Expression);
 
-	switch (OpType)
-	{
-	case wcTokenType::PlusOperator:
-		if (string(Lh.type().name()) == ImplementationTypeNames["int"])
-		{
-			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-				return std::any_cast<int>(Lh) + std::any_cast<int>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-				return std::any_cast<int>(Lh) + std::any_cast<float>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-				return std::any_cast<int>(Lh) + std::any_cast<unsigned int>(Rh);
-		}
-		else if (string(Lh.type().name()) == ImplementationTypeNames["float"])
-		{
-			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-				return std::any_cast<float>(Lh) + std::any_cast<int>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-				return std::any_cast<float>(Lh) + std::any_cast<float>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-				return std::any_cast<float>(Lh) + std::any_cast<unsigned int>(Rh);
-		}
-		return std::any();	//error
-
-	case wcTokenType::MinusOperator:
-		if (string(Lh.type().name()) == ImplementationTypeNames["int"])
-		{
-			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-				return std::any_cast<int>(Lh) - std::any_cast<int>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-				return std::any_cast<int>(Lh) - std::any_cast<float>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-				return std::any_cast<int>(Lh) - std::any_cast<unsigned int>(Rh);
-		}
-		else if (string(Lh.type().name()) == ImplementationTypeNames["float"])
-		{
-			if (string(Rh.type().name()) == ImplementationTypeNames["int"])
-				return std::any_cast<float>(Lh) - std::any_cast<int>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["float"])
-				return std::any_cast<float>(Lh) - std::any_cast<float>(Rh);
-			else if (string(Rh.type().name()) == ImplementationTypeNames["unsigned int"])
-				return std::any_cast<float>(Lh) - std::any_cast<unsigned int>(Rh);
-		}
-		return std::any();
-	}
-
-	return std::any();
+	return DoOp(OpType, Lh, Rh);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecComparison()
@@ -262,16 +235,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecComparison()
 	auto Lh = EvalNode(PC->Type, Expression);
 	auto Rh = EvalNode(PC->Type, Expression);
 
-	switch (OpType)
-	{
-	case wcTokenType::PlusOperator:
-		return std::any_cast<int>(Lh) + std::any_cast<int>(Rh);
-
-	case wcTokenType::MinusOperator:
-		return std::any_cast<int>(Lh) - std::any_cast<int>(Rh);
-	}
-
-	return std::any();
+	return DoOp(OpType, Lh, Rh);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecLogicAnd()
@@ -282,17 +246,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecLogicAnd()
 	auto Lh = EvalNode(PC->Type, Expression);
 	auto Rh = EvalNode(PC->Type, Expression);
 
-	switch (OpType)
-	{
-	case wcTokenType::PlusOperator:
-		if (string(Lh.type().name()) == ImplementationTypeNames["int"])
-			return std::any_cast<int>(Lh) + std::any_cast<int>(Rh);
-
-	case wcTokenType::MinusOperator:
-		return std::any_cast<int>(Lh) - std::any_cast<int>(Rh);
-	}
-
-	return std::any();
+	return DoOp(OpType, Lh, Rh);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecLogicOr()
@@ -303,16 +257,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecLogicOr()
 	auto Lh = EvalNode(PC->Type, Expression);
 	auto Rh = EvalNode(PC->Type, Expression);
 
-	switch (OpType)
-	{
-	case wcTokenType::PlusOperator:
-		return std::any_cast<int>(Lh) + std::any_cast<int>(Rh);
-
-	case wcTokenType::MinusOperator:
-		return std::any_cast<int>(Lh) - std::any_cast<int>(Rh);
-	}
-
-	return std::any();
+	return DoOp(OpType, Lh, Rh);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecAssignment()
@@ -323,16 +268,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecAssignment()
 	auto Lh = EvalNode(PC->Type, Expression);
 	auto Rh = EvalNode(PC->Type, Expression);
 
-	switch (OpType)
-	{
-	case wcTokenType::PlusOperator:
-		return std::any_cast<int>(Lh) + std::any_cast<int>(Rh);
-
-	case wcTokenType::MinusOperator:
-		return std::any_cast<int>(Lh) - std::any_cast<int>(Rh);
-	}
-
-	return std::any();
+	return DoOp(OpType, Lh, Rh);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecEquality()
@@ -343,21 +279,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecEquality()
 	auto Lh = EvalNode(PC->Type, Expression);
 	auto Rh = EvalNode(PC->Type, Expression);
 
-	switch (OpType)
-	{
-	case wcTokenType::PlusOperator:
-		return std::any_cast<int>(Lh) + std::any_cast<int>(Rh);
-
-	case wcTokenType::MinusOperator:
-		return std::any_cast<int>(Lh) - std::any_cast<int>(Rh);
-	}
-
-	return std::any();
-}
-
-bool weec::interpreter::wcInterpreter::ExecExpression()
-{
-	return false;
+	return DoOp(OpType, Lh, Rh);
 }
 
 weec::interpreter::wcInterpreter::wcInterpreter(parse::wcParseOutput _Input)
@@ -374,13 +296,26 @@ std::any weec::interpreter::wcInterpreter::Exec()
 {
 	PC = Input.AST.begin();
 
-	std::any ExpressionResult;
-	while (PC != Input.AST.end())
+	std::any ExpressionResult, ReturnResult;
+	while (PC != Input.AST.end() && PC != nullptr && !Halt)
 	{
 		switch (PC->Type)
 		{
-		case Expression:
-			ExpressionResult = wcExpressionInterpeter(SymbolTable, Input, PC).Exec();
+		case Statement:
+			ExecStatement();
+			break;
+
+		case Block:
+			ExecBlock();
+			break;
+
+		case Head:
+			break;
+
+		default:
+			Error.Node = *PC;
+			Error.Code = wcIntpreterErrorCode::InvalidNode;
+			Halt = true;
 			break;
 		}
 
@@ -392,5 +327,118 @@ std::any weec::interpreter::wcInterpreter::Exec()
 
 std::any weec::interpreter::wcInterpreter::ExecStatement()
 {
-	return false;
+	auto Begin = PC;
+	PC++;
+
+	auto d1 = Input.AST.depth(Begin);
+	auto d2 = Input.AST.depth(PC);
+	auto d3 = PC->Type;
+	if(Input.AST.depth(PC) > Input.AST.depth(Begin))
+		switch (PC->Type)
+		{
+		case Expression:
+			LastExpression = wcExpressionInterpeter(SymbolTable, Input, PC).Exec();
+			break;
+
+		case ReturnStatement:
+			Return = ExecReturn();
+			break;
+
+		case IfStatement:
+			ExecIf();
+			break;
+
+		case Declaration:
+			ExecDeclaration();
+			break;
+
+		default:
+			Error.Node = *PC;
+			Error.Code = wcIntpreterErrorCode::InvalidNode;
+			Halt = true;
+			break;
+		}
+
+	return Return;
+}
+
+std::any weec::interpreter::wcInterpreter::ExecReturn()
+{
+	auto Begin = PC;
+	PC++;
+
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && !Halt))
+		switch (PC->Type)
+		{
+		case Expression:
+			Return = wcExpressionInterpeter(SymbolTable, Input, PC).Exec();
+			break;
+
+		default:
+			Error.Node = *PC;
+			Error.Code = wcIntpreterErrorCode::InvalidNode;
+			Halt = true;
+			break;
+		}
+
+	Halt = true;
+	return std::any();
+}
+
+std::any weec::interpreter::wcInterpreter::ExecBlock()
+{
+	auto Begin = PC;
+	PC++;
+
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && !Halt))
+		switch (PC->Type)
+		{
+		case Statement:
+			ExecStatement();
+			break;
+
+		default:
+			Error.Node = *PC;
+			Error.Code = wcIntpreterErrorCode::InvalidNode;
+			Halt = true;
+			break;
+		}
+
+	return std::any();
+}
+
+std::any weec::interpreter::wcInterpreter::ExecIf()
+{
+	return std::any();
+}
+
+std::any weec::interpreter::wcInterpreter::ExecDeclaration()
+{
+	auto Begin = PC;
+	PC++;
+	auto d1 = Input.AST.depth(Begin);
+	auto d2 = Input.AST.depth(PC);
+	auto d3 = PC->Type;
+
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC != nullptr && !Halt))
+		switch (PC++->Type)
+		{
+		case Declaration_Type:
+			break;
+
+		case Declaration_Ident:
+			break;
+
+		case Expression:
+			LastExpression = wcExpressionInterpeter(SymbolTable, Input, PC).Exec();
+			break;
+
+		default:
+			Error.Node = *PC;
+			Error.Code = wcIntpreterErrorCode::InvalidNode;
+			Halt = true;
+			break;
+		}
+
+	return Return;
 }

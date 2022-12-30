@@ -21,6 +21,8 @@ namespace weec
 			
 			IfStatement, If_Expression, If_TrueBlock, If_ElseBlock,
 
+			ReturnStatement, Return_Expression,
+
 			Declaration, Declaration_Type, Declaration_Ident,
 
 			Expression, Expression_Equality, Expression_Assignment, Expression_LogicOr, Expression_LogicAnd, Expression_Comparison, Expression_Term,
@@ -39,7 +41,7 @@ namespace weec
 
 			InvalidType, 
 			
-			If_MissingClosingParenthesis,
+			If_MissingClosingParenthesis, MissingClosingBrace,
 
 			IdentRedeclaration, UndeclaredIdent,
 
@@ -161,6 +163,8 @@ namespace weec
 			void AddAsChild(wcParseOutput, bool PointToChild = false);
 			void AddAsChild(wcParseNode, bool PointToChild = false);
 
+			void Up() { NodeIndex = AST.parent(NodeIndex); }
+
 			tree<wcParseNode>::pre_order_iterator GetHead() { return UnofficialHead; }
 			tree<wcParseNode>::pre_order_iterator GetSubHead();
 
@@ -227,6 +231,7 @@ namespace weec
 			wcParseOutput ParseBlock();
 			wcParseOutput ParseIf();
 			wcParseOutput ParseSemiColon();
+			wcParseOutput ParseReturn();
 			wcParseOutput ParseDeclaration(), ParseDeclaration_Function(), ParseDeclaration_Variable();
 			wcParseOutput ParseDeclaration(wcParseSymbol), ParseDeclaration_Function(wcParseSymbol), ParseDeclaration_Variable(wcParseSymbol);
 

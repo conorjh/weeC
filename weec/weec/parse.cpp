@@ -71,7 +71,7 @@ wcParseOutput weec::parse::wcParser::ParseDeclaration()
 		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
 	if (Tokenizer.GetToken().Type == wcTokenType::SemiColon)
 	{
-		ParseSemiColon();
+		Output.AddAsChild(ParseSemiColon());
 		return Output;
 	}
 	else if (Tokenizer.GetToken().Type != wcTokenType::AssignOperator)
@@ -79,10 +79,9 @@ wcParseOutput weec::parse::wcParser::ParseDeclaration()
 	Tokenizer.NextToken();
 
 	//optional assignment expression;
-	auto InitExpression = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
-	if (InitExpression.Error.Code != None)
-		return InitExpression;
-	Output.AddAsChild(InitExpression);
+	Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression());
+	if (Output.Error.Code != None)
+		return Output;
 
 	//semi colon
 	ParseSemiColon();
@@ -146,7 +145,9 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 	WC_SWITCHCASE_TOKENS_OPERATORS_ALL
 	case OpenParenthesis:
 		Buffer = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
-		ParseSemiColon();
+		if (Buffer.Error.Code != None)
+			return Buffer;
+		Buffer.AddAsChild(ParseSemiColon());
 		break;
 
 		WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
@@ -155,6 +156,10 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 
 	case wcTokenType::IfKeyword:
 		Buffer = ParseIf();
+		break;
+
+	case wcTokenType::ReturnKeyword:
+		Buffer = ParseReturn();
 		break;
 
 	default:
@@ -175,13 +180,8 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 			Buffer = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression(Ident);
 			if (Buffer.Error.Code != None)
 				return Buffer;
-
 			if (Tokenizer.GetToken().Type != SemiColon)
-			{
-				//error
-				Output.Error = wcParserError(wcParserErrorCode::UnexpectedToken, Tokenizer.GetToken());
-				return Output;
-			}
+				return wcParseOutput(wcParserError(wcParserErrorCode::UnexpectedToken, Tokenizer.GetToken()));
 			Tokenizer.NextToken();
 			break;
 
@@ -208,7 +208,6 @@ wcParseOutput weec::parse::wcParser::ParseBlock()
 
 	if (Tokenizer.GetToken().Type != OpenBrace)
 		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));
-
 	if (!Tokenizer.NextToken())
 		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
 
@@ -223,7 +222,7 @@ wcParseOutput weec::parse::wcParser::ParseBlock()
 	}
 
 	if(Tokenizer.GetToken().Type != CloseBrace)
-		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));
+		return wcParseOutput(wcParserError(MissingClosingBrace, Tokenizer.GetToken()));
 
 	Tokenizer.NextToken();
 
@@ -246,10 +245,7 @@ wcParseOutput weec::parse::wcParser::ParseIf()
 		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
 
 	//expression
-	auto IfExpression = wcExpressionParser(Tokenizer, SymbolTable).ParseExpression();
-	if (IfExpression.Error.Code != None)
-		return IfExpression;
-	Output.AddAsChild(IfExpression);
+	Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression());
 	if (Output.Error.Code != None)
 		return Output;
 
@@ -260,15 +256,14 @@ wcParseOutput weec::parse::wcParser::ParseIf()
 		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
 
 	//block/statement
-	wcParseOutput TrueBlock;
-	TrueBlock.AddAsChild(wcParseNode(wcParseNodeType::If_TrueBlock), true);
+	Output.AddAsChild(wcParseNode(wcParseNodeType::If_TrueBlock), true);
 	if (Tokenizer.GetToken().Type == wcTokenType::OpenBrace)
-		TrueBlock.AddAsChild(ParseBlock());
+		Output.AddAsChild(ParseBlock());
 	else
-		TrueBlock.AddAsChild(ParseStatement());
-	if (TrueBlock.Error.Code != None)
+		Output.AddAsChild(ParseStatement());
+	Output.Up();	//return pointer to parent of true block
+	if (Output.Error.Code != None)
 		return Output;
-	Output.AddAsChild(TrueBlock);
 
 	//optional else keyword
 	if (Tokenizer.GetToken().Type != wcTokenType::ElseKeyword)
@@ -276,25 +271,55 @@ wcParseOutput weec::parse::wcParser::ParseIf()
 	Tokenizer.NextToken();
 
 	//optional else block/statement
-	wcParseOutput ElseBlock;
-	ElseBlock.AddAsChild(wcParseNode(wcParseNodeType::If_ElseBlock), true);
+	Output.AddAsChild(wcParseNode(wcParseNodeType::If_ElseBlock), true);
 	if (Tokenizer.GetToken().Type == wcTokenType::OpenBrace)
-		ElseBlock.AddAsChild(ParseBlock());
+		Output.AddAsChild(ParseBlock());
 	else
-		ElseBlock.AddAsChild(ParseStatement());
-	Output.AddAsChild(ElseBlock);
+		Output.AddAsChild(ParseStatement());
+	Output.Up();	//return pointer to parent of else block
 
 	return Output;
 }
 
+//Note: always returns an empty parseoutput, we only need to know if it errored or not, so always 
+//append it to parent output to see the error cascade back up the call chain
 wcParseOutput weec::parse::wcParser::ParseSemiColon()
 {
 	if (Tokenizer.GetToken().Type != SemiColon)
-		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));		//error
+		if (Tokenizer.IsFinished())
+			return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));		//error
+		else
+			return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));		//error
 	Tokenizer.NextToken();
 
 	//no nodes created
 	return wcParseOutput();
+}
+
+wcParseOutput weec::parse::wcParser::ParseReturn()
+{
+	wcParseOutput Output;
+	Output.AddAsChild(wcParseNode(wcParseNodeType::ReturnStatement), true);
+
+	//return keyword;
+	if (Tokenizer.GetToken().Type != ReturnKeyword)
+		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));		//error	
+	if(!Tokenizer.NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));		//error
+
+	//semi colon/optional return expression
+	if (Tokenizer.GetToken().Type == SemiColon)
+	{
+		Output.AddAsChild(ParseSemiColon());
+		return Output;
+	}
+
+	Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression());
+	if (Output.Error.Code != None)
+		return Output;
+
+	Output.AddAsChild(ParseSemiColon());
+	return Output;
 }
 
 tree<wcParseNode>::pre_order_iterator weec::parse::wcParseExpression::GetExpressionRootNodeBegin()
@@ -473,27 +498,6 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Equality()
 	return Output;
 }
 
-/*
-
- private Expr assignment() {
-	Expr expr = equality();
-
-	if (match(EQUAL)) {
-	  Token equals = previous();
-	  Expr value = assignment();
-
-	  if (expr instanceof Expr.Variable) {
-		Token name = ((Expr.Variable)expr).name;
-		return new Expr.Assign(name, value);
-	  }
-
-	  error(equals, "Invalid assignment target.");
-	}
-
-	return expr;
-
-*/
-
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
 {
 	wcParseExpression Output = ParseExpression_LogicOr();
@@ -586,7 +590,6 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Term()
 		}
 
 		auto RightExp = ParseExpression_Factor();
-		//if(RightExp.Error)
 
 		Output = wcParseExpression(Expression_Term, Output, Operator, RightExp);
 
@@ -706,10 +709,11 @@ weec::parse::wcParseOutput::wcParseOutput(wcParserError _Error)
 
 void weec::parse::wcParseOutput::AddAsChild(wcParseOutput Child, bool PointToChild)
 {
-	if (PointToChild)
-		NodeIndex = AST.append_child(NodeIndex, Child.GetSubHead());
-	else
-		AST.append_child(NodeIndex, Child.GetSubHead());
+	if(Child.AST.size() > 1)
+		if (PointToChild)
+			NodeIndex = AST.append_child(NodeIndex, Child.GetSubHead());
+		else
+			AST.append_child(NodeIndex, Child.GetSubHead());
 
 	Error = Child.Error;
 }
@@ -851,6 +855,8 @@ std::string weec::parse::wcParserErrorCodeToString(wcParserErrorCode Code)
 		return "UnexpectedToken";
 	case If_MissingClosingParenthesis:
 		return "If_MissingClosingParenthesis";
+	case MissingClosingBrace:
+		return "MissingClosingBrace"; 
 	case InvalidType:
 		return "InvalidType";
 	case IdentRedeclaration:
@@ -881,6 +887,10 @@ std::string weec::parse::wcParseNodeTypeToString(wcParseNodeType Type)
 		return "Head";
 	case wcParseNodeType::Empty:
 		return "Empty";
+	case wcParseNodeType::ReturnStatement:
+		return "ReturnStatement";
+	case wcParseNodeType::Return_Expression:
+		return "Return_Expression";
 	case wcParseNodeType::IfStatement:
 		return "IfStatement";
 	case wcParseNodeType::If_Expression:

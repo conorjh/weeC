@@ -24,9 +24,7 @@ CommandLineSettings ParseCommandLine(CommandLine CmdLine)
 
 	for (auto& Argument : CmdLine.Arguments)
 		if (Argument.Type == ApplicationPath)
-		{
 			Output.Filepath = Argument.Data;
-		}
 
 		else if (Argument.Data == "-cfg")
 		{
@@ -60,11 +58,24 @@ CommandLineSettings ParseCommandLine(CommandLine CmdLine)
 			Output.LogLevel = IntBuff;
 		}
 
+		else if (Argument.Data == "-sym")
+		{
+			Output.Profile.BuildSymbolTable = true;
+		}
+
 		else
 		{
-			//unknown parameter - error
-			Output.Errors.AddError("Invalid argument: " + Argument.Data);
+			//source filepath has no argument
+			if(Output.Profile.SourceFilepath == "")
+				Output.Profile.SourceFilepath = Argument.Data;
+			else
+				//source filepath redefinition, warning
+				Output.Errors.AddError("Source filepath given more than once");
 		}
+
+
+	if(Output.Profile.BuildSymbolTable && Output.Profile.DestinationFilepath != "")
+		Output.Profile.SymbolTableFilepath = Output.Profile.DestinationFilepath + ".sym";
 
 	return Output;
 }
@@ -86,7 +97,6 @@ Config App::ConfigParser::Parse()
 		return Config();
 
 	Config Output;
-
 
 	
 	return Output;
@@ -133,7 +143,6 @@ bool App::Application::Init()
 	spdlog::debug("IO Init");
 	IO.Init();
 
-
 	return true;
 }
 
@@ -163,8 +172,7 @@ App::AppData::AppData()
 
 void App::AppData::UpdateFromConfig(Config Cfg)
 {
-	ScreenWidth = Cfg.ScreenWidth; ScreenHeight = Cfg.ScreenHeight;
-	ShowFPS = Cfg.ShowFPS;
+
 }
 
 

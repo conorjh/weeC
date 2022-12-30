@@ -1,6 +1,7 @@
 #ifndef APP_H
 #define APP_H
 #include "Util.h"
+#include "Wcc.h"
 
 namespace App
 {
@@ -28,9 +29,6 @@ namespace App
 	{
 		Config() {}
 
-		unsigned int ScreenWidth = 1024, ScreenHeight = 768, ScreenDepth = 32;
-		bool ShowFPS = true;
-
 		unsigned int Ver = 1;
 		std::string VerString = "0.0.0.1";
 	};
@@ -51,8 +49,10 @@ namespace App
 		CommandLineSettings();
 
 		//settings
-		std::string Filepath, ConfigPath;
+		std::string Filepath, ConfigPath; 
 		unsigned int LogLevel;
+		
+		wcc::CompilerProfile Profile;
 
 		//errors
 		Error::ErrorData Errors;
@@ -66,8 +66,6 @@ namespace App
 		void UpdateFromConfig(Config Cfg);
 
 
-		unsigned int ScreenWidth = 1024, ScreenHeight = 768;
-		bool ShowFPS = false;
 		bool Halted = false;
 
 	};
@@ -100,6 +98,8 @@ namespace App
 
 		bool Init();
 		void Update();
+
+		void Splash();
 	};
 
 

@@ -39,12 +39,12 @@ namespace weec
 			std::string list_parser13 = "if(1 == 10-9\n\tint a;";	//error
 			std::string list_parser14 = "if(1 == 10-9)\n{\n\tint a;\n\nelse\n{\n\tint b;\n} "; //error
 			std::string list_parser15 = "if(1)\n\t55+55;\nelse\n\t66+ +66;";
-			std::string list_parser16 = "2 -4 +6 -1 -1- 0 +8";
-			std::string list_parser17 = "1 -1   + 2   - 2   +  4 - 4 +    6";
-			std::string list_parser18 = "2 -4 +6 -1 -1- 0 +8";
-			std::string list_parser19 = "1 -1   + 2   - 2   +  4 - 4 +    6";
-			std::string list_parser20 = " 2*3 - 4*5 + 6/3 ";
-			std::string list_parser21 = "2*3*4/8 -   5/2*4 +  6 + 0/3   ";
+			std::string list_parser16 = "if(1) if(1) if(1) 123;";
+			std::string list_parser17 = "return";	//error
+			std::string list_parser18 = "return;";
+			std::string list_parser19 = "return 2+2;";
+			std::string list_parser20 = "int a = 123; return a;";
+			std::string list_parser21 = "int a = 123; \nif(a < 100)\n\treturn a;\nelse\nreturn a * 2;";
 			std::string list_parser22 = "10/4";
 			std::string list_parser23 = "5/3";
 			std::string list_parser24 = "3 + 8/5 -1 -2*5";
@@ -56,49 +56,56 @@ namespace weec
 			std::string list_parser30 = "5/1";
 
 
-			std::string list_expression1 = "2 + 3";
-			std::string list_expression2 = "2 * 3";
-			std::string list_expression3 = "89";
-			std::string list_expression4 = "   12        -  8   ";
-			std::string list_expression5 = "142        -9   ";
-			std::string list_expression6 = "72+  15";
-			std::string list_expression7 = " 12*  4";
-			std::string list_expression8 = " 50/10";
-			std::string list_expression9 = "2.5";
-			std::string list_expression10 = "4*2.5 + 8.5+1.5 / 3.0";
-			std::string list_expression11 = "5.0005 + 0.0095";
-			std::string list_expression12 = "67+2";
-			std::string list_expression13 = " 2-7";
-			std::string list_expression14 = "5*7 ";
-			std::string list_expression15 = "8/4";
-			std::string list_expression16 = "2 -4 +6 -1 -1- 0 +8";
-			std::string list_expression17 = "1 -1   + 2   - 2   +  4 - 4 +    6";
-			std::string list_expression18 = "2 -4 +6 -1 -1- 0 +8";
-			std::string list_expression19 = "1 -1   + 2   - 2   +  4 - 4 +    6";
-			std::string list_expression20 = " 2*3 - 4*5 + 6/3 ";
-			std::string list_expression21 = "2*3*4/8 -   5/2*4 +  6 + 0/3   ";
-			std::string list_expression22 = "10/4";
-			std::string list_expression23 = "5/3";
-			std::string list_expression24 = "3 + 8/5 -1 -2*5";
-			std::string list_expression25 = "  6 + c";
-			std::string list_expression26 = "  7 & 2";
-			std::string list_expression27 = "  %";
-			std::string list_expression28 = " 5 + + 6";
-			std::string list_expression29 = " -5 + 2";
-			std::string list_expression30 = "5/1";
-			std::string list_expression31 = " 2 - 1 + 14/1 + 7";
-			std::string list_expression32 = "(2)";
-			std::string list_expression33 = "(5 + 2*3 - 1 + 7 * 8)";
-			std::string list_expression34 = "(67 + 2 * 3 - 67 + 2/1 - 7)";
-			std::string list_expression35 = "(2) + (17*2-30) * (5)+2 - (8/2)*4";
-			std::string list_expression36 = "(5*7/5) + (23) - 5 * (98-4)/(6*7-42)";
-			std::string list_expression37 = "(((((5)))))";
-			std::string list_expression38 = "(( ((2)) + 4))*((5))";
-			std::string list_expression39 = "2 + (5 * 2";
-			std::string list_expression40 = "(((((4))))";
-			std::string list_expression41 = "((2)) * ((3";
-			std::string list_expression42 = "((9)) * ((1)";
-			std::string list_expression43 = "1 == +(-1) == 1.00";
+			std::string list_expression1 = "2 + 3;";
+			std::string list_expression2 = "2 * 3;";
+			std::string list_expression3 = "89;";
+			std::string list_expression4 = "   12        -  8   ;";
+			std::string list_expression5 = "142        -9   ;";
+			std::string list_expression6 = "72+  15;";
+			std::string list_expression7 = " 12*  4;";
+			std::string list_expression8 = " 50/10;";
+			std::string list_expression9 = "2.5;";
+			std::string list_expression10 = "4*2.5 + 8.5+1.5 / 3.0;";
+			std::string list_expression11 = "5.0005 + 0.0095;";
+			std::string list_expression12 = "67+2;";
+			std::string list_expression13 = " 2-7;";
+			std::string list_expression14 = "5*7 ;";
+			std::string list_expression15 = "8/4;";
+			std::string list_expression16 = "2 -4 +6 -1 -1- 0 +8;";
+			std::string list_expression17 = "1 -1   + 2   - 2   +  4 - 4 +    6;";
+			std::string list_expression18 = "2 -4 +6 -1 -1- 0 +8;";
+			std::string list_expression19 = "1 -1   + 2   - 2   +  4 - 4 +    6;";
+			std::string list_expression20 = " 2*3 - 4*5 + 6/3 ;";
+			std::string list_expression21 = "2*3*4/8 -   5/2*4 +  6 + 0/3   ;";
+			std::string list_expression22 = "10/4;";
+			std::string list_expression23 = "5/3;";
+			std::string list_expression24 = "3 + 8/5 -1 -2*5;";
+			std::string list_expression25 = "  6 + c;";
+			std::string list_expression26 = "  7 & 2;";
+			std::string list_expression27 = "  %;";
+			std::string list_expression28 = " 5 + + 6;";
+			std::string list_expression29 = " -5 + 2;";
+			std::string list_expression30 = "5/1;";
+			std::string list_expression31 = " 2 - 1 + 14/1 + 7;";
+			std::string list_expression32 = "(2);";
+			std::string list_expression33 = "(5 + 2*3 - 1 + 7 * 8);";
+			std::string list_expression34 = "(67 + 2 * 3 - 67 + 2/1 - 7);";
+			std::string list_expression35 = "(2) + (17*2-30) * (5)+2 - (8/2)*4;";
+			std::string list_expression36 = "(5*7/5) + (23) - 5 * (98-4)/(6*7-42);";
+			std::string list_expression37 = "(((((5)))));";
+			std::string list_expression38 = "(( ((2)) + 4))*((5));";
+			std::string list_expression39 = "2 + (5 * 2;";
+			std::string list_expression40 = "(((((4))));";
+			std::string list_expression41 = "((2)) * ((3;";
+			std::string list_expression42 = "((9)) * ((1);";
+			std::string list_expression43 = "1 == +(-1) == 1.00;";
+			std::string list_expression44 = "+(-1) * 10;";
+			std::string list_expression45 = "!2;";
+			std::string list_expression46 = "22 && (11 + 11);";
+			std::string list_expression47 = "0 || (33 + 33);";
+			std::string list_expression48 = "+(-2) * 10;";
+			std::string list_expression49 = "!!!2;";
+			std::string list_expression50 = "!!!!(123);";
 
 			std::string list_stringtokenizer4 = "Hello\nWorld\nLonger sentence\nFinishing with newline\n";
 		}
@@ -126,9 +133,9 @@ namespace weec
 				Test_wcExpressionParser_21(), Test_wcExpressionParser_22(), Test_wcExpressionParser_23(), Test_wcExpressionParser_24(), Test_wcExpressionParser_25(),
 				Test_wcExpressionParser_26(), Test_wcExpressionParser_27(), Test_wcExpressionParser_28(), Test_wcExpressionParser_29(), Test_wcExpressionParser_30(),
 				Test_wcExpressionParser_31(), Test_wcExpressionParser_32(), Test_wcExpressionParser_33(), Test_wcExpressionParser_34(), Test_wcExpressionParser_35(),
-				Test_wcExpressionParser_36(), Test_wcExpressionParser_37(), Test_wcExpressionParser_38(), Test_wcExpressionParser_39(), Test_wcExpressionParser_40(), 
-				Test_wcExpressionParser_41(), Test_wcExpressionParser_42(), Test_wcExpressionParser_43();
-
+				Test_wcExpressionParser_36(), Test_wcExpressionParser_37(), Test_wcExpressionParser_38(), Test_wcExpressionParser_39(), Test_wcExpressionParser_40(),
+				Test_wcExpressionParser_41(), Test_wcExpressionParser_42(), Test_wcExpressionParser_43(), Test_wcExpressionParser_44(), Test_wcExpressionParser_45(),
+				Test_wcExpressionParser_46(), Test_wcExpressionParser_47(), Test_wcExpressionParser_48(), Test_wcExpressionParser_49(), Test_wcExpressionParser_50();
 
 			//int Test_wcParseNode_1(), Test_wcParseNode_2(), Test_wcParseNode_3(), Test_wcParseNode_4(), Test_wcParseNode_5(), Test_wcParseNode_6();
 
@@ -161,7 +168,8 @@ namespace weec
 				Test_wcExpressionParser_26, Test_wcExpressionParser_27, Test_wcExpressionParser_28, Test_wcExpressionParser_29, Test_wcExpressionParser_30,
 				Test_wcExpressionParser_31, Test_wcExpressionParser_32, Test_wcExpressionParser_33, Test_wcExpressionParser_34, Test_wcExpressionParser_35,
 				Test_wcExpressionParser_36, Test_wcExpressionParser_37, Test_wcExpressionParser_38, Test_wcExpressionParser_39, Test_wcExpressionParser_40,
-				Test_wcExpressionParser_41, Test_wcExpressionParser_42, Test_wcExpressionParser_43
+				Test_wcExpressionParser_41, Test_wcExpressionParser_42, Test_wcExpressionParser_43, Test_wcExpressionParser_44, Test_wcExpressionParser_45,
+				Test_wcExpressionParser_46, Test_wcExpressionParser_47, Test_wcExpressionParser_48, Test_wcExpressionParser_49, Test_wcExpressionParser_50
 			};
 			int Test_AllParse();
 			

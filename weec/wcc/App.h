@@ -1,70 +1,34 @@
 #ifndef APP_H
 #define APP_H
+#include "config.h"
+#include "cmd_line.h"
 #include "Util.h"
 #include "Wcc.h"
 
 namespace App
 {
-	enum class CommandLineArgumentType
-	{
-		ApplicationPath, Argument, OptionalArgument, FreeFloatingParameter
-	};
-
-	struct CommandLineArgument
-	{
-		CommandLineArgumentType Type;
-		std::string Data;
-		std::vector<std::string> Parameters;
-	};
-
-	class CommandLine
-	{
-	public:
-		CommandLine(int argc, char* argv[]);
-
-		std::vector<CommandLineArgument> Arguments;
-	};
-
-	struct Config
-	{
-		Config() {}
-
-		unsigned int Ver = 1;
-		std::string VerString = "0.0.0.1";
-	};
-
-	class ConfigParser
-	{
-		std::string Filepath;
-	public:
-		ConfigParser(std::string _Filepath);
-
-		Config Parse();
-
-		Error::ErrorData Errors;
-	};
-
 	struct CommandLineSettings
 	{
-		CommandLineSettings();
+		CommandLineSettings(CommandLine::Cmd_Line);
 
 		//settings
-		std::string Filepath, ConfigPath; 
+		std::string Filepath, ConfigPath;
 		unsigned int LogLevel;
-		
+
 		wcc::CompilerProfile Profile;
 
 		//errors
 		Error::ErrorData Errors;
-	};
 
+	private:
+		bool ParseCommandLine(CommandLine::Cmd_Line);
+	};
 
 	struct AppData
 	{
 		AppData();
 
-		void UpdateFromConfig(Config Cfg);
-
+		void UpdateFromConfig(Config::ConfigData Cfg);
 
 		bool Halted = false;
 
@@ -87,8 +51,8 @@ namespace App
 	class Application
 	{
 	public:
-		CommandLine CmdLine;
-		Config Cfg;
+		CommandLine::Cmd_Line CmdLine;
+		Config::ConfigData Cfg;
 		AppIO IO;
 		AppData Data;
 

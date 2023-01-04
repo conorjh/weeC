@@ -1,41 +1,44 @@
 #include "App.h"
+#include "cmd_line.h"
+#include "config.h"
 #include "Util.h"
 #include "spdlog/spdlog.h"
 #include <filesystem>
 
 using namespace std;
 using namespace App;
+using namespace App::CommandLine;
+using namespace App::Config;
 using namespace Error;
 using namespace Util;
 
-using enum CommandLineArgumentType;
+using enum Cmd_LineArgumentType;
 
-App::CommandLineSettings::CommandLineSettings()
+App::CommandLineSettings::CommandLineSettings(Cmd_Line CmdLine)
 {
 	Filepath = "";
 	ConfigPath = "config.cfg";
 	LogLevel = 0;
+
+	ParseCommandLine(CmdLine);
 }
 
-
-CommandLineSettings ParseCommandLine(CommandLine CmdLine)
+bool App::CommandLineSettings::ParseCommandLine(Cmd_Line CmdLine)
 {
-	CommandLineSettings Output;
-
 	for (auto& Argument : CmdLine.Arguments)
 		if (Argument.Type == ApplicationPath)
-			Output.Filepath = Argument.Data;
+			this->Filepath = Argument.Data;
 
 		else if (Argument.Data == "-cfg")
 		{
 			if (Argument.Parameters.size() != 1)
 			{
 				//error - no parameters
-				Output.Errors.AddError("-cfg: No Filepath specified");
+				this->Errors.AddError("-cfg: No Filepath specified");
 				continue;
 			}
 
-			Output.ConfigPath = Argument.Parameters[0];
+			this->ConfigPath = Argument.Parameters[0];
 		}
 
 		else if (Argument.Data == "-log")
@@ -43,7 +46,7 @@ CommandLineSettings ParseCommandLine(CommandLine CmdLine)
 			if (Argument.Parameters.size() != 1)
 			{
 				//error - no parameters
-				Output.Errors.AddError("-log: no log level specified (should be a number, 0 - 6)");
+				this->Errors.AddError("-log: no log level specified (should be a number, 0 - 6)");
 				continue;
 			}
 
@@ -51,56 +54,35 @@ CommandLineSettings ParseCommandLine(CommandLine CmdLine)
 			if (IntBuff < 0 || IntBuff > 6)
 			{
 				//invalid log level bro
-				Output.Errors.AddError("-log: Invalid log level, should be a number 0 to 6, got: " + Argument.Parameters[0]);
+				this->Errors.AddError("-log: Invalid log level, should be a number 0 to 6, got: " + Argument.Parameters[0]);
 				continue;
 			}
 
-			Output.LogLevel = IntBuff;
+			this->LogLevel = IntBuff;
 		}
 
 		else if (Argument.Data == "-sym")
 		{
-			Output.Profile.BuildSymbolTable = true;
+			this->Profile.BuildSymbolTable = true;
 		}
 
 		else
 		{
 			//source filepath has no argument
-			if(Output.Profile.SourceFilepath == "")
-				Output.Profile.SourceFilepath = Argument.Data;
+			if(this->Profile.SourceFilepath == "")
+				this->Profile.SourceFilepath = Argument.Data;
 			else
 				//source filepath redefinition, warning
-				Output.Errors.AddError("Source filepath given more than once");
+				this->Errors.AddError("Source filepath given more than once");
 		}
 
 
-	if(Output.Profile.BuildSymbolTable && Output.Profile.DestinationFilepath != "")
-		Output.Profile.SymbolTableFilepath = Output.Profile.DestinationFilepath + ".sym";
+	if(this->Profile.BuildSymbolTable && this->Profile.DestinationFilepath != "")
+		this->Profile.SymbolTableFilepath = this->Profile.DestinationFilepath + ".sym";
 
-	return Output;
+	return true;
 }
 
-App::ConfigParser::ConfigParser(std::string _Filepath)
-{
-	Filepath = _Filepath;
-	
-	if (!FileExists(Filepath))
-	{
-		Errors.AddError("Missing file @ " + Filepath);
-		return;
-	}
-}
-
-Config App::ConfigParser::Parse()
-{
-	if(Errors.HasErrored())
-		return Config();
-
-	Config Output;
-
-	
-	return Output;
-}
 
 App::Application::Application(int argc, char* argv[]) : CmdLine(argc, argv), IO(Data)
 {
@@ -111,7 +93,7 @@ App::Application::Application(int argc, char* argv[]) : CmdLine(argc, argv), IO(
 	spdlog::trace("Running dir " + std::filesystem::current_path().string());
 
 	spdlog::debug("Parsing command line");
-	auto Settings = ParseCommandLine(CmdLine);
+	CommandLineSettings Settings(CmdLine);
 	if(Settings.Errors.HasErrored())
 		spdlog::debug("Parsing command line");
 	
@@ -132,7 +114,6 @@ bool App::Application::Ended() const
 {
 	return Data.Halted;
 }
-
 
 bool App::Application::Init()
 {
@@ -170,72 +151,7 @@ App::AppData::AppData()
 {
 }
 
-void App::AppData::UpdateFromConfig(Config Cfg)
+void App::AppData::UpdateFromConfig(ConfigData Cfg)
 {
 
-}
-
-
-/*
-Takes the standard C/C++ char* array, returns a vector of CommandLineArgument objects
-Arguments have the following syntax
-	-argument
-	/argument
-
-Any argument may have unlimited parameters
-	-argument param1
-	/argument param1 param2
-
-	eg. "app.exe -filepath c:/path/file.csv"
-	eg. "app.exe /move c:/src/file.csv c:/dst/file.csv"
-
-Free floating parameters have no parameters
-	argument1 argument2
-
-	eg "app.exe hidelaucher showfps"
-*/
-App::CommandLine::CommandLine(int argc, char* argv[])
-{
-	CommandLineArgument arg;
-	bool parsingParams = false;
-	int index = 0;
-	while (index < argc)
-	{
-		switch (argv[index][0])
-		{
-		case '//':
-		case '-':	//command			
-			if (parsingParams)
-			{
-				Arguments.push_back(arg);
-				arg = CommandLineArgument();
-			}
-
-			if (argv[index][0] == '--')
-				arg.Type = OptionalArgument;
-			else
-				arg.Type = Argument;
-
-			arg.Data = string(argv[index]).substr(1, strlen(argv[index]) - 1);
-			parsingParams = true;
-			break;
-
-			//parameter
-		default:
-			arg.Parameters.push_back(argv[index]);
-			if (!parsingParams)
-			{
-				//the first item is always the exe location
-				arg.Type = index == 0 ? ApplicationPath : FreeFloatingParameter;
-				arg.Data = argv[index];
-				Arguments.push_back(arg);
-				arg = CommandLineArgument();
-			}
-			break;
-		}
-		index++;
-	}
-
-	if (parsingParams)
-		Arguments.push_back(arg);
 }

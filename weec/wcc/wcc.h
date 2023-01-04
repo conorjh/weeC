@@ -8,7 +8,10 @@ namespace wcc
 {
 	enum class CompilerAction
 	{
-		Compile, CompileAndRun, RunOnly
+		REPL,			//Command line interface
+		Compile,		//Build
+		CompileAndRun,	//Build and Execute
+		RunOnly			//Execute
 	};
 
 	enum class CompilerBinaryType

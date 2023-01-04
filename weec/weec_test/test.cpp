@@ -164,7 +164,7 @@ int weec::test::lex::Test_Tokenizer4()
 	string input = listing::list_tokenizer4;
 	wcTokenizer tokenizer(input);
 
-	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::ConstKeyword  && tokenizer.GetToken().StringToken.Data == "const")
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::ConstKeyword && tokenizer.GetToken().StringToken.Data == "const")
 		return 1;
 
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::IntKeyword)
@@ -525,6 +525,60 @@ int weec::test::lex::Test_wcParseNode_6()
 	return 0;
 }
 */
+
+bool printIsExpected(std::any Result, std::any ExpectedResult)
+{
+	bool IsExpected = false;
+	if (strcmp(Result.type().name(), "int") == 0)
+	{
+		if (ExpectedResult.has_value())
+		{
+			IsExpected = std::any_cast<int>(Result) == std::any_cast<int>(ExpectedResult);
+			cout << "Expected: " << std::any_cast<int>(ExpectedResult) << "   ";
+		}
+		cout << "Out: " << std::any_cast<int>(Result) << std::endl;
+	}
+	else if (strcmp(Result.type().name(), "unsigned int") == 0)
+	{
+		if (ExpectedResult.has_value())
+		{
+			IsExpected = std::any_cast<unsigned int>(Result) == std::any_cast<int>(ExpectedResult);
+			cout << "Expected: " << std::any_cast<unsigned int>(ExpectedResult) << "   ";
+			cout << "Out: " << std::any_cast<unsigned int>(Result) << std::endl;
+		}
+	}
+	else if (strcmp(Result.type().name(), "float") == 0)
+	{
+		if (ExpectedResult.has_value())
+		{
+			IsExpected = std::any_cast<float>(Result) == std::any_cast<float>(ExpectedResult);
+			cout << "Expected: " << std::any_cast<float>(ExpectedResult) << "   ";
+			cout << "Out: " << std::any_cast<float>(Result) << std::endl;
+		}
+	}
+	else if (strcmp(Result.type().name(), "double") == 0)
+	{
+		if (ExpectedResult.has_value())
+		{
+			IsExpected = std::any_cast<double>(Result) == std::any_cast<double>(ExpectedResult);
+			cout << "Expected: " << std::any_cast<double>(ExpectedResult) << "   ";
+			cout << "Out: " << std::any_cast<double>(Result) << std::endl;
+		}
+	}
+	else if (strcmp(Result.type().name(), "bool") == 0)
+	{
+		if (ExpectedResult.has_value())
+		{
+			IsExpected = std::any_cast<bool>(Result) == std::any_cast<bool>(ExpectedResult);
+			cout << "Expected: " << std::any_cast<bool>(ExpectedResult) << "   ";
+			cout << "Out: " << std::any_cast<bool>(Result) << std::endl;
+		}
+	}
+	auto t = Result.type().name();
+	cout << "Type: " << Result.type().name() << std::endl;
+	return IsExpected;
+}
+
 int Test_ParserTemplate(string Listing)
 {
 	wcTokenizer tokenizer(Listing); //tokenizer.NextToken();
@@ -544,8 +598,9 @@ int Test_ParserTemplate(string Listing)
 	auto Interp = wcInterpreter(Parsed);
 	auto Result = Interp.Exec();
 
-	return (Parsed.Error.Code == wcParserErrorCode::None) ? 0 : 1;
+	return (Parsed.Error.Code == wcParserErrorCode::None && printIsExpected(Result, std::any())) ? 0 : 1;
 }
+
 
 int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 {
@@ -565,41 +620,8 @@ int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 	auto Interp = wcInterpreter(Expr);
 	auto Result = Interp.Exec();
 
-	bool IsExpected = false;
-	if (strcmp(Result.type().name(), "int") == 0)
-	{
-		IsExpected = std::any_cast<int>(Result) == std::any_cast<int>(ExpectedResult);
-		cout << "Expected: " << std::any_cast<int>(ExpectedResult) << "   ";
-		cout << "Out: " << std::any_cast<int>(Result) << std::endl;
-	}
-	else if (strcmp(Result.type().name(), "unsigned int") == 0)
-	{
-		IsExpected = std::any_cast<unsigned int>(Result) == std::any_cast<int>(ExpectedResult);
-		cout << "Expected: " << std::any_cast<unsigned int>(ExpectedResult) << "   ";
-		cout << "Out: " << std::any_cast<unsigned int>(Result) << std::endl;
-	}
-	else if (strcmp(Result.type().name(), "float") == 0)
-	{
-		IsExpected = std::any_cast<float>(Result) == std::any_cast<float>(ExpectedResult);
-		cout << "Expected: " << std::any_cast<float>(ExpectedResult) << "   ";
-		cout << "Out: " << std::any_cast<float>(Result) << std::endl;
-	}
-	else if (strcmp(Result.type().name(), "double") == 0)
-	{
-		IsExpected = std::any_cast<double>(Result) == std::any_cast<double>(ExpectedResult);
-		cout << "Expected: " << std::any_cast<double>(ExpectedResult) << "   ";
-		cout << "Out: " << std::any_cast<double>(Result) << std::endl;
-	}
-	else if (strcmp(Result.type().name(), "bool") == 0)
-	{
-		IsExpected = std::any_cast<bool>(Result) == std::any_cast<bool>(ExpectedResult);
-		cout << "Expected: " << std::any_cast<bool>(ExpectedResult) << "   ";
-		cout << "Out: " << std::any_cast<bool>(Result) << std::endl;
-	}
-	auto t = Result.type().name();
-	cout << "Type: " << Result.type().name() << std::endl;
 
-	return (Expr.Error.Code == wcParserErrorCode::None && IsExpected) ? 0 : 1;
+	return (Expr.Error.Code == wcParserErrorCode::None && printIsExpected(ExpectedResult, Result)) ? 0 : 1;
 }
 
 int weec::test::lex::Test_wcExpressionParser_1()
@@ -839,7 +861,7 @@ int weec::test::lex::Test_wcExpressionParser_18()
 }
 int weec::test::lex::Test_wcExpressionParser_19()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression19,6);
+	return Test_ExpressionParserTemplate(listing::list_expression19, 6);
 }
 
 int weec::test::lex::Test_wcExpressionParser_20()
@@ -854,43 +876,43 @@ int weec::test::lex::Test_wcExpressionParser_21()
 
 int weec::test::lex::Test_wcExpressionParser_22()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression22,(10 / 4));
+	return Test_ExpressionParserTemplate(listing::list_expression22, (10 / 4));
 }
 
 int weec::test::lex::Test_wcExpressionParser_23()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression23,(5 / 3));
+	return Test_ExpressionParserTemplate(listing::list_expression23, (5 / 3));
 }
 
 int weec::test::lex::Test_wcExpressionParser_24()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression24,(3 + 8 / 5 - 1 - 2 * 5));
+	return Test_ExpressionParserTemplate(listing::list_expression24, (3 + 8 / 5 - 1 - 2 * 5));
 }
 
 int weec::test::lex::Test_wcExpressionParser_25()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression25,0);
+	return Test_ExpressionParserTemplate(listing::list_expression25, 0);
 }
 int weec::test::lex::Test_wcExpressionParser_26()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression26,0);
+	return Test_ExpressionParserTemplate(listing::list_expression26, 0);
 }
 int weec::test::lex::Test_wcExpressionParser_27()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression27,0);
+	return Test_ExpressionParserTemplate(listing::list_expression27, 0);
 }
 int weec::test::lex::Test_wcExpressionParser_28()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression28,(5 + +6));
+	return Test_ExpressionParserTemplate(listing::list_expression28, (5 + +6));
 }
 int weec::test::lex::Test_wcExpressionParser_29()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression29,(-5 + 2));
+	return Test_ExpressionParserTemplate(listing::list_expression29, (-5 + 2));
 }
 
 int weec::test::lex::Test_wcExpressionParser_30()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression30,5/1);
+	return Test_ExpressionParserTemplate(listing::list_expression30, 5 / 1);
 }
 
 int weec::test::lex::Test_wcExpressionParser_31()
@@ -919,7 +941,7 @@ int weec::test::lex::Test_wcExpressionParser_35()
 }
 int weec::test::lex::Test_wcExpressionParser_36()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression36,((5 * 7 / 5) + (23) - 5 * (98 - 4) / (6 * 7 - 42)));
+	return Test_ExpressionParserTemplate(listing::list_expression36, ((5 * 7 / 5) + (23) - 5 * (98 - 4) / (6 * 7 - 42)));
 }
 int weec::test::lex::Test_wcExpressionParser_37()
 {
@@ -931,15 +953,15 @@ int weec::test::lex::Test_wcExpressionParser_38()
 }
 int weec::test::lex::Test_wcExpressionParser_39()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression39,0);
+	return Test_ExpressionParserTemplate(listing::list_expression39, 0);
 }
 int weec::test::lex::Test_wcExpressionParser_40()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression40,0);
+	return Test_ExpressionParserTemplate(listing::list_expression40, 0);
 }
 int weec::test::lex::Test_wcExpressionParser_41()
 {
-	return Test_ExpressionParserTemplate(listing::list_expression41,0);
+	return Test_ExpressionParserTemplate(listing::list_expression41, 0);
 }
 int weec::test::lex::Test_wcExpressionParser_42()
 {

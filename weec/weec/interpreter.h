@@ -17,6 +17,21 @@ namespace weec
 {
 	namespace interpreter
 	{
+		class wcInterpreterSymbolTable
+		{
+			std::unordered_map<std::string, std::any> Container;
+
+		public:
+			wcInterpreterSymbolTable();
+
+			bool Add(std::any, std::string FullIdent),
+
+				Exists(std::string FullIdent) const;
+
+			std::any Get(std::string FullIdent) const;
+			void Set(std::string FullIdent, std::any);
+		};
+
 		class ImplementationType
 		{
 		public:
@@ -40,7 +55,7 @@ namespace weec
 		class AnyOperatorUnary
 		{
 		public:
-			std::any DoOp(lex::wcTokenType Op, std::any a);			
+			std::any DoOp(lex::wcTokenType Op, std::any a);
 		};
 
 		class wcExpressionInterpeter
@@ -48,8 +63,10 @@ namespace weec
 			int Value;
 
 			parse::wcParseOutput& Input;
-			tree<parse::wcParseNode>::iterator PC;
-			parse::wcParseSymbolTable& SymTab;
+			tree<parse::wcParseNode>::iterator& PC;
+			wcInterpreterSymbolTable& SymTab;
+			std::any& EAX;
+			std::any& Return;
 
 			std::unordered_map<std::string, ImplementationType> ImplementationTypes;
 			void SetupImplementationTypeNames();
@@ -60,7 +77,7 @@ namespace weec
 			std::any DoOp(lex::wcTokenType Op, std::any a);
 
 		public:
-			wcExpressionInterpeter(parse::wcParseSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator PC);
+			wcExpressionInterpeter(wcInterpreterSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX, std::any& Return);
 
 			std::any ExecSubExpression(),
 				ExecEquality(), ExecAssignment(), ExecLogicOr(),
@@ -83,11 +100,12 @@ namespace weec
 			parse::wcParseNode Node;
 		};
 
+
 		class wcInterpreter
 		{
 			parse::wcParseOutput Input;
 			tree<parse::wcParseNode>::iterator PC;
-			parse::wcParseSymbolTable SymbolTable;
+			wcInterpreterSymbolTable SymbolTable;
 
 		public:
 			wcExpressionInterpeter ExpressionInterp;
@@ -98,7 +116,7 @@ namespace weec
 
 			wcIntpreterError Error;
 			bool Halt;
-			std::any LastExpression, Return;
+			std::any EAX, Return;
 		};
 
 
@@ -133,45 +151,45 @@ namespace weec
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
 						return std::any_cast<bool>(b) != 0 ? std::any_cast<unsigned int>(a) / std::any_cast<bool>(b) : std::any();
 				}
-			else if(!strcmp(std::type_index(typeid(T1)).name(), "double"))
-			{
-				if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
-					return std::any_cast<int>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<int>(b)) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
-					return std::any_cast<unsigned int>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<unsigned int>(b)) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
-					return std::any_cast<double>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<double>(b)) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
-					return std::any_cast<float>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<float>(b)) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
-					return std::any_cast<bool>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<bool>(b)) : std::any();
-			}
-			else if(!strcmp(std::type_index(typeid(T1)).name(), "float"))
-			{
-				if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
-					return std::any_cast<int>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<int>(b)) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
-					return std::any_cast<unsigned int>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<unsigned int>(b)) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
-					return std::any_cast<double>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<double>(b)) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
-					return std::any_cast<float>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<float>(b)) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
-					return std::any_cast<bool>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<bool>(b)) : std::any();
-			}
-			else if(!strcmp(std::type_index(typeid(T1)).name(), "bool"))
-			{
-				if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
-					return std::any_cast<int>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<int>(b) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
-					return std::any_cast<unsigned int>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<unsigned int>(b) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
-					return std::any_cast<double>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<double>(b) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
-					return std::any_cast<float>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<float>(b) : std::any();
-				else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
-					return std::any_cast<bool>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<bool>(b) : std::any();
-			}
+				else if (!strcmp(std::type_index(typeid(T1)).name(), "double"))
+				{
+					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
+						return std::any_cast<int>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<int>(b)) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
+						return std::any_cast<unsigned int>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<unsigned int>(b)) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
+						return std::any_cast<double>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<double>(b)) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
+						return std::any_cast<float>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<float>(b)) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
+						return std::any_cast<bool>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<bool>(b)) : std::any();
+				}
+				else if (!strcmp(std::type_index(typeid(T1)).name(), "float"))
+				{
+					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
+						return std::any_cast<int>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<int>(b)) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
+						return std::any_cast<unsigned int>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<unsigned int>(b)) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
+						return std::any_cast<double>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<double>(b)) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
+						return std::any_cast<float>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<float>(b)) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
+						return std::any_cast<bool>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<bool>(b)) : std::any();
+				}
+				else if (!strcmp(std::type_index(typeid(T1)).name(), "bool"))
+				{
+					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
+						return std::any_cast<int>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<int>(b) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
+						return std::any_cast<unsigned int>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<unsigned int>(b) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
+						return std::any_cast<double>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<double>(b) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
+						return std::any_cast<float>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<float>(b) : std::any();
+					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
+						return std::any_cast<bool>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<bool>(b) : std::any();
+				}
 
 			switch (Op)
 			{
@@ -198,7 +216,8 @@ namespace weec
 			case lex::wcTokenType::NotEqualOperator:
 				return std::any_cast<T1>(a) != std::any_cast<T2>(b);
 			}
-			return std::any();
+
+			return std::any();	//err
 		}
 
 		template<typename T1>
@@ -216,7 +235,7 @@ namespace weec
 			return std::any();
 		}
 
-}
+	}
 
 }
 

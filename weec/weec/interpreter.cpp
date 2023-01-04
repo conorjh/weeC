@@ -145,10 +145,9 @@ std::any weec::interpreter::wcExpressionInterpeter::DoOp(lex::wcTokenType Op, st
 
 
 
-weec::interpreter::wcExpressionInterpeter::wcExpressionInterpeter(parse::wcParseSymbolTable& _SymTab, parse::wcParseOutput _Input, tree<parse::wcParseNode>::iterator _PC)
-	: Input(_Input), SymTab(_SymTab)
+weec::interpreter::wcExpressionInterpeter::wcExpressionInterpeter(wcInterpreterSymbolTable& _SymTab, parse::wcParseOutput _Input, tree<parse::wcParseNode>::iterator& _PC, any& _EAX, any& _Return)
+	: Input(_Input), SymTab(_SymTab), PC(_PC), EAX(_EAX), Return(_Return)
 {
-	PC = _PC;
 	SetupImplementationTypeNames();
 }
 
@@ -165,16 +164,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecOperator()
 
 std::any weec::interpreter::wcExpressionInterpeter::Exec()
 {
-	std::any ExpressionResult;
-
-	while (PC.node != nullptr)
-	{
-		ExpressionResult = EvalNode(PC->Type, Expression);
-
-		PC++;
-	}
-
-	return ExpressionResult;
+	return EAX = Return = EvalNode(PC->Type, Expression);
 }
 
 std::any weec::interpreter::wcExpressionInterpeter::ExecPrimary()
@@ -190,7 +180,7 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecPrimary()
 	case wcTokenType::FloatLiteral:
 		return stof(Result->Token.StringToken.Data);
 	case wcTokenType::Identifier:
-		return stof(Result->Token.StringToken.Data);
+		return this->SymTab.Get(Result->Token.StringToken.Data);
 	}
 	return std::any();
 }
@@ -283,13 +273,14 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecEquality()
 }
 
 weec::interpreter::wcInterpreter::wcInterpreter(parse::wcParseOutput _Input)
-	: ExpressionInterp(SymbolTable, _Input, PC)
+	: ExpressionInterp(SymbolTable, _Input, PC, EAX, Return)
 {
 	Input = _Input;
 }
 
 void weec::interpreter::wcInterpreter::Reset()
 {
+
 }
 
 std::any weec::interpreter::wcInterpreter::Exec()
@@ -310,6 +301,7 @@ std::any weec::interpreter::wcInterpreter::Exec()
 			break;
 
 		case Head:
+			PC++;
 			break;
 
 		default:
@@ -319,10 +311,9 @@ std::any weec::interpreter::wcInterpreter::Exec()
 			break;
 		}
 
-		PC++;
 	}
 
-	return ExpressionResult;
+	return Return;
 }
 
 std::any weec::interpreter::wcInterpreter::ExecStatement()
@@ -337,7 +328,7 @@ std::any weec::interpreter::wcInterpreter::ExecStatement()
 		switch (PC->Type)
 		{
 		case Expression:
-			LastExpression = wcExpressionInterpeter(SymbolTable, Input, PC).Exec();
+			wcExpressionInterpeter(SymbolTable, Input, PC, EAX, Return).Exec();
 			break;
 
 		case ReturnStatement:
@@ -371,7 +362,7 @@ std::any weec::interpreter::wcInterpreter::ExecReturn()
 		switch (PC->Type)
 		{
 		case Expression:
-			Return = wcExpressionInterpeter(SymbolTable, Input, PC).Exec();
+			Return = wcExpressionInterpeter(SymbolTable, Input, PC, EAX, Return).Exec();
 			break;
 
 		default:
@@ -420,17 +411,24 @@ std::any weec::interpreter::wcInterpreter::ExecDeclaration()
 	auto d2 = Input.AST.depth(PC);
 	auto d3 = PC->Type;
 
-	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC != nullptr && !Halt))
-		switch (PC++->Type)
+	wcToken TypeToken, IdentToken;
+	std::any ExpressionResult;
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC.node != nullptr && !Halt))
+	{
+		switch (PC->Type)
 		{
 		case Declaration_Type:
+			TypeToken = PC->Token;
+			PC++;
 			break;
 
 		case Declaration_Ident:
+			IdentToken = PC->Token;
+			PC++;
 			break;
 
 		case Expression:
-			LastExpression = wcExpressionInterpeter(SymbolTable, Input, PC).Exec();
+			ExpressionResult = wcExpressionInterpeter(SymbolTable, Input, PC, EAX, Return).Exec();
 			break;
 
 		default:
@@ -439,6 +437,39 @@ std::any weec::interpreter::wcInterpreter::ExecDeclaration()
 			Halt = true;
 			break;
 		}
+	}
 
-	return Return;
+	//add to symbol table
+	if (TypeToken.StringToken.Data == "int")
+		SymbolTable.Add(any_cast<int>(ExpressionResult.has_value() ? ExpressionResult : 0 ), IdentToken.StringToken.Data);
+	else if (TypeToken.StringToken.Data == "float")
+		SymbolTable.Add(any_cast<float>(ExpressionResult.has_value() ? ExpressionResult : 0), IdentToken.StringToken.Data);
+	else if (TypeToken.StringToken.Data == "unsigned int")
+		SymbolTable.Add(any_cast<unsigned int>(ExpressionResult.has_value() ? ExpressionResult : 0), IdentToken.StringToken.Data);
+	else if (TypeToken.StringToken.Data == "double")
+		SymbolTable.Add(any_cast<double>(ExpressionResult.has_value() ? ExpressionResult : 0), IdentToken.StringToken.Data);
+	else if (TypeToken.StringToken.Data == "bool")
+		SymbolTable.Add(any_cast<bool>(ExpressionResult.has_value() ? ExpressionResult : 0), IdentToken.StringToken.Data);
+
+	return ExpressionResult;
+}
+
+weec::interpreter::wcInterpreterSymbolTable::wcInterpreterSymbolTable()
+{
+}
+
+bool weec::interpreter::wcInterpreterSymbolTable::Add(std::any Value, std::string FullIdent)
+{
+	Container.insert(make_pair(FullIdent, Value));
+	return true;
+}
+
+std::any weec::interpreter::wcInterpreterSymbolTable::Get(std::string FullIdent) const
+{
+	return Container.find(FullIdent)->second;
+}
+
+void weec::interpreter::wcInterpreterSymbolTable::Set(std::string FullIdent, std::any Value)
+{
+	Container.find(FullIdent)->second = Value;
 }

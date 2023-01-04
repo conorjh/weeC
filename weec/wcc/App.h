@@ -4,6 +4,7 @@
 #include "cmd_line.h"
 #include "Util.h"
 #include "Wcc.h"
+#include "weec.h"
 
 namespace App
 {
@@ -31,7 +32,7 @@ namespace App
 		void UpdateFromConfig(Config::ConfigData Cfg);
 
 		bool Halted = false;
-
+		wcc::CompilerProfile Profile;
 	};
 
 	class AppIO
@@ -50,6 +51,8 @@ namespace App
 
 	class Application
 	{
+		std::string Version = "v0.0.0.1";
+
 	public:
 		CommandLine::Cmd_Line CmdLine;
 		Config::ConfigData Cfg;
@@ -64,6 +67,7 @@ namespace App
 		void Update();
 
 		void Splash();
+		void Repl();
 	};
 
 

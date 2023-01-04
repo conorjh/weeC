@@ -2,13 +2,12 @@
 #define WC_UTIL
 #include <string>
 #include <vector>
-
+#include <any>
 namespace weec
 {
 	namespace util
 	{
-		int stoi(std::string);
-		std::string itos(int);
+		std::string AnyToString(std::any);
 	}
 }
 

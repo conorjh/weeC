@@ -3,7 +3,7 @@
 wcc::CompilerProfile::CompilerProfile()
 {
 	//defaults
-	Action = CompilerAction::CompileAndRun;
+	Action = CompilerAction::REPL;
 	BinaryType = CompilerBinaryType::AST;
 	VerboseOutput = false;
 	BuildSymbolTable = false;

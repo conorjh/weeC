@@ -526,56 +526,72 @@ int weec::test::lex::Test_wcParseNode_6()
 }
 */
 
-bool printIsExpected(std::any Result, std::any ExpectedResult)
+std::string AnyToString(std::any In)
+{
+	if (strcmp(In.type().name(), "int") == 0)
+		return to_string(any_cast<int>(In));
+	else if (strcmp(In.type().name(), "unsigned int") == 0)
+		return to_string(any_cast<unsigned int>(In));
+	else if (strcmp(In.type().name(), "float") == 0)
+		return to_string(any_cast<float>(In));
+	else if (strcmp(In.type().name(), "double") == 0)
+		return to_string(any_cast<double>(In));
+	else if (strcmp(In.type().name(), "bool") == 0)
+		return to_string(any_cast<bool>(In));
+	return "";
+}
+
+bool printIsExpected(wcInterpreter Interp, std::any ExpectedResult)
 {
 	bool IsExpected = false;
-	if (strcmp(Result.type().name(), "int") == 0)
+	if (strcmp(Interp.Return.type().name(), "int") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<int>(Result) == std::any_cast<int>(ExpectedResult);
+			IsExpected = std::any_cast<int>(Interp.Return) == std::any_cast<int>(ExpectedResult);
 			cout << "Expected: " << std::any_cast<int>(ExpectedResult) << "   ";
 		}
-		cout << "Out: " << std::any_cast<int>(Result) << std::endl;
+			cout << "Out: " << std::any_cast<int>(Interp.Return) << std::endl;
 	}
-	else if (strcmp(Result.type().name(), "unsigned int") == 0)
+	else if (strcmp(Interp.Return.type().name(), "unsigned int") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<unsigned int>(Result) == std::any_cast<int>(ExpectedResult);
+			IsExpected = std::any_cast<unsigned int>(Interp.Return) == std::any_cast<int>(ExpectedResult);
 			cout << "Expected: " << std::any_cast<unsigned int>(ExpectedResult) << "   ";
-			cout << "Out: " << std::any_cast<unsigned int>(Result) << std::endl;
 		}
+			cout << "Out: " << std::any_cast<unsigned int>(Interp.Return) << std::endl;
 	}
-	else if (strcmp(Result.type().name(), "float") == 0)
+	else if (strcmp(Interp.Return.type().name(), "float") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<float>(Result) == std::any_cast<float>(ExpectedResult);
+			IsExpected = std::any_cast<float>(Interp.Return) == std::any_cast<float>(ExpectedResult);
 			cout << "Expected: " << std::any_cast<float>(ExpectedResult) << "   ";
-			cout << "Out: " << std::any_cast<float>(Result) << std::endl;
 		}
+			cout << "Out: " << std::any_cast<float>(Interp.Return) << std::endl;
 	}
-	else if (strcmp(Result.type().name(), "double") == 0)
+	else if (strcmp(Interp.Return.type().name(), "double") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<double>(Result) == std::any_cast<double>(ExpectedResult);
+			IsExpected = std::any_cast<double>(Interp.Return) == std::any_cast<double>(ExpectedResult);
 			cout << "Expected: " << std::any_cast<double>(ExpectedResult) << "   ";
-			cout << "Out: " << std::any_cast<double>(Result) << std::endl;
 		}
+			cout << "Out: " << std::any_cast<double>(Interp.Return) << std::endl;
 	}
-	else if (strcmp(Result.type().name(), "bool") == 0)
+	else if (strcmp(Interp.Return.type().name(), "bool") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<bool>(Result) == std::any_cast<bool>(ExpectedResult);
+			IsExpected = std::any_cast<bool>(Interp.Return) == std::any_cast<bool>(ExpectedResult);
 			cout << "Expected: " << std::any_cast<bool>(ExpectedResult) << "   ";
-			cout << "Out: " << std::any_cast<bool>(Result) << std::endl;
 		}
+		cout << "Out: " << std::any_cast<bool>(Interp.Return) << std::endl;
 	}
-	auto t = Result.type().name();
-	cout << "Type: " << Result.type().name() << std::endl;
+	cout << "EAX: " << AnyToString(Interp.EAX) << std::endl;
+	auto t = Interp.Return.type().name();
+	cout << "Type: " << Interp.Return.type().name() << std::endl;
 	return IsExpected;
 }
 
@@ -598,7 +614,7 @@ int Test_ParserTemplate(string Listing)
 	auto Interp = wcInterpreter(Parsed);
 	auto Result = Interp.Exec();
 
-	return (Parsed.Error.Code == wcParserErrorCode::None && printIsExpected(Result, std::any())) ? 0 : 1;
+	return (Parsed.Error.Code == wcParserErrorCode::None && printIsExpected(Interp, std::any())) ? 0 : 1;
 }
 
 
@@ -620,8 +636,7 @@ int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 	auto Interp = wcInterpreter(Expr);
 	auto Result = Interp.Exec();
 
-
-	return (Expr.Error.Code == wcParserErrorCode::None && printIsExpected(ExpectedResult, Result)) ? 0 : 1;
+	return (Expr.Error.Code == wcParserErrorCode::None && printIsExpected(Interp, ExpectedResult)) ? 0 : 1;
 }
 
 int weec::test::lex::Test_wcExpressionParser_1()

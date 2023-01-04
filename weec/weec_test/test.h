@@ -38,8 +38,8 @@ namespace weec
 			std::string list_parser12 = "if(1 == 10-9)\n\treturn (1 == 10-9);\nreturn !(1 == 10-9);";
 			std::string list_parser13 = "if(1 == 10-9\n\tint a;";	//error
 			std::string list_parser14 = "if(1 == 10-9)\n{\n\tint a;\n\nelse\n{\n\tint b;\n} "; //error
-			std::string list_parser15 = "if(1)\n\t55+55;\nelse\n\t66+ +66;";
-			std::string list_parser16 = "if(1) if(1) if(1) 123;";
+			std::string list_parser15 = "if(true)\n\t55+55;\nelse\n\t66+ +66;";
+			std::string list_parser16 = "if(true) if(true) if(true) 123;";
 			std::string list_parser17 = "return";	//error
 			std::string list_parser18 = "return;";
 			std::string list_parser19 = "return 2+2;";

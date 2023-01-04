@@ -4,8 +4,15 @@
 #include "Util.h"
 #include "spdlog/spdlog.h"
 #include <filesystem>
+#include <iostream>
+#include <string>
 
 using namespace std;
+using namespace wcc;
+using namespace weec::lex;
+using namespace weec::util;
+using namespace weec::parse;
+using namespace weec::interpreter;
 using namespace App;
 using namespace App::CommandLine;
 using namespace App::Config;
@@ -13,6 +20,7 @@ using namespace Error;
 using namespace Util;
 
 using enum Cmd_LineArgumentType;
+using enum CompilerAction;
 
 App::CommandLineSettings::CommandLineSettings(Cmd_Line CmdLine)
 {
@@ -86,27 +94,11 @@ bool App::CommandLineSettings::ParseCommandLine(Cmd_Line CmdLine)
 
 App::Application::Application(int argc, char* argv[]) : CmdLine(argc, argv), IO(Data)
 {
-	spdlog::set_level(spdlog::level::level_enum::trace);
+	spdlog::set_level(spdlog::level::level_enum::critical);
 	srand(time(0));
 
-	spdlog::info("Application launch");
-	spdlog::trace("Running dir " + std::filesystem::current_path().string());
-
-	spdlog::debug("Parsing command line");
 	CommandLineSettings Settings(CmdLine);
-	if(Settings.Errors.HasErrored())
-		spdlog::debug("Parsing command line");
 	
-	/*
-	* Config parser - TODO
-	spdlog::debug("Opening config " + Settings.ConfigPath);
-	ConfigParser CfgParser(Settings.ConfigPath);
-	if (CfgParser.Errors.HasErrored())
-	{
-		//error with config file, use exist defaults
-		spdlog::warn("Errors in config @ " + Settings.ConfigPath);
-	}
-	*/
 	Data.UpdateFromConfig(Cfg);
 }
 
@@ -124,12 +116,60 @@ bool App::Application::Init()
 	spdlog::debug("IO Init");
 	IO.Init();
 
+	Splash();
+
 	return true;
+}
+
+void REPL_Loop()
+{
+	cout << ">";
+	std::string Buffer;
+	getline(cin, Buffer);
+	cout << endl ;
+
+	wcParseOutput Parsed = wcParser(*new wcTokenizer(Buffer)).Parse();
+	if (Parsed.Error.Code != wcParserErrorCode::None)
+	{
+		cout << "Error: " << to_string((int)Parsed.Error.Code) << " " << wcParserErrorCodeToString(Parsed.Error.Code) << endl << endl;
+		return;
+	}
+	
+	wcInterpreter Interp(Parsed);
+	Interp.Exec();
+
+	cout << "Out: " << AnyToString(Interp.Return) 
+		<< "\tEAX: " << AnyToString(Interp.EAX) << endl << endl;
 }
 
 void App::Application::Update()
 {
 	IO.Update();
+
+	std::string Buffer;
+	switch (Data.Profile.Action)
+	{
+	case REPL:
+		REPL_Loop();
+		break;
+
+	case Compile:
+
+		break;
+
+	case CompileAndRun:
+
+		break;
+	}
+}
+
+void App::Application::Splash()
+{
+	cout << "weeC Compiler" << endl
+		<< Version << endl
+		<< "by Conor Haddock" << endl
+		<< endl;
+
 }
 
 App::AppIO::AppIO(AppData& _Data) : Data(_Data)

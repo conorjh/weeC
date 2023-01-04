@@ -66,7 +66,6 @@ namespace weec
 			tree<parse::wcParseNode>::iterator& PC;
 			wcInterpreterSymbolTable& SymTab;
 			std::any& EAX;
-			std::any& Return;
 
 			std::unordered_map<std::string, ImplementationType> ImplementationTypes;
 			void SetupImplementationTypeNames();
@@ -77,7 +76,7 @@ namespace weec
 			std::any DoOp(lex::wcTokenType Op, std::any a);
 
 		public:
-			wcExpressionInterpeter(wcInterpreterSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX, std::any& Return);
+			wcExpressionInterpeter(wcInterpreterSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX);
 
 			std::any ExecSubExpression(),
 				ExecEquality(), ExecAssignment(), ExecLogicOr(),
@@ -89,14 +88,24 @@ namespace weec
 			std::any Exec();
 		};
 
-		enum class wcIntpreterErrorCode
+		enum class wcInterpreterErrorCode
 		{
-			None, InvalidNode, DivByZero
+			None, BadInput, InvalidNode, DivByZero
 		};
 
-		struct wcIntpreterError
+		struct wcInterpreterError
 		{
-			wcIntpreterErrorCode Code;
+			wcInterpreterError()
+			{
+				Code = wcInterpreterErrorCode::None;
+			}
+			wcInterpreterError(wcInterpreterErrorCode _Code, parse::wcParseNode _Node)
+			{
+				Code = _Code;
+				Node = _Node;
+			}
+
+			wcInterpreterErrorCode Code;
 			parse::wcParseNode Node;
 		};
 
@@ -114,7 +123,7 @@ namespace weec
 			void Reset();
 			std::any Exec(), ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecReturn(), ExecDeclaration();
 
-			wcIntpreterError Error;
+			wcInterpreterError Error;
 			bool Halt;
 			std::any EAX, Return;
 		};

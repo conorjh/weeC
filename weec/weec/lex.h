@@ -55,8 +55,8 @@ namespace weec
 
 			//reserved words
 			TrueKeyword, FalseKeyword,
-			StringKeyword, IntKeyword, UIntKeyword, FloatKeyword, BoolKeyword, CharKeyword, ObjectKeyword, VarKeyword,
-			NamespaceKeyword, FunctionKeyword, IfKeyword, ElseKeyword, ElseIfKeyword,
+			StringKeyword, DoubleKeyword, IntKeyword, UIntKeyword, FloatKeyword, BoolKeyword, CharKeyword, ObjectKeyword, VarKeyword,
+			NamespaceKeyword, FunctionKeyword, IfKeyword, ElseKeyword, 
 			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, ConstKeyword,
 
 			//misc
@@ -91,7 +91,7 @@ namespace weec
 		};
 
 		extern const wcTokenDefinition definitions[];
-		const unsigned int WC_VAR_DEFINITIONCOUNT = 63;
+		const unsigned int WC_VAR_DEFINITIONCOUNT = 64;
 
 		//definitions used for creating wcToken
 		struct wcTokenDefinitionsBank

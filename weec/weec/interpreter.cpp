@@ -321,9 +321,6 @@ std::any weec::interpreter::wcInterpreter::ExecStatement()
 	auto Begin = PC;
 	PC++;
 
-	auto d1 = Input.AST.depth(Begin);
-	auto d2 = Input.AST.depth(PC);
-	auto d3 = PC->Type;
 	if(Input.AST.depth(PC) > Input.AST.depth(Begin))
 		switch (PC->Type)
 		{
@@ -414,9 +411,7 @@ std::any weec::interpreter::wcInterpreter::ExecIf()
 {
 	auto Begin = PC;
 	PC++;
-	auto d1 = Input.AST.depth(Begin);
-	auto d2 = Input.AST.depth(PC);
-	auto d3 = PC->Type;
+
 
 	wcToken TypeToken, IdentToken;
 	std::any ExpressionResult;
@@ -461,9 +456,6 @@ std::any weec::interpreter::wcInterpreter::ExecDeclaration()
 {
 	auto Begin = PC;
 	PC++;
-	auto d1 = Input.AST.depth(Begin);
-	auto d2 = Input.AST.depth(PC);
-	auto d3 = PC->Type;
 
 	wcToken TypeToken, IdentToken;
 	std::any ExpressionResult;

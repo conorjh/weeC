@@ -61,8 +61,10 @@ namespace weec
 
 			//keywords
 			wcTokenDefinition(wcTokenType::IntKeyword, "int"),
+			wcTokenDefinition(wcTokenType::UIntKeyword, "uint"),
 			wcTokenDefinition(wcTokenType::CharKeyword, "char"),
 			wcTokenDefinition(wcTokenType::StringKeyword, "string"),
+			wcTokenDefinition(wcTokenType::DoubleKeyword, "double"),
 			wcTokenDefinition(wcTokenType::FloatKeyword, "float"),
 			wcTokenDefinition(wcTokenType::ConstKeyword, "const"),
 			wcTokenDefinition(wcTokenType::BoolKeyword, "bool"),
@@ -70,7 +72,6 @@ namespace weec
 			wcTokenDefinition(wcTokenType::FalseKeyword, "false"),
 			wcTokenDefinition(wcTokenType::IfKeyword, "if"),
 			wcTokenDefinition(wcTokenType::ElseKeyword, "else"),
-			wcTokenDefinition(wcTokenType::ElseIfKeyword, "elseif"),
 			wcTokenDefinition(wcTokenType::ReturnKeyword, "return"),
 			wcTokenDefinition(wcTokenType::WhileKeyword, "while"),
 			wcTokenDefinition(wcTokenType::BreakKeyword, "break"),

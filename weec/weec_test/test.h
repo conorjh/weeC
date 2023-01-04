@@ -32,7 +32,7 @@ namespace weec
 			std::string list_parser6 = "int a = 2; int b = a * 2;";
 			std::string list_parser7 = " int a; int a;";	//error
 			std::string list_parser8 = " a * b;";			//error
-			std::string list_parser9 = "2.5";
+			std::string list_parser9 = "int a = 2;\n int b = a * 2;\nreturn a * b;";
 			std::string list_parser10 = "if(1 == 10-9)\n{\nint a;\n}";
 			std::string list_parser11 = "if(1 == 10-9)\n{\n\tint a;\n}\nelse\n{\n\tint b;\n}";
 			std::string list_parser12 = "if(1 == 10-9)\n\tint a;";

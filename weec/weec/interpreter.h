@@ -112,7 +112,7 @@ namespace weec
 			wcInterpreter(parse::wcParseOutput Input);
 
 			void Reset();
-			std::any Exec(), ExecBlock(), ExecStatement(), ExecIf(), ExecReturn(), ExecDeclaration();
+			std::any Exec(), ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecReturn(), ExecDeclaration();
 
 			wcIntpreterError Error;
 			bool Halt;

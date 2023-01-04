@@ -398,9 +398,63 @@ std::any weec::interpreter::wcInterpreter::ExecBlock()
 	return std::any();
 }
 
+std::any weec::interpreter::wcInterpreter::SkipBlock()
+{
+	auto Begin = PC;
+	//PC = Input.AST.next_sibling(PC);
+	PC++;
+
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && !Halt))
+		PC++;
+
+	return std::any();
+}
+
 std::any weec::interpreter::wcInterpreter::ExecIf()
 {
-	return std::any();
+	auto Begin = PC;
+	PC++;
+	auto d1 = Input.AST.depth(Begin);
+	auto d2 = Input.AST.depth(PC);
+	auto d3 = PC->Type;
+
+	wcToken TypeToken, IdentToken;
+	std::any ExpressionResult;
+	bool ExprTrue = false;
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC.node != nullptr && !Halt))
+	{
+		switch (PC->Type)
+		{
+		case Expression:
+			ExpressionResult = wcExpressionInterpeter(SymbolTable, Input, PC, EAX, Return).Exec();
+			ExprTrue = any_cast<bool>(ExpressionResult);
+			break;
+
+		case If_TrueBlock:
+			PC++;
+			if (ExprTrue)
+				ExecBlock();
+			else
+				SkipBlock();
+			break;
+
+		case If_ElseBlock:
+			PC++;
+			if (ExprTrue)
+				SkipBlock();
+			else
+				ExecBlock();
+			break;
+
+		default:
+			Error.Node = *PC;
+			Error.Code = wcIntpreterErrorCode::InvalidNode;
+			Halt = true;
+			break;
+		}
+	}
+
+	return ExprTrue;
 }
 
 std::any weec::interpreter::wcInterpreter::ExecDeclaration()

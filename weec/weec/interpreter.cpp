@@ -373,7 +373,7 @@ std::any weec::interpreter::wcInterpreter::ExecReturn()
 		}
 
 	Halt = true;
-	return std::any();
+	return Return;
 }
 
 std::any weec::interpreter::wcInterpreter::ExecBlock()

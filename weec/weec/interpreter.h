@@ -40,9 +40,10 @@ namespace weec
 				Name = _Name;
 			}
 
-			std::string Name;
+			std::string Name, InternalName;
 			std::type_index TypeIndex;
 		};
+
 
 		template<typename T1, typename T2>
 		class AnyOperator
@@ -58,10 +59,8 @@ namespace weec
 			std::any DoOp(lex::wcTokenType Op, std::any a);
 		};
 
-		class wcExpressionInterpeter
+		class wcExpressionInterpreter
 		{
-			int Value;
-
 			parse::wcParseOutput& Input;
 			tree<parse::wcParseNode>::iterator& PC;
 			wcInterpreterSymbolTable& SymTab;
@@ -75,8 +74,9 @@ namespace weec
 			std::any DoOp(lex::wcTokenType Op, std::any a, std::any b);
 			std::any DoOp(lex::wcTokenType Op, std::any a);
 
+
 		public:
-			wcExpressionInterpeter(wcInterpreterSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX);
+			wcExpressionInterpreter(wcInterpreterSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX);
 
 			std::any ExecSubExpression(),
 				ExecEquality(), ExecAssignment(), ExecLogicOr(),
@@ -90,8 +90,9 @@ namespace weec
 
 		enum class wcInterpreterErrorCode
 		{
-			None, BadInput, InvalidNode, DivByZero
+			None, BadInput, InvalidNode, DivByZero, BadOperation
 		};
+		std::string to_string(wcInterpreterErrorCode Code);
 
 		struct wcInterpreterError
 		{
@@ -103,6 +104,10 @@ namespace weec
 			{
 				Code = _Code;
 				Node = _Node;
+			}
+			wcInterpreterError(wcInterpreterErrorCode _Code)
+			{
+				Code = _Code;
 			}
 
 			wcInterpreterErrorCode Code;
@@ -117,7 +122,7 @@ namespace weec
 			wcInterpreterSymbolTable SymbolTable;
 
 		public:
-			wcExpressionInterpeter ExpressionInterp;
+			wcExpressionInterpreter ExpressionInterp;
 			wcInterpreter(parse::wcParseOutput Input);
 
 			void Reset();
@@ -137,67 +142,124 @@ namespace weec
 				if (!strcmp(std::type_index(typeid(T1)).name(), "int"))
 				{
 					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
-						return std::any_cast<int>(b) != 0 ? std::any_cast<int>(a) / std::any_cast<int>(b) : std::any();
+						if (std::any_cast<int>(b) != 0)
+							return std::any_cast<int>(a) / std::any_cast<int>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
+
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
-						return std::any_cast<unsigned int>(b) != 0 ? std::any_cast<int>(a) / std::any_cast<unsigned int>(b) : std::any();
+						if (std::any_cast<unsigned int>(b) != 0)
+							return std::any_cast<int>(a) / std::any_cast<unsigned int>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
+
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
-						return std::any_cast<double>(b) != 0 ? std::any_cast<int>(a) / std::any_cast<double>(b) : std::any();
+						if (std::any_cast<double>(b) != 0)
+							return std::any_cast<int>(a) / std::any_cast<double>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
+
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
-						return std::any_cast<float>(b) != 0 ? std::any_cast<int>(a) / std::any_cast<float>(b) : std::any();
+						if (std::any_cast<float>(b) != 0)
+							return std::any_cast<int>(a) / std::any_cast<float>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
+
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
-						return std::any_cast<bool>(b) != 0 ? std::any_cast<int>(a) / std::any_cast<bool>(b) : std::any();
+						if (std::any_cast<bool>(b) != 0)
+							return std::any_cast<int>(a) / std::any_cast<bool>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
+
 				}
 				else if (!strcmp(std::type_index(typeid(T1)).name(), "unsigned int"))
 				{
 					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
-						return std::any_cast<int>(b) != 0 ? std::any_cast<unsigned int>(a) / std::any_cast<int>(b) : std::any();
+						if (std::any_cast<int>(b) != 0)
+							return std::any_cast<unsigned int>(a) / std::any_cast<int>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
+
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
-						return std::any_cast<unsigned int>(b) != 0 ? std::any_cast<unsigned int>(a) / std::any_cast<unsigned int>(b) : std::any();
+						if (std::any_cast<unsigned int>(b) != 0)
+							return std::any_cast<unsigned int>(a) / std::any_cast<unsigned int>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
+
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
-						return std::any_cast<double>(b) != 0 ? std::any_cast<unsigned int>(a) / std::any_cast<double>(b) : std::any();
+						if (std::any_cast<double>(b) != 0)
+							return std::any_cast<unsigned int>(a) / std::any_cast<double>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
-						return std::any_cast<float>(b) != 0 ? std::any_cast<unsigned int>(a) / std::any_cast<float>(b) : std::any();
+						if (std::any_cast<float>(b) != 0)
+							return std::any_cast<unsigned int>(a) / std::any_cast<float>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
-						return std::any_cast<bool>(b) != 0 ? std::any_cast<unsigned int>(a) / std::any_cast<bool>(b) : std::any();
+						if (std::any_cast<bool>(b) != 0)
+							return std::any_cast<unsigned int>(a) / std::any_cast<bool>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 				}
 				else if (!strcmp(std::type_index(typeid(T1)).name(), "double"))
 				{
 					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
-						return std::any_cast<int>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<int>(b)) : std::any();
+						if (std::any_cast<int>(b) != 0)
+							return double(std::any_cast<double>(a) / std::any_cast<int>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
-						return std::any_cast<unsigned int>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<unsigned int>(b)) : std::any();
+						if (std::any_cast<unsigned int>(b) != 0)
+							return double(std::any_cast<double>(a) / std::any_cast<unsigned int>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
-						return std::any_cast<double>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<double>(b)) : std::any();
+						if (std::any_cast<double>(b) != 0)
+							return double(std::any_cast<double>(a) / std::any_cast<double>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
-						return std::any_cast<float>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<float>(b)) : std::any();
+						if (std::any_cast<float>(b) != 0)
+							return double(std::any_cast<double>(a) / std::any_cast<float>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
-						return std::any_cast<bool>(b) != 0 ? double(std::any_cast<double>(a) / std::any_cast<bool>(b)) : std::any();
+						if (std::any_cast<bool>(b) != 0)
+							return double(std::any_cast<double>(a) / std::any_cast<bool>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 				}
 				else if (!strcmp(std::type_index(typeid(T1)).name(), "float"))
 				{
 					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
-						return std::any_cast<int>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<int>(b)) : std::any();
+						if (std::any_cast<int>(b) != 0)
+							return float(std::any_cast<float>(a) / std::any_cast<int>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
-						return std::any_cast<unsigned int>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<unsigned int>(b)) : std::any();
+						if (std::any_cast<unsigned int>(b) != 0)
+							return float(std::any_cast<float>(a) / std::any_cast<unsigned int>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
-						return std::any_cast<double>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<double>(b)) : std::any();
+						if (std::any_cast<double>(b) != 0)
+							return float(std::any_cast<float>(a) / std::any_cast<double>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
-						return std::any_cast<float>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<float>(b)) : std::any();
+						if (std::any_cast<float>(b) != 0)
+							return float(std::any_cast<float>(a) / std::any_cast<float>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
-						return std::any_cast<bool>(b) != 0 ? float(std::any_cast<float>(a) / std::any_cast<bool>(b)) : std::any();
+						if (std::any_cast<bool>(b) != 0)
+							return float(std::any_cast<float>(a) / std::any_cast<bool>(b));
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 				}
 				else if (!strcmp(std::type_index(typeid(T1)).name(), "bool"))
 				{
 					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
-						return std::any_cast<int>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<int>(b) : std::any();
+						if (std::any_cast<int>(b) != 0)
+							return std::any_cast<bool>(a) / std::any_cast<int>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "unsigned int"))
-						return std::any_cast<unsigned int>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<unsigned int>(b) : std::any();
+						if (std::any_cast<unsigned int>(b) != 0)
+							return std::any_cast<bool>(a) / std::any_cast<unsigned int>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "double"))
-						return std::any_cast<double>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<double>(b) : std::any();
+						if (std::any_cast<double>(b) != 0)
+							return std::any_cast<bool>(a) / std::any_cast<double>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "float"))
-						return std::any_cast<float>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<float>(b) : std::any();
+						if (std::any_cast<float>(b) != 0)
+							return std::any_cast<bool>(a) / std::any_cast<float>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 					else if (!strcmp(std::type_index(typeid(T2)).name(), "bool"))
-						return std::any_cast<bool>(b) != 0 ? std::any_cast<bool>(a) / std::any_cast<bool>(b) : std::any();
+						if (std::any_cast<bool>(b) != 0)
+							return std::any_cast<bool>(a) / std::any_cast<bool>(b);
+						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 				}
 
 			switch (Op)
@@ -226,7 +288,7 @@ namespace weec
 				return std::any_cast<T1>(a) != std::any_cast<T2>(b);
 			}
 
-			return std::any();	//err
+			return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
 		}
 
 		template<typename T1>
@@ -241,7 +303,8 @@ namespace weec
 			case lex::wcTokenType::PlusOperator:
 				return +std::any_cast<T1>(a);
 			}
-			return std::any();
+
+			return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
 		}
 
 	}

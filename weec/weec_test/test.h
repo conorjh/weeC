@@ -45,8 +45,8 @@ namespace weec
 			std::string list_parser19 = "return 2+2;";
 			std::string list_parser20 = "int a = 123; return a;";
 			std::string list_parser21 = "int a = 123; \nif(a < 100)\n\treturn a;\nelse\nreturn a * 2;";
-			std::string list_parser22 = "10/4";
-			std::string list_parser23 = "5/3";
+			std::string list_parser22 = "int t = 0;\nwhile(t<1000)\n{\n\tt = t+1;\n}\nreturn t;";
+			std::string list_parser23 = "int a = 2;\n int b = 3;\n if (a < b)\n return 213123;	\n return 323444; ";			
 			std::string list_parser24 = "3 + 8/5 -1 -2*5";
 			std::string list_parser25 = "  6 + c";
 			std::string list_parser26 = "  7 & 2";
@@ -106,6 +106,7 @@ namespace weec
 			std::string list_expression48 = "+(-2) * 10;";
 			std::string list_expression49 = "!!!2;";
 			std::string list_expression50 = "!!!!(123);";
+			std::string list_expression51 = "10/0;";
 
 			std::string list_stringtokenizer4 = "Hello\nWorld\nLonger sentence\nFinishing with newline\n";
 		}
@@ -135,7 +136,9 @@ namespace weec
 				Test_wcExpressionParser_31(), Test_wcExpressionParser_32(), Test_wcExpressionParser_33(), Test_wcExpressionParser_34(), Test_wcExpressionParser_35(),
 				Test_wcExpressionParser_36(), Test_wcExpressionParser_37(), Test_wcExpressionParser_38(), Test_wcExpressionParser_39(), Test_wcExpressionParser_40(),
 				Test_wcExpressionParser_41(), Test_wcExpressionParser_42(), Test_wcExpressionParser_43(), Test_wcExpressionParser_44(), Test_wcExpressionParser_45(),
-				Test_wcExpressionParser_46(), Test_wcExpressionParser_47(), Test_wcExpressionParser_48(), Test_wcExpressionParser_49(), Test_wcExpressionParser_50();
+				Test_wcExpressionParser_46(), Test_wcExpressionParser_47(), Test_wcExpressionParser_48(), Test_wcExpressionParser_49(), Test_wcExpressionParser_50(),
+				Test_wcExpressionParser_51(), Test_wcExpressionParser_52(), Test_wcExpressionParser_53(), Test_wcExpressionParser_54(), Test_wcExpressionParser_55(),
+				Test_wcExpressionParser_56(), Test_wcExpressionParser_57(), Test_wcExpressionParser_58(), Test_wcExpressionParser_59(), Test_wcExpressionParser_60();
 
 			//int Test_wcParseNode_1(), Test_wcParseNode_2(), Test_wcParseNode_3(), Test_wcParseNode_4(), Test_wcParseNode_5(), Test_wcParseNode_6();
 
@@ -170,6 +173,7 @@ namespace weec
 				Test_wcExpressionParser_36, Test_wcExpressionParser_37, Test_wcExpressionParser_38, Test_wcExpressionParser_39, Test_wcExpressionParser_40,
 				Test_wcExpressionParser_41, Test_wcExpressionParser_42, Test_wcExpressionParser_43, Test_wcExpressionParser_44, Test_wcExpressionParser_45,
 				Test_wcExpressionParser_46, Test_wcExpressionParser_47, Test_wcExpressionParser_48, Test_wcExpressionParser_49, Test_wcExpressionParser_50
+				, Test_wcExpressionParser_51
 			};
 			int Test_AllParse();
 			

@@ -30,7 +30,7 @@ namespace weec
 
 			Type, Variable, Array, Function
 		};
-		std::string wcParseNodeTypeToString(wcParseNodeType);
+		std::string to_string(wcParseNodeType);
 		wcParseNodeType wcTokenTypeToParseNodeType(lex::wcTokenType);
 
 		enum class wcParserErrorCode
@@ -43,7 +43,7 @@ namespace weec
 			
 			If_MissingClosingParenthesis, MissingClosingBrace,
 
-			IdentRedeclaration, UndeclaredIdent,
+			IdentRedeclaration, UndeclaredIdent, DeclarationsProhibited,
 
 			UnexpectedEOF,
 
@@ -52,7 +52,7 @@ namespace weec
 			Experession_MissingClosingParenthesis,
 			Experession_UnexpectedEOF
 		};
-		std::string wcParserErrorCodeToString(wcParserErrorCode);
+		std::string to_string(wcParserErrorCode);
 
 		struct wcParserError
 		{
@@ -227,8 +227,8 @@ namespace weec
 			lex::wcTokenizer& Tokenizer;
 			wcParseSymbolTable SymbolTable;
 
-			wcParseOutput ParseStatement();
-			wcParseOutput ParseBlock();
+			wcParseOutput ParseStatement(bool AllowDeclarations);
+			wcParseOutput ParseBlock(bool AllowDeclarations);
 			wcParseOutput ParseIf();
 			wcParseOutput ParseSemiColon();
 			wcParseOutput ParseReturn();

@@ -32,7 +32,7 @@ void printTree(tree<wcParseNode> pTree)
 	{
 		for (int t = 0; t < pTree.depth(it); t++)
 			cout << " - ";
-		cout << it->Token.StringToken.Data << " (" << wcParseNodeTypeToString(it->Type) << ")" << endl;
+		cout << it->Token.StringToken.Data << " (" << to_string(it->Type) << ")" << endl;
 		it++;
 	}
 }
@@ -543,6 +543,9 @@ std::string AnyToString(std::any In)
 
 bool printIsExpected(wcInterpreter Interp, std::any ExpectedResult)
 {
+	if (Interp.Error.Code != wcInterpreterErrorCode::None)
+		cout << "Interp error: " << to_string((int)Interp.Error.Code) << " " << to_string(Interp.Error.Code) << endl;
+
 	bool IsExpected = false;
 	if (strcmp(Interp.Return.type().name(), "int") == 0)
 	{
@@ -607,7 +610,7 @@ int Test_ParserTemplate(string Listing)
 
 	if (Parsed.Error.Code != wcParserErrorCode::None)
 	{
-		cout << std::endl << "Error code: " << (int)Parsed.Error.Code << "  " << wcParserErrorCodeToString(Parsed.Error.Code) << std::endl;
+		cout << std::endl << "Error code: " << (int)Parsed.Error.Code << "  " << to_string(Parsed.Error.Code) << std::endl;
 		return (int)Parsed.Error.Code;
 	}
 
@@ -630,7 +633,7 @@ int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 
 	if (Expr.Error.Code != wcParserErrorCode::None)
 	{
-		cout << std::endl << "Error code: " << (int)Expr.Error.Code << "  " << wcParserErrorCodeToString(Expr.Error.Code) << std::endl;
+		cout << std::endl << "Error code: " << (int)Expr.Error.Code << "  " << to_string(Expr.Error.Code) << std::endl;
 		return (int)Expr.Error.Code;
 	}
 	auto Interp = wcInterpreter(Expr);
@@ -642,6 +645,56 @@ int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 int weec::test::lex::Test_wcExpressionParser_1()
 {
 	return Test_ExpressionParserTemplate(listing::list_expression1, 5);
+}
+
+int weec::test::lex::Test_wcExpressionParser_60()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_59()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_58()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_57()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_56()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_55()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_54()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_53()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_52()
+{
+	return 0;
+}
+
+int weec::test::lex::Test_wcExpressionParser_51()
+{
+	return Test_ExpressionParserTemplate(listing::list_expression51, 0);
 }
 
 int weec::test::lex::Test_wcExpressionParser_2()

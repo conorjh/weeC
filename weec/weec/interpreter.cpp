@@ -6,7 +6,12 @@ using namespace std;
 using namespace weec::lex;
 using namespace weec::parse;
 
-void weec::interpreter::wcExpressionInterpeter::SetupImplementationTypeNames()
+bool operator==(std::any& a, std::any& b)
+{
+	return true;
+}
+
+void weec::interpreter::wcExpressionInterpreter::SetupImplementationTypeNames()
 {
 	ImplementationTypes.insert(make_pair("int", ImplementationType("int", std::type_index(typeid(int)))));
 	ImplementationTypes.insert(make_pair("unsigned int", ImplementationType("unsigned int", std::type_index(typeid(unsigned int)))));
@@ -16,7 +21,26 @@ void weec::interpreter::wcExpressionInterpeter::SetupImplementationTypeNames()
 }
 
 
-std::any weec::interpreter::wcExpressionInterpeter::EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom)
+std::string weec::interpreter::to_string(wcInterpreterErrorCode Code)
+{
+	switch (Code)
+	{
+	case wcInterpreterErrorCode::BadInput:
+		return "BadInput";
+	case wcInterpreterErrorCode::BadOperation:
+		return "BadOperation";
+	case wcInterpreterErrorCode::DivByZero:
+		return "DivByZero";
+	case wcInterpreterErrorCode::InvalidNode:
+		return "InvalidNode";
+	case wcInterpreterErrorCode::None:
+		return "None";
+	default:
+		return "";
+	}
+}
+
+std::any weec::interpreter::wcExpressionInterpreter::EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom)
 {
 	switch (PC->Type)
 	{
@@ -50,7 +74,7 @@ std::any weec::interpreter::wcExpressionInterpeter::EvalNode(parse::wcParseNodeT
 	return std::any();
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::DoOp(lex::wcTokenType Op, std::any a, std::any b)
+std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, std::any a, std::any b)
 {
 	auto FindA = ImplementationTypes.find(a.type().name());
 	auto FindB = ImplementationTypes.find(b.type().name());
@@ -122,10 +146,11 @@ std::any weec::interpreter::wcExpressionInterpeter::DoOp(lex::wcTokenType Op, st
 		else if (FindB->first == "bool")
 			return AnyOperator<bool, bool>().DoOp(Op, a, b);
 	}
+	
 	return std::any();
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::DoOp(lex::wcTokenType Op, std::any a)
+std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, std::any a)
 {
 	auto FindA = ImplementationTypes.find(a.type().name());
 	if (FindA == ImplementationTypes.end())
@@ -146,29 +171,29 @@ std::any weec::interpreter::wcExpressionInterpeter::DoOp(lex::wcTokenType Op, st
 
 
 
-weec::interpreter::wcExpressionInterpeter::wcExpressionInterpeter(wcInterpreterSymbolTable& _SymTab, parse::wcParseOutput _Input, tree<parse::wcParseNode>::iterator& _PC, any& _EAX)
+weec::interpreter::wcExpressionInterpreter::wcExpressionInterpreter(wcInterpreterSymbolTable& _SymTab, parse::wcParseOutput _Input, tree<parse::wcParseNode>::iterator& _PC, any& _EAX)
 	: Input(_Input), SymTab(_SymTab), PC(_PC), EAX(_EAX)
 {
 	SetupImplementationTypeNames();
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecSubExpression()
+std::any weec::interpreter::wcExpressionInterpreter::ExecSubExpression()
 {
 	PC++;
 	return EvalNode(PC->Type, Expression);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecOperator()
+std::any weec::interpreter::wcExpressionInterpreter::ExecOperator()
 {
 	return EvalNode(PC->Type, Expression);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::Exec()
+std::any weec::interpreter::wcExpressionInterpreter::Exec()
 {
 	return EAX = EvalNode(PC->Type, Expression);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecPrimary()
+std::any weec::interpreter::wcExpressionInterpreter::ExecPrimary()
 {
 	auto Result = PC++;
 
@@ -189,89 +214,120 @@ std::any weec::interpreter::wcExpressionInterpeter::ExecPrimary()
 	return std::any();
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecUnary()
+std::any weec::interpreter::wcExpressionInterpreter::ExecUnary()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
-
+	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
+		return Lh;
+	auto Rh = EvalNode(PC->Type, Expression);
+	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
+		return Rh;
 	return DoOp(OpType, Lh);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecFactor()
+std::any weec::interpreter::wcExpressionInterpreter::ExecFactor()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
+	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
+		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
+	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
+		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecTerm()
+std::any weec::interpreter::wcExpressionInterpreter::ExecTerm()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
+	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
+		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
+	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
+		return Rh;
+	return DoOp(OpType, Lh, Rh);
+}
+
+std::any weec::interpreter::wcExpressionInterpreter::ExecComparison()
+{
+	auto OpType = PC->Token.Type;
+	PC++;
+
+	auto Lh = EvalNode(PC->Type, Expression);
+	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
+		return Lh;
+	auto Rh = EvalNode(PC->Type, Expression);
+	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
+		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecComparison()
+std::any weec::interpreter::wcExpressionInterpreter::ExecLogicAnd()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
+	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
+		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
+	if (Rh.type().name() == "struct weec::interpreter::wcInterpreterError")
+		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecLogicAnd()
+std::any weec::interpreter::wcExpressionInterpreter::ExecLogicOr()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
+	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
+		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
+	if (Rh.type().name() == "struct weec::interpreter::wcInterpreterError")
+		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecLogicOr()
+std::any weec::interpreter::wcExpressionInterpreter::ExecAssignment()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
+	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
+		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
+	if (Rh.type().name() == "struct weec::interpreter::wcInterpreterError")
+		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpeter::ExecAssignment()
+std::any weec::interpreter::wcExpressionInterpreter::ExecEquality()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
+	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
+		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
-
-	return DoOp(OpType, Lh, Rh);
-}
-
-std::any weec::interpreter::wcExpressionInterpeter::ExecEquality()
-{
-	auto OpType = PC->Token.Type;
-	PC++;
-
-	auto Lh = EvalNode(PC->Type, Expression);
-	auto Rh = EvalNode(PC->Type, Expression);
+	if (Rh.type().name() == "struct weec::interpreter::wcInterpreterError")
+		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
 }
@@ -330,11 +386,18 @@ std::any weec::interpreter::wcInterpreter::ExecStatement()
 	auto Begin = PC;
 	PC++;
 
+	std::any ExpressionResult;
 	if(Input.AST.depth(PC) > Input.AST.depth(Begin))
 		switch (PC->Type)
 		{
 		case Expression:
-			wcExpressionInterpeter(SymbolTable, Input, PC, EAX).Exec();
+			ExpressionResult = wcExpressionInterpreter(SymbolTable, Input, PC, EAX).Exec();
+			if (strcmp(ExpressionResult.type().name(),"struct weec::interpreter::wcInterpreterError") == 0)
+			{
+				Error = any_cast<wcInterpreterError>(ExpressionResult);
+				Halt = true;
+				return ExpressionResult;
+			}
 			break;
 
 		case ReturnStatement:
@@ -368,7 +431,7 @@ std::any weec::interpreter::wcInterpreter::ExecReturn()
 		switch (PC->Type)
 		{
 		case Expression:
-			Return = wcExpressionInterpeter(SymbolTable, Input, PC, EAX).Exec();
+			Return = wcExpressionInterpreter(SymbolTable, Input, PC, EAX).Exec();
 			break;
 
 		default:
@@ -430,12 +493,12 @@ std::any weec::interpreter::wcInterpreter::ExecIf()
 		switch (PC->Type)
 		{
 		case Expression:
-			ExpressionResult = wcExpressionInterpeter(SymbolTable, Input, PC, EAX).Exec();
+			ExpressionResult = wcExpressionInterpreter(SymbolTable, Input, PC, EAX).Exec();
 			ExprTrue = any_cast<bool>(ExpressionResult);
 			break;
 
 		case If_TrueBlock:
-			PC++;
+			//PC++;
 			if (ExprTrue)
 				ExecBlock();
 			else
@@ -443,7 +506,7 @@ std::any weec::interpreter::wcInterpreter::ExecIf()
 			break;
 
 		case If_ElseBlock:
-			PC++;
+			//PC++;
 			if (ExprTrue)
 				SkipBlock();
 			else
@@ -482,7 +545,7 @@ std::any weec::interpreter::wcInterpreter::ExecDeclaration()
 			break;
 
 		case Expression:
-			wcExpressionInterpeter(SymbolTable, Input, PC, EAX).Exec();
+			wcExpressionInterpreter(SymbolTable, Input, PC, EAX).Exec();
 			break;
 
 		default:

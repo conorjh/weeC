@@ -33,7 +33,7 @@ wcParseOutput weec::parse::wcParser::Parse()
 	{
 		auto ThisToken = Tokenizer.GetToken();
 
-		Output.AddAsChild(ParseStatement());
+		Output.AddAsChild(ParseStatement(true));
 	}
 
 	Output.SymbolTable = SymbolTable;
@@ -131,7 +131,7 @@ wcParseSymbol weec::parse::wcIdentParser::ParseIdent()
 	return Symbol;
 }
 
-wcParseOutput weec::parse::wcParser::ParseStatement()
+wcParseOutput weec::parse::wcParser::ParseStatement(bool AllowDeclarations)
 {
 	wcParseOutput Output;
 	auto ThisToken = Tokenizer.GetToken();
@@ -151,6 +151,8 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 		break;
 
 		WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
+			if(!AllowDeclarations)
+				return wcParseOutput(wcParserError(wcParserErrorCode::DeclarationsProhibited, Tokenizer.GetToken()));
 			Buffer = ParseDeclaration();
 		break;
 
@@ -172,6 +174,8 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 		switch (Ident.Type)
 		{
 		case wcParseSymbolType::Type:
+			if (!AllowDeclarations)
+				return wcParseOutput(wcParserError(wcParserErrorCode::DeclarationsProhibited, Tokenizer.GetToken()));
 			Buffer = ParseDeclaration(Ident);
 			break;
 
@@ -202,7 +206,7 @@ wcParseOutput weec::parse::wcParser::ParseStatement()
 	return Output;
 }
 
-wcParseOutput weec::parse::wcParser::ParseBlock()
+wcParseOutput weec::parse::wcParser::ParseBlock(bool AllowDeclarations)
 {
 	wcParseOutput Output;
 
@@ -215,7 +219,7 @@ wcParseOutput weec::parse::wcParser::ParseBlock()
 
 	while (Tokenizer.GetToken().Type != CloseBrace)
 	{
-		Output.AddAsChild(ParseStatement());
+		Output.AddAsChild(ParseStatement(AllowDeclarations));
 
 		if (Tokenizer.IsErrored() || Output.Error.Code != None)
 			return Output;
@@ -258,9 +262,9 @@ wcParseOutput weec::parse::wcParser::ParseIf()
 	//block/statement
 	Output.AddAsChild(wcParseNode(wcParseNodeType::If_TrueBlock), true);
 	if (Tokenizer.GetToken().Type == wcTokenType::OpenBrace)
-		Output.AddAsChild(ParseBlock());
+		Output.AddAsChild(ParseBlock(false));
 	else
-		Output.AddAsChild(ParseStatement());
+		Output.AddAsChild(ParseStatement(false));
 	Output.Up();	//return pointer to parent of true block
 	if (Output.Error.Code != None)
 		return Output;
@@ -273,9 +277,9 @@ wcParseOutput weec::parse::wcParser::ParseIf()
 	//optional else block/statement
 	Output.AddAsChild(wcParseNode(wcParseNodeType::If_ElseBlock), true);
 	if (Tokenizer.GetToken().Type == wcTokenType::OpenBrace)
-		Output.AddAsChild(ParseBlock());
+		Output.AddAsChild(ParseBlock(false));
 	else
-		Output.AddAsChild(ParseStatement());
+		Output.AddAsChild(ParseStatement(false));
 	Output.Up();	//return pointer to parent of else block
 
 	return Output;
@@ -843,7 +847,7 @@ Experession_MissingClosingParenthesis,
 Experession_UnexpectedEOF
 */
 
-std::string weec::parse::wcParserErrorCodeToString(wcParserErrorCode Code)
+std::string weec::parse::to_string(wcParserErrorCode Code)
 {
 	switch (Code)
 	{
@@ -879,7 +883,7 @@ std::string weec::parse::wcParserErrorCodeToString(wcParserErrorCode Code)
 }
 
 
-std::string weec::parse::wcParseNodeTypeToString(wcParseNodeType Type)
+std::string weec::parse::to_string(wcParseNodeType Type)
 {
 	switch (Type)
 	{

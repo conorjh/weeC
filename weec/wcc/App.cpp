@@ -124,20 +124,28 @@ bool App::Application::Init()
 void REPL_Loop()
 {
 	cout << ">";
-	std::string Buffer;
+	std::string Buffer, FullSource;
+
 	getline(cin, Buffer);
+	while (Buffer != "#run")
+	{
+		FullSource += Buffer + "\n";
+		cout << ">";
+		getline(cin, Buffer);
+	}
 	cout << endl ;
 
-	wcParseOutput Parsed = wcParser(*new wcTokenizer(Buffer)).Parse();
+	wcParseOutput Parsed = wcParser(*new wcTokenizer(FullSource)).Parse();
 	if (Parsed.Error.Code != wcParserErrorCode::None)
 	{
-		cout << "Error: " << to_string((int)Parsed.Error.Code) << " " << wcParserErrorCodeToString(Parsed.Error.Code) << endl << endl;
+		cout << "Error: " << to_string((int)Parsed.Error.Code) << " " << to_string(Parsed.Error.Code) << endl << endl;
 		return;
 	}
 	
 	wcInterpreter Interp(Parsed);
 	Interp.Exec();
-
+	if (Interp.Error.Code != wcInterpreterErrorCode::None)
+		cout << "Runtime error: " << to_string((int)Interp.Error.Code) << " " << to_string(Interp.Error.Code) << endl;
 	cout << "Out: " << AnyToString(Interp.Return) 
 		<< "\tEAX: " << AnyToString(Interp.EAX) << endl << endl;
 }

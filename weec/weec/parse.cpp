@@ -164,6 +164,10 @@ wcParseOutput weec::parse::wcParser::ParseStatement(bool AllowDeclarations)
 		Buffer = ParseReturn();
 		break;
 
+	case wcTokenType::WhileKeyword:
+		Buffer = ParseWhile();
+		break;
+
 	default:
 		//error
 		Output.Error = wcParserError(wcParserErrorCode::UnexpectedToken, Tokenizer.GetToken());
@@ -323,6 +327,43 @@ wcParseOutput weec::parse::wcParser::ParseReturn()
 		return Output;
 
 	Output.AddAsChild(ParseSemiColon());
+	return Output;
+}
+
+wcParseOutput weec::parse::wcParser::ParseWhile()
+{
+	wcParseOutput Output;
+	Output.AddAsChild(wcParseNode(wcParseNodeType::WhileStatement), true);
+
+	//while keyword
+	if (Tokenizer.GetToken().Type != WhileKeyword)
+		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));		//error - expected built in or user type
+
+	// ( 
+	if (!Tokenizer.NextToken(OpenParenthesis))
+		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));
+	if (!Tokenizer.NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
+
+	//expression
+	Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression());
+	if (Output.Error.Code != None)
+		return Output;
+
+	// )
+	if (Tokenizer.GetToken().Type != wcTokenType::CloseParenthesis)
+		return wcParseOutput(wcParserError(If_MissingClosingParenthesis, Tokenizer.GetToken()));
+	if (!Tokenizer.NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
+
+	//block/statement
+	if (Tokenizer.GetToken().Type == wcTokenType::OpenBrace)
+		Output.AddAsChild(ParseBlock(false));
+	else
+		Output.AddAsChild(ParseStatement(false));
+	if (Output.Error.Code != None)
+		return Output;
+
 	return Output;
 }
 
@@ -891,6 +932,8 @@ std::string weec::parse::to_string(wcParseNodeType Type)
 		return "Head";
 	case wcParseNodeType::Empty:
 		return "Empty";
+	case wcParseNodeType::WhileStatement:
+		return "WhileStatement";
 	case wcParseNodeType::ReturnStatement:
 		return "ReturnStatement";
 	case wcParseNodeType::Return_Expression:

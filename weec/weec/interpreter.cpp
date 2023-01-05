@@ -236,6 +236,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecFactor()
 	auto Lh = EvalNode(PC->Type, Expression);
 	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Lh;
+
 	auto Rh = EvalNode(PC->Type, Expression);
 	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Rh;
@@ -408,6 +409,10 @@ std::any weec::interpreter::wcInterpreter::ExecStatement()
 			ExecIf();
 			break;
 
+		case WhileStatement:
+			ExecWhile();
+			break;
+
 		case Declaration:
 			ExecDeclaration();
 			break;
@@ -484,7 +489,6 @@ std::any weec::interpreter::wcInterpreter::ExecIf()
 	auto Begin = PC;
 	PC++;
 
-
 	wcToken TypeToken, IdentToken;
 	std::any ExpressionResult;
 	bool ExprTrue = false;
@@ -519,6 +523,49 @@ std::any weec::interpreter::wcInterpreter::ExecIf()
 			Halt = true;
 			break;
 		}
+	}
+
+	return ExprTrue;
+}
+
+std::any weec::interpreter::wcInterpreter::ExecWhile()
+{
+	auto Begin = PC;
+	PC++;
+
+	tree<wcParseNode>::iterator ExprPC = PC;
+	tree<wcParseNode>::iterator WhileBlockPC = PC;
+	std::any ExpressionResult;
+	bool ExprTrue = false;
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC.node != nullptr && !Halt))
+	{
+		switch (PC->Type)
+		{
+		case Expression:
+			ExprPC = PC;
+			ExpressionResult = wcExpressionInterpreter(SymbolTable, Input, PC, EAX).Exec();
+			ExprTrue = any_cast<bool>(ExpressionResult);
+			break;
+
+		case Block:
+			WhileBlockPC = PC;
+			if (ExprTrue)
+				ExecBlock();
+			else
+				SkipBlock();
+			PC = ExprPC;
+			break;
+
+		default:
+			Error.Node = *PC;
+			Error.Code = wcInterpreterErrorCode::InvalidNode;
+			Halt = true;
+			break;
+		}
+
+		if (!ExprTrue)
+			return false;
+		
 	}
 
 	return ExprTrue;

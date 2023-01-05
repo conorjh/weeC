@@ -126,7 +126,7 @@ namespace weec
 			wcInterpreter(parse::wcParseOutput Input);
 
 			void Reset();
-			std::any Exec(), ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecReturn(), ExecDeclaration();
+			std::any Exec(), ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecDeclaration();
 
 			wcInterpreterError Error;
 			bool Halt;
@@ -286,6 +286,9 @@ namespace weec
 				return std::any_cast<T1>(a) == std::any_cast<T2>(b);
 			case lex::wcTokenType::NotEqualOperator:
 				return std::any_cast<T1>(a) != std::any_cast<T2>(b);
+
+			case lex::wcTokenType::AssignOperator:
+				return std::any_cast<T1>(a) = std::any_cast<T2>(b);
 			}
 
 			return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err

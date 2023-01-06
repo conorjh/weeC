@@ -17,46 +17,63 @@ namespace weec
 {
 	namespace interpreter
 	{
-		class wcInterpreterSymbolTable
-		{
-			std::unordered_map<std::string, std::any> Container;
-
-		public:
-			wcInterpreterSymbolTable();
-
-			bool Add(std::any, std::string FullIdent),
-
-				Exists(std::string FullIdent) const;
-
-			std::any Get(std::string FullIdent) const;
-			void Set(std::string FullIdent, std::any);
-		};
-
 		class ImplementationType
 		{
 		public:
+			ImplementationType()
+				: TypeIndex(typeid(void)) {
+
+			}
+
 			ImplementationType(std::string _Name, std::type_index _TypeIndex)
 				: TypeIndex(_TypeIndex) {
 				Name = _Name;
+				InternalName = _TypeIndex.name();
 			}
 
 			std::string Name, InternalName;
 			std::type_index TypeIndex;
 		};
 
+		class ImplementationTypes
+		{
+			std::unordered_map<std::string, ImplementationType> EasyTypeNames;
+			std::unordered_map<std::string, ImplementationType> InternalTypeNames;
+		public:
+			ImplementationTypes();
+			ImplementationType operator[](std::string a) { return Get(a); }
+			void Add(std::string EasyName, std::type_index Type);
+			ImplementationType Get(std::string EasyName), GetByInternal(std::string InternalName);
+		};
+
+		class wcInterpreterSymbolTable 
+		{
+			std::unordered_map<std::string, std::any> Container;
+		public:
+
+			wcInterpreterSymbolTable();
+
+			bool Add(std::any, std::string FullIdent),
+				Exists(std::string FullIdent) const;
+
+			std::any Get(std::string FullIdent) const;
+			void Set(std::string FullIdent, std::any);
+
+			ImplementationTypes ImplTypes;
+		};
 
 		template<typename T1, typename T2>
 		class AnyOperator
 		{
 		public:
-			std::any DoOp(lex::wcTokenType Op, std::any a, std::any b);
+			std::any DoOp(wcInterpreterSymbolTable&, lex::wcTokenType Op, std::any a, std::any b);
 		};
 
 		template<typename T1>
 		class AnyOperatorUnary
 		{
 		public:
-			std::any DoOp(lex::wcTokenType Op, std::any a);
+			std::any DoOp(wcInterpreterSymbolTable&, lex::wcTokenType Op, std::any a);
 		};
 
 		class wcExpressionInterpreter
@@ -66,10 +83,7 @@ namespace weec
 			wcInterpreterSymbolTable& SymTab;
 			std::any& EAX;
 
-			std::unordered_map<std::string, ImplementationType> ImplementationTypes;
-			void SetupImplementationTypeNames();
-
-			std::any EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom);
+			std::any EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom, bool);
 
 			std::any DoOp(lex::wcTokenType Op, std::any a, std::any b);
 			std::any DoOp(lex::wcTokenType Op, std::any a);
@@ -82,7 +96,7 @@ namespace weec
 				ExecEquality(), ExecAssignment(), ExecLogicOr(),
 				ExecLogicAnd(), ExecComparison(),
 				ExecTerm(), ExecFactor(),
-				ExecUnary(), ExecPrimary(),
+				ExecUnary(), ExecPrimary(bool),
 				ExecOperator();
 
 			std::any Exec();
@@ -114,7 +128,6 @@ namespace weec
 			parse::wcParseNode Node;
 		};
 
-
 		class wcInterpreter
 		{
 			parse::wcParseOutput Input;
@@ -133,12 +146,82 @@ namespace weec
 			std::any EAX, Return;
 		};
 
+		template <>
+		inline std::any AnyOperator<std::string, int>::DoOp(wcInterpreterSymbolTable& SymTab, lex::wcTokenType Op, std::any a, std::any b)
+		{
+			switch (Op)
+			{
+			case lex::wcTokenType::AssignOperator:
+				SymTab.Set(std::any_cast<std::string>(a), std::any_cast<int>(b));
+				return std::any_cast<int>(b);
+
+			default:
+				return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
+			}
+		}
+
+		template <>
+		inline std::any AnyOperator<std::string, unsigned int>::DoOp(wcInterpreterSymbolTable& SymTab, lex::wcTokenType Op, std::any a, std::any b)
+		{
+			switch (Op)
+			{
+			case lex::wcTokenType::AssignOperator:
+				SymTab.Set(std::any_cast<std::string>(a), std::any_cast<unsigned int>(b));
+				return std::any_cast<unsigned int>(b);
+
+			default:
+				return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
+			}
+		}
+
+		template <>
+		inline std::any AnyOperator<std::string, float>::DoOp(wcInterpreterSymbolTable& SymTab, lex::wcTokenType Op, std::any a, std::any b)
+		{
+			switch (Op)
+			{
+			case lex::wcTokenType::AssignOperator:
+				SymTab.Set(std::any_cast<std::string>(a), std::any_cast<float>(b));
+				return std::any_cast<float>(b);
+
+			default:
+				return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
+			}
+		}
+
+		template <>
+		inline std::any AnyOperator<std::string, double>::DoOp(wcInterpreterSymbolTable& SymTab, lex::wcTokenType Op, std::any a, std::any b)
+		{
+			switch (Op)
+			{
+			case lex::wcTokenType::AssignOperator:
+				SymTab.Set(std::any_cast<std::string>(a), std::any_cast<double>(b));
+				return std::any_cast<double>(b);
+
+			default:
+				return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
+			}
+		}
+
+		template <>
+		inline std::any AnyOperator<std::string, std::string>::DoOp(wcInterpreterSymbolTable& SymTab, lex::wcTokenType Op, std::any a, std::any b)
+		{
+			switch (Op)
+			{
+			case lex::wcTokenType::AssignOperator:
+				SymTab.Set(std::any_cast<std::string>(a), std::any_cast<std::string>(b));
+				return std::any_cast<std::string>(b);
+
+			default:
+				return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
+			}
+		}
 
 		template<typename T1, typename T2>
-		inline std::any AnyOperator<T1, T2>::DoOp(lex::wcTokenType Op, std::any a, std::any b)
+		inline std::any AnyOperator<T1, T2>::DoOp(wcInterpreterSymbolTable& SymTab, lex::wcTokenType Op, std::any a, std::any b)
 		{
 			//manually handle divide
 			if (Op == lex::wcTokenType::DivideOperator)
+			{
 				if (!strcmp(std::type_index(typeid(T1)).name(), "int"))
 				{
 					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
@@ -238,7 +321,7 @@ namespace weec
 							return float(std::any_cast<float>(a) / std::any_cast<bool>(b));
 						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 				}
-				else if (!strcmp(std::type_index(typeid(T1)).name(), "bool"))
+				else if (!strcmp(std::type_index(typeid(T1)).name(), "string"))
 				{
 					if (!strcmp(std::type_index(typeid(T2)).name(), "int"))
 						if (std::any_cast<int>(b) != 0)
@@ -261,7 +344,8 @@ namespace weec
 							return std::any_cast<bool>(a) / std::any_cast<bool>(b);
 						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 				}
-
+			}
+			
 			switch (Op)
 			{
 			case lex::wcTokenType::MultiplyOperator:
@@ -288,14 +372,15 @@ namespace weec
 				return std::any_cast<T1>(a) != std::any_cast<T2>(b);
 
 			case lex::wcTokenType::AssignOperator:
-				return std::any_cast<T1>(a) = std::any_cast<T2>(b);
+				SymTab.Set(any_cast<std::string>(a), std::any_cast<T1>(b));
+				return std::any_cast<T1>(b);
 			}
 
 			return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
 		}
 
 		template<typename T1>
-		inline std::any AnyOperatorUnary<T1>::DoOp(lex::wcTokenType Op, std::any a)
+		inline std::any AnyOperatorUnary<T1>::DoOp(wcInterpreterSymbolTable& SymTab, lex::wcTokenType Op, std::any a)
 		{
 			switch (Op)
 			{

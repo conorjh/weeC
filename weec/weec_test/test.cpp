@@ -1069,7 +1069,6 @@ int weec::test::lex::Test_wcExpressionParser_50()
 }
 
 
-
 /*
 * Parser
 - should compute 5 when given 2 + 3

@@ -230,8 +230,6 @@ namespace weec
 			wcLexer(std::string& _source);
 		};
 
-
-
 		namespace misc
 		{
 			extern wcStringToken NullToken;

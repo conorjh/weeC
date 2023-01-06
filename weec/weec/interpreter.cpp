@@ -5,21 +5,12 @@ using enum weec::parse::wcParseNodeType;
 using namespace std;
 using namespace weec::lex;
 using namespace weec::parse;
+using namespace weec::interpreter;
 
 bool operator==(std::any& a, std::any& b)
 {
 	return true;
 }
-
-void weec::interpreter::wcExpressionInterpreter::SetupImplementationTypeNames()
-{
-	ImplementationTypes.insert(make_pair("int", ImplementationType("int", std::type_index(typeid(int)))));
-	ImplementationTypes.insert(make_pair("unsigned int", ImplementationType("unsigned int", std::type_index(typeid(unsigned int)))));
-	ImplementationTypes.insert(make_pair("float", ImplementationType("float", std::type_index(typeid(float)))));
-	ImplementationTypes.insert(make_pair("double", ImplementationType("double", std::type_index(typeid(double)))));
-	ImplementationTypes.insert(make_pair("bool", ImplementationType("bool", std::type_index(typeid(bool)))));
-}
-
 
 std::string weec::interpreter::to_string(wcInterpreterErrorCode Code)
 {
@@ -40,7 +31,7 @@ std::string weec::interpreter::to_string(wcInterpreterErrorCode Code)
 	}
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom)
+std::any weec::interpreter::wcExpressionInterpreter::EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom, bool isLValue = false)
 {
 	switch (PC->Type)
 	{
@@ -63,7 +54,7 @@ std::any weec::interpreter::wcExpressionInterpreter::EvalNode(parse::wcParseNode
 	case Expression_Unary:
 		return ExecUnary();
 	case Expression_Primary:
-		return ExecPrimary();
+		return ExecPrimary(isLValue);
 	case Expression_Operator:
 		return ExecOperator();
 	default:
@@ -76,96 +67,128 @@ std::any weec::interpreter::wcExpressionInterpreter::EvalNode(parse::wcParseNode
 
 std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, std::any a, std::any b)
 {
-	auto FindA = ImplementationTypes.find(a.type().name());
-	auto FindB = ImplementationTypes.find(b.type().name());
-	if (FindA == ImplementationTypes.end() || FindB == ImplementationTypes.end())
+	auto FindA = SymTab.ImplTypes.GetByInternal((a.type().name()));
+	auto FindB = SymTab.ImplTypes.GetByInternal((b.type().name()));
+	if (FindA.Name == "" || FindB.Name == "")
 		return std::any();
 
-	if (FindA->first == "int")
+	if (Op == wcTokenType::AssignOperator)
 	{
-		if (FindB->first == "int")
-			return AnyOperator<int, int>().DoOp(Op, a, b);
-		else if (FindB->first == "unsigned int")
-			return AnyOperator<int, unsigned int>().DoOp(Op, a, b);
-		else if (FindB->first == "float")
-			return AnyOperator<int, float>().DoOp(Op, a, b);
-		else if (FindB->first == "double")
-			return AnyOperator<int, double>().DoOp(Op, a, b);
-		else if (FindB->first == "bool")
-			return AnyOperator<int, bool>().DoOp(Op, a, b);
+
 	}
-	else if (FindA->first == "unsigned int")
+
+	if (FindA.Name == "int")
 	{
-		if (FindB->first == "int")
-			return AnyOperator<unsigned int, int>().DoOp(Op, a, b);
-		else if (FindB->first == "unsigned int")
-			return AnyOperator<unsigned int, unsigned int>().DoOp(Op, a, b);
-		else if (FindB->first == "float")
-			return AnyOperator<unsigned int, float>().DoOp(Op, a, b);
-		else if (FindB->first == "double")
-			return AnyOperator<unsigned int, double>().DoOp(Op, a, b);
-		else if (FindB->first == "bool")
-			return AnyOperator<unsigned int, bool>().DoOp(Op, a, b);
+		if (FindB.Name == "int")
+			return AnyOperator<int, int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "unsigned int")
+			return AnyOperator<int, unsigned int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "float")
+			return AnyOperator<int, float>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "double")
+			return AnyOperator<int, double>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "bool")
+			return AnyOperator<int, bool>().DoOp(SymTab, Op, a, b);
+		//else if (FindB.Name == "string")
+		//	return AnyOperator<int, string>().DoOp(SymTab, Op, a, b);
 	}
-	else if (FindA->first == "float")
+	else if (FindA.Name == "unsigned int")
 	{
-		if (FindB->first == "int")
-			return AnyOperator<float, int>().DoOp(Op, a, b);
-		else if (FindB->first == "unsigned int")
-			return AnyOperator<float, unsigned int>().DoOp(Op, a, b);
-		else if (FindB->first == "float")
-			return AnyOperator<float, float>().DoOp(Op, a, b);
-		else if (FindB->first == "double")
-			return AnyOperator<float, double>().DoOp(Op, a, b);
-		else if (FindB->first == "bool")
-			return AnyOperator<float, bool>().DoOp(Op, a, b);
+		if (FindB.Name == "int")
+			return AnyOperator<unsigned int, int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "unsigned int")
+			return AnyOperator<unsigned int, unsigned int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "float")
+			return AnyOperator<unsigned int, float>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "double")
+			return AnyOperator<unsigned int, double>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "bool")
+			return AnyOperator<unsigned int, bool>().DoOp(SymTab, Op, a, b);
+		//else if (FindB.Name == "string")
+		//	return AnyOperator<unsigned int, string>().DoOp(SymTab, Op, a, b);
 	}
-	else if (FindA->first == "double")
+	else if (FindA.Name == "float")
 	{
-		if (FindB->first == "int")
-			return AnyOperator<double, int>().DoOp(Op, a, b);
-		else if (FindB->first == "unsigned int")
-			return AnyOperator<double, unsigned int>().DoOp(Op, a, b);
-		else if (FindB->first == "float")
-			return AnyOperator<double, float>().DoOp(Op, a, b);
-		else if (FindB->first == "double")
-			return AnyOperator<double, double>().DoOp(Op, a, b);
-		else if (FindB->first == "bool")
-			return AnyOperator<double, bool>().DoOp(Op, a, b);
+		if (FindB.Name == "int")
+			return AnyOperator<float, int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "unsigned int")
+			return AnyOperator<float, unsigned int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "float")
+			return AnyOperator<float, float>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "double")
+			return AnyOperator<float, double>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "bool")
+			return AnyOperator<float, bool>().DoOp(SymTab, Op, a, b);
+		//else if (FindB.Name == "string")
+		//	return AnyOperator<float, string>().DoOp(SymTab, Op, a, b);
 	}
-	else if (FindA->first == "bool")
+	else if (FindA.Name == "double")
 	{
-		if (FindB->first == "int")
-			return AnyOperator<bool, int>().DoOp(Op, a, b);
-		else if (FindB->first == "unsigned int")
-			return AnyOperator<bool, unsigned int>().DoOp(Op, a, b);
-		else if (FindB->first == "float")
-			return AnyOperator<bool, float>().DoOp(Op, a, b);
-		else if (FindB->first == "double")
-			return AnyOperator<bool, double>().DoOp(Op, a, b);
-		else if (FindB->first == "bool")
-			return AnyOperator<bool, bool>().DoOp(Op, a, b);
+		if (FindB.Name == "int")
+			return AnyOperator<double, int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "unsigned int")
+			return AnyOperator<double, unsigned int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "float")
+			return AnyOperator<double, float>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "double")
+			return AnyOperator<double, double>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "bool")
+			return AnyOperator<double, bool>().DoOp(SymTab, Op, a, b);
+		//else if (FindB.Name == "string")
+		//	return AnyOperator<double, string>().DoOp(SymTab, Op, a, b);
 	}
-	
+	else if (FindA.Name == "bool")
+	{
+		if (FindB.Name == "int")
+			return AnyOperator<bool, int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "unsigned int")
+			return AnyOperator<bool, unsigned int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "float")
+			return AnyOperator<bool, float>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "double")
+			return AnyOperator<bool, double>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "bool")
+			return AnyOperator<bool, bool>().DoOp(SymTab, Op, a, b);
+		//else if (FindB.Name == "string")
+		//	return AnyOperator<bool, string>().DoOp(SymTab, Op, a, b);
+	}
+	else if (FindA.Name == "string")
+	{
+		if (FindB.Name == "int")
+			return AnyOperator<string, int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "unsigned int")
+			return AnyOperator<string, unsigned int>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "float")
+			return AnyOperator<string, float>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "double")
+			return AnyOperator<string, double>().DoOp(SymTab, Op, a, b);
+		//else if (FindB.Name == "bool")
+		//	return AnyOperator<string, bool>().DoOp(SymTab, Op, a, b);
+		else if (FindB.Name == "string")
+			return AnyOperator<string, string>().DoOp(SymTab, Op, a, b);
+	}
+
 	return std::any();
 }
 
 std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, std::any a)
 {
-	auto FindA = ImplementationTypes.find(a.type().name());
-	if (FindA == ImplementationTypes.end())
+	auto FindA = SymTab.ImplTypes.GetByInternal(a.type().name());
+	if (FindA.Name == "")
 		return std::any();
 
-	if (FindA->first == "int")
-		return AnyOperatorUnary<int>().DoOp(Op, a);
-	else if (FindA->first == "unsigned int")
-		return AnyOperatorUnary<unsigned int>().DoOp(Op, a);
-	else if (FindA->first == "float")
-		return AnyOperatorUnary<float>().DoOp(Op, a);
-	else if (FindA->first == "double")
-		return AnyOperatorUnary<double>().DoOp(Op, a);
-	else if (FindA->first == "bool")
-		return AnyOperatorUnary<bool>().DoOp(Op, a);
+	if (FindA.Name == "int")
+		return AnyOperatorUnary<int>().DoOp(SymTab, Op, a);
+	else if (FindA.Name == "unsigned int")
+		return AnyOperatorUnary<unsigned int>().DoOp(SymTab, Op, a);
+	else if (FindA.Name == "float")
+		return AnyOperatorUnary<float>().DoOp(SymTab, Op, a);
+	else if (FindA.Name == "double")
+		return AnyOperatorUnary<double>().DoOp(SymTab, Op, a);
+	else if (FindA.Name == "bool")
+		return AnyOperatorUnary<bool>().DoOp(SymTab, Op, a);
+	else if (FindA.Name == "string")
+		return AnyOperatorUnary<bool>().DoOp(SymTab, Op, a);
 	return std::any();
 }
 
@@ -174,7 +197,6 @@ std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, s
 weec::interpreter::wcExpressionInterpreter::wcExpressionInterpreter(wcInterpreterSymbolTable& _SymTab, parse::wcParseOutput _Input, tree<parse::wcParseNode>::iterator& _PC, any& _EAX)
 	: Input(_Input), SymTab(_SymTab), PC(_PC), EAX(_EAX)
 {
-	SetupImplementationTypeNames();
 }
 
 std::any weec::interpreter::wcExpressionInterpreter::ExecSubExpression()
@@ -193,7 +215,7 @@ std::any weec::interpreter::wcExpressionInterpreter::Exec()
 	return EAX = EvalNode(PC->Type, Expression);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecPrimary()
+std::any weec::interpreter::wcExpressionInterpreter::ExecPrimary(bool isLValue)
 {
 	auto Result = PC++;
 
@@ -209,6 +231,9 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecPrimary()
 	case wcTokenType::FalseKeyword:
 		return Result->Token.StringToken.Data == "true" ? true : false;
 	case wcTokenType::Identifier:
+	if(isLValue)
+		return Result->Token.StringToken.Data;
+	else
 		return this->SymTab.Get(Result->Token.StringToken.Data);
 	}
 	return std::any();
@@ -308,7 +333,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecAssignment()
 	auto OpType = PC->Token.Type;
 	PC++;
 
-	auto Lh = EvalNode(PC->Type, Expression);
+	auto Lh = EvalNode(PC->Type, Expression, true);
 	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
 		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
@@ -618,8 +643,10 @@ std::any weec::interpreter::wcInterpreter::ExecDeclaration()
 	return EAX;
 }
 
+
 weec::interpreter::wcInterpreterSymbolTable::wcInterpreterSymbolTable()
 {
+
 }
 
 bool weec::interpreter::wcInterpreterSymbolTable::Add(std::any Value, std::string FullIdent)
@@ -637,3 +664,34 @@ void weec::interpreter::wcInterpreterSymbolTable::Set(std::string FullIdent, std
 {
 	Container.find(FullIdent)->second = Value;
 }
+
+weec::interpreter::ImplementationTypes::ImplementationTypes()
+{
+	Add("int", std::type_index(typeid(int)));
+	Add("unsigned int", std::type_index(typeid(unsigned int)));
+	Add("float", std::type_index(typeid(float)));
+	Add("double", std::type_index(typeid(double)));
+	Add("bool", std::type_index(typeid(bool)));
+	Add("string", std::type_index(typeid(string)));
+}
+
+void weec::interpreter::ImplementationTypes::Add(std::string EasyName, std::type_index Type)
+{
+	EasyTypeNames.insert(make_pair(EasyName, ImplementationType(EasyName, Type)));
+	InternalTypeNames.insert(make_pair(Type.name(), ImplementationType(EasyName, Type)));
+}
+
+ImplementationType weec::interpreter::ImplementationTypes::Get(std::string EasyName)
+{
+	if(EasyTypeNames.find(EasyName) == EasyTypeNames.end())
+		return ImplementationType();
+	return EasyTypeNames[EasyName];
+}
+
+ImplementationType weec::interpreter::ImplementationTypes::GetByInternal(std::string InternalName)
+{
+	if (InternalTypeNames.find(InternalName) == InternalTypeNames.end())
+		return ImplementationType();
+	return InternalTypeNames[InternalName];
+}
+

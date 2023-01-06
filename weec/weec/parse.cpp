@@ -422,6 +422,8 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex:
 	AST.append_child(ExpNode, *new wcParseNode(HeadType, OperatorOrLiteral));
 
 	Tokens.push_back(OperatorOrLiteral);
+
+	Type = OperatorOrLiteral.Type ==  wcTokenType::Identifier ? wcParseExpressionType::Variable : wcParseExpressionType::Literal;
 }
 
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, wcToken Operator, wcParseExpression RightHand)
@@ -443,10 +445,37 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcPa
 	for (auto t = RightHand.Tokens.begin(); t != RightHand.Tokens.end(); ++t)
 		Tokens.push_back(*t);
 
+	Error = LeftHand.Error;
+	if (LeftHand.Error.Code == None && RightHand.Error.Code != None)
+		Error = RightHand.Error;
+
+	Type = wcParseExpressionType::Binary;
+}
+
+weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken AssignOperator, wcParseExpression RightHand, bool IsAssignment)
+{
+	//build the ast
+	auto ExpRootNode = AST.insert(AST.begin(), *new wcParseNode(Expression));
+
+	auto OpNode = AST.append_child(ExpRootNode, wcParseNode(HeadType, AssignOperator));
+	auto OpNodeChild = AST.append_child(OpNode);
+
+	AST.insert_subtree(OpNodeChild, LeftHand.GetExpressionNodeBegin());
+	AST.insert_subtree(OpNodeChild, RightHand.GetExpressionNodeBegin());
+	AST.erase(OpNodeChild);
+
+	//tokens in order
+	for (auto t = LeftHand.Tokens.begin(); t != LeftHand.Tokens.end(); ++t)
+		Tokens.push_back(*t);
+	Tokens.push_back(AssignOperator);
+	for (auto t = RightHand.Tokens.begin(); t != RightHand.Tokens.end(); ++t)
+		Tokens.push_back(*t);
 
 	Error = LeftHand.Error;
 	if (LeftHand.Error.Code == None && RightHand.Error.Code != None)
 		Error = RightHand.Error;
+
+	Type = wcParseExpressionType::Assignment;
 }
 
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand)
@@ -465,13 +494,14 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex:
 		Tokens.push_back(*t);
 
 	Error = RightHand.Error;
+	Type = wcParseExpressionType::Unary;
 }
 
 
 wcParseOutput weec::parse::wcExpressionParser::ParseExpression()
 {
 	if (Tokenizer.IsFinished())
-		return wcParserError(wcParserErrorCode::Experession_Empty, Tokenizer.GetToken());
+		return wcParserError(wcParserErrorCode::Expression_Empty, Tokenizer.GetToken());
 
 	auto eExpression = ParseExpression_Expression();
 	wcParseOutput Output;
@@ -483,7 +513,7 @@ wcParseOutput weec::parse::wcExpressionParser::ParseExpression(wcParseSymbol Sym
 {
 
 	if (Tokenizer.IsFinished())
-		return wcParserError(wcParserErrorCode::Experession_Empty, Tokenizer.GetToken());
+		return wcParserError(wcParserErrorCode::Expression_Empty, Tokenizer.GetToken());
 
 	wcParseOutput Output;
 	auto Expression = ParseExpression_Expression();
@@ -495,7 +525,7 @@ wcParseOutput weec::parse::wcExpressionParser::ParseExpression(wcParseSymbol Sym
 
 	if (Tokenizer.GetToken().Type != wcTokenType::SemiColon)
 	{
-		Output.Error = wcParserError(wcParserErrorCode::Experession_UnexpectedToken, Tokenizer.GetToken());
+		Output.Error = wcParserError(wcParserErrorCode::Expression_UnexpectedToken, Tokenizer.GetToken());
 		return Output;
 	}
 
@@ -517,16 +547,40 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Expression()
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_SubExpression()
 {
-	auto Expression = ParseExpression_Equality();
+	auto Expression = ParseExpression_Assignment();
 
 	//if(!Tokenizer.IsFinished())
 
 	return Expression;
 }
 
+wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
+{
+	wcParseExpression Output = ParseExpression_Equality();
+	if (Output.Error.Code != None)
+		return Output;
+
+	auto Operator = Tokenizer.GetToken();
+	while (Operator.Type == AssignOperator)
+	{
+		Tokenizer.NextToken();
+
+		if (Output.Type != wcParseExpressionType::Variable)
+		{
+			Output.Error = wcParserError(wcParserErrorCode::Expression_NotAnLValue, Tokenizer.GetToken());
+			return Output;
+		}
+		auto RightExp = ParseExpression_Assignment();
+
+		return wcParseExpression(Expression_Assignment, Output, Operator, RightExp, true);
+	}
+
+	return Output;
+}
+
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Equality()
 {
-	wcParseExpression Output = ParseExpression_Assignment();
+	wcParseExpression Output = ParseExpression_LogicOr();
 	if (Output.Error.Code != None)
 		return Output;
 
@@ -534,7 +588,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Equality()
 	while (Operator.Type == NotEqualOperator || Operator.Type == EqualOperator)
 	{
 		Tokenizer.NextToken();
-		auto RightExp = ParseExpression_Assignment();
+		auto RightExp = ParseExpression_LogicOr();
 		Output = wcParseExpression(Expression_Equality, Output, Operator, RightExp);
 
 		Operator = Tokenizer.GetToken();
@@ -543,24 +597,6 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Equality()
 	return Output;
 }
 
-wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
-{
-	wcParseExpression Output = ParseExpression_LogicOr();
-	if (Output.Error.Code != None)
-		return Output;
-
-	auto Operator = Tokenizer.GetToken();
-	while (Operator.Type == AssignOperator)
-	{
-		Tokenizer.NextToken();
-		auto RightExp = ParseExpression_LogicOr();
-		Output = wcParseExpression(Expression_Assignment, Output, Operator, RightExp);
-
-		Operator = Tokenizer.GetToken();
-	}
-
-	return Output;
-}
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_LogicOr()
 {
@@ -630,7 +666,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Term()
 	{
 		if (!Tokenizer.NextToken())
 		{
-			Output.Error = wcParserError(wcParserErrorCode::Experession_UnexpectedEOF, Tokenizer.GetToken());
+			Output.Error = wcParserError(wcParserErrorCode::Expression_UnexpectedEOF, Tokenizer.GetToken());
 			return Output;
 		}
 
@@ -724,7 +760,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 		if (Tokenizer.IsFinished() || Tokenizer.GetToken().Type != CloseParenthesis)
 		{
 			//didnt find one, madness
-			Output.Error = wcParserError(wcParserErrorCode::Experession_MissingClosingParenthesis, Tokenizer.GetToken());
+			Output.Error = wcParserError(wcParserErrorCode::Expression_MissingClosingParenthesis, Tokenizer.GetToken());
 			return Output;
 		}
 		Tokenizer.NextToken();
@@ -732,7 +768,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 
 	default:
 		//error
-		Output.Error = wcParserError(wcParserErrorCode::Experession_UnexpectedToken, Tokenizer.GetToken());
+		Output.Error = wcParserError(wcParserErrorCode::Expression_UnexpectedToken, Tokenizer.GetToken());
 		return Output;
 		break;
 	}
@@ -910,13 +946,13 @@ std::string weec::parse::to_string(wcParserErrorCode Code)
 		return "UndeclaredIdent";
 	case UnexpectedEOF:
 		return "UnexpectedEOF";
-	case Experession_Empty:
+	case Expression_Empty:
 		return "Experession_Empty";
-	case Experession_UnexpectedToken:
+	case Expression_UnexpectedToken:
 		return "Experession_UnexpectedToken";
-	case Experession_MissingClosingParenthesis:
+	case Expression_MissingClosingParenthesis:
 		return "Experession_MissingClosingParenthesis";
-	case Experession_UnexpectedEOF:
+	case Expression_UnexpectedEOF:
 		return "Experession_UnexpectedEOF";
 	default:
 		return "";

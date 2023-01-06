@@ -449,33 +449,12 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcPa
 	if (LeftHand.Error.Code == None && RightHand.Error.Code != None)
 		Error = RightHand.Error;
 
-	Type = wcParseExpressionType::Binary;
-}
-
-weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken AssignOperator, wcParseExpression RightHand, bool IsAssignment)
-{
-	//build the ast
-	auto ExpRootNode = AST.insert(AST.begin(), *new wcParseNode(Expression));
-
-	auto OpNode = AST.append_child(ExpRootNode, wcParseNode(HeadType, AssignOperator));
-	auto OpNodeChild = AST.append_child(OpNode);
-
-	AST.insert_subtree(OpNodeChild, LeftHand.GetExpressionNodeBegin());
-	AST.insert_subtree(OpNodeChild, RightHand.GetExpressionNodeBegin());
-	AST.erase(OpNodeChild);
-
-	//tokens in order
-	for (auto t = LeftHand.Tokens.begin(); t != LeftHand.Tokens.end(); ++t)
-		Tokens.push_back(*t);
-	Tokens.push_back(AssignOperator);
-	for (auto t = RightHand.Tokens.begin(); t != RightHand.Tokens.end(); ++t)
-		Tokens.push_back(*t);
-
-	Error = LeftHand.Error;
-	if (LeftHand.Error.Code == None && RightHand.Error.Code != None)
-		Error = RightHand.Error;
-
-	Type = wcParseExpressionType::Assignment;
+	if (Operator.Type == wcTokenType::AssignOperator)
+		Type = wcParseExpressionType::Assignment;
+	else if (Operator.Type == wcTokenType::LogAndOperator || Operator.Type == wcTokenType::LogOrOperator)
+		Type = wcParseExpressionType::Logical;
+	else
+		Type = wcParseExpressionType::Binary;
 }
 
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand)
@@ -556,7 +535,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_SubExpression
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
 {
-	wcParseExpression Output = ParseExpression_Equality();
+	wcParseExpression Output = ParseExpression_LogicOr();
 	if (Output.Error.Code != None)
 		return Output;
 
@@ -572,7 +551,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
 		}
 		auto RightExp = ParseExpression_Assignment();
 
-		return wcParseExpression(Expression_Assignment, Output, Operator, RightExp, true);
+		return wcParseExpression(Expression_Assignment, Output, Operator, RightExp);
 	}
 
 	return Output;
@@ -580,7 +559,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Equality()
 {
-	wcParseExpression Output = ParseExpression_LogicOr();
+	wcParseExpression Output = ParseExpression_Comparison();
 	if (Output.Error.Code != None)
 		return Output;
 
@@ -588,7 +567,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Equality()
 	while (Operator.Type == NotEqualOperator || Operator.Type == EqualOperator)
 	{
 		Tokenizer.NextToken();
-		auto RightExp = ParseExpression_LogicOr();
+		auto RightExp = ParseExpression_Comparison();
 		Output = wcParseExpression(Expression_Equality, Output, Operator, RightExp);
 
 		Operator = Tokenizer.GetToken();
@@ -616,9 +595,10 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_LogicOr()
 
 	return Output;
 }
+
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_LogicAnd()
 {
-	wcParseExpression Output = ParseExpression_Comparison();
+	wcParseExpression Output = ParseExpression_Equality();
 	if (Output.Error.Code != None)
 		return Output;
 
@@ -626,7 +606,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_LogicAnd()
 	while (Operator.Type == wcTokenType::LogAndOperator)
 	{
 		Tokenizer.NextToken();
-		auto RightExp = ParseExpression_Comparison();
+		auto RightExp = ParseExpression_Equality();
 		Output = wcParseExpression(Expression_LogicAnd, Output, Operator, RightExp);
 
 		Operator = Tokenizer.GetToken();
@@ -907,22 +887,6 @@ wcParseNode& weec::parse::wcParseNode::operator=(const wcParseNode& Other)
 	Type = Other.Type;
 	return *this;
 }
-/*
-None, FuckKnows,
-
-UnexpectedToken,
-
-InvalidType,
-
-IdentRedeclaration, UndeclaredIdent,
-
-UnexpectedEOF,
-
-Experession_Empty,
-Experession_UnexpectedToken,
-Experession_MissingClosingParenthesis,
-Experession_UnexpectedEOF
-*/
 
 std::string weec::parse::to_string(wcParserErrorCode Code)
 {
@@ -947,13 +911,13 @@ std::string weec::parse::to_string(wcParserErrorCode Code)
 	case UnexpectedEOF:
 		return "UnexpectedEOF";
 	case Expression_Empty:
-		return "Experession_Empty";
+		return "Expression_Empty";
 	case Expression_UnexpectedToken:
-		return "Experession_UnexpectedToken";
+		return "Expression_UnexpectedToken";
 	case Expression_MissingClosingParenthesis:
-		return "Experession_MissingClosingParenthesis";
+		return "Expression_MissingClosingParenthesis";
 	case Expression_UnexpectedEOF:
-		return "Experession_UnexpectedEOF";
+		return "Expression_UnexpectedEOF";
 	default:
 		return "";
 	}

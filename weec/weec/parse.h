@@ -180,7 +180,7 @@ namespace weec
 
 		enum class wcParseExpressionType
 		{
-			Literal, Variable, Unary, Binary, Grouping, Assignment
+			Literal, Variable, Unary, Binary, Logical, Grouping, Assignment
 		};
 
 		class wcParseExpression
@@ -194,8 +194,7 @@ namespace weec
 			tree<wcParseNode> AST;
 
 			wcParseExpression();
-			wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken Operator, wcParseExpression RightHand);		//binary
-			wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken Operator, wcParseExpression RightHand, bool);	//assignment
+			wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken Operator, wcParseExpression RightHand);		//binary / logical / assignment
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand);									//unary
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken OperatorOrLiteral);														//literal/operator
 			//wcParseExpression(wcParseExpression& OtherExpression);																			//grouping

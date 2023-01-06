@@ -487,6 +487,10 @@ std::any weec::interpreter::wcInterpreter::ExecBlock()
 			ExecStatement();
 			break;
 
+		case Block:
+			ExecBlock();
+			break;
+
 		default:
 			Error.Node = *PC;
 			Error.Code = wcInterpreterErrorCode::InvalidNode;
@@ -578,6 +582,13 @@ std::any weec::interpreter::wcInterpreter::ExecWhile()
 				ExecBlock();
 			else
 				SkipBlock();
+			PC = ExprPC;
+			break;
+
+		case Statement:
+			WhileBlockPC = PC;
+			if (ExprTrue)
+				ExecStatement();
 			PC = ExprPC;
 			break;
 

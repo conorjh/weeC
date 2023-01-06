@@ -175,7 +175,7 @@ void App::Application::Splash()
 {
 	cout << "weeC Compiler" << endl
 		<< Version << endl
-		<< "by Conor Haddock" << endl
+		//<< "by Conor Haddock" << endl
 		<< endl;
 
 }

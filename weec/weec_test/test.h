@@ -47,7 +47,7 @@ namespace weec
 			std::string list_parser21 = "int a = 123; \nif(a < 100)\n\treturn a;\nelse\nreturn a * 2;";
 			std::string list_parser22 = "int t = 0;\nwhile(t<1000)\n{\n\tt = t+1;\n}\nreturn t;";
 			std::string list_parser23 = "int a = 2;\n int b = 3;\n if (a < b)\n return 213123;	\n return 323444; ";			
-			std::string list_parser24 = "3 + 8/5 -1 -2*5";
+			std::string list_parser24 = "int a = 1;\n\n//single line while sloop \nwhile(a<100)\n\ta = a + 1;\nreturn 1;";
 			std::string list_parser25 = "  6 + c";
 			std::string list_parser26 = "  7 & 2";
 			std::string list_parser27 = "  %";

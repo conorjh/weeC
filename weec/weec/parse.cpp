@@ -585,14 +585,19 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex:
 weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcParseExpression Callee, std::vector<wcParseExpression> Arguments)
 {
 	auto ExpNode = AST.insert(AST.begin(), *new wcParseNode(Expression));
+	auto ExpNodeChild = AST.append_child(ExpNode);
 
-	auto CalleeNode = AST.insert_subtree(ExpNode, Callee.GetExpressionNodeBegin());
+	auto CalleeNode = AST.insert_subtree(ExpNodeChild, Callee.GetExpressionNodeBegin());
+	CalleeNode.node->data.Type = Expression_Call;
+
+	AST.erase(ExpNodeChild);
+	auto CalleeNodeChild = AST.append_child(CalleeNode);
 	Tokens.push_back(Callee.Tokens[0]);
 
 	for (auto Arg : Arguments)
 	{
 		//add argument ASTs as a sub child to the callee
-		AST.insert_subtree(CalleeNode, Arg.GetExpressionNodeBegin());
+		AST.insert_subtree(CalleeNodeChild, Arg.GetExpressionRootNodeBegin());
 
 		//add an error if it had one
 		if (Arg.Error.Code != None)
@@ -602,6 +607,8 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, wcPa
 		for (auto Tok : Arg.Tokens)
 			Tokens.push_back(Tok);
 	}
+
+	AST.erase(CalleeNodeChild);
 
 	Type = wcParseExpressionType::Call;
 }

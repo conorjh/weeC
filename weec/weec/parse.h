@@ -25,10 +25,10 @@ namespace weec
 
 			ReturnStatement, Return_Expression,
 
-			Declaration, Declaration_Type, Declaration_Ident,
+			Declaration, Declaration_Type, Declaration_Ident, DeclarationArguments, DeclarationArgument, DeclarationArgument_Type, DeclarationArgument_Ident, DeclaratationBody,
 
 			Expression, Expression_Equality, Expression_Assignment, Expression_LogicOr, Expression_LogicAnd, Expression_Comparison, Expression_Term,
-			Expression_Factor, Expression_Unary, Expression_Primary, Expression_Operator,
+			Expression_Factor, Expression_Call, Expression_Unary, Expression_Primary, Expression_Operator,
 
 			Type, Variable, Array, Function
 		};
@@ -53,7 +53,10 @@ namespace weec
 			Expression_UnexpectedToken,
 			Expression_MissingClosingParenthesis,
 			Expression_UnexpectedEOF,
-			Expression_NotAnLValue
+			Expression_NotAnLValue,
+			Expression_FunctionCallMissingOpenParenthesis,
+
+			FunctionCall_MaxArgumentsExceeded
 		};
 		std::string to_string(wcParserErrorCode);
 
@@ -81,7 +84,6 @@ namespace weec
 			wcParseNodeType Type;
 		};
 
-
 		enum class wcParseSymbolType
 		{
 			Null, Type, Variable, Function, Namespace
@@ -92,7 +94,7 @@ namespace weec
 			wcIdent();
 			wcIdent(const wcIdent&), wcIdent(std::string);
 
-			std::string Get() const { return Ident.c_str(); }
+			std::string to_string() const { return Ident.c_str(); }
 			std::string Ident;
 		};
 
@@ -101,7 +103,7 @@ namespace weec
 			wcScope();
 			wcScope(const wcScope&), wcScope(std::string);
 
-			std::string Get() const { return FullIdent.c_str(); }
+			std::string to_string() const { return FullIdent.c_str(); }
 			std::string FullIdent;
 		};
 
@@ -112,10 +114,19 @@ namespace weec
 			wcFullIdent(const wcFullIdent&), wcFullIdent(wcIdent, wcScope), wcFullIdent(std::string), wcFullIdent(std::string, std::string);
 			bool operator==(const wcFullIdent& p) const
 			{
-				return Get() == p.Get();
+				return to_string() == p.to_string();
 			}
-			std::string Get() const;
-			wcIdent Ident;
+
+			wcFullIdent& operator=(const wcFullIdent& Other)
+			{
+				ShortIdent = Other.ShortIdent;
+				Scope = Other.Scope;
+				return *this;
+			}
+
+			std::string to_string() const;
+
+			wcIdent ShortIdent;
 			wcScope Scope;
 		};
 
@@ -124,25 +135,43 @@ namespace weec
 		public:
 			wcParseSymbol();
 			wcParseSymbol(const wcParseSymbol&);
-			wcParseSymbol(wcParseSymbolType _Type, wcFullIdent FullIdent);
+			wcParseSymbol(wcParseSymbolType _Type, wcFullIdent FullIdent, lex::wcToken IdentToken);
+			wcParseSymbol(wcParseSymbolType _Type, wcFullIdent FullIdent, wcFullIdent DataType, lex::wcToken IdentToken);
 
 			wcParseSymbolType Type;
+			wcFullIdent DataType;
 			wcFullIdent FullIdent;
+			lex::wcToken IdentToken;
+			unsigned int Arguments;
 			bool Registered, Const;
+		};
+
+		struct wcParseFunctionSignature
+		{
+			std::string to_string();
+			std::string to_string_no_arguments();
+
+			wcParseSymbol Ident;
+			std::vector<wcParseSymbol> ArgumentTypes;
 		};
 
 		class wcParseSymbolTable
 		{
 			std::unordered_map<std::string, wcParseSymbol> Container;
-			wcParseSymbol CurrentScopeFullIdent;
+			std::unordered_map<std::string, wcParseFunctionSignature> FunctionContainer;
+			std::vector<std::string> ShortFunctionNames; 
+			
+			wcParseSymbol CurrentScope;
 
 		public:
 			wcParseSymbolTable();
 
 			wcParseSymbolTable& operator=(const wcParseSymbolTable&);
 
-			bool Add(wcParseSymbolType, wcIdent Ident),
-				Add(wcParseSymbolType, wcFullIdent Ident, bool SetScopeToThisSymbol = false),
+			bool Add(wcParseSymbolType, wcIdent Ident, lex::wcToken IdentToken),
+				Add(wcParseSymbolType, wcFullIdent Ident, lex::wcToken IdentToken, bool SetScopeToThisSymbol = false),
+				Add(wcParseSymbol Sym, bool SetScopeToThisSymbol = false),
+				Add(wcParseFunctionSignature Sig, bool SetScopeToThisSymbol = false),
 
 				Exists(wcFullIdent FullIdent) const;
 
@@ -162,6 +191,7 @@ namespace weec
 		public:
 			wcParseOutput();
 			wcParseOutput(wcParserError);
+			wcParseOutput(wcParseNode, bool PointToChild = false);
 
 			void AddAsChild(wcParseOutput, bool PointToChild = false);
 			void AddAsChild(wcParseNode, bool PointToChild = false);
@@ -180,7 +210,7 @@ namespace weec
 
 		enum class wcParseExpressionType
 		{
-			Literal, Variable, Unary, Binary, Logical, Grouping, Assignment
+			Literal, Variable, Unary, Call, Binary, Logical, Grouping, Assignment
 		};
 
 		class wcParseExpression
@@ -194,8 +224,10 @@ namespace weec
 			tree<wcParseNode> AST;
 
 			wcParseExpression();
+			wcParseExpression(wcParserError _Error);
 			wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken Operator, wcParseExpression RightHand);		//binary / logical / assignment
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand);									//unary
+			wcParseExpression(wcParseNodeType HeadType, wcParseExpression Callee, std::vector<wcParseExpression> Arguments);					//call
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken OperatorOrLiteral);														//literal/operator
 			//wcParseExpression(wcParseExpression& OtherExpression);																			//grouping
 
@@ -213,7 +245,7 @@ namespace weec
 				ParseExpression_Equality(), ParseExpression_Assignment(), ParseExpression_LogicOr(),
 				ParseExpression_LogicAnd(), ParseExpression_Comparison(),
 				ParseExpression_Term(), ParseExpression_Factor(),
-				ParseExpression_Unary(), ParseExpression_Primary();
+				ParseExpression_Unary(), ParseExpression_Call(), ParseExpression_CallArguments(wcParseExpression Callee), ParseExpression_Primary();
 		public:
 			wcExpressionParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable);
 
@@ -230,7 +262,6 @@ namespace weec
 			wcParseSymbol ParseIdent();
 		};
 
-
 		class wcParser
 		{
 			lex::wcTokenizer& Tokenizer;
@@ -242,8 +273,7 @@ namespace weec
 			wcParseOutput ParseSemiColon();
 			wcParseOutput ParseReturn();
 			wcParseOutput ParseWhile();
-			wcParseOutput ParseDeclaration(), ParseDeclaration_Function(), ParseDeclaration_Variable();
-			wcParseOutput ParseDeclaration(wcParseSymbol), ParseDeclaration_Function(wcParseSymbol), ParseDeclaration_Variable(wcParseSymbol);
+			wcParseOutput ParseDeclaration(), ParseDeclarationArguments(wcFullIdent, wcFullIdent, lex::wcToken, wcFullIdent& Output), ParseDeclarationBody();
 
 		public:
 			wcParser(lex::wcTokenizer& _Tokenizer);

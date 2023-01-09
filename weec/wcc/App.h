@@ -4,7 +4,6 @@
 #include "cmd_line.h"
 #include "Util.h"
 #include "Wcc.h"
-#include "weec.h"
 
 namespace App
 {

@@ -47,11 +47,11 @@ namespace weec
 			std::string list_parser21 = "int a = 123; \nif(a < 100)\n\treturn a;\nelse\nreturn a * 2;";
 			std::string list_parser22 = "int t = 0;\nwhile(t<1000)\n{\n\tt = t+1;\n}\nreturn t;";
 			std::string list_parser23 = "int a = 2;\n int b = 3;\n if (a < b)\n return 213123;	\n return 323444; ";			
-			std::string list_parser24 = "int a = 1;\n\n//single line while sloop \nwhile(a<100)\n\ta = a + 1;\nreturn 1;";
-			std::string list_parser25 = "  6 + c";
-			std::string list_parser26 = "  7 & 2";
-			std::string list_parser27 = "  %";
-			std::string list_parser28 = " 5 + + 6";
+			std::string list_parser24 = "int a = 1;\n\n//single line while loop \nwhile(a<100)\n\ta = a + 1;\nreturn 1;";
+			std::string list_parser25 = "int functionName();";
+			std::string list_parser26 = "int functionNameWithBody()\n{\n\treturn 123;\n}";
+			std::string list_parser27 = "int functionNameWithParams(int a, int b)\n{\n\treturn a * b;\n}";
+			std::string list_parser28 = "int functionNameWithParams(int a, int b)\n{\n\treturn a * b;\n}\n\nreturn functionNameWithParams(2,3);";
 			std::string list_parser29 = " -5 + 2";
 			std::string list_parser30 = "5/1";
 

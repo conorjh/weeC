@@ -254,6 +254,10 @@ wcParseOutput weec::parse::wcParser::ParseStatement(bool AllowDeclarations)
 		Buffer = ParseDeclaration();
 		break;
 
+	case wcTokenType::SemiColon:
+		Buffer = ParseSemiColon();
+		break;
+
 	case wcTokenType::IfKeyword:
 		Buffer = ParseIf();
 		break;
@@ -1204,6 +1208,8 @@ std::string weec::parse::to_string(wcParseNodeType Type)
 		return "Expression_Primary";
 	case wcParseNodeType::Expression_Term:
 		return "Expression_Term";
+	case wcParseNodeType::Expression_Call:
+		return "Expression_Call";
 	case wcParseNodeType::Expression_Unary:
 		return "Expression_Unary";
 	case wcParseNodeType::Expression_Operator:

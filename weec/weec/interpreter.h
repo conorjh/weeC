@@ -34,6 +34,35 @@ namespace weec
 			std::string Name, InternalName;
 			std::type_index TypeIndex;
 		};
+		class wcInterpreter;
+
+		struct wcInterpreterFunctionSignature
+		{
+			parse::wcParseOutput& Input;
+			tree<parse::wcParseNode>::iterator Block;
+			wcInterpreter& Interpreter;
+			std::string ReturnDataType;
+
+		public:
+			wcInterpreterFunctionSignature(parse::wcParseOutput&, wcInterpreter& Interpreter, std::string ReturnDataType, tree<parse::wcParseNode>::iterator Block);
+
+			std::any Invoke();
+		};
+
+		class wcInterpreterFunctionTable
+		{
+			parse::wcParseOutput& Input;
+			std::unordered_map<std::string, wcInterpreterFunctionSignature> Container;
+		public:
+
+			wcInterpreterFunctionTable(parse::wcParseOutput&);
+
+			bool Add(wcInterpreterFunctionSignature, std::string FullIdent),
+				Exists(std::string FullIdent);
+
+			wcInterpreterFunctionSignature Get(std::string FullIdent);
+		};
+
 
 		class ImplementationTypes
 		{
@@ -81,6 +110,7 @@ namespace weec
 			parse::wcParseOutput& Input;
 			tree<parse::wcParseNode>::iterator& PC;
 			wcInterpreterSymbolTable& SymTab;
+			wcInterpreterFunctionTable& FuncTab;
 			std::any& EAX;
 
 			std::any EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom, bool);
@@ -90,13 +120,13 @@ namespace weec
 
 
 		public:
-			wcExpressionInterpreter(wcInterpreterSymbolTable& SymTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX);
+			wcExpressionInterpreter(wcInterpreterSymbolTable& SymTab, wcInterpreterFunctionTable& FuncTab,parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX);
 
 			std::any ExecSubExpression(),
 				ExecEquality(), ExecAssignment(), ExecLogicOr(),
 				ExecLogicAnd(), ExecComparison(),
 				ExecTerm(), ExecFactor(),
-				ExecUnary(), ExecPrimary(bool),
+				ExecUnary(), ExecCall(), ExecPrimary(bool),
 				ExecOperator();
 
 			std::any Exec();
@@ -130,16 +160,17 @@ namespace weec
 
 		class wcInterpreter
 		{
-			parse::wcParseOutput Input;
+			parse::wcParseOutput& Input;
 			tree<parse::wcParseNode>::iterator PC;
 			wcInterpreterSymbolTable SymbolTable;
+			wcInterpreterFunctionTable FunctionTable;
 
 		public:
 			wcExpressionInterpreter ExpressionInterp;
-			wcInterpreter(parse::wcParseOutput Input);
+			wcInterpreter(parse::wcParseOutput& Input);
 
 			void Reset();
-			std::any Exec(), ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecDeclaration();
+			std::any Exec(), Exec(tree<parse::wcParseNode>::iterator NewPC), ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecDeclaration();
 
 			wcInterpreterError Error;
 			bool Halt;

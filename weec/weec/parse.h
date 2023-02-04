@@ -45,6 +45,8 @@ namespace weec
 
 			If_MissingClosingParenthesis, MissingClosingBrace,
 
+			While_MissingClosingParenthesis,
+
 			IdentRedeclaration, UndeclaredIdent, DeclarationsProhibited,
 
 			UnexpectedEOF,

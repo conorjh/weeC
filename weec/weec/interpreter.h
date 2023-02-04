@@ -49,7 +49,8 @@ namespace weec
 
 		struct wcInterpreterIdentPlusValue
 		{
-			wcInterpreterArgument Arg;
+			wcInterpreterIdentPlusValue(parse::wcFullIdent _Arg, std::any _Value) { Arg = _Arg; Value = _Value; }
+			parse::wcFullIdent Arg;
 			std::any Value;
 		};
 
@@ -94,10 +95,30 @@ namespace weec
 			ImplementationType Get(std::string EasyName), GetByInternal(std::string InternalName);
 		};
 
+		struct wcInterpreterStackFrame
+		{
+			wcInterpreterStackFrame(std::string _FrameName, tree<parse::wcParseNode>::iterator _ReturnAddress, std::vector<std::any> _Arguments)
+			{
+				FrameName = _FrameName;
+				ReturnAddress = _ReturnAddress;
+				Arguments = _Arguments;
+			}
+
+			bool Add(std::any, parse::wcFullIdent FullIdent);
+			std::any Get(parse::wcFullIdent FullIdent) const;
+			void Set(parse::wcFullIdent FullIdent, std::any);
+
+			std::string FrameName;
+			tree<parse::wcParseNode>::iterator ReturnAddress;
+			std::vector<std::any> Arguments;
+			std::unordered_map<std::string, std::any> Container;
+		};
+
 		class wcInterpreterSymbolTable 
 		{
 			std::unordered_map<std::string, std::any> Container;
 		public:
+			std::stack<wcInterpreterStackFrame> StackFrames;
 
 			wcInterpreterSymbolTable();
 
@@ -124,19 +145,6 @@ namespace weec
 			std::any DoOp(wcInterpreterSymbolTable&, lex::wcTokenType Op, std::any a);
 		};
 
-		struct wcInterpreterStackFrame
-		{
-			wcInterpreterStackFrame(std::string _FrameName, tree<parse::wcParseNode>::iterator _ReturnAddress, std::vector<std::any> _Arguments)
-			{
-				FrameName = _FrameName;
-				ReturnAddress = _ReturnAddress;
-				Arguments = _Arguments;
-			}
-
-			std::string FrameName;
-			tree<parse::wcParseNode>::iterator ReturnAddress;
-			std::vector<std::any> Arguments;
-		};
 
 		class wcExpressionInterpreter
 		{
@@ -198,8 +206,6 @@ namespace weec
 			wcInterpreterSymbolTable SymbolTable;
 			wcInterpreterFunctionTable FunctionTable;
 
-			std::stack<wcInterpreterStackFrame> StackFrames;
-			std::stack<std::vector<wcInterpreterIdentPlusValue>> Arguments;
 		public:
 			wcExpressionInterpreter ExpressionInterp;
 			wcInterpreter(parse::wcParseOutput& Input);

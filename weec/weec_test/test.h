@@ -53,7 +53,7 @@ namespace weec
 			std::string list_parser27 = "int functionNameWithParams(int a, int b)\n{\n\treturn a * b;\n}";
 			std::string list_parser28 = "int functionName()\n{\n\treturn 2345;;\n}\n\nreturn functionName();";
 			std::string list_parser29 = "int functionNameWithParams(int a, int b)\n{\n\treturn a + b;\n}\n\nreturn functionNameWithParams(2,3);";
-			std::string list_parser30 = "5/1";
+			std::string list_parser30 = "int functionNameWithParamsAndRecursion(int a, int b)\n{\n\tif(a+b < 1000)\n\t\treturn functionNameWithParamsAndRecursion(a + b, b);\n\telse\nreturn a + b;\n}\n\nreturn functionNameWithParamsAndRecursion(2,3);";
 
 
 			std::string list_expression1 = "2 + 3;";

@@ -97,7 +97,7 @@ namespace weec
 			wcIdent FullIdent;
 		};
 
-		class wcParseExpression;
+		class wcParseExpression; struct wcParseSymbol;
 		struct wcFullIdent
 		{
 			wcFullIdent();
@@ -105,6 +105,7 @@ namespace weec
 			wcFullIdent(wcIdent, wcScope);
 			wcFullIdent(std::string);
 			wcFullIdent(std::string, std::vector<wcParseExpression>);
+			wcFullIdent(std::string, std::vector<wcParseSymbol>);
 			wcFullIdent(std::string, std::string);
 
 			bool operator==(const wcFullIdent& p) const
@@ -141,7 +142,6 @@ namespace weec
 			lex::wcToken Token;
 			wcParseNodeType Type;
 		};
-
 
 		struct wcParseSymbol
 		{
@@ -312,7 +312,7 @@ namespace weec
 		{
 
 			wcParseOutput ParseType(wcFullIdent& DeclarationType), ParseIdent(wcFullIdent& DeclarationIdent, lex::wcToken& IdentAsSeen),
-				ParseArguments(wcFullIdent, wcFullIdent, lex::wcToken, wcFullIdent& Output),
+				ParseArguments(wcFullIdent, wcFullIdent, lex::wcToken, wcFullIdent& Output, std::vector<wcParseSymbol>& ArgumentSymbolsToRegister),
 				ParseArgument(std::vector<wcParseSymbol>& ArgumentSymbolsToRegister);
 
 		public:

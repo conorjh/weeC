@@ -212,6 +212,7 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 {
 	auto Ident = PC->Token;
 	auto IdentDepth = Input.AST.depth(PC);
+	auto ReturnAddress = PC;
 	PC++;
 	vector<any> ArgumentValues;
 
@@ -221,15 +222,21 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 	//search for call
 	if (!FuncTab.Exists(Ident.StringToken.Data))
 		return any();	//error, bad func name
+	wcInterpreterStackFrame StackFrame(Ident.StringToken.Data, ReturnAddress, ArgumentValues);
+	SymTab.StackFrames.push(StackFrame);
 
 	auto FuncSig = FuncTab.Get(Ident.StringToken.Data);
-	for (int t=0; t<FuncSig.Arguments.size();++t)
+	vector<wcInterpreterIdentPlusValue> PackedArgs;
+	for (int t = 0; t < FuncSig.Arguments.size(); ++t)
 	{
 		auto IdentString = Ident.StringToken.Data + "::" + wcFullIdent(FuncSig.Arguments[t].Ident.StringToken.Data).ShortIdent.to_string();
-		SymTab.Set(IdentString, ArgumentValues[t]);
+		SymTab.StackFrames.top().Add(ArgumentValues[t], wcFullIdent(IdentString));
+
+		PackedArgs.push_back(wcInterpreterIdentPlusValue(wcFullIdent(IdentString), ArgumentValues[t]));
 	}
-	auto t = FuncSig.Invoke(vector<wcInterpreterIdentPlusValue>());
-	return t; 
+	auto t = FuncSig.Invoke(PackedArgs);
+	SymTab.StackFrames.pop();
+	return t;
 }
 
 any weec::interpreter::wcExpressionInterpreter::ExecOperator()
@@ -391,10 +398,10 @@ weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& _Input)
 	Input = _Input;
 	PC = Input.AST.begin();
 
-
+	//wcInterpreterFunctionSignature GlobalFuncSig(Input, this, vector<wcInterpreterArgument>(), "$g::int", PC);
 
 	//push global stack frame
-	StackFrames.push(wcInterpreterStackFrame("$g", PC, vector<any>()));
+	SymbolTable.StackFrames.push(wcInterpreterStackFrame("$g", PC, vector<any>()));
 }
 
 void weec::interpreter::wcInterpreter::Reset()
@@ -407,7 +414,8 @@ void weec::interpreter::wcInterpreter::Reset()
 
 any weec::interpreter::wcInterpreter::Exec(tree<wcParseNode>::iterator NewPC, vector<wcInterpreterIdentPlusValue> _Arguments)
 {
-	Arguments.push(_Arguments);
+
+	//Arguments.push(_Arguments);
 
 	PC = NewPC;
 	return Exec();
@@ -688,7 +696,7 @@ any weec::interpreter::wcInterpreter::ExecDeclaration()
 				PC++;
 				Arguments.push_back(wcInterpreterArgument(ArgType, ArgIdent));
 			}
-			
+
 			SymbolName += "";
 			break;
 
@@ -728,7 +736,7 @@ any weec::interpreter::wcInterpreter::ExecDeclaration()
 	else
 	{
 		//register args
-		for(auto Arg : Arguments)
+		for (auto Arg : Arguments)
 			if (TypeToken.StringToken.Data == "int")
 				SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
 			else if (TypeToken.StringToken.Data == "float")
@@ -755,18 +763,18 @@ weec::interpreter::wcInterpreterSymbolTable::wcInterpreterSymbolTable()
 
 bool weec::interpreter::wcInterpreterSymbolTable::Add(any Value, wcFullIdent FullIdent)
 {
-	Container.insert(make_pair(FullIdent.to_string(), Value));
+	StackFrames.top().Add(Value, FullIdent.to_string());
 	return true;
 }
 
 any weec::interpreter::wcInterpreterSymbolTable::Get(wcFullIdent FullIdent) const
 {
-	return Container.find(FullIdent.to_string())->second;
+	return StackFrames.top().Container.find(FullIdent.to_string())->second;
 }
 
 void weec::interpreter::wcInterpreterSymbolTable::Set(wcFullIdent FullIdent, any Value)
 {
-	Container.find(FullIdent.to_string())->second = Value;
+	StackFrames.top().Container.find(FullIdent.to_string())->second = Value;
 }
 
 weec::interpreter::ImplementationTypes::ImplementationTypes()
@@ -822,7 +830,7 @@ bool weec::interpreter::wcInterpreterFunctionTable::Add(wcInterpreterFunctionSig
 	return true;
 }
 
-bool weec::interpreter::wcInterpreterFunctionTable::Exists(string FullIdent) 
+bool weec::interpreter::wcInterpreterFunctionTable::Exists(string FullIdent)
 {
 	return Container.find(FullIdent) != Container.end();
 }
@@ -840,4 +848,20 @@ any weec::interpreter::wcInterpreterFunctionSignature::Invoke()
 any weec::interpreter::wcInterpreterFunctionSignature::Invoke(vector<wcInterpreterIdentPlusValue> Arguments)
 {
 	return Interpreter.Exec(Block, Arguments);
+}
+
+bool weec::interpreter::wcInterpreterStackFrame::Add(std::any Value, parse::wcFullIdent FullIdent)
+{
+	Container.insert(make_pair(FullIdent.to_string(), Value));
+	return true;
+}
+
+std::any weec::interpreter::wcInterpreterStackFrame::Get(parse::wcFullIdent FullIdent) const
+{
+	return Container.find(FullIdent.to_string())->second;
+}
+
+void weec::interpreter::wcInterpreterStackFrame::Set(parse::wcFullIdent FullIdent, std::any Value)
+{
+	Container.find(FullIdent.to_string())->second = Value;
 }

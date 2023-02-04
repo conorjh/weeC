@@ -31,7 +31,7 @@ wcParseOutput weec::parse::wcParser::Parse()
 
 	while (!Tokenizer.IsFinished() && !Tokenizer.IsErrored() && Output.Error.Code == None)
 		Output.AddAsChild(wcStatementParser(Tokenizer, SymbolTable).Parse(true));
-	
+
 	Output.SymbolTable = SymbolTable;
 
 	return Output;
@@ -46,7 +46,7 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseType(wcFullIdent& Declarati
 
 	//populate a FullIdent for the DeclarationParser
 	DeclarationType = wcFullIdent(TypeToken.StringToken.Data, SymbolTable.GetCurrentScope().FullIdent.to_string());
-	
+
 	return wcParseOutput(wcParseNode(wcParseNodeType::Declaration_Type, TypeToken));
 }
 
@@ -56,7 +56,7 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseIdent(wcFullIdent& Declarat
 		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));
 
 	IdentToken = Tokenizer.GetToken();
-	
+
 	DeclarationIdent = wcFullIdent(IdentToken.StringToken.Data, SymbolTable.GetCurrentScope().FullIdent.to_string());
 	if (SymbolTable.Exists(DeclarationIdent))
 		return wcParseOutput(wcParserError(IdentRedeclaration, IdentToken));
@@ -77,12 +77,12 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 	///variable/function identifier
 	wcFullIdent DeclarationIdent; wcToken IdentToken; wcParseOutput IdentNode;
 	if ((IdentNode = ParseIdent(DeclarationIdent, IdentToken)).Error.Code != None)
-		return Output;	
-	
+		return Output;
+
 	wcParseOutput ArgumentsNode, BodyNode;
 	if (!Tokenizer.NextToken())
 		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
-	
+
 	//semi colon - variable declaration
 	else if (ExpectToken(SemiColon))
 	{
@@ -95,13 +95,15 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 	//function declaration
 	else if (ExpectToken(OpenParenthesis))
 	{
-		//add to symbol table
-		SymbolTable.Add(wcParseSymbol(wcParseSymbolType::Function, DeclarationIdent, DeclarationType, IdentToken));
+		vector<wcParseSymbol> ArgumentSymbols;
 
 		//function declaration prototype
 		wcFullIdent TrueFunctionName;
-		ArgumentsNode = ParseArguments(DeclarationIdent, DeclarationType, IdentToken, TrueFunctionName);
+		ArgumentsNode = ParseArguments(DeclarationIdent, DeclarationType, IdentToken, TrueFunctionName, ArgumentSymbols);
 		(++IdentNode.AST.begin()).node->data.Token.StringToken.Data = TrueFunctionName.to_string();
+
+		//add to symbol table
+		//SymbolTable.Add(wcParseSymbol(wcParseSymbolType::Function, wcFullIdent(DeclarationIdent.to_string(), ArgumentSymbols), DeclarationType, IdentToken));
 
 		//optional semi colon
 		if (ExpectToken(SemiColon))
@@ -146,7 +148,7 @@ wcFullIdent GetFullIdentForFunction(wcFullIdent DeclarationIdent, vector<wcParse
 	return wcFullIdent(Output + ")");
 }
 
-wcParseOutput weec::parse::wcDeclarationParser::ParseArguments(wcFullIdent DeclarationIdent, wcFullIdent DeclarationType, wcToken IdentToken, wcFullIdent& ReturnTrueFunctionIdent)
+wcParseOutput weec::parse::wcDeclarationParser::ParseArguments(wcFullIdent DeclarationIdent, wcFullIdent DeclarationType, wcToken IdentToken, wcFullIdent& ReturnTrueFunctionIdent, vector<wcParseSymbol>& ArgumentSymbolsToRegister)
 {
 	//consume openining parenthesis, error if we dont find it
 	if (!ExpectToken(OpenParenthesis))
@@ -156,7 +158,6 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseArguments(wcFullIdent Decla
 
 	//check for any arguments
 	wcParseOutput Output(wcParseNode(wcParseNodeType::DeclarationArguments), true);
-	vector<wcParseSymbol> ArgumentSymbolsToRegister;
 	while (!Tokenizer.IsFinished() && !Tokenizer.IsErrored() && Tokenizer.GetToken().Type != CloseParenthesis)
 	{
 		Output.AddAsChild(ParseArgument(ArgumentSymbolsToRegister));
@@ -169,7 +170,7 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseArguments(wcFullIdent Decla
 	}
 
 	//add the function to symbol table with the short name, no arguments
-	ReturnTrueFunctionIdent = GetFullIdentForFunction(DeclarationIdent, ArgumentSymbolsToRegister);
+	ReturnTrueFunctionIdent = wcFullIdent(DeclarationIdent.to_string(), ArgumentSymbolsToRegister);
 	SymbolTable.Add(wcParseSymbol(wcParseSymbolType::Function, ReturnTrueFunctionIdent, DeclarationType, IdentToken));
 	SymbolTable.Add(wcParseFunctionSignature(wcParseSymbol(wcParseSymbolType::Function, ReturnTrueFunctionIdent, DeclarationType, IdentToken), ArgumentSymbolsToRegister));
 
@@ -195,7 +196,7 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseArguments(wcFullIdent Decla
 	SymbolTable.SetScope(OriginalScope);
 
 	//consume closing parenthesis
-	if(!ExpectToken(CloseParenthesis))
+	if (!ExpectToken(CloseParenthesis))
 		return wcParseOutput(wcParserError(UnexpectedToken, Tokenizer.GetToken()));
 	if (!Tokenizer.NextToken())
 		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
@@ -228,7 +229,7 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseArgument(vector<wcParseSymb
 	return ArgumentNode;
 }
 
-weec::parse::wcIdentParser::wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable) 
+weec::parse::wcIdentParser::wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable)
 	: wcSubParser(_Tokenizer, _SymbolTable)
 {
 
@@ -238,8 +239,10 @@ wcParseSymbol weec::parse::wcIdentParser::ParseIdent()
 {
 	auto Ident1 = Tokenizer.GetToken();
 
-	//
-	wcFullIdent FullIdent(wcIdent(Ident1.StringToken.Data), wcScope(SymbolTable.GetCurrentScope().FullIdent.to_string()));
+	//wcScope(SymbolTable.GetCurrentScope().FullIdent.to_string()
+	//todo - look for appropriate scope so recursive works
+
+	wcFullIdent FullIdent(wcIdent(Ident1.StringToken.Data), ));
 
 	if (SymbolTable.Exists(FullIdent))
 	{
@@ -259,17 +262,17 @@ wcParseOutput weec::parse::wcStatementParser::Parse(bool AllowDeclarations)
 	wcParseOutput Buffer;
 	switch (ThisToken.Type)
 	{
-	WC_SWITCHCASE_TOKENS_LITERAL
-	WC_SWITCHCASE_TOKENS_OPERATORS_ALL
+		WC_SWITCHCASE_TOKENS_LITERAL
+			WC_SWITCHCASE_TOKENS_OPERATORS_ALL
 	case OpenParenthesis:
 		if ((Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression())).Error.Code != None)
 			return Output;
 		return Output.AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable).Parse());
 
-	WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
-		if (!AllowDeclarations)
-			return wcParseOutput(wcParserError(wcParserErrorCode::DeclarationsProhibited, Tokenizer.GetToken()));
-		return Output.AddAsChild(wcDeclarationParser(Tokenizer,SymbolTable).Parse());
+		WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
+			if (!AllowDeclarations)
+				return wcParseOutput(wcParserError(wcParserErrorCode::DeclarationsProhibited, Tokenizer.GetToken()));
+		return Output.AddAsChild(wcDeclarationParser(Tokenizer, SymbolTable).Parse());
 
 	case SemiColon:
 		return Output.AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable).Parse());
@@ -449,7 +452,7 @@ wcParseOutput weec::parse::wcWhileParser::Parse()
 		return wcParseOutput(wcParserError(UnexpectedEOF, Tokenizer.GetToken()));
 
 	//expression
-	if(Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression()).Error.Code != None)
+	if (Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable).ParseExpression()).Error.Code != None)
 		return Output;
 
 	// )
@@ -994,7 +997,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 			return Output;
 		}
 
-		if((Output = ParseExpression_SubExpression()).Error.Code != None)
+		if ((Output = ParseExpression_SubExpression()).Error.Code != None)
 			return Output;
 
 		//consume closing parenthesis
@@ -1340,7 +1343,7 @@ bool weec::parse::wcParseSymbolTable::Add(wcParseSymbol Sym, bool SetScopeToThis
 
 	Container.insert(make_pair(Sym.FullIdent.to_string(), Sym));
 
-	if(SetScopeToThisSymbol)
+	if (SetScopeToThisSymbol)
 		SetScope(Sym.FullIdent);
 
 	return true;
@@ -1364,18 +1367,20 @@ bool weec::parse::wcParseSymbolTable::Add(wcParseSymbolType Type, wcFullIdent Fu
 
 bool weec::parse::wcParseSymbolTable::Exists(wcFullIdent FullIdent) const
 {
-	if (FullIdent.to_string().find("("))
-		//if (Container.find(FullIdent.to_string().substr(0, FullIdent.to_string().find_first_of("@"))) != Container.end())
-		//	return true;	
+
+	for (auto FuncSig : FunctionContainer)
 	{
-		for (auto FuncSig : FunctionContainer)
-			if (FuncSig.second.Ident.FullIdent.ShortIdent == FullIdent.ShortIdent)
-				return true;
+		auto t1 = FuncSig.second.Ident.FullIdent.to_string().substr(0, FullIdent.to_string().size());
+		auto t2 = FullIdent.to_string();
+
+		if (t1== t2)
+			return true;
 	}
 
+
 	//check function names
-	for(auto ShortFunctionName : ShortFunctionNames)
-		if(ShortFunctionName == FullIdent.to_string())
+	for (auto ShortFunctionName : ShortFunctionNames)
+		if (ShortFunctionName == FullIdent.to_string())
 			return true;
 
 	return Container.find(FullIdent.to_string()) != Container.end() ? true : false;
@@ -1429,7 +1434,7 @@ wcParseSymbol weec::parse::wcParseSymbolTable::ClassifyIdent(lex::wcToken Ident)
 
 	}
 
-	return wcParseSymbol(wcParseSymbolType::Variable, FullIdent ,Ident);
+	return wcParseSymbol(wcParseSymbolType::Variable, FullIdent, Ident);
 }
 
 weec::parse::wcScope::wcScope()
@@ -1487,6 +1492,39 @@ weec::parse::wcFullIdent::wcFullIdent(std::string FullIdent)
 	//get scope
 	Scope = wcScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of("::") - 1));			//$global
 	ShortIdent = wcIdent(ShortIdentWithArguments);
+}
+
+weec::parse::wcFullIdent::wcFullIdent(std::string FullIdent, std::vector<wcParseSymbol> Arguments)
+{
+	//$global::functionNameWithParams($global::a,$global::b)
+	if (FullIdent.find("::") == std::string::npos)
+	{
+		//not qualified as expected, global scope
+		ShortIdent = wcIdent(FullIdent);
+		Scope = wcScope(ParserConsts.Parser_GlobalScopeIdent);
+		return;
+	}
+
+	//argument specifier, must be a function
+	string IdentWithoutArguments = FullIdent, ShortIdentWithArguments = "";
+	if (IdentWithoutArguments.find_first_of("(") != std::string::npos)
+	{
+		IdentWithoutArguments = IdentWithoutArguments.substr(0, IdentWithoutArguments.find_first_of("("));	//$global::functionNameWithParams
+		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind("::", FullIdent.find_first_of("(")) + 2);
+	}
+	else
+		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of("::") + 1);
+
+	//todo fill me in bruv
+	string ArgStr = "";
+	for (auto Argument : Arguments)
+		ArgStr += Argument.DataType.to_string() + ",";
+	if (ArgStr.size() && strcmp(ArgStr.substr(ArgStr.size() - 1, 1).c_str(), ",") == 0)
+		ArgStr = ArgStr.substr(0, ArgStr.size() - 1);
+
+	//get scope
+	Scope = wcScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of("::") - 1));			//$global
+	ShortIdent = wcFullIdent(FullIdent + "(" + ArgStr + ")").ShortIdent;
 }
 
 weec::parse::wcFullIdent::wcFullIdent(std::string FullIdent, std::vector<wcParseExpression> Arguments)

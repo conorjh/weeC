@@ -7,12 +7,13 @@ using namespace weec::lex;
 using namespace weec::parse;
 using namespace weec::interpreter;
 
-bool operator==(std::any& a, std::any& b)
+
+bool operator==(any& a, any& b)
 {
 	return true;
 }
 
-std::string weec::interpreter::to_string(wcInterpreterErrorCode Code)
+string weec::interpreter::to_string(wcInterpreterErrorCode Code)
 {
 	switch (Code)
 	{
@@ -31,7 +32,7 @@ std::string weec::interpreter::to_string(wcInterpreterErrorCode Code)
 	}
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::EvalNode(parse::wcParseNodeType Type, parse::wcParseNodeType CalledFrom, bool isLValue = false)
+any weec::interpreter::wcExpressionInterpreter::EvalNode(wcParseNodeType Type, parse::wcParseNodeType CalledFrom, bool isLValue = false)
 {
 	switch (PC->Type)
 	{
@@ -64,15 +65,15 @@ std::any weec::interpreter::wcExpressionInterpreter::EvalNode(parse::wcParseNode
 		break;
 	}
 
-	return std::any();
+	return any();
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, std::any a, std::any b)
+any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, any a, any b)
 {
 	auto FindA = SymTab.ImplTypes.GetByInternal((a.type().name()));
 	auto FindB = SymTab.ImplTypes.GetByInternal((b.type().name()));
 	if (FindA.Name == "" || FindB.Name == "")
-		return std::any();
+		return any();
 
 	if (Op == wcTokenType::AssignOperator)
 	{
@@ -170,14 +171,14 @@ std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, s
 			return AnyOperator<string, string>().DoOp(SymTab, Op, a, b);
 	}
 
-	return std::any();
+	return any();
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, std::any a)
+any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, any a)
 {
 	auto FindA = SymTab.ImplTypes.GetByInternal(a.type().name());
 	if (FindA.Name == "")
-		return std::any();
+		return any();
 
 	if (FindA.Name == "int")
 		return AnyOperatorUnary<int>().DoOp(SymTab, Op, a);
@@ -191,7 +192,7 @@ std::any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, s
 		return AnyOperatorUnary<bool>().DoOp(SymTab, Op, a);
 	else if (FindA.Name == "string")
 		return AnyOperatorUnary<bool>().DoOp(SymTab, Op, a);
-	return std::any();
+	return any();
 }
 
 
@@ -201,42 +202,47 @@ weec::interpreter::wcExpressionInterpreter::wcExpressionInterpreter(wcInterprete
 {
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecSubExpression()
+any weec::interpreter::wcExpressionInterpreter::ExecSubExpression()
 {
 	PC++;
 	return EvalNode(PC->Type, Expression);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecCall()
+any weec::interpreter::wcExpressionInterpreter::ExecCall()
 {
 	auto Ident = PC->Token;
 	auto IdentDepth = Input.AST.depth(PC);
 	PC++;
-	vector<std::any> Arguments;
+	vector<any> ArgumentValues;
 
 	while (Input.AST.depth(PC) > IdentDepth)
-		Arguments.push_back(Exec());
+		ArgumentValues.push_back(this->Exec());
 
 	//search for call
 	if (!FuncTab.Exists(Ident.StringToken.Data))
-		return std::any();	//error, bad func name
+		return any();	//error, bad func name
 
 	auto FuncSig = FuncTab.Get(Ident.StringToken.Data);
-
-	return FuncSig.Invoke();
+	for (int t=0; t<FuncSig.Arguments.size();++t)
+	{
+		auto IdentString = Ident.StringToken.Data + "::" + wcFullIdent(FuncSig.Arguments[t].Ident.StringToken.Data).ShortIdent.to_string();
+		SymTab.Set(IdentString, ArgumentValues[t]);
+	}
+	auto t = FuncSig.Invoke(vector<wcInterpreterIdentPlusValue>());
+	return t; 
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecOperator()
+any weec::interpreter::wcExpressionInterpreter::ExecOperator()
 {
 	return EvalNode(PC->Type, Expression);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::Exec()
+any weec::interpreter::wcExpressionInterpreter::Exec()
 {
 	return EAX = EvalNode(PC->Type, Expression);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecPrimary(bool isLValue)
+any weec::interpreter::wcExpressionInterpreter::ExecPrimary(bool isLValue)
 {
 	auto Result = PC++;
 
@@ -257,10 +263,10 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecPrimary(bool isLValue)
 		else
 			return this->SymTab.Get(Result->Token.StringToken.Data);
 	}
-	return std::any();
+	return any();
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecUnary()
+any weec::interpreter::wcExpressionInterpreter::ExecUnary()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
@@ -274,7 +280,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecUnary()
 	return DoOp(OpType, Lh);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecFactor()
+any weec::interpreter::wcExpressionInterpreter::ExecFactor()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
@@ -290,7 +296,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecFactor()
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecTerm()
+any weec::interpreter::wcExpressionInterpreter::ExecTerm()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
@@ -304,7 +310,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecTerm()
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecComparison()
+any weec::interpreter::wcExpressionInterpreter::ExecComparison()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
@@ -319,7 +325,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecComparison()
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecLogicAnd()
+any weec::interpreter::wcExpressionInterpreter::ExecLogicAnd()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
@@ -334,7 +340,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecLogicAnd()
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecLogicOr()
+any weec::interpreter::wcExpressionInterpreter::ExecLogicOr()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
@@ -349,7 +355,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecLogicOr()
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecAssignment()
+any weec::interpreter::wcExpressionInterpreter::ExecAssignment()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
@@ -364,7 +370,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecAssignment()
 	return DoOp(OpType, Lh, Rh);
 }
 
-std::any weec::interpreter::wcExpressionInterpreter::ExecEquality()
+any weec::interpreter::wcExpressionInterpreter::ExecEquality()
 {
 	auto OpType = PC->Token.Type;
 	PC++;
@@ -379,33 +385,40 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecEquality()
 	return DoOp(OpType, Lh, Rh);
 }
 
-weec::interpreter::wcInterpreter::wcInterpreter(parse::wcParseOutput& _Input)
+weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& _Input)
 	: ExpressionInterp(SymbolTable, FunctionTable, _Input, PC, EAX), Input(_Input), FunctionTable(_Input)
 {
 	Input = _Input;
 	PC = Input.AST.begin();
+
+
+
+	//push global stack frame
+	StackFrames.push(wcInterpreterStackFrame("$g", PC, vector<any>()));
 }
 
 void weec::interpreter::wcInterpreter::Reset()
 {
 	Halt = false;
-	EAX = std::any();
-	Return = std::any();
+	EAX = any();
+	Return = any();
 }
 
-std::any weec::interpreter::wcInterpreter::Exec(tree<wcParseNode>::iterator NewPC)
+
+any weec::interpreter::wcInterpreter::Exec(tree<wcParseNode>::iterator NewPC, vector<wcInterpreterIdentPlusValue> _Arguments)
 {
+	Arguments.push(_Arguments);
+
 	PC = NewPC;
 	return Exec();
 }
 
-std::any weec::interpreter::wcInterpreter::Exec()
+any weec::interpreter::wcInterpreter::Exec()
 {
 	if (Input.Error.Code != wcParserErrorCode::None)
 		return wcInterpreterError(wcInterpreterErrorCode::BadInput, *Input.AST.begin());
 
-
-	std::any ExpressionResult, ReturnResult;
+	any ExpressionResult, ReturnResult;
 	while (PC != Input.AST.end() && PC != nullptr && !Halt)
 	{
 		switch (PC->Type)
@@ -434,12 +447,12 @@ std::any weec::interpreter::wcInterpreter::Exec()
 	return Return;
 }
 
-std::any weec::interpreter::wcInterpreter::ExecStatement()
+any weec::interpreter::wcInterpreter::ExecStatement()
 {
 	auto Begin = PC;
 	PC++;
 
-	std::any ExpressionResult;
+	any ExpressionResult;
 	if (Input.AST.depth(PC) > Input.AST.depth(Begin))
 		switch (PC->Type)
 		{
@@ -479,7 +492,7 @@ std::any weec::interpreter::wcInterpreter::ExecStatement()
 	return Return;
 }
 
-std::any weec::interpreter::wcInterpreter::ExecReturn()
+any weec::interpreter::wcInterpreter::ExecReturn()
 {
 	auto Begin = PC;
 	PC++;
@@ -502,7 +515,7 @@ std::any weec::interpreter::wcInterpreter::ExecReturn()
 	return Return;
 }
 
-std::any weec::interpreter::wcInterpreter::ExecBlock()
+any weec::interpreter::wcInterpreter::ExecBlock()
 {
 	auto Begin = PC;
 	PC++;
@@ -525,10 +538,10 @@ std::any weec::interpreter::wcInterpreter::ExecBlock()
 			break;
 		}
 
-	return std::any();
+	return any();
 }
 
-std::any weec::interpreter::wcInterpreter::SkipBlock()
+any weec::interpreter::wcInterpreter::SkipBlock()
 {
 	auto Begin = PC;
 	//PC = Input.AST.next_sibling(PC);
@@ -537,16 +550,16 @@ std::any weec::interpreter::wcInterpreter::SkipBlock()
 	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && !Halt))
 		PC++;
 
-	return std::any();
+	return any();
 }
 
-std::any weec::interpreter::wcInterpreter::ExecIf()
+any weec::interpreter::wcInterpreter::ExecIf()
 {
 	auto Begin = PC;
 	PC++;
 
 	wcToken TypeToken, IdentToken;
-	std::any ExpressionResult;
+	any ExpressionResult;
 	bool ExprTrue = false;
 	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC.node != nullptr && !Halt))
 	{
@@ -584,14 +597,14 @@ std::any weec::interpreter::wcInterpreter::ExecIf()
 	return ExprTrue;
 }
 
-std::any weec::interpreter::wcInterpreter::ExecWhile()
+any weec::interpreter::wcInterpreter::ExecWhile()
 {
 	auto Begin = PC;
 	PC++;
 
 	tree<wcParseNode>::iterator ExprPC = PC;
 	tree<wcParseNode>::iterator WhileBlockPC = PC;
-	std::any ExpressionResult;
+	any ExpressionResult;
 	bool ExprTrue = false;
 	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC.node != nullptr && !Halt))
 	{
@@ -634,7 +647,7 @@ std::any weec::interpreter::wcInterpreter::ExecWhile()
 	return ExprTrue;
 }
 
-std::any weec::interpreter::wcInterpreter::ExecDeclaration()
+any weec::interpreter::wcInterpreter::ExecDeclaration()
 {
 	auto Begin = PC;
 	PC++;
@@ -643,6 +656,7 @@ std::any weec::interpreter::wcInterpreter::ExecDeclaration()
 	bool isFunc = false;
 	unsigned int DeclarationArgDepth;
 	tree<wcParseNode>::iterator DecBlockPC = PC;
+	vector<wcInterpreterArgument> Arguments;
 	string SymbolName = "";
 	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC.node != nullptr && !Halt))
 	{
@@ -672,8 +686,9 @@ std::any weec::interpreter::wcInterpreter::ExecDeclaration()
 				PC++;
 				ArgIdent = PC->Token;
 				PC++;
+				Arguments.push_back(wcInterpreterArgument(ArgType, ArgIdent));
 			}
-
+			
 			SymbolName += "";
 			break;
 
@@ -712,7 +727,21 @@ std::any weec::interpreter::wcInterpreter::ExecDeclaration()
 	}
 	else
 	{
-		FunctionTable.Add(wcInterpreterFunctionSignature(Input, *this, TypeToken.StringToken.Data, DecBlockPC), IdentToken.StringToken.Data);
+		//register args
+		for(auto Arg : Arguments)
+			if (TypeToken.StringToken.Data == "int")
+				SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+			else if (TypeToken.StringToken.Data == "float")
+				SymbolTable.Add(any_cast<float>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+			else if (TypeToken.StringToken.Data == "unsigned int")
+				SymbolTable.Add(any_cast<unsigned int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+			else if (TypeToken.StringToken.Data == "double")
+				SymbolTable.Add(any_cast<double>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+			else if (TypeToken.StringToken.Data == "bool")
+				SymbolTable.Add(any_cast<bool>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+
+
+		FunctionTable.Add(wcInterpreterFunctionSignature(Input, *this, Arguments, TypeToken.StringToken.Data, DecBlockPC), IdentToken.StringToken.Data);
 	}
 
 	return EAX;
@@ -724,64 +753,66 @@ weec::interpreter::wcInterpreterSymbolTable::wcInterpreterSymbolTable()
 
 }
 
-bool weec::interpreter::wcInterpreterSymbolTable::Add(std::any Value, std::string FullIdent)
+bool weec::interpreter::wcInterpreterSymbolTable::Add(any Value, wcFullIdent FullIdent)
 {
-	Container.insert(make_pair(FullIdent, Value));
+	Container.insert(make_pair(FullIdent.to_string(), Value));
 	return true;
 }
 
-std::any weec::interpreter::wcInterpreterSymbolTable::Get(std::string FullIdent) const
+any weec::interpreter::wcInterpreterSymbolTable::Get(wcFullIdent FullIdent) const
 {
-	return Container.find(FullIdent)->second;
+	return Container.find(FullIdent.to_string())->second;
 }
 
-void weec::interpreter::wcInterpreterSymbolTable::Set(std::string FullIdent, std::any Value)
+void weec::interpreter::wcInterpreterSymbolTable::Set(wcFullIdent FullIdent, any Value)
 {
-	Container.find(FullIdent)->second = Value;
+	Container.find(FullIdent.to_string())->second = Value;
 }
 
 weec::interpreter::ImplementationTypes::ImplementationTypes()
 {
-	Add("int", std::type_index(typeid(int)));
-	Add("unsigned int", std::type_index(typeid(unsigned int)));
-	Add("float", std::type_index(typeid(float)));
-	Add("double", std::type_index(typeid(double)));
-	Add("bool", std::type_index(typeid(bool)));
-	Add("string", std::type_index(typeid(string)));
+	Add("int", type_index(typeid(int)));
+	Add("unsigned int", type_index(typeid(unsigned int)));
+	Add("float", type_index(typeid(float)));
+	Add("double", type_index(typeid(double)));
+	Add("bool", type_index(typeid(bool)));
+	Add("string", type_index(typeid(string)));
 }
 
-void weec::interpreter::ImplementationTypes::Add(std::string EasyName, std::type_index Type)
+void weec::interpreter::ImplementationTypes::Add(string EasyName, type_index Type)
 {
 	EasyTypeNames.insert(make_pair(EasyName, ImplementationType(EasyName, Type)));
 	InternalTypeNames.insert(make_pair(Type.name(), ImplementationType(EasyName, Type)));
 }
 
-ImplementationType weec::interpreter::ImplementationTypes::Get(std::string EasyName)
+ImplementationType weec::interpreter::ImplementationTypes::Get(string EasyName)
 {
 	if (EasyTypeNames.find(EasyName) == EasyTypeNames.end())
 		return ImplementationType();
 	return EasyTypeNames[EasyName];
 }
 
-ImplementationType weec::interpreter::ImplementationTypes::GetByInternal(std::string InternalName)
+ImplementationType weec::interpreter::ImplementationTypes::GetByInternal(string InternalName)
 {
 	if (InternalTypeNames.find(InternalName) == InternalTypeNames.end())
 		return ImplementationType();
 	return InternalTypeNames[InternalName];
 }
 
-weec::interpreter::wcInterpreterFunctionSignature::wcInterpreterFunctionSignature(parse::wcParseOutput& _Input, wcInterpreter& _Interpreter, std::string _ReturnDataType, tree<parse::wcParseNode>::iterator _Block)
+weec::interpreter::wcInterpreterFunctionSignature::wcInterpreterFunctionSignature(wcParseOutput& _Input, wcInterpreter& _Interpreter, vector<wcInterpreterArgument> _Arguments, string _ReturnDataType, tree<wcParseNode>::iterator _Block)
 	: Input(_Input), Interpreter(_Interpreter), Block(_Block)
 {
+	for (auto Arg : _Arguments)
+		Arguments.push_back(Arg);
 	ReturnDataType = _ReturnDataType;
 }
 
-weec::interpreter::wcInterpreterFunctionTable::wcInterpreterFunctionTable(parse::wcParseOutput& _Input)
+weec::interpreter::wcInterpreterFunctionTable::wcInterpreterFunctionTable(wcParseOutput& _Input)
 	: Input(_Input)
 {
 }
 
-bool weec::interpreter::wcInterpreterFunctionTable::Add(wcInterpreterFunctionSignature Sig, std::string FullIdent)
+bool weec::interpreter::wcInterpreterFunctionTable::Add(wcInterpreterFunctionSignature Sig, string FullIdent)
 {
 	if (Exists(FullIdent))
 		return false;
@@ -791,17 +822,22 @@ bool weec::interpreter::wcInterpreterFunctionTable::Add(wcInterpreterFunctionSig
 	return true;
 }
 
-bool weec::interpreter::wcInterpreterFunctionTable::Exists(std::string FullIdent) 
+bool weec::interpreter::wcInterpreterFunctionTable::Exists(string FullIdent) 
 {
 	return Container.find(FullIdent) != Container.end();
 }
 
-wcInterpreterFunctionSignature weec::interpreter::wcInterpreterFunctionTable::Get(std::string FullIdent)
+wcInterpreterFunctionSignature weec::interpreter::wcInterpreterFunctionTable::Get(string FullIdent)
 {
 	return Container.find(FullIdent)->second;
 }
 
-std::any weec::interpreter::wcInterpreterFunctionSignature::Invoke()
+any weec::interpreter::wcInterpreterFunctionSignature::Invoke()
 {
-	return Interpreter.Exec(Block);
+	return Interpreter.Exec(Block, vector<wcInterpreterIdentPlusValue>());
+}
+
+any weec::interpreter::wcInterpreterFunctionSignature::Invoke(vector<wcInterpreterIdentPlusValue> Arguments)
+{
+	return Interpreter.Exec(Block, Arguments);
 }

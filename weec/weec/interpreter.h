@@ -12,6 +12,7 @@
 #include "parse.h"
 #include <typeindex>
 #include <functional>
+#include <stack>
 
 namespace weec
 {
@@ -36,17 +37,34 @@ namespace weec
 		};
 		class wcInterpreter;
 
+		struct wcInterpreterArgument
+		{
+			wcInterpreterArgument(lex::wcToken _Type, lex::wcToken _Ident)
+			{
+				Type = _Type;
+				Ident = _Ident;
+			}
+			lex::wcToken Type, Ident;
+		};
+
+		struct wcInterpreterIdentPlusValue
+		{
+			wcInterpreterArgument Arg;
+			std::any Value;
+		};
+
 		struct wcInterpreterFunctionSignature
 		{
 			parse::wcParseOutput& Input;
 			tree<parse::wcParseNode>::iterator Block;
 			wcInterpreter& Interpreter;
+			std::vector<wcInterpreterArgument> Arguments;
 			std::string ReturnDataType;
 
 		public:
-			wcInterpreterFunctionSignature(parse::wcParseOutput&, wcInterpreter& Interpreter, std::string ReturnDataType, tree<parse::wcParseNode>::iterator Block);
+			wcInterpreterFunctionSignature(parse::wcParseOutput&, wcInterpreter& Interpreter, std::vector<wcInterpreterArgument> Arguments, std::string ReturnDataType, tree<parse::wcParseNode>::iterator Block);
 
-			std::any Invoke();
+			std::any Invoke(), Invoke(std::vector<wcInterpreterIdentPlusValue> Arguments);
 		};
 
 		class wcInterpreterFunctionTable
@@ -68,6 +86,7 @@ namespace weec
 		{
 			std::unordered_map<std::string, ImplementationType> EasyTypeNames;
 			std::unordered_map<std::string, ImplementationType> InternalTypeNames;
+
 		public:
 			ImplementationTypes();
 			ImplementationType operator[](std::string a) { return Get(a); }
@@ -82,11 +101,11 @@ namespace weec
 
 			wcInterpreterSymbolTable();
 
-			bool Add(std::any, std::string FullIdent),
-				Exists(std::string FullIdent) const;
+			bool Add(std::any, parse::wcFullIdent FullIdent),
+				Exists(parse::wcFullIdent FullIdent) const;
 
-			std::any Get(std::string FullIdent) const;
-			void Set(std::string FullIdent, std::any);
+			std::any Get(parse::wcFullIdent FullIdent) const;
+			void Set(parse::wcFullIdent FullIdent, std::any);
 
 			ImplementationTypes ImplTypes;
 		};
@@ -103,6 +122,20 @@ namespace weec
 		{
 		public:
 			std::any DoOp(wcInterpreterSymbolTable&, lex::wcTokenType Op, std::any a);
+		};
+
+		struct wcInterpreterStackFrame
+		{
+			wcInterpreterStackFrame(std::string _FrameName, tree<parse::wcParseNode>::iterator _ReturnAddress, std::vector<std::any> _Arguments)
+			{
+				FrameName = _FrameName;
+				ReturnAddress = _ReturnAddress;
+				Arguments = _Arguments;
+			}
+
+			std::string FrameName;
+			tree<parse::wcParseNode>::iterator ReturnAddress;
+			std::vector<std::any> Arguments;
 		};
 
 		class wcExpressionInterpreter
@@ -165,12 +198,18 @@ namespace weec
 			wcInterpreterSymbolTable SymbolTable;
 			wcInterpreterFunctionTable FunctionTable;
 
+			std::stack<wcInterpreterStackFrame> StackFrames;
+			std::stack<std::vector<wcInterpreterIdentPlusValue>> Arguments;
 		public:
 			wcExpressionInterpreter ExpressionInterp;
 			wcInterpreter(parse::wcParseOutput& Input);
 
 			void Reset();
-			std::any Exec(), Exec(tree<parse::wcParseNode>::iterator NewPC), ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecDeclaration();
+			std::any Exec(), 
+				Exec(tree<parse::wcParseNode>::iterator NewPC), 
+				Exec(tree<parse::wcParseNode>::iterator NewPC, std::vector<wcInterpreterIdentPlusValue> Arguments),
+				
+				ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecDeclaration();
 
 			wcInterpreterError Error;
 			bool Halt;

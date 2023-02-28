@@ -1,7 +1,6 @@
 #include "lex.h"
 #include <ctype.h>
 #include <sstream>
-#include "token_definitions.h"
 
 using std::vector;
 using std::string;

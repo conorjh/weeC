@@ -49,8 +49,8 @@ namespace weec
 
 		struct wcInterpreterIdentPlusValue
 		{
-			wcInterpreterIdentPlusValue(parse::wcFullIdent _Arg, std::any _Value) { Arg = _Arg; Value = _Value; }
-			parse::wcFullIdent Arg;
+			wcInterpreterIdentPlusValue(parse::wcFullIdentifier _Arg, std::any _Value) { Arg = _Arg; Value = _Value; }
+			parse::wcFullIdentifier Arg;
 			std::any Value;
 		};
 
@@ -104,9 +104,9 @@ namespace weec
 				Arguments = _Arguments;
 			}
 
-			bool Add(std::any, parse::wcFullIdent FullIdent);
-			std::any Get(parse::wcFullIdent FullIdent) const;
-			void Set(parse::wcFullIdent FullIdent, std::any);
+			bool Add(std::any, parse::wcFullIdentifier FullIdent);
+			std::any Get(parse::wcFullIdentifier FullIdent) const;
+			void Set(parse::wcFullIdentifier FullIdent, std::any);
 
 			std::string FrameName;
 			tree<parse::wcParseNode>::iterator ReturnAddress;
@@ -122,11 +122,11 @@ namespace weec
 
 			wcInterpreterSymbolTable();
 
-			bool Add(std::any, parse::wcFullIdent FullIdent),
-				Exists(parse::wcFullIdent FullIdent) const;
+			bool Add(std::any, parse::wcFullIdentifier FullIdent),
+				Exists(parse::wcFullIdentifier FullIdent) const;
 
-			std::any Get(parse::wcFullIdent FullIdent) const;
-			void Set(parse::wcFullIdent FullIdent, std::any);
+			std::any Get(parse::wcFullIdentifier FullIdent) const;
+			void Set(parse::wcFullIdentifier FullIdent, std::any);
 
 			ImplementationTypes ImplTypes;
 		};

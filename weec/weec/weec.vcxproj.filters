@@ -21,9 +21,6 @@
     <ClInclude Include="parse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="token_definitions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="interpreter.h">
       <Filter>Header Files</Filter>
     </ClInclude>

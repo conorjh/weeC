@@ -152,7 +152,6 @@
     <ClInclude Include="interpreter.h" />
     <ClInclude Include="parse.h" />
     <ClInclude Include="lex.h" />
-    <ClInclude Include="token_definitions.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="weec.h" />
   </ItemGroup>

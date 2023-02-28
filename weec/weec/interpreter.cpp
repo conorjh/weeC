@@ -229,10 +229,10 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 	vector<wcInterpreterIdentPlusValue> PackedArgs;
 	for (int t = 0; t < FuncSig.Arguments.size(); ++t)
 	{
-		auto IdentString = Ident.StringToken.Data + "::" + wcFullIdent(FuncSig.Arguments[t].Ident.StringToken.Data).ShortIdent.to_string();
-		SymTab.StackFrames.top().Add(ArgumentValues[t], wcFullIdent(IdentString));
+		auto IdentString = Ident.StringToken.Data + "::" + wcFullIdentifier(FuncSig.Arguments[t].Ident.StringToken.Data).ShortIdent.to_string();
+		SymTab.StackFrames.top().Add(ArgumentValues[t], wcFullIdentifier(IdentString));
 
-		PackedArgs.push_back(wcInterpreterIdentPlusValue(wcFullIdent(IdentString), ArgumentValues[t]));
+		PackedArgs.push_back(wcInterpreterIdentPlusValue(wcFullIdentifier(IdentString), ArgumentValues[t]));
 	}
 	auto t = FuncSig.Invoke(PackedArgs);
 	SymTab.StackFrames.pop();
@@ -738,15 +738,15 @@ any weec::interpreter::wcInterpreter::ExecDeclaration()
 		//register args
 		for (auto Arg : Arguments)
 			if (TypeToken.StringToken.Data == "int")
-				SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+				SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdent.to_string());
 			else if (TypeToken.StringToken.Data == "float")
-				SymbolTable.Add(any_cast<float>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+				SymbolTable.Add(any_cast<float>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdent.to_string());
 			else if (TypeToken.StringToken.Data == "unsigned int")
-				SymbolTable.Add(any_cast<unsigned int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+				SymbolTable.Add(any_cast<unsigned int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdent.to_string());
 			else if (TypeToken.StringToken.Data == "double")
-				SymbolTable.Add(any_cast<double>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+				SymbolTable.Add(any_cast<double>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdent.to_string());
 			else if (TypeToken.StringToken.Data == "bool")
-				SymbolTable.Add(any_cast<bool>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdent(Arg.Ident.StringToken.Data).ShortIdent.to_string());
+				SymbolTable.Add(any_cast<bool>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdent.to_string());
 
 
 		FunctionTable.Add(wcInterpreterFunctionSignature(Input, *this, Arguments, TypeToken.StringToken.Data, DecBlockPC), IdentToken.StringToken.Data);
@@ -761,18 +761,18 @@ weec::interpreter::wcInterpreterSymbolTable::wcInterpreterSymbolTable()
 
 }
 
-bool weec::interpreter::wcInterpreterSymbolTable::Add(any Value, wcFullIdent FullIdent)
+bool weec::interpreter::wcInterpreterSymbolTable::Add(any Value, wcFullIdentifier FullIdent)
 {
 	StackFrames.top().Add(Value, FullIdent.to_string());
 	return true;
 }
 
-any weec::interpreter::wcInterpreterSymbolTable::Get(wcFullIdent FullIdent) const
+any weec::interpreter::wcInterpreterSymbolTable::Get(wcFullIdentifier FullIdent) const
 {
 	return StackFrames.top().Container.find(FullIdent.to_string())->second;
 }
 
-void weec::interpreter::wcInterpreterSymbolTable::Set(wcFullIdent FullIdent, any Value)
+void weec::interpreter::wcInterpreterSymbolTable::Set(wcFullIdentifier FullIdent, any Value)
 {
 	StackFrames.top().Container.find(FullIdent.to_string())->second = Value;
 }
@@ -850,18 +850,18 @@ any weec::interpreter::wcInterpreterFunctionSignature::Invoke(vector<wcInterpret
 	return Interpreter.Exec(Block, Arguments);
 }
 
-bool weec::interpreter::wcInterpreterStackFrame::Add(std::any Value, parse::wcFullIdent FullIdent)
+bool weec::interpreter::wcInterpreterStackFrame::Add(std::any Value, parse::wcFullIdentifier FullIdent)
 {
 	Container.insert(make_pair(FullIdent.to_string(), Value));
 	return true;
 }
 
-std::any weec::interpreter::wcInterpreterStackFrame::Get(parse::wcFullIdent FullIdent) const
+std::any weec::interpreter::wcInterpreterStackFrame::Get(parse::wcFullIdentifier FullIdent) const
 {
 	return Container.find(FullIdent.to_string())->second;
 }
 
-void weec::interpreter::wcInterpreterStackFrame::Set(parse::wcFullIdent FullIdent, std::any Value)
+void weec::interpreter::wcInterpreterStackFrame::Set(parse::wcFullIdentifier FullIdent, std::any Value)
 {
 	Container.find(FullIdent.to_string())->second = Value;
 }

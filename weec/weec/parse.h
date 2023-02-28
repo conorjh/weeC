@@ -5,6 +5,7 @@
 #endif
 #include <string>
 #include <vector>
+#include <stack>
 #include <unordered_map>
 #include "tree.hh"
 #include "lex.h"
@@ -75,45 +76,57 @@ namespace weec
 			Null, Type, Variable, Function, Namespace
 		};
 
-		struct wcIdent
+		struct wcIdentifier
 		{
-			wcIdent();
-			wcIdent(const wcIdent&), wcIdent(std::string);
-			bool operator==(const wcIdent& p) const
+			wcIdentifier();
+			wcIdentifier(const wcIdentifier&), wcIdentifier(std::string);
+
+			bool operator==(const wcIdentifier& p) const
 			{
 				return to_string() == p.to_string();
 			}
 
-			std::string to_string() const { return Ident.c_str(); }
-			std::string Ident;
+			std::string to_string() const { return Identifier.c_str(); }
+
+		private:
+			std::string Identifier;
 		};
 
-		struct wcScope
+		struct wcIdentifierScope
 		{
-			wcScope();
-			wcScope(const wcScope&), wcScope(std::string);
+			wcIdentifierScope();
+			wcIdentifierScope(const wcIdentifierScope&), wcIdentifierScope(std::string);
 
 			std::string to_string() const { return FullIdent.to_string(); }
-			wcIdent FullIdent;
+			wcIdentifier FullIdent;
+		};
+
+		struct wcParseScope
+		{
+			wcParseScope();
+
+			std::string Name;
+			std::vector<wcFullIdentifier> Symbols
 		};
 
 		class wcParseExpression; struct wcParseSymbol;
-		struct wcFullIdent
-		{
-			wcFullIdent();
-			wcFullIdent(const wcFullIdent&);
-			wcFullIdent(wcIdent, wcScope);
-			wcFullIdent(std::string);
-			wcFullIdent(std::string, std::vector<wcParseExpression>);
-			wcFullIdent(std::string, std::vector<wcParseSymbol>);
-			wcFullIdent(std::string, std::string);
 
-			bool operator==(const wcFullIdent& p) const
+		struct wcFullIdentifier
+		{
+			wcFullIdentifier();
+			wcFullIdentifier(const wcFullIdentifier&);
+			wcFullIdentifier(wcIdentifier, wcIdentifierScope);
+			wcFullIdentifier(std::string);
+			wcFullIdentifier(std::string, std::vector<wcParseExpression>);
+			wcFullIdentifier(std::string, std::vector<wcParseSymbol>);
+			wcFullIdentifier(std::string, std::string);
+
+			bool operator==(const wcFullIdentifier& p) const
 			{
 				return to_string() == p.to_string();
 			}
 
-			wcFullIdent& operator=(const wcFullIdent& Other)
+			wcFullIdentifier& operator=(const wcFullIdentifier& Other)
 			{
 				ShortIdent = Other.ShortIdent;
 				Scope = Other.Scope;
@@ -122,8 +135,58 @@ namespace weec
 
 			std::string to_string() const;
 
-			wcIdent ShortIdent;
-			wcScope Scope;
+			wcIdentifier ShortIdent;
+			wcIdentifierScope Scope;
+		};
+
+		struct wcArgumentPrototype
+		{
+			wcFullIdentifier Type, Identifer;
+		};
+
+		struct wcFunctionIdentifier
+		{
+			wcFunctionIdentifier() {}
+			wcFunctionIdentifier(std::string);
+			wcFunctionIdentifier(wcFullIdentifier _Identifier, std::vector<wcArgumentPrototype> Arguments);
+			wcFunctionIdentifier(wcFullIdentifier _Identifier, std::vector<wcFullIdentifier> ArgumentTypes);
+			wcFunctionIdentifier(wcFullIdentifier, std::vector<wcParseSymbol> Arguments);
+
+			bool operator==(const wcFunctionIdentifier& p) const
+			{
+				return to_string() == p.to_string();
+			}
+
+			bool operator==(const wcFullIdentifier& p) const
+			{
+				return to_string_no_arguments() == p.to_string();
+			}
+
+			wcFunctionIdentifier& operator=(const wcFunctionIdentifier& Other)
+			{
+				Identifier = Other.Identifier;
+				IdentifierWithoutArguments = Other.IdentifierWithoutArguments;
+				ArgumentTypes = Other.ArgumentTypes;
+				return *this;
+			}
+
+			std::string to_string() const
+			{
+				return Identifier.to_string();
+			}
+
+			std::string to_string_no_arguments() const
+			{
+				return IdentifierWithoutArguments.to_string();
+			}
+
+			unsigned int ArgumentCount()
+			{
+				return ArgumentTypes.size();
+			}
+
+			wcFullIdentifier Identifier, IdentifierWithoutArguments;
+			std::vector<wcFullIdentifier> ArgumentTypes;
 		};
 
 		class wcParseNode
@@ -133,13 +196,14 @@ namespace weec
 			wcParseNode(const wcParseNode&);
 			wcParseNode(wcParseNodeType _Type);
 			wcParseNode(wcParseNodeType _Type, lex::wcToken _Token);
-			wcParseNode(wcParseNodeType _Type, lex::wcToken _Token, wcFullIdent Identifier);
+			wcParseNode(wcParseNodeType _Type, lex::wcToken _Token, wcFullIdentifier Identifier);
 			wcParseNode(lex::wcToken _Token);
 
 			bool operator==(const wcParseNode&), operator==(wcParseNode);
 			wcParseNode& operator=(const wcParseNode&);
 
 			lex::wcToken Token;
+			std::string Memo;
 			wcParseNodeType Type;
 		};
 
@@ -147,12 +211,14 @@ namespace weec
 		{
 			wcParseSymbol();
 			wcParseSymbol(const wcParseSymbol&);
-			wcParseSymbol(wcParseSymbolType _Type, wcFullIdent FullIdent, lex::wcToken IdentToken);
-			wcParseSymbol(wcParseSymbolType _Type, wcFullIdent FullIdent, wcFullIdent DataType, lex::wcToken IdentToken);
+			wcParseSymbol(wcParseSymbolType _Type, wcFullIdentifier FullIdent, lex::wcToken IdentToken);
+			wcParseSymbol(wcParseSymbolType _Type, wcFullIdentifier FullIdent, wcFullIdentifier DataType, lex::wcToken IdentToken);
+			wcParseSymbol(wcArgumentPrototype ArgDeclaration, lex::wcToken IdentToken);
 
 			wcParseSymbolType Type;
-			wcFullIdent DataType;
-			wcFullIdent FullIdent;
+			wcFullIdentifier DataType;
+			wcFullIdentifier FullIdent;
+
 			lex::wcToken IdentToken;
 			unsigned int Arguments;
 			bool Registered, Const, HasOverloads;
@@ -163,18 +229,20 @@ namespace weec
 			std::string to_string();
 			std::string to_string_no_arguments();
 
-			wcParseSymbol Ident;
-			std::vector<wcParseSymbol> ArgumentTypes;
+			wcFullIdentifier DataType;
+			lex::wcToken IdentToken;
+			wcFunctionIdentifier FuncFullIdent;
 		};
 
 		struct wcParseStackFrame
 		{
 			wcParseStackFrame();
-			wcParseStackFrame(wcFullIdent);
+			wcParseStackFrame(wcFullIdentifier);
 
-			wcFullIdent FuncSig;
+			std::string Name;
+			wcFunctionIdentifier FuncIdent;
 			tree<parse::wcParseNode>::iterator ReturnAddress;
-			std::vector<wcFullIdent> ValidScopes;
+			std::vector<wcFullIdentifier> Symbols;
 			//std::vector<std::any> Arguments;
 		};
 
@@ -182,26 +250,25 @@ namespace weec
 		{
 			std::unordered_map<std::string, wcParseSymbol> Container;
 			std::unordered_map<std::string, wcParseFunctionSignature> FunctionContainer;
-			std::vector<std::string> ShortFunctionNames;
-			std::vector<wcParseStackFrame> StackFrames;
 
 			wcParseSymbol CurrentScope;
 
 		public:
+			std::stack<wcParseStackFrame> StackFrames;
 			wcParseSymbolTable();
 
 			wcParseSymbolTable& operator=(const wcParseSymbolTable&);
 
 			bool 
-				Add(wcParseSymbolType, wcFullIdent Ident, lex::wcToken IdentToken, bool SetScopeToThisSymbol = false),
+				Add(wcParseSymbolType, wcFullIdentifier Ident, lex::wcToken IdentToken, bool SetScopeToThisSymbol = false),
 				Add(wcParseSymbol Sym, bool SetScopeToThisSymbol = false),
 				Add(wcParseFunctionSignature Sig, bool SetScopeToThisSymbol = false),
 
-				Exists(wcFullIdent FullIdent) const;
+				Exists(wcFullIdentifier FullIdent) const;
 
-			wcParseSymbol Get(wcFullIdent FullIdent) const;
+			wcParseSymbol Get(wcFullIdentifier FullIdent) const;
 
-			bool SetScope(wcFullIdent FullIdent), SetScope(wcParseSymbol&);
+			bool SetScope(wcFullIdentifier FullIdent), SetScope(wcParseSymbol&);
 			wcParseSymbol GetCurrentScope() const;
 
 			const  wcParseSymbol NullSymbol;
@@ -232,6 +299,16 @@ namespace weec
 			wcParserError Error;
 		};
 
+		class wcIdentifierResolver
+		{
+			std::stack<wcParseStackFrame>& StackFrames;
+		public:
+			wcIdentifierResolver(std::stack<wcParseStackFrame>& _StackFrames) :
+				StackFrames(_StackFrames) {}
+
+			bool Resolve(wcIdentifier In, wcFullIdentifier& Out);
+		};
+
 		enum class wcParseExpressionType
 		{
 			Literal, Variable, Unary, Call, Binary, Logical, Grouping, Assignment
@@ -242,7 +319,7 @@ namespace weec
 			tree<wcParseNode>::pre_order_iterator GetExpressionNodeBegin(), GetExpressionNodeEnd(), GetExpressionRootNodeBegin(), GetExpressionRootNodeEnd();
 
 		public:
-			wcFullIdent DataType;
+			wcFullIdentifier DataType;
 			wcParseExpressionType Type;
 			wcParserError Error;
 			std::vector<lex::wcToken> Tokens;
@@ -252,21 +329,15 @@ namespace weec
 			wcParseExpression(wcParserError _Error);
 			wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken Operator, wcParseExpression RightHand);		//binary / logical / assignment
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand);									//unary
-			wcParseExpression(wcParseNodeType HeadType, wcFullIdent FullIdent, wcParseExpression Callee, std::vector<wcParseExpression> Arguments);					//call
+			wcParseExpression(wcParseNodeType HeadType, wcFullIdentifier FullIdent, wcParseExpression Callee, std::vector<wcParseExpression> Arguments);					//call
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken OperatorOrLiteral);														//literal/operator
-			wcParseExpression(wcParseNodeType HeadType, lex::wcToken OperatorOrLiteral, wcFullIdent DataType);														//variable
-			wcParseExpression(wcParseNodeType HeadType, wcFullIdent FullIdent, wcFullIdent DataType, lex::wcToken OperatorOrLiteral);									//variable
+			wcParseExpression(wcParseNodeType HeadType, lex::wcToken OperatorOrLiteral, wcFullIdentifier DataType);														//variable
+			wcParseExpression(wcParseNodeType HeadType, wcFullIdentifier FullIdent, wcFullIdentifier DataType, lex::wcToken OperatorOrLiteral);									//variable
 			//wcParseExpression(wcParseExpression& OtherExpression);																			//grouping
 
 			wcParseExpression operator=(wcParseExpression);
 
-			void Eval();
 			bool IsErrored();
-		};
-
-		enum class wcSubParserExpectOrNext
-		{
-			Pass, ExpectFailed, NextFailed 
 		};
 
 		class wcSubParser
@@ -274,14 +345,13 @@ namespace weec
 		protected:
 			lex::wcTokenizer& Tokenizer;
 			wcParseSymbolTable& SymbolTable;
+
 		public:
 			wcSubParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable)
 				: Tokenizer(_Tokenizer), SymbolTable(_SymbolTable) {}
 
 			bool ExpectToken(lex::wcTokenType);
 			bool ExpectNextToken(lex::wcTokenType);
-
-			int ExpectAndMatch(lex::wcTokenType);
 		};
 
 		class wcExpressionParser : wcSubParser
@@ -311,9 +381,9 @@ namespace weec
 		class wcDeclarationParser : wcSubParser
 		{
 
-			wcParseOutput ParseType(wcFullIdent& DeclarationType), ParseIdent(wcFullIdent& DeclarationIdent, lex::wcToken& IdentAsSeen),
-				ParseArguments(wcFullIdent, wcFullIdent, lex::wcToken, wcFullIdent& Output, std::vector<wcParseSymbol>& ArgumentSymbolsToRegister),
-				ParseArgument(std::vector<wcParseSymbol>& ArgumentSymbolsToRegister);
+			wcParseOutput ParseType(wcFullIdentifier& DeclarationType), ParseIdent(wcIdentifier& DeclarationIdent, lex::wcToken& IdentAsSeen),
+				ParseArguments(wcFullIdentifier DeclarationIdent, wcFullIdentifier DeclarationType, lex::wcToken IdentToken, wcFunctionIdentifier& ReturnTrueFunctionIdent),
+				ParseArgument(wcFunctionIdentifier& ReturnTrueFunctionIdent);
 
 		public:
 			wcDeclarationParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable)

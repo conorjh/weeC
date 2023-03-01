@@ -28,6 +28,9 @@ namespace weec
 
 			Declaration, Declaration_Type, Declaration_Ident, DeclarationArguments, DeclarationArgument, DeclarationArgument_Type, DeclarationArgument_Ident, DeclaratationBody,
 
+			//Temporary, hackish
+			Identifier, 
+
 			Expression, Expression_Equality, Expression_Assignment, Expression_LogicOr, Expression_LogicAnd, Expression_Comparison, Expression_Term,
 			Expression_Factor, Expression_Call, Expression_Unary, Expression_Primary, Expression_Operator,
 
@@ -97,20 +100,12 @@ namespace weec
 			wcIdentifierScope();
 			wcIdentifierScope(const wcIdentifierScope&), wcIdentifierScope(std::string);
 
-			std::string to_string() const { return FullIdent.to_string(); }
-			wcIdentifier FullIdent;
-		};
+			std::string to_string() const { return Identifier.to_string(); }
 
-		struct wcParseScope
-		{
-			wcParseScope();
-
-			std::string Name;
-			std::vector<wcFullIdentifier> Symbols
+			wcIdentifier Identifier;	//should be fully qualified
 		};
 
 		class wcParseExpression; struct wcParseSymbol;
-
 		struct wcFullIdentifier
 		{
 			wcFullIdentifier();
@@ -128,15 +123,15 @@ namespace weec
 
 			wcFullIdentifier& operator=(const wcFullIdentifier& Other)
 			{
-				ShortIdent = Other.ShortIdent;
-				Scope = Other.Scope;
+				Identifier = Other.Identifier;
+				ScopeIdentifier = Other.ScopeIdentifier;
 				return *this;
 			}
 
 			std::string to_string() const;
 
-			wcIdentifier ShortIdent;
-			wcIdentifierScope Scope;
+			wcIdentifier Identifier;
+			wcIdentifierScope ScopeIdentifier;
 		};
 
 		struct wcArgumentPrototype
@@ -150,7 +145,7 @@ namespace weec
 			wcFunctionIdentifier(std::string);
 			wcFunctionIdentifier(wcFullIdentifier _Identifier, std::vector<wcArgumentPrototype> Arguments);
 			wcFunctionIdentifier(wcFullIdentifier _Identifier, std::vector<wcFullIdentifier> ArgumentTypes);
-			wcFunctionIdentifier(wcFullIdentifier, std::vector<wcParseSymbol> Arguments);
+			wcFunctionIdentifier(wcFullIdentifier, std::vector<wcParseSymbol> Arguments) {}
 
 			bool operator==(const wcFunctionIdentifier& p) const
 			{
@@ -236,14 +231,15 @@ namespace weec
 
 		struct wcParseStackFrame
 		{
-			wcParseStackFrame();
-			wcParseStackFrame(wcFullIdentifier);
+			wcParseStackFrame(std::string _Name)
+			{
+				Name = _Name;
+			}
 
 			std::string Name;
-			wcFunctionIdentifier FuncIdent;
 			tree<parse::wcParseNode>::iterator ReturnAddress;
+
 			std::vector<wcFullIdentifier> Symbols;
-			//std::vector<std::any> Arguments;
 		};
 
 		class wcParseSymbolTable
@@ -350,8 +346,22 @@ namespace weec
 			wcSubParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable)
 				: Tokenizer(_Tokenizer), SymbolTable(_SymbolTable) {}
 
-			bool ExpectToken(lex::wcTokenType);
-			bool ExpectNextToken(lex::wcTokenType);
+			lex::wcToken GetToken()
+			{
+				return Tokenizer.GetToken();
+			}
+			bool NextToken()
+			{
+				return Tokenizer.NextToken();
+			}
+			bool ExpectToken(lex::wcTokenType TokenType)
+			{
+				return Tokenizer.GetToken().Type == TokenType;
+			}
+			bool ExpectNextToken(lex::wcTokenType TokenType)
+			{
+				return Tokenizer.NextToken(TokenType);
+			}
 		};
 
 		class wcExpressionParser : wcSubParser
@@ -375,13 +385,13 @@ namespace weec
 		public:
 			wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable);
 
-			wcParseSymbol ParseIdent();
+			wcParseOutput Parse(wcIdentifier&, wcFullIdentifier& ResolvedFullIdentifier, bool Consume = true, bool ExpectDeclared = false);
 		};
 
 		class wcDeclarationParser : wcSubParser
 		{
 
-			wcParseOutput ParseType(wcFullIdentifier& DeclarationType), ParseIdent(wcIdentifier& DeclarationIdent, lex::wcToken& IdentAsSeen),
+			wcParseOutput ParseType(wcFullIdentifier& DeclarationType), ParseIdent(wcFullIdentifier& DeclarationFullIdentifier, lex::wcToken& IdentAsSeen),
 				ParseArguments(wcFullIdentifier DeclarationIdent, wcFullIdentifier DeclarationType, lex::wcToken IdentToken, wcFunctionIdentifier& ReturnTrueFunctionIdent),
 				ParseArgument(wcFunctionIdentifier& ReturnTrueFunctionIdent);
 

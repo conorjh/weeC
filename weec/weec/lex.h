@@ -34,7 +34,7 @@ namespace weec
 			wcStringToken(std::string _data, wcStringTokenType _type, int _line, int _column);
 			wcStringToken& operator=(wcStringToken);
 			bool operator==(const wcStringToken&);
-;
+
 			wcStringTokenType Type;
 			std::string Data;
 			unsigned int Line, Column;
@@ -90,7 +90,6 @@ namespace weec
 			const std::vector<std::string> identifiers;
 		};
 
-		extern const wcTokenDefinition definitions[];
 		const unsigned int WC_VAR_DEFINITIONCOUNT = 64;
 
 		//definitions used for creating wcToken
@@ -201,7 +200,6 @@ namespace weec
 			std::string Msg;
 		};
 
-
 		class wcTokenizer
 		{
 			wcStringTokenizer stringTokenizer;
@@ -222,15 +220,7 @@ namespace weec
 			bool NextToken(), NextToken(wcTokenType Type), IsErrored(), IsFinished();
 		};
 
-		class wcLexer
-		{
-			int error;
-
-		public:
-			wcLexer(std::string& _source);
-		};
-
-		const wcTokenDefinition weec::lex::definitions[WC_VAR_DEFINITIONCOUNT] =
+		const wcTokenDefinition definitions[WC_VAR_DEFINITIONCOUNT] =
 		{
 			wcTokenDefinition(wcTokenType::Null, ""),
 			wcTokenDefinition(wcTokenType::Whitespace, " ", true, true),

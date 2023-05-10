@@ -222,6 +222,7 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 	//search for call
 	if (!FuncTab.Exists(Ident.StringToken.Data))
 		return any();	//error, bad func name
+
 	wcInterpreterStackFrame StackFrame(Ident.StringToken.Data, ReturnAddress, ArgumentValues);
 	SymTab.StackFrames.push(StackFrame);
 
@@ -229,7 +230,7 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 	vector<wcInterpreterIdentPlusValue> PackedArgs;
 	for (int t = 0; t < FuncSig.Arguments.size(); ++t)
 	{
-		auto IdentString = Ident.StringToken.Data + "::" + wcFullIdentifier(FuncSig.Arguments[t].Ident.StringToken.Data).ShortIdentifier.to_string();
+		auto IdentString = Ident.StringToken.Data;
 		SymTab.StackFrames.top().Add(ArgumentValues[t], wcFullIdentifier(IdentString));
 
 		PackedArgs.push_back(wcInterpreterIdentPlusValue(wcFullIdentifier(IdentString), ArgumentValues[t]));

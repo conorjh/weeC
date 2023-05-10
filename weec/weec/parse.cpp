@@ -9,13 +9,6 @@ using namespace weec::parse;
 using enum weec::parse::wcParserErrorCode;
 using enum weec::lex::wcTokenType;
 
-struct wcParserConsts
-{
-	std::string Parser_GlobalIdentifier = "$g",
-		Parser_ScopeDelimiter = "::";
-};
-
-static wcParserConsts ParserConsts;
 
 weec::parse::wcParser::wcParser(lex::wcTokenizer& _Tokenizer)
 	: Tokenizer(_Tokenizer)
@@ -74,7 +67,11 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		auto FunctionSignature = wcParseFunctionSignature(DeclarationType, IdentToken, Parameters, wcFunctionIdentifier(DeclarationIdent, Parameters));
 		SymbolTable.Add(FunctionSignature, Parameters);
 		
-		//hack - adjust parameter nodes to have correct scope
+		//hack - adjust ident node to have correct function name (including parameters)
+		for (auto& It : IdentNode.AST)
+			if (It.Type == wcParseNodeType::Declaration_Ident)
+				It.Token.StringToken.Data = FunctionSignature.FunctionIdentifier.to_string();
+		//hack - adjust parameter nodes to have correct scope, we didnt have the scope at the time
 		for (auto& It : ParametersNode.AST)
 			if (It.Type == wcParseNodeType::Parameter_Ident)
 				It.Token.StringToken.Data = wcFullIdentifier(wcFullIdentifier(It.Token.StringToken.Data).ShortIdentifier.to_string(), FunctionSignature.FunctionIdentifier.to_string()).to_string();
@@ -116,8 +113,13 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseType(wcFullIdentifier& Decl
 		return wcParseOutput(wcParserError(InvalidType, TypeToken));		//error - expected built in or user type
 
 	//resolve type - built in types are registered in symbol table
-	if (!wcIdentifierResolver(SymbolTable.StackFrames).Resolve(wcIdentifier(TypeToken.StringToken.Data), DeclarationType))
+	switch (SymbolTable.Resolve(wcIdentifier(TypeToken.StringToken.Data), DeclarationType))
+	{
+	case wcIdentifierResolveResult::Ambiguous:
+		return wcParseOutput(wcParserError(AmbiguousType, TypeToken));		//failed to resolve type
+	case wcIdentifierResolveResult::Unresolved:
 		return wcParseOutput(wcParserError(CouldntResolveType, TypeToken));		//failed to resolve type
+	}
 
 	if(!NextToken())
 		return wcParseOutput(wcParserError(UnexpectedEOF, TypeToken));
@@ -132,7 +134,7 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseIdent(wcFullIdentifier& Dec
 
 	//parse Ident, discard the node it creates though
 	wcIdentifier ParsedIdentifier;	wcParseOutput IdentNode;
-	if ((IdentNode = wcIdentParser(Tokenizer, SymbolTable).Parse(ParsedIdentifier, DeclarationFullIdentifier, true, false)).Error.Code != None)
+	if ((IdentNode = wcIdentParser(Tokenizer, SymbolTable).Parse(ParsedIdentifier, DeclarationFullIdentifier, true, true)).Error.Code != None)
 		return IdentNode;
 
 	//return a declaration type node with a fully qualified identifier added
@@ -219,7 +221,7 @@ weec::parse::wcIdentParser::wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseS
 
 }
 
-wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier,	wcFullIdentifier& ResolvedFullIdentifier, bool Consume, bool ExpectDeclared)
+wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier,	wcFullIdentifier& ResolvedFullIdentifier, bool Consume, bool IsDeclaration)
 {
 	//obviously we expect an identifier here
 	if (!ExpectToken(wcTokenType::Identifier))
@@ -233,11 +235,25 @@ wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier,	
 
 	//try to resovlve it, output the fully qualified identifier to ResolvedFullIdentifier. 
 	//raise an error if it needs to be previously declared (ie ExpectDeclared)
-	if (!wcIdentifierResolver(SymbolTable.StackFrames).Resolve(ParsedIdentifier, ResolvedFullIdentifier))
-		if (ExpectDeclared)
-			return wcParseOutput(wcParserError(UndeclaredIdent, IdentToken));
-		else
-			ResolvedFullIdentifier = wcFullIdentifier(ParsedIdentifier.to_string(), SymbolTable.GetCurrentScope().FullIdent.to_string());
+	switch (SymbolTable.Resolve(ParsedIdentifier, ResolvedFullIdentifier))
+	{
+	case wcIdentifierResolveResult::Ambiguous:
+		if(!IsDeclaration)
+			return wcParseOutput(wcParserError(AmbiguousIdentifier, IdentToken));		//failed to resolve a single identifier
+		break;
+
+	case wcIdentifierResolveResult::Unresolved:
+		if (!IsDeclaration)
+			return wcParseOutput(wcParserError(CouldntResolveIdentifier, IdentToken));		//failed to resolve 
+		break;
+
+	case wcIdentifierResolveResult::Resolved:
+		if (IsDeclaration)
+			return wcParseOutput(wcParserError(IdentRedeclaration, IdentToken));		//failed to resolve 
+		break;
+	}
+
+	ResolvedFullIdentifier = wcFullIdentifier(ParsedIdentifier.to_string(), SymbolTable.GetCurrentScope().FullIdent.to_string());
 
 	//consume the identifier token if told so (ie when expression parsing)
 	if(Consume && !NextToken())
@@ -281,7 +297,7 @@ wcParseOutput weec::parse::wcStatementParser::Parse(bool AllowDeclarations)
 		return Output.AddAsChild(wcWhileParser(Tokenizer, SymbolTable).Parse());
 
 	case wcTokenType::Identifier:
-		if ((IdentNode = wcIdentParser(Tokenizer, SymbolTable).Parse(Identifier, ResolvedIdentifier, false, true)).Error.Code != None)
+		if ((IdentNode = wcIdentParser(Tokenizer, SymbolTable).Parse(Identifier, ResolvedIdentifier, false, false)).Error.Code != None)
 			return Output.AddAsChild(IdentNode);	//error occurred
 		switch (SymbolTable.Get(ResolvedIdentifier).Type)
 		{
@@ -908,9 +924,15 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_CallArguments
 		return wcParseExpression(wcParserError(wcParserErrorCode::Expression_FunctionCallMissingOpenParenthesis, GetToken()));
 	NextToken();
 
+	//todo check symbol type
+	
+	//todo check arity
+	
 	//check we dont exceed max arguments
 	if (Arguments.size() > 255)
 		return wcParseExpression(wcParserError(wcParserErrorCode::FunctionCall_MaxArgumentsExceeded, GetToken()));
+
+
 
 	//todo get the functions full qualified name (with arugments), add as second param
 	return wcParseExpression(wcParseNodeType::Expression_Call, wcFullIdentifier(Callee.Tokens[0].StringToken.Data, Arguments), Callee, Arguments);
@@ -937,7 +959,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 		return Output;
 
 	case Identifier:
-		if ((IdentNode = wcIdentParser(Tokenizer, SymbolTable).Parse(IdentAsSeen, ResolvedIdenfitifer, true, true)).Error.Code != None)
+		if ((IdentNode = wcIdentParser(Tokenizer, SymbolTable).Parse(IdentAsSeen, ResolvedIdenfitifer, true, false)).Error.Code != None)
 		{
 			Output.Error = wcParserError(wcParserErrorCode::UndeclaredIdent, GetToken());
 			return Output;
@@ -1303,6 +1325,11 @@ bool weec::parse::wcParseSymbolTable::Add(wcParseFunctionSignature Sig, vector<w
 	return true;
 }
 
+wcIdentifierResolveResult weec::parse::wcParseSymbolTable::Resolve(wcIdentifier Ident, wcFullIdentifier& Output)
+{
+	return wcIdentifierResolver(StackFrames).Resolve(Ident, Output);
+}
+
 bool weec::parse::wcParseSymbolTable::Add(wcParseSymbol Sym, bool SetScopeToThisSymbol)
 {
 	if (Exists(Sym.FullIdent))
@@ -1339,7 +1366,7 @@ bool weec::parse::wcParseSymbolTable::Exists(wcFullIdentifier FullIdent) const
 
 	for (auto FuncSig : FunctionContainer)
 	{
-		auto t1 = FuncSig.second.FunctionIdentifier.to_string_no_arguments();
+		auto t1 = FuncSig.second.FunctionIdentifier.to_string_no_parameters();
 		auto t2 = FullIdent.to_string();
 
 		if (t1 == t2)
@@ -1579,13 +1606,6 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(const wcFullIdentifier& Other)
 	ScopeIdentifier = wcIdentifierScope(Other.ScopeIdentifier);
 }
 
-std::string weec::parse::wcFullIdentifier::to_string() const
-{
-	if (ShortIdentifier.to_string() == ParserConsts.Parser_GlobalIdentifier)
-		return ShortIdentifier.to_string();		//stops the global scope FullIdent being global::global
-	return ScopeIdentifier.to_string() + ParserConsts.Parser_ScopeDelimiter.c_str() + ShortIdentifier.to_string();
-}
-
 weec::parse::wcParseSymbol::wcParseSymbol() : FullIdent()
 {
 	Type = wcParseSymbolType::Null;
@@ -1634,10 +1654,12 @@ weec::parse::wcParseSymbol::wcParseSymbol(wcParseFunctionSignature FuntionSignat
 	Arguments = FuntionSignature.FunctionIdentifier.ArgumentCount();
 }
 
-bool weec::parse::wcIdentifierResolver::Resolve(wcIdentifier In, wcFullIdentifier& Out)
+wcIdentifierResolveResult weec::parse::wcIdentifierResolver::Resolve(wcIdentifier In, wcFullIdentifier& Out, bool ReturnFirstMatch)
 {
-	bool Success = false;
 	stack<wcParseStackFrame> Receiver;
+	unsigned int MatchingIdentifierCount = 0;
+	auto Result = wcIdentifierResolveResult::Unresolved;
+
 	while (StackFrames.size() > 0)
 	{
 		//check if top stackframe declares the given identifier
@@ -1645,9 +1667,13 @@ bool weec::parse::wcIdentifierResolver::Resolve(wcIdentifier In, wcFullIdentifie
 			if (Symbol.ShortIdentifier == In)
 			{
 				//found it
+				MatchingIdentifierCount++;
 				Out = Symbol;
-				Success = true;
-				goto _wcIdentifierResolver_Resolve_Cleanup;
+				Result = wcIdentifierResolveResult::Resolved;
+				
+				//return the first match we get if were forced to resolve ambiguous symbols
+				if(ReturnFirstMatch)
+					goto _wcIdentifierResolver_Resolve_Cleanup;
 			}
 
 		//pop this stackframe, try the next if there is one
@@ -1655,7 +1681,8 @@ bool weec::parse::wcIdentifierResolver::Resolve(wcIdentifier In, wcFullIdentifie
 		StackFrames.pop();
 	}
 
-	//nothing found
+	//mutliple or nothing found
+	Result = MatchingIdentifierCount > 1 ? wcIdentifierResolveResult::Ambiguous : wcIdentifierResolveResult::Unresolved;
 
 	//restore StackFrames
 	_wcIdentifierResolver_Resolve_Cleanup:
@@ -1664,5 +1691,6 @@ bool weec::parse::wcIdentifierResolver::Resolve(wcIdentifier In, wcFullIdentifie
 		StackFrames.push(Receiver.top());
 		Receiver.pop();
 	}
-	return Success;
+
+	return Result;
 }

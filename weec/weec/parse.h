@@ -14,6 +14,14 @@ namespace weec
 {
 	namespace parse
 	{
+		struct wcParserConsts
+		{
+			std::string Parser_GlobalIdentifier = "$g",
+				Parser_ScopeDelimiter = "::";
+		};
+
+		static wcParserConsts ParserConsts;
+
 		enum class wcParseNodeType
 		{
 			Empty, Head,
@@ -53,7 +61,7 @@ namespace weec
 
 			IdentRedeclaration, UndeclaredIdent, DeclarationsProhibited,
 
-			CouldntResolveType,
+			CouldntResolveType, AmbiguousType, CouldntResolveIdentifier, AmbiguousIdentifier,
 
 			UnexpectedEOF,
 
@@ -95,7 +103,20 @@ namespace weec
 				return l == r;
 			}
 
-			std::string to_string() const { return Identifier.c_str(); }
+			bool IsFunction() const
+			{
+				return Identifier.find("(") != Identifier.npos;
+			}
+
+			bool IsFullyQualified() const
+			{
+				return Identifier.find("::") != Identifier.npos;
+			}
+
+			std::string to_string() const 
+			{ 
+				return Identifier.c_str(); 
+			}
 
 		private:
 			std::string Identifier;
@@ -135,7 +156,17 @@ namespace weec
 				return *this;
 			}
 
-			std::string to_string() const;
+			std::string to_string() const
+			{
+				if (ShortIdentifier.to_string() == ParserConsts.Parser_GlobalIdentifier)
+					return ShortIdentifier.to_string();		//stops the global scope FullIdent being global::global
+				return ScopeIdentifier.to_string() + ParserConsts.Parser_ScopeDelimiter.c_str() + ShortIdentifier.to_string();
+			}
+
+			bool IsFunction() const
+			{
+				return ShortIdentifier.IsFunction();
+			}
 
 			wcIdentifier ShortIdentifier;
 			wcIdentifierScope ScopeIdentifier;
@@ -164,7 +195,7 @@ namespace weec
 
 			bool operator==(const wcFullIdentifier& p) const
 			{
-				return to_string_no_arguments() == p.to_string();
+				return to_string_no_parameters() == p.to_string();
 			}
 
 			wcFunctionIdentifier& operator=(const wcFunctionIdentifier& Other)
@@ -184,7 +215,7 @@ namespace weec
 				return Identifier.to_string();
 			}
 
-			std::string to_string_no_arguments() const
+			std::string to_string_no_parameters() const
 			{
 				return no_arguments().to_string();
 			}
@@ -231,9 +262,9 @@ namespace weec
 				return DataType.to_string() + " " + FunctionIdentifier.to_string();
 			}
 
-			std::string to_string_no_arguments() const
+			std::string to_string_no_parameters() const
 			{
-				return DataType.to_string() + " " + FunctionIdentifier.to_string_no_arguments();
+				return DataType.to_string() + " " + FunctionIdentifier.to_string_no_parameters();
 			}
 
 			wcFullIdentifier DataType;
@@ -265,12 +296,30 @@ namespace weec
 			wcParseStackFrame(std::string _Name)
 			{
 				Name = _Name;
+				Scope = wcIdentifierScope(_Name);
 			}
 
 			std::string Name;
-			tree<parse::wcParseNode>::iterator ReturnAddress;
+			wcIdentifierScope Scope;
 
 			std::vector<wcFullIdentifier> Symbols;
+		};
+
+		enum class wcIdentifierResolveResult
+		{
+			Ambiguous = -1,
+			Unresolved = 0,  
+			Resolved = 1
+		};
+
+		class wcIdentifierResolver
+		{
+			std::stack<wcParseStackFrame>& StackFrames;
+		public:
+			wcIdentifierResolver(std::stack<wcParseStackFrame>& _StackFrames) :
+				StackFrames(_StackFrames) {}
+
+			wcIdentifierResolveResult Resolve(wcIdentifier In, wcFullIdentifier& Out, bool ForceResolve = true);
 		};
 
 		class wcParseSymbolTable
@@ -286,12 +335,14 @@ namespace weec
 
 			wcParseSymbolTable& operator=(const wcParseSymbolTable&);
 
-			bool 
+			bool
 				Add(wcParseSymbolType, wcFullIdentifier Ident, lex::wcToken IdentToken, bool SetScopeToThisSymbol = false),
 				Add(wcParseSymbol Sym, bool SetScopeToThisSymbol = false),
 				Add(wcParseFunctionSignature Sig, std::vector<wcParseParameter> Parameters, bool SetScopeToThisSymbol = false),
 
 				Exists(wcFullIdentifier FullIdent) const;
+
+			wcIdentifierResolveResult Resolve(wcIdentifier Ident, wcFullIdentifier& Output);
 
 			wcParseSymbol Get(wcFullIdentifier FullIdent) const;
 
@@ -324,16 +375,6 @@ namespace weec
 			tree<wcParseNode> AST;
 			wcParseSymbolTable SymbolTable;
 			wcParserError Error;
-		};
-
-		class wcIdentifierResolver
-		{
-			std::stack<wcParseStackFrame>& StackFrames;
-		public:
-			wcIdentifierResolver(std::stack<wcParseStackFrame>& _StackFrames) :
-				StackFrames(_StackFrames) {}
-
-			bool Resolve(wcIdentifier In, wcFullIdentifier& Out);
 		};
 
 		enum class wcParseExpressionType

@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "weec_test", "weec_test\weec
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wcc", "wcc\wcc.vcxproj", "{4E2CC6C1-3B3B-49D7-99BE-9A75D60F4379}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IDE", "IDE\IDE.vcxproj", "{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -44,6 +46,14 @@ Global
 		{4E2CC6C1-3B3B-49D7-99BE-9A75D60F4379}.Release|x64.Build.0 = Release|x64
 		{4E2CC6C1-3B3B-49D7-99BE-9A75D60F4379}.Release|x86.ActiveCfg = Release|Win32
 		{4E2CC6C1-3B3B-49D7-99BE-9A75D60F4379}.Release|x86.Build.0 = Release|Win32
+		{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}.Debug|x64.ActiveCfg = Debug|x64
+		{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}.Debug|x64.Build.0 = Debug|x64
+		{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}.Debug|x86.ActiveCfg = Debug|x64
+		{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}.Debug|x86.Build.0 = Debug|x64
+		{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}.Release|x64.ActiveCfg = Release|x64
+		{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}.Release|x64.Build.0 = Release|x64
+		{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}.Release|x86.ActiveCfg = Release|x64
+		{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -718,8 +718,6 @@ any weec::interpreter::wcInterpreter::ExecDeclaration()
 		}
 	}
 
-
-
 	//add to symbol table
 	if (!isFunc)
 	{

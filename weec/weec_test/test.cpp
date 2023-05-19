@@ -126,6 +126,93 @@ int weec::test::lex::Test_StringTokenizer1()
 	return 0;
 }
 
+int weec::test::lex::Test_wcIdentifier1()
+{
+	//a blank wcIdentifier
+	string emptyString = "";
+	wcIdentifier blankIdent;
+	if (blankIdent != emptyString || blankIdent.Size() != 0 || blankIdent.IsQualified() || blankIdent.IsFunction())
+		return 1;
+
+	//a string constructed wcIdentifier
+	string identString1 = "_TestIdent1";
+	wcIdentifier constructedIdentifier(identString1);
+	if (constructedIdentifier != identString1 || constructedIdentifier.Size() != identString1.size() || constructedIdentifier.IsQualified() || constructedIdentifier.IsFunction())
+		return 2;
+
+
+	//a string constructed wcIdentifier, with a namespace in the string (or a fully qualified identifier) 
+	string identStringWithNamespace = "ns::IdentWithNamespace";
+	wcIdentifier fullyQualifiedIdentifier(identStringWithNamespace);
+	if (fullyQualifiedIdentifier != identStringWithNamespace || fullyQualifiedIdentifier.Size() != identStringWithNamespace.size() || !fullyQualifiedIdentifier.IsQualified() || fullyQualifiedIdentifier.IsFunction())
+		return 3;
+
+
+	//a string constructed wcIdentifier, with a function in the string 
+	string identStringWithFunction = "ThisIsAFunction()";
+	string identStringWithoutFunction = "ThisIsAFunction";
+	wcIdentifier identifierWithFunction(identStringWithFunction);
+	if (identifierWithFunction != identStringWithFunction)		//"ThisIsAFunction()" == "ThisIsAFunction()" is true
+		return 4;
+	if (identifierWithFunction != identStringWithoutFunction)		//"ThisIsAFunction()" == "ThisIsAFunction" is true
+		return 5;
+	if (identifierWithFunction.to_string() != identStringWithFunction)
+		return 6;
+	if (identifierWithFunction.Size() != identStringWithFunction.size() || identifierWithFunction.IsQualified() || !identifierWithFunction.IsFunction())
+		return 7;
+
+
+	//a string constructed wcIdentifier, with a fully qualified function in the string 
+	string identStringWithFunctionAndNamespace = "ns::ThisIsAFunctionWithNamespace()";
+	string identStringWithoutFunctionButFunction = "ns::ThisIsAFunctionWithNamespace";
+	wcIdentifier identifierWithFunctionAndNamespace(identStringWithFunctionAndNamespace);
+	if (identifierWithFunctionAndNamespace != identStringWithFunctionAndNamespace)
+		return 8;
+	if (identifierWithFunctionAndNamespace != identStringWithoutFunctionButFunction)
+		return 9;
+	if (identifierWithFunctionAndNamespace.to_string() != identStringWithFunctionAndNamespace)
+		return 10;
+	if (identifierWithFunctionAndNamespace.Size() != identStringWithFunctionAndNamespace.size() || !identifierWithFunctionAndNamespace.IsQualified() || !identifierWithFunctionAndNamespace.IsFunction())
+		return 11;
+
+	return 0;
+}
+
+int weec::test::lex::Test_wcScopeIdentifier1()
+{
+	//a blank wcIdentifierScope
+	string emptyString = "";
+	wcIdentifierScope blankScopeIdent;
+	if (blankScopeIdent != emptyString || blankScopeIdent.Size() != 0 || blankScopeIdent.to_string() != ParserConsts.GlobalIdentifier || blankScopeIdent.to_unqualified_string() != emptyString)
+		return 1;
+
+	string simpleScope = "scope";
+	wcIdentifierScope simpleIdentScope(simpleScope);
+	if (simpleIdentScope != simpleScope || simpleIdentScope.Size() != simpleScope.size() || simpleIdentScope.to_string() != ParserConsts.GlobalIdentPrefix + simpleScope || simpleIdentScope.to_unqualified_string() != simpleScope)
+		return 2;
+
+	return 0;
+}
+
+
+int weec::test::lex::Test_wcFullIdentifier1()
+{
+	//a blank wcIdentifier
+	string emtpyString = "";
+	wcFullIdentifier blankIdentifier;
+	if (blankIdentifier != emtpyString || blankIdentifier.Size() != 0 || blankIdentifier.IsFunction())
+		return 1;
+
+	//string constructed wcFullIdentifier
+	string ns = "namespace", ident = "ident", fullIdentString1 = ns + ParserConsts.ScopeDelimiter + ident;
+	wcFullIdentifier constructor1(fullIdentString1);
+	if (constructor1 != fullIdentString1 || constructor1.to_string() != fullIdentString1)
+		return 1;
+
+
+	return 0;
+}
+
 int weec::test::lex::Test_Tokenizer1()
 {
 	string input = listing::list_tokenizer1;

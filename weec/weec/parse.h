@@ -16,8 +16,9 @@ namespace weec
 	{
 		struct wcParserConsts
 		{
-			std::string Parser_GlobalIdentifier = "$g",
-				Parser_ScopeDelimiter = "::";
+			std::string GlobalIdentifier = "$g",
+				ScopeDelimiter = "::",
+				GlobalIdentPrefix = GlobalIdentifier + ScopeDelimiter;
 		};
 
 		static wcParserConsts ParserConsts;
@@ -89,6 +90,32 @@ namespace weec
 			Null, Type, Variable, Function, Namespace
 		};
 
+		enum class wcIdentalyzerAnalyzeResultCode
+		{
+			InvalidIdentifier, ShortIdentifier, QualifiedIdentifier, ShortFunction, QualifiedFunction
+		};
+
+		class wcIdentifier; class wcIdentifierScope;
+
+		class wcIdentalyzer
+		{
+		public:
+			wcIdentalyzerAnalyzeResultCode Analyze(std::string);
+
+			bool Create(std::string IdentifierString, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
+
+			std::string GetNamespaceFromQualifiedIdentifier(std::string IdentifierString),
+				GetIdentifierFromQualifiedIdentifier(std::string IdentifierString);
+
+			bool IsQualified(std::string), IsFunction(std::string), IsValid(std::string), IsQualifiedWithGlobal(std::string);
+		};
+
+
+		class wcBaseIdentifier
+		{
+
+		};
+
 		struct wcIdentifier
 		{
 			wcIdentifier();
@@ -97,8 +124,17 @@ namespace weec
 			bool operator==(const wcIdentifier& p) const
 			{
 				//strip arguments from either side
-				auto l = to_string().find("(") != to_string().npos ?  to_string().substr(0, to_string().find_first_of("(")) : to_string();				
+				auto l = to_string().find("(") != to_string().npos ? to_string().substr(0, to_string().find_first_of("(")) : to_string();
 				auto r = p.to_string().find("(") != p.to_string().npos ? p.to_string().substr(0, p.to_string().find_first_of("(")) : p.to_string();
+
+				return l == r;
+			}
+
+			bool operator==(const std::string& p) const
+			{
+				//strip arguments from either side
+				auto l = to_string().find("(") != to_string().npos ? to_string().substr(0, to_string().find_first_of("(")) : to_string();
+				auto r = p.find("(") != p.npos ? p.substr(0, p.find_first_of("(")) : p;
 
 				return l == r;
 			}
@@ -108,14 +144,59 @@ namespace weec
 				return Identifier.find("(") != Identifier.npos;
 			}
 
-			bool IsFullyQualified() const
+			bool IsQualified() const
 			{
-				return Identifier.find("::") != Identifier.npos;
+				return (ContainsNamespace() || ContainsTheGlobalIdentifier());
 			}
 
-			std::string to_string() const 
-			{ 
-				return Identifier.c_str(); 
+			bool ContainsTheGlobalIdentifier() const
+			{
+				return Identifier.find(ParserConsts.GlobalIdentifier) != std::string::npos;
+			}
+
+			bool ContainsNamespace() const
+			{
+				return Identifier.find("::") != std::string::npos;
+			}
+
+			std::string to_string() const
+			{
+				return Identifier;
+			}
+
+			std::string to_unqualified_string() const
+			{
+				//remove $g:: and any other namespaces
+				if (ContainsNamespace())
+					return Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter), Identifier.size() - Identifier.find_last_of(ParserConsts.ScopeDelimiter));
+
+				if (ContainsTheGlobalIdentifier())
+					return "";	//no namespace delimiter, but a present global ident... must be just "$g". the unqualified version of this is an empty string
+				
+				//no namespace, no global, this identifier already is unqualified
+				return Identifier;
+			}
+
+			std::string to_string_no_global() const
+			{
+				if (!ContainsTheGlobalIdentifier())
+					return Identifier;	//global wasnt present
+				else
+					if (ContainsNamespace())
+						return Identifier.substr(Identifier.find_first_of(ParserConsts.GlobalIdentPrefix), Identifier.size() - Identifier.find_first_of(ParserConsts.GlobalIdentPrefix));
+					else
+						return "";  //must be just "$g"
+			}
+
+			unsigned int Size() const
+			{
+				if (ContainsTheGlobalIdentifier())
+					if (ContainsNamespace())
+						return Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter), Identifier.size() - Identifier.find_last_of(ParserConsts.ScopeDelimiter)).size();
+					else
+						return 0;	//must be just "$g"
+				else
+					return Identifier.size();
 			}
 
 		private:
@@ -124,17 +205,63 @@ namespace weec
 
 		struct wcIdentifierScope
 		{
-			wcIdentifierScope();
-			wcIdentifierScope(const wcIdentifierScope&), wcIdentifierScope(std::string);
+			wcIdentifierScope() 
+			{ 
+				Identifier = ParserConsts.GlobalIdentifier;  
+			}
+
+			wcIdentifierScope(const wcIdentifierScope& Other)
+			{
+				Identifier = Other.Identifier;
+			}
+
+			wcIdentifierScope(std::string Data)
+			{
+				//todo finish
+				if()
+
+				Identifier = Data;
+			}
+
+			bool operator==(const wcIdentifierScope& p) const
+			{
+				return to_string() == p.to_string();
+			}
+
+			bool operator==(const std::string& p) const
+			{
+				if (wcIdentalyzer().IsQualified(p))
+					return to_string() == p;
+				return to_unqualified_string() == p;
+			}
+
+			bool IsQualified() const
+			{
+				//we guarantee the identifier to be fully qualified
+				return true;	
+			}
+
+			unsigned int Size() const
+			{
+				return Identifier.Size();
+			}
 
 			std::string to_string() const { return Identifier.to_string(); }
+
+			std::string to_unqualified_string() const
+			{
+				return Identifier.to_unqualified_string();
+			}
 
 			wcIdentifier Identifier;	//should be fully qualified
 		};
 
 		class wcParseExpression; struct wcParseSymbol; struct wcParseParameter;
+
 		struct wcFullIdentifier
 		{
+			  
+		public: 
 			wcFullIdentifier();
 			wcFullIdentifier(const wcFullIdentifier&);
 			wcFullIdentifier(wcIdentifier, wcIdentifierScope);
@@ -156,16 +283,21 @@ namespace weec
 				return *this;
 			}
 
-			std::string to_string() const
-			{
-				if (ShortIdentifier.to_string() == ParserConsts.Parser_GlobalIdentifier)
-					return ShortIdentifier.to_string();		//stops the global scope FullIdent being global::global
-				return ScopeIdentifier.to_string() + ParserConsts.Parser_ScopeDelimiter.c_str() + ShortIdentifier.to_string();
-			}
-
 			bool IsFunction() const
 			{
 				return ShortIdentifier.IsFunction();
+			}
+			
+			unsigned int Size() const
+			{
+				return to_string().size();
+			}
+
+			std::string to_string() const
+			{
+				if (ShortIdentifier.to_string() == ParserConsts.GlobalIdentifier)
+					return ShortIdentifier.to_string();		//stops the global scope FullIdent being $g::$g
+				return ScopeIdentifier.to_string() + ParserConsts.ScopeDelimiter.c_str() + ShortIdentifier.to_string();
 			}
 
 			wcIdentifier ShortIdentifier;
@@ -289,7 +421,6 @@ namespace weec
 			unsigned int Arguments;
 			bool Registered, Const, HasOverloads;
 		};
-
 
 		struct wcParseStackFrame
 		{

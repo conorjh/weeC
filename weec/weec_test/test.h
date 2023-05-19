@@ -24,15 +24,20 @@ namespace weec
 			std::string list_tokenizer11 = "x = 88 + (42 / 99)";
 			std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember";
 
+			//declarations
 			std::string list_parser1 = "int a;";
 			std::string list_parser2 = "float a";
 			std::string list_parser3 = "int a = 2;";
 			std::string list_parser4 = "int a = (22 + 6);";
 			std::string list_parser5 = "int a; int b = a * 2;";
 			std::string list_parser6 = "int a = 2; int b = a * 2;";
+
+			//declaration errors
 			std::string list_parser7 = " int a; int a;";	//error
 			std::string list_parser8 = " a * b;";			//error
 			std::string list_parser9 = "int a = 2;\n int b = a * 2;\n return a * b;";
+
+			//if statements
 			std::string list_parser10 = "if(1 == 10-9)\n{\n return 999;\n}";
 			std::string list_parser11 = "if(1 != 10-9)\n{\n\t return 123;\n}\nelse\n{\n\t return 999;\n}";
 			std::string list_parser12 = "if(1 == 10-9)\n\treturn (1 == 10-9);\nreturn !(1 == 10-9);";
@@ -40,6 +45,8 @@ namespace weec
 			std::string list_parser14 = "if(1 == 10-9)\n{\n\tint a;\n\nelse\n{\n\tint b;\n} "; //error
 			std::string list_parser15 = "if(true)\n\t55+55;\nelse\n\t66+ +66;";
 			std::string list_parser16 = "if(true) if(true) if(true) 123;";
+
+			//return statement
 			std::string list_parser17 = "return";	//error
 			std::string list_parser18 = "return;";
 			std::string list_parser19 = "return 2+2;";
@@ -48,6 +55,8 @@ namespace weec
 			std::string list_parser22 = "int t = 0;\nwhile(t<10000)\n{\n\tt = t+1;\n}\nreturn t;";
 			std::string list_parser23 = "int a = 2;\n int b = 3;\n if (a < b)\n return 213123;	\n return 323444; ";			
 			std::string list_parser24 = "int a = 1;\n\n//single line while loop \nwhile(a<100)\n\ta = a + 1;\nreturn a;";
+
+			//function declarations
 			std::string list_parser25 = "int functionName();";
 			std::string list_parser26 = "int functionNameWithBody()\n{\n\treturn 123;\n}";
 			std::string list_parser27 = "int functionNameWithParams(int a, int b)\n{\n\treturn a * b;\n}";
@@ -120,6 +129,10 @@ namespace weec
 
 			int Test_StringTokenizer1();
 
+			int Test_wcIdentifier1();
+			int Test_wcScopeIdentifier1();
+			int Test_wcFullIdentifier1();
+
 			int Test_wcParser_1(), Test_wcParser_2(), Test_wcParser_3(), Test_wcParser_4(), Test_wcParser_5(),
 				Test_wcParser_6(), Test_wcParser_7(), Test_wcParser_8(), Test_wcParser_9(), Test_wcParser_10(),
 				Test_wcParser_11(), Test_wcParser_12(), Test_wcParser_13(), Test_wcParser_14(), Test_wcParser_15(),
@@ -154,6 +167,12 @@ namespace weec
 
 			std::vector<int(*)()> allParseTests =
 			{
+				Test_wcIdentifier1,
+
+				Test_wcScopeIdentifier1,
+
+				Test_wcFullIdentifier1,
+
 				Test_wcParser_1, Test_wcParser_2, Test_wcParser_3, Test_wcParser_4, Test_wcParser_5,
 				Test_wcParser_6, Test_wcParser_7, Test_wcParser_8, Test_wcParser_9, Test_wcParser_10,
 				Test_wcParser_11, Test_wcParser_12, Test_wcParser_13, Test_wcParser_14, Test_wcParser_15,

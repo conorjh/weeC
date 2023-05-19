@@ -33,7 +33,7 @@ namespace weec
 			wcStringToken();
 			wcStringToken(std::string _data, wcStringTokenType _type, int _line, int _column);
 			wcStringToken& operator=(wcStringToken);
-			bool operator==(const wcStringToken&);
+			bool operator==(const wcStringToken&), operator==(wcStringToken&);
 
 			wcStringTokenType Type;
 			std::string Data;

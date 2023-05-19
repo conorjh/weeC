@@ -44,6 +44,13 @@ bool weec::lex::wcStringToken::operator==(const wcStringToken& Other)
 	return false;
 }
 
+bool weec::lex::wcStringToken::operator==(wcStringToken& Other)
+{
+	if (Other.Data == Data && Other.Type == Type)
+		return true;
+	return false;
+}
+
 weec::lex::wcToken::wcToken() : StringToken(misc::NullToken)
 {
 	Type = wcTokenType::Null;
@@ -169,7 +176,8 @@ bool weec::lex::wcStringTokenizer::Match(wcStringTokenType _expectedType)
 
 bool weec::lex::wcStringTokenizer::Match(char _expectedChar)
 {
-	if (TokenBuffer.Data.size() && _expectedChar != '\0' && TokenBuffer.Data.at(TokenBuffer.Data.size() - 1) != _expectedChar)
+	if (TokenBuffer.Data.size() && _expectedChar != '\0' 
+		&& TokenBuffer.Data.at(TokenBuffer.Data.size() - 1) != _expectedChar)
 		return false;
 	return true;
 }
@@ -370,7 +378,8 @@ bool weec::lex::wcToken::operator==(const wcToken& Other)
 
 bool weec::lex::wcToken::operator==(wcToken& Other)
 {
-	if (Other.StringToken == StringToken && Other.Type == Type)
+	if (Other.StringToken == StringToken 
+		&& Other.Type == Type)
 		return true;
 	return false;
 }
@@ -741,35 +750,43 @@ bool weec::lex::wcTokenizer::IsErrored()
 }
 
 
-weec::lex::wcTokenDefinition::wcTokenDefinition() : Type(wcTokenType::Null), identifiers({}), delimiter(false), punctuation(false), precedence(0)
+weec::lex::wcTokenDefinition::wcTokenDefinition() 
+	: Type(wcTokenType::Null), identifiers({}), delimiter(false), punctuation(false), precedence(0)
 {
 }
 
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) : Type(_type), identifiers({ identifier }), delimiter(false), punctuation(false), precedence(0)
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) 
+	: Type(_type), identifiers({ identifier }), delimiter(false), punctuation(false), precedence(0)
 {
 }
 
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) : Type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(false), precedence(0)
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) 
+	: Type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(false), precedence(0)
 {
 }
 
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim, bool _isPunc) : Type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(_isPunc), precedence(0)
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim, bool _isPunc) 
+	: Type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(_isPunc), precedence(0)
 {
 }
 
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) : Type(_type), identifiers(_identifiers), delimiter(false), punctuation(false), precedence(0)
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) 
+	: Type(_type), identifiers(_identifiers), delimiter(false), punctuation(false), precedence(0)
 {
 }
 
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) : Type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(false), precedence(0)
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) 
+	: Type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(false), precedence(0)
 {
 }
 
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation) : Type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(_isPunctuation), precedence(0)
+weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation) 
+	: Type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(_isPunctuation), precedence(0)
 {
 }
 
-weec::lex::wcTokenDefinition::wcTokenDefinition(const wcTokenDefinition& input) : Type(input.Type), identifiers(input.identifiers), delimiter(input.delimiter), punctuation(input.punctuation), precedence(input.precedence)
+weec::lex::wcTokenDefinition::wcTokenDefinition(const wcTokenDefinition& input) 
+	: Type(input.Type), identifiers(input.identifiers), delimiter(input.delimiter), punctuation(input.punctuation), precedence(input.precedence)
 {
 }
 

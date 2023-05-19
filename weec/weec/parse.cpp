@@ -46,7 +46,6 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		return Output.AddAsChild(TypeNode).AddAsChild(IdentNode);
 
 	//semi colon - variable declaration
-	wcParseOutput ParametersNode, BodyNode;
 	if (ExpectToken(SemiColon))
 	{
 		//add to symbol table
@@ -57,6 +56,8 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 	//function declaration
 	else if (ExpectToken(OpenParenthesis))
 	{
+		wcParseOutput ParametersNode, BodyNode;
+
 		//function declaration prototype
 		vector<wcParseParameter> Parameters;
 
@@ -541,16 +542,16 @@ weec::parse::wcParseExpression::wcParseExpression(wcParseNodeType HeadType, lex:
 		switch (OperatorOrLiteral.Type)
 		{
 		case IntLiteral:
-			DataType = wcFullIdentifier(ParserConsts.Parser_GlobalIdentifier + ParserConsts.Parser_ScopeDelimiter + "int");
+			DataType = wcFullIdentifier(ParserConsts.GlobalIdentifier + ParserConsts.ScopeDelimiter + "int");
 			break;
 		case StringLiteral:
-			DataType = wcFullIdentifier(ParserConsts.Parser_GlobalIdentifier + ParserConsts.Parser_ScopeDelimiter + "string");
+			DataType = wcFullIdentifier(ParserConsts.GlobalIdentifier + ParserConsts.ScopeDelimiter + "string");
 			break;
 		case FloatLiteral:
-			DataType = wcFullIdentifier(ParserConsts.Parser_GlobalIdentifier + ParserConsts.Parser_ScopeDelimiter + "float");
+			DataType = wcFullIdentifier(ParserConsts.GlobalIdentifier + ParserConsts.ScopeDelimiter + "float");
 			break;
 		case CharLiteral:
-			DataType = wcFullIdentifier(ParserConsts.Parser_GlobalIdentifier + ParserConsts.Parser_ScopeDelimiter + "char");
+			DataType = wcFullIdentifier(ParserConsts.GlobalIdentifier + ParserConsts.ScopeDelimiter + "char");
 			break;
 		default:
 			DataType = wcFullIdentifier("null");
@@ -1277,20 +1278,20 @@ wcParseNodeType wcTokenTypeToParseNodeType(wcTokenType Type)
 weec::parse::wcParseSymbolTable::wcParseSymbolTable() : NullSymbol(wcParseSymbolType::Null, wcFullIdentifier("", ""), wcToken())
 {
 	//global stackframe
-	wcParseStackFrame GlobalFrame(ParserConsts.Parser_GlobalIdentifier);
+	wcParseStackFrame GlobalFrame(ParserConsts.GlobalIdentifier);
 	StackFrames.push(GlobalFrame);
 
 	//global scope
-	Add(wcParseSymbolType::Namespace, wcFullIdentifier(ParserConsts.Parser_GlobalIdentifier, ParserConsts.Parser_GlobalIdentifier), wcToken(), true);
+	Add(wcParseSymbolType::Namespace, wcFullIdentifier(ParserConsts.GlobalIdentifier, ParserConsts.GlobalIdentifier), wcToken(), true);
 
 	//built-in types
-	Add(wcParseSymbolType::Type, wcFullIdentifier("void", ParserConsts.Parser_GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("int", ParserConsts.Parser_GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("uint", ParserConsts.Parser_GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("double", ParserConsts.Parser_GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("float", ParserConsts.Parser_GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("bool", ParserConsts.Parser_GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("string", ParserConsts.Parser_GlobalIdentifier), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier("void", ParserConsts.GlobalIdentifier), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier("int", ParserConsts.GlobalIdentifier), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier("uint", ParserConsts.GlobalIdentifier), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier("double", ParserConsts.GlobalIdentifier), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier("float", ParserConsts.GlobalIdentifier), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier("bool", ParserConsts.GlobalIdentifier), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier("string", ParserConsts.GlobalIdentifier), wcToken());
 
 }
 
@@ -1428,19 +1429,6 @@ wcParseSymbol weec::parse::wcParseSymbolTable::ClassifyIdent(lex::wcToken Ident)
 	return wcParseSymbol(wcParseSymbolType::Variable, FullIdent, Ident);
 }
 
-weec::parse::wcIdentifierScope::wcIdentifierScope()
-{
-}
-
-weec::parse::wcIdentifierScope::wcIdentifierScope(const wcIdentifierScope& Other)
-{
-	Identifier = Other.Identifier;
-}
-
-weec::parse::wcIdentifierScope::wcIdentifierScope(std::string _Data)
-{
-	Identifier = _Data;
-}
 
 weec::parse::wcIdentifier::wcIdentifier()
 {
@@ -1458,30 +1446,7 @@ weec::parse::wcIdentifier::wcIdentifier(std::string _Data)
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string RawIdentifier)
 {
-	string IdentWithoutArguments = RawIdentifier, ShortIdentWithArguments = "";
-
-	//unqualified identifier, no namespace used
-	if (RawIdentifier.find("::") == std::string::npos)
-	{
-		//append global scope
-		ScopeIdentifier = wcIdentifierScope(ParserConsts.Parser_GlobalIdentifier);
-		ShortIdentifier = wcIdentifier(RawIdentifier);
-		return;
-	}
-	//qualified identifier, check if its a function as well
-	else if (IdentWithoutArguments.find_first_of("(") != std::string::npos)
-	{
-		IdentWithoutArguments = IdentWithoutArguments.substr(0, IdentWithoutArguments.find_first_of("("));	//$global::functionNameWithParams
-		ShortIdentWithArguments = RawIdentifier.substr(RawIdentifier.rfind("::", RawIdentifier.find_first_of("(")) + 2);
-	}
-	else
-		//qualified non function identifier
-		ShortIdentWithArguments = RawIdentifier.substr(RawIdentifier.find_last_of("::") + 1);
-
-
-	//get scope
-	ScopeIdentifier = wcIdentifierScope(RawIdentifier.substr(0, IdentWithoutArguments.find_last_of("::") - 1));			//split the namespace from the identifier
-	ShortIdentifier = wcIdentifier(ShortIdentWithArguments);
+	wcIdentalyzer().Create(RawIdentifier, ScopeIdentifier, ShortIdentifier);
 }
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vector<wcParseSymbol> Arguments)
@@ -1491,7 +1456,7 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 	{
 		//not qualified as expected, global scope
 		ShortIdentifier = wcIdentifier(FullIdent);
-		ScopeIdentifier = wcIdentifierScope(ParserConsts.Parser_GlobalIdentifier);
+		ScopeIdentifier = wcIdentifierScope();
 		return;
 	}
 
@@ -1524,7 +1489,7 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 	{
 		//not qualified as expected, global scope
 		ShortIdentifier = wcIdentifier(FullIdent);
-		ScopeIdentifier = wcIdentifierScope(ParserConsts.Parser_GlobalIdentifier);
+		ScopeIdentifier = wcIdentifierScope();
 		return;
 	}
 
@@ -1557,7 +1522,7 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 	{
 		//not qualified as expected, global scope
 		ShortIdentifier = wcIdentifier(FullIdent);
-		ScopeIdentifier = wcIdentifierScope(ParserConsts.Parser_GlobalIdentifier);
+		ScopeIdentifier = wcIdentifierScope();
 		return;
 	}
 
@@ -1694,3 +1659,85 @@ wcIdentifierResolveResult weec::parse::wcIdentifierResolver::Resolve(wcIdentifie
 
 	return Result;
 }
+
+wcIdentalyzerAnalyzeResultCode weec::parse::wcIdentalyzer::Analyze(std::string PossibleIdentifier)
+{
+	if(IsValid(PossibleIdentifier))
+		if (IsQualified(PossibleIdentifier))
+			if (IsFunction(PossibleIdentifier))
+				return wcIdentalyzerAnalyzeResultCode::QualifiedFunction;
+			else
+				return wcIdentalyzerAnalyzeResultCode::QualifiedIdentifier;
+		else
+			if (IsFunction(PossibleIdentifier))
+				return wcIdentalyzerAnalyzeResultCode::ShortFunction;
+			else
+				return wcIdentalyzerAnalyzeResultCode::ShortIdentifier;
+	else
+		return wcIdentalyzerAnalyzeResultCode::InvalidIdentifier;
+}
+
+bool weec::parse::wcIdentalyzer::Create(std::string IdentifierString, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput)
+{
+	switch (Analyze(IdentifierString))
+	{
+	case wcIdentalyzerAnalyzeResultCode::ShortFunction:
+	case wcIdentalyzerAnalyzeResultCode::ShortIdentifier:
+		ScopeOutput = wcIdentifierScope();
+		IdentifierOutput = wcIdentifier(IdentifierString);
+		return true;
+
+	case wcIdentalyzerAnalyzeResultCode::QualifiedIdentifier:
+	case wcIdentalyzerAnalyzeResultCode::QualifiedFunction:
+		ScopeOutput = wcIdentifierScope(GetNamespaceFromQualifiedIdentifier(IdentifierString));
+		IdentifierOutput = wcIdentifier(GetIdentifierFromQualifiedIdentifier(IdentifierString));
+		return true;
+
+	case wcIdentalyzerAnalyzeResultCode::InvalidIdentifier:
+		break;
+	}
+	return false;
+}
+
+std::string weec::parse::wcIdentalyzer::GetIdentifierFromQualifiedIdentifier(std::string IdentifierString)
+{
+	if (IdentifierString.find_last_of("::") == std::string::npos)
+		return IdentifierString;	//not qualified
+
+	return IdentifierString.substr(IdentifierString.find_last_of("::"), IdentifierString.size() - IdentifierString.find_last_of("::"));
+}
+
+std::string weec::parse::wcIdentalyzer::GetNamespaceFromQualifiedIdentifier(std::string IdentifierString)
+{
+	if (IdentifierString.find_last_of("::") == std::string::npos)
+		return IdentifierString;	//not qualified
+
+	return IdentifierString.substr(0, IdentifierString.find_last_of("::"));
+}
+
+bool weec::parse::wcIdentalyzer::IsQualified(std::string PossibleIdentifier)
+{
+	if (PossibleIdentifier.find("::") != std::string::npos)
+		return true;	//could still be an invalid ident
+	return false;
+}
+
+bool weec::parse::wcIdentalyzer::IsQualifiedWithGlobal(std::string PossibleIdentifier)
+{
+	if (IsQualified(PossibleIdentifier) && PossibleIdentifier.starts_with(ParserConsts.GlobalIdentifier + ParserConsts.ScopeDelimiter))
+		return true;	//could still be an invalid ident
+	return false;
+}
+
+bool weec::parse::wcIdentalyzer::IsFunction(std::string PossibleIdentifier)
+{
+	if (PossibleIdentifier.find_first_of("(") != std::string::npos && PossibleIdentifier.find_first_of(")") != std::string::npos)
+		return true;	//could still be an invalid ident
+	return false;
+}
+
+bool weec::parse::wcIdentalyzer::IsValid(std::string PossibleIdentifier)
+{
+	return lex::wcTokenTypeAlizer().IsValidIdent(PossibleIdentifier);
+}
+

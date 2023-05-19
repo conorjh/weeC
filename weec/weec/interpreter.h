@@ -448,7 +448,7 @@ namespace weec
 				return std::any_cast<T1>(a) != std::any_cast<T2>(b);
 
 			case lex::wcTokenType::AssignOperator:
-				SymTab.Set(any_cast<std::string>(a), std::any_cast<T1>(b));
+				SymTab.Set(std::any_cast<std::string>(a), std::any_cast<T1>(b));
 				return std::any_cast<T1>(b);
 			}
 

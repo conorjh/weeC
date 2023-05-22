@@ -1419,7 +1419,7 @@ wcParseSymbol weec::parse::wcParseSymbolTable::ClassifyIdent(lex::wcToken Ident)
 	if (wcTokenTypeAlizer().IsIdentQualified(Ident.StringToken.Data))
 		FullIdent = wcFullIdentifier(Ident.StringToken.Data);
 	else
-		FullIdent = wcFullIdentifier(wcIdentifier(Ident.StringToken.Data), wcIdentifierScope(GetCurrentScope().FullIdent.to_string()));
+		FullIdent = wcFullIdentifier(wcIdentifierScope(GetCurrentScope().FullIdent.to_string()), wcIdentifier(Ident.StringToken.Data));
 
 	if (Exists(FullIdent))
 	{
@@ -1430,9 +1430,6 @@ wcParseSymbol weec::parse::wcParseSymbolTable::ClassifyIdent(lex::wcToken Ident)
 }
 
 
-weec::parse::wcIdentifier::wcIdentifier()
-{
-}
 
 weec::parse::wcIdentifier::wcIdentifier(const wcIdentifier& Other) : Identifier(Other.Identifier)
 {
@@ -1452,7 +1449,7 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string RawIdentifier)
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vector<wcParseSymbol> Arguments)
 {
 	//$global::functionNameWithParams($global::a,$global::b)
-	if (FullIdent.find("::") == std::string::npos)
+	if (FullIdent.find(ParserConsts.ScopeDelimiter) == std::string::npos)
 	{
 		//not qualified as expected, global scope
 		ShortIdentifier = wcIdentifier(FullIdent);
@@ -1465,10 +1462,10 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 	if (IdentWithoutArguments.find_first_of("(") != std::string::npos)
 	{
 		IdentWithoutArguments = IdentWithoutArguments.substr(0, IdentWithoutArguments.find_first_of("("));	//$global::functionNameWithParams
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind("::", FullIdent.find_first_of("(")) + 2);
+		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind(ParserConsts.ScopeDelimiter, FullIdent.find_first_of("(")) + 2);
 	}
 	else
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of("::") + 1);
+		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of(ParserConsts.ScopeDelimiter) + 1);
 
 	//todo fill me in bruv
 	string ArgStr = "";
@@ -1478,14 +1475,14 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 		ArgStr = ArgStr.substr(0, ArgStr.size() - 1);
 
 	//get scope
-	ScopeIdentifier = wcIdentifierScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of("::") - 1));			//$global
+	ScopeIdentifier = wcIdentifierScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of(ParserConsts.ScopeDelimiter) - 1));			//$global
 	ShortIdentifier = wcFullIdentifier(FullIdent + "(" + ArgStr + ")").ShortIdentifier;
 }
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vector<wcParseExpression> Arguments)
 {
 	//$global::functionNameWithParams($global::a,$global::b)
-	if (FullIdent.find("::") == std::string::npos)
+	if (FullIdent.find(ParserConsts.ScopeDelimiter) == std::string::npos)
 	{
 		//not qualified as expected, global scope
 		ShortIdentifier = wcIdentifier(FullIdent);
@@ -1498,10 +1495,10 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 	if (IdentWithoutArguments.find_first_of("(") != std::string::npos)
 	{
 		IdentWithoutArguments = IdentWithoutArguments.substr(0, IdentWithoutArguments.find_first_of("("));	//$global::functionNameWithParams
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind("::", FullIdent.find_first_of("(")) + 2);
+		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind(ParserConsts.ScopeDelimiter, FullIdent.find_first_of("(")) + 2);
 	}
 	else
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of("::") + 1);
+		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of(ParserConsts.ScopeDelimiter) + 1);
 
 	//todo fill me in bruv
 	string ArgStr = "";
@@ -1511,14 +1508,14 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 		ArgStr = ArgStr.substr(0, ArgStr.size() - 1);
 
 	//get scope
-	ScopeIdentifier = wcIdentifierScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of("::") - 1));			//$global
+	ScopeIdentifier = wcIdentifierScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of(ParserConsts.ScopeDelimiter) - 1));			//$global
 	ShortIdentifier = wcFullIdentifier(FullIdent + "(" + ArgStr + ")").ShortIdentifier;
 }
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vector<wcParseParameter> Parameters)
 {
 	//$global::functionNameWithParams($global::a,$global::b)
-	if (FullIdent.find("::") == std::string::npos)
+	if (FullIdent.find(ParserConsts.ScopeDelimiter) == std::string::npos)
 	{
 		//not qualified as expected, global scope
 		ShortIdentifier = wcIdentifier(FullIdent);
@@ -1531,10 +1528,10 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 	if (IdentWithoutArguments.find_first_of("(") != std::string::npos)
 	{
 		IdentWithoutArguments = IdentWithoutArguments.substr(0, IdentWithoutArguments.find_first_of("("));	//$global::functionNameWithParams
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind("::", FullIdent.find_first_of("(")) + 2);
+		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind(ParserConsts.ScopeDelimiter, FullIdent.find_first_of("(")) + 2);
 	}
 	else
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of("::") + 1);
+		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of(ParserConsts.ScopeDelimiter) + 1);
 
 	//todo fill me in bruv
 	string ArgStr = "";
@@ -1544,7 +1541,7 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 		ArgStr = ArgStr.substr(0, ArgStr.size() - 1);
 
 	//get scope
-	ScopeIdentifier = wcIdentifierScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of("::") - 1));			//$global
+	ScopeIdentifier = wcIdentifierScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of(ParserConsts.ScopeDelimiter) - 1));			//$global
 	ShortIdentifier = wcFullIdentifier(FullIdent + "(" + ArgStr + ")").ShortIdentifier;
 }
 
@@ -1555,15 +1552,12 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string _Ident, std::string 
 	ScopeIdentifier = wcIdentifierScope(_Scope);
 }
 
-weec::parse::wcFullIdentifier::wcFullIdentifier(wcIdentifier _Ident, wcIdentifierScope _Scope)
+weec::parse::wcFullIdentifier::wcFullIdentifier( wcIdentifierScope _Scope, wcIdentifier _Ident)
 {
 	ShortIdentifier = wcIdentifier(_Ident);
 	ScopeIdentifier = wcIdentifierScope(_Scope);
 }
 
-weec::parse::wcFullIdentifier::wcFullIdentifier()
-{
-}
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(const wcFullIdentifier& Other)
 {
@@ -1662,7 +1656,7 @@ wcIdentifierResolveResult weec::parse::wcIdentifierResolver::Resolve(wcIdentifie
 
 wcIdentalyzerAnalyzeResultCode weec::parse::wcIdentalyzer::Analyze(std::string PossibleIdentifier)
 {
-	if(IsValid(PossibleIdentifier))
+	//if(IsValid(PossibleIdentifier))
 		if (IsQualified(PossibleIdentifier))
 			if (IsFunction(PossibleIdentifier))
 				return wcIdentalyzerAnalyzeResultCode::QualifiedFunction;
@@ -1673,8 +1667,8 @@ wcIdentalyzerAnalyzeResultCode weec::parse::wcIdentalyzer::Analyze(std::string P
 				return wcIdentalyzerAnalyzeResultCode::ShortFunction;
 			else
 				return wcIdentalyzerAnalyzeResultCode::ShortIdentifier;
-	else
-		return wcIdentalyzerAnalyzeResultCode::InvalidIdentifier;
+	//else
+	//	return wcIdentalyzerAnalyzeResultCode::InvalidIdentifier;
 }
 
 bool weec::parse::wcIdentalyzer::Create(std::string IdentifierString, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput)
@@ -1701,37 +1695,42 @@ bool weec::parse::wcIdentalyzer::Create(std::string IdentifierString, wcIdentifi
 
 std::string weec::parse::wcIdentalyzer::GetIdentifierFromQualifiedIdentifier(std::string IdentifierString)
 {
-	if (IdentifierString.find_last_of("::") == std::string::npos)
-		return IdentifierString;	//not qualified
-
-	return IdentifierString.substr(IdentifierString.find_last_of("::"), IdentifierString.size() - IdentifierString.find_last_of("::"));
+	return IsQualified(IdentifierString)
+		? IdentifierString.substr(IdentifierString.find_last_of(ParserConsts.ScopeDelimiter) + 1, IdentifierString.size() - IdentifierString.find_last_of(ParserConsts.ScopeDelimiter) + 1)
+		: IdentifierString;
 }
 
 std::string weec::parse::wcIdentalyzer::GetNamespaceFromQualifiedIdentifier(std::string IdentifierString)
 {
-	if (IdentifierString.find_last_of("::") == std::string::npos)
-		return IdentifierString;	//not qualified
+	return IsQualified(IdentifierString)
+		? IdentifierString.substr(0, IdentifierString.find_last_of(ParserConsts.ScopeDelimiter) - 1)
+		: IdentifierString;
+}
 
-	return IdentifierString.substr(0, IdentifierString.find_last_of("::"));
+std::string weec::parse::wcIdentalyzer::StripArgumentsFromFunctionIdentifier(std::string FunctionIdentifierString)
+{
+	return IsFunction(FunctionIdentifierString)
+		? FunctionIdentifierString.substr(0, FunctionIdentifierString.find_first_of("("))
+		: FunctionIdentifierString;
 }
 
 bool weec::parse::wcIdentalyzer::IsQualified(std::string PossibleIdentifier)
 {
-	if (PossibleIdentifier.find("::") != std::string::npos)
+	if (PossibleIdentifier.find(ParserConsts.ScopeDelimiter) != std::string::npos)
 		return true;	//could still be an invalid ident
 	return false;
 }
 
 bool weec::parse::wcIdentalyzer::IsQualifiedWithGlobal(std::string PossibleIdentifier)
 {
-	if (IsQualified(PossibleIdentifier) && PossibleIdentifier.starts_with(ParserConsts.GlobalIdentifier + ParserConsts.ScopeDelimiter))
+	if (PossibleIdentifier.starts_with(ParserConsts.GlobalIdentPrefix))
 		return true;	//could still be an invalid ident
 	return false;
 }
 
 bool weec::parse::wcIdentalyzer::IsFunction(std::string PossibleIdentifier)
 {
-	if (PossibleIdentifier.find_first_of("(") != std::string::npos && PossibleIdentifier.find_first_of(")") != std::string::npos)
+	if (PossibleIdentifier.find_first_of("(") != std::string::npos && PossibleIdentifier.find_last_of(")") != std::string::npos)
 		return true;	//could still be an invalid ident
 	return false;
 }
@@ -1740,4 +1739,6 @@ bool weec::parse::wcIdentalyzer::IsValid(std::string PossibleIdentifier)
 {
 	return lex::wcTokenTypeAlizer().IsValidIdent(PossibleIdentifier);
 }
+
+
 

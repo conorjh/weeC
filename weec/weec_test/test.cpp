@@ -7,7 +7,7 @@
 #include <vector>
 #include <iostream>
 
-using std::string;
+using namespace std;
 
 using namespace std;
 using namespace weec;
@@ -45,14 +45,14 @@ int main(int argc, char* argv[])
 
 int weec::test::lex::Test_AllLex()
 {
-	std::cout << "Running lex tests..." << std::endl;
+	cout << "Running lex tests..." << endl;
 	for (int t = 0; t < allLexTests.size(); ++t)
 	{
 		int testResult = allLexTests[t]();
 		if (testResult)
-			std::cout << "Test #" << t + 1 << " failed: " << testResult << std::endl;
+			cout << "Test #" << t + 1 << " failed: " << testResult << endl;
 		else
-			std::cout << "Test #" << t + 1 << " passed" << std::endl;
+			cout << "Test #" << t + 1 << " passed" << endl;
 	}
 
 	return 0;
@@ -60,14 +60,14 @@ int weec::test::lex::Test_AllLex()
 
 int weec::test::lex::Test_AllParse()
 {
-	std::cout << "Running parse tests..." << std::endl;
+	cout << "Running parse tests..." << endl;
 	for (int t = 0; t < allParseTests.size(); ++t)
 	{
 		int testResult = allParseTests[t]();
 		if (testResult)
-			std::cout << "\tTest #" << t + 1 << " failed: " << testResult << std::endl;
+			cout << "\tTest #" << t + 1 << " failed: " << testResult << endl;
 		else
-			std::cout << "\tTest #" << t + 1 << " passed" << std::endl;
+			cout << "\tTest #" << t + 1 << " passed" << endl;
 	}
 
 	return 0;
@@ -131,49 +131,113 @@ int weec::test::lex::Test_wcIdentifier1()
 	//a blank wcIdentifier
 	string emptyString = "";
 	wcIdentifier blankIdent;
-	if (blankIdent != emptyString || blankIdent.Size() != 0 || blankIdent.IsQualified() || blankIdent.IsFunction())
-		return 1;
+	if (blankIdent != emptyString)													return 1;
+	if (blankIdent.Size() != 0)														return 2;
+	if (blankIdent.IsQualified())													return 3;
+	if (blankIdent.IsFunction())													return 4;
+	if (blankIdent.to_string() != emptyString)										return 5;
+	if (blankIdent.to_string_no_global() != emptyString)							return 6;
+	if (blankIdent.to_unqualified_string() != emptyString)							return 7;
+	if (blankIdent.to_string_no_arguments() != emptyString)							return 8;
+	if (blankIdent.to_string_no_arguments_no_global() != emptyString)				return 9;
+	if (blankIdent.to_string_unqualified_no_arguments() != emptyString)				return 10;
+
 
 	//a string constructed wcIdentifier
-	string identString1 = "_TestIdent1";
-	wcIdentifier constructedIdentifier(identString1);
-	if (constructedIdentifier != identString1 || constructedIdentifier.Size() != identString1.size() || constructedIdentifier.IsQualified() || constructedIdentifier.IsFunction())
-		return 2;
+	string identString1 = "_TestIdent1";	wcIdentifier constructedIdentifier(identString1);
+	if (constructedIdentifier != identString1)													return 11;
+	if (constructedIdentifier.Size() != identString1.size())									return 12;
+	if (constructedIdentifier.IsQualified())													return 13;
+	if (constructedIdentifier.IsFunction())														return 14;
+	if (constructedIdentifier.to_string() != identString1)										return 15;
+	if (constructedIdentifier.to_string_no_global() != identString1)							return 16;
+	if (constructedIdentifier.to_unqualified_string() != identString1)							return 17;
+	if (constructedIdentifier.to_string_no_arguments() != identString1)							return 18;
+	if (constructedIdentifier.to_string_no_arguments_no_global() != identString1)				return 19;
+	if (constructedIdentifier.to_string_unqualified_no_arguments() != identString1)				return 20;
 
 
 	//a string constructed wcIdentifier, with a namespace in the string (or a fully qualified identifier) 
 	string identStringWithNamespace = "ns::IdentWithNamespace";
 	wcIdentifier fullyQualifiedIdentifier(identStringWithNamespace);
-	if (fullyQualifiedIdentifier != identStringWithNamespace || fullyQualifiedIdentifier.Size() != identStringWithNamespace.size() || !fullyQualifiedIdentifier.IsQualified() || fullyQualifiedIdentifier.IsFunction())
-		return 3;
+	if (fullyQualifiedIdentifier != identStringWithNamespace)										return 21;
+	if (fullyQualifiedIdentifier.Size() != identStringWithNamespace.size())							return 22;
+	if (!fullyQualifiedIdentifier.IsQualified())													return 23;
+	if (fullyQualifiedIdentifier.IsFunction())														return 24;
+	if (fullyQualifiedIdentifier.to_string() != identStringWithNamespace)							return 25;
+	if (fullyQualifiedIdentifier.to_string_no_global() != identStringWithNamespace)					return 26;
+	if (fullyQualifiedIdentifier.to_unqualified_string() != "IdentWithNamespace")					return 27;
+	if (fullyQualifiedIdentifier.to_string_no_arguments() != identStringWithNamespace)				return 28;
+	if (fullyQualifiedIdentifier.to_string_no_arguments_no_global() != identStringWithNamespace)	return 29;
+	if (fullyQualifiedIdentifier.to_string_unqualified_no_arguments() != "IdentWithNamespace")		return 30;
 
 
 	//a string constructed wcIdentifier, with a function in the string 
-	string identStringWithFunction = "ThisIsAFunction()";
-	string identStringWithoutFunction = "ThisIsAFunction";
+	string identStringWithFunction = "ThisIsAFunction()", identStringWithoutFunction = "ThisIsAFunction";
 	wcIdentifier identifierWithFunction(identStringWithFunction);
-	if (identifierWithFunction != identStringWithFunction)		//"ThisIsAFunction()" == "ThisIsAFunction()" is true
-		return 4;
-	if (identifierWithFunction != identStringWithoutFunction)		//"ThisIsAFunction()" == "ThisIsAFunction" is true
-		return 5;
-	if (identifierWithFunction.to_string() != identStringWithFunction)
-		return 6;
-	if (identifierWithFunction.Size() != identStringWithFunction.size() || identifierWithFunction.IsQualified() || !identifierWithFunction.IsFunction())
-		return 7;
+	if (identifierWithFunction != identStringWithFunction)														return 31;
+	if (identifierWithFunction != identStringWithoutFunction)													return 32;
+	if (identifierWithFunction.to_string() != identStringWithFunction)											return 33;
+	if (identifierWithFunction.Size() != identStringWithFunction.size())										return 34;
+	if (identifierWithFunction.IsQualified())																	return 35;
+	if (!identifierWithFunction.IsFunction())																	return 36;
+	if (identifierWithFunction.to_string() != identStringWithFunction)											return 37;
+	if (identifierWithFunction.to_string_no_global() != identStringWithFunction)								return 38;
+	if (identifierWithFunction.to_unqualified_string() != identStringWithFunction)								return 39;
+	if (identifierWithFunction.to_string_no_arguments() != identStringWithoutFunction)							return 40;
+	if (identifierWithFunction.to_string_no_arguments_no_global() != identStringWithoutFunction)				return 41;
+	if (identifierWithFunction.to_string_unqualified_no_arguments() != identStringWithoutFunction)				return 42;
 
 
 	//a string constructed wcIdentifier, with a fully qualified function in the string 
-	string identStringWithFunctionAndNamespace = "ns::ThisIsAFunctionWithNamespace()";
-	string identStringWithoutFunctionButFunction = "ns::ThisIsAFunctionWithNamespace";
+	string identStringWithFunctionAndNamespace = "ns::ThisIsAFunctionWithNamespace()", identStringWithoutFunctionButFunction = "ns::ThisIsAFunctionWithNamespace";
 	wcIdentifier identifierWithFunctionAndNamespace(identStringWithFunctionAndNamespace);
-	if (identifierWithFunctionAndNamespace != identStringWithFunctionAndNamespace)
-		return 8;
-	if (identifierWithFunctionAndNamespace != identStringWithoutFunctionButFunction)
-		return 9;
-	if (identifierWithFunctionAndNamespace.to_string() != identStringWithFunctionAndNamespace)
-		return 10;
-	if (identifierWithFunctionAndNamespace.Size() != identStringWithFunctionAndNamespace.size() || !identifierWithFunctionAndNamespace.IsQualified() || !identifierWithFunctionAndNamespace.IsFunction())
-		return 11;
+	if (identifierWithFunctionAndNamespace != identStringWithFunctionAndNamespace)										return 43;
+	if (identifierWithFunctionAndNamespace != identStringWithoutFunctionButFunction)									return 44;
+	if (identifierWithFunctionAndNamespace.to_string() != identStringWithFunctionAndNamespace)							return 45;
+	if (identifierWithFunctionAndNamespace.Size() != identStringWithFunctionAndNamespace.size())						return 46;
+	if (!identifierWithFunctionAndNamespace.IsQualified())																return 47;
+	if (!identifierWithFunctionAndNamespace.IsFunction())																return 48;
+	if (identifierWithFunctionAndNamespace.to_string() != identStringWithFunctionAndNamespace)							return 49;
+	if (identifierWithFunctionAndNamespace.to_string_no_global() != identStringWithFunctionAndNamespace)				return 50;
+	if (identifierWithFunctionAndNamespace.to_unqualified_string() != "ThisIsAFunctionWithNamespace()")					return 51;
+	if (identifierWithFunctionAndNamespace.to_string_no_arguments() != identStringWithoutFunctionButFunction)			return 52;
+	if (identifierWithFunctionAndNamespace.to_string_no_arguments_no_global() != identStringWithoutFunctionButFunction)	return 53;
+	if (identifierWithFunctionAndNamespace.to_string_unqualified_no_arguments() != "ThisIsAFunctionWithNamespace")		return 54;
+
+
+	//a copy constructed wcIdentifier, with a fully qualified ident with global namespace
+	string copyConstructedString = "$g::NS::anotherNS::SomeIdentifier";
+	wcIdentifier originalIdent(copyConstructedString), copyConstructedIdent(originalIdent);
+	if (copyConstructedIdent != copyConstructedString)													return 55;
+	if (copyConstructedIdent != originalIdent)															return 56;
+	if (copyConstructedIdent.to_string() != copyConstructedString)										return 57;
+	if (copyConstructedIdent.Size() != copyConstructedString.size() - 4)								return 58;
+	if (!copyConstructedIdent.IsQualified())															return 59;
+	if (copyConstructedIdent.IsFunction())																return 60;
+	if (copyConstructedIdent.to_string() != copyConstructedString)										return 61;
+	if (copyConstructedIdent.to_string_no_global() != "NS::anotherNS::SomeIdentifier")					return 62;
+	if (copyConstructedIdent.to_unqualified_string() != "SomeIdentifier")								return 63;
+	if (copyConstructedIdent.to_string_no_arguments() != copyConstructedString)							return 64;
+	if (copyConstructedIdent.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")		return 65;
+	if (copyConstructedIdent.to_string_unqualified_no_arguments() != "SomeIdentifier")					return 66;
+
+
+	//a copy constructed wcIdentifier, with a fully qualified function ident with global namespace
+	string copyConstructedString2 = "$g::NS::anotherNS::SomeIdentifier()";
+	wcIdentifier originalIdent2(copyConstructedString2), copyConstructedIdent2(originalIdent2);
+	if (copyConstructedIdent2 != copyConstructedString2)											return 67;
+	if (copyConstructedIdent2 != originalIdent2)													return 68;
+	if (copyConstructedIdent2.to_string() != copyConstructedString2)								return 69;
+	if (copyConstructedIdent2.Size() != copyConstructedString2.size() - 4)							return 70;
+	if (!copyConstructedIdent2.IsQualified())														return 71;
+	if (!copyConstructedIdent2.IsFunction())														return 72;
+	if (copyConstructedIdent2.to_string() != copyConstructedString2)								return 73;
+	if (copyConstructedIdent2.to_string_no_global() != "NS::anotherNS::SomeIdentifier()")			return 74;
+	if (copyConstructedIdent2.to_unqualified_string() != "SomeIdentifier()")						return 75;
+	if (copyConstructedIdent2.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")		return 76;
+	if (copyConstructedIdent2.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")return 77;
+	if (copyConstructedIdent2.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 78;
 
 	return 0;
 }
@@ -181,15 +245,39 @@ int weec::test::lex::Test_wcIdentifier1()
 int weec::test::lex::Test_wcScopeIdentifier1()
 {
 	//a blank wcIdentifierScope
-	string emptyString = "";
-	wcIdentifierScope blankScopeIdent;
-	if (blankScopeIdent != emptyString || blankScopeIdent.Size() != 0 || blankScopeIdent.to_string() != ParserConsts.GlobalIdentifier || blankScopeIdent.to_unqualified_string() != emptyString)
-		return 1;
+	string emptyString = "";	wcIdentifierScope blankScopeIdent;
+	if (blankScopeIdent != emptyString)									return 1;
+	if (blankScopeIdent.Size() != 0)									return 2;
+	if (blankScopeIdent.to_string() != ParserConsts.GlobalIdentifier)	return 3;
+	if (blankScopeIdent.to_unqualified_string() != emptyString)			return 4;
+	if (blankScopeIdent.to_string_no_global() != emptyString)			return 5;
 
-	string simpleScope = "scope";
-	wcIdentifierScope simpleIdentScope(simpleScope);
-	if (simpleIdentScope != simpleScope || simpleIdentScope.Size() != simpleScope.size() || simpleIdentScope.to_string() != ParserConsts.GlobalIdentPrefix + simpleScope || simpleIdentScope.to_unqualified_string() != simpleScope)
-		return 2;
+	//string constructed scope, short identifier
+	string simpleScope = "scope";	wcIdentifierScope simpleIdentScope(simpleScope);
+	if (simpleIdentScope != simpleScope)												return 6;
+	if (simpleIdentScope.Size() != simpleScope.size())									return 7;
+	if (simpleIdentScope.to_string() != ParserConsts.GlobalIdentPrefix + simpleScope)	return 8;
+	if (simpleIdentScope.to_unqualified_string() != simpleScope)						return 9;
+	if (simpleIdentScope.to_string_no_global() != simpleScope)							return 10;
+
+
+	//string constructed scope, already qualified identifier
+	string simpleScope2 = "$g::scope";	wcIdentifierScope simpleIdentScope2(simpleScope2);
+	if (simpleIdentScope2 != simpleScope2)						return 11;
+	if (simpleIdentScope2.Size() != string("scope").size())		return 12;
+	if (simpleIdentScope2.to_string() != simpleScope2)			return 13;
+	if (simpleIdentScope2.to_unqualified_string() != "scope")	return 14;
+	if (simpleIdentScope2.to_string_no_global() != "scope")		return 15;
+
+	//copy constructed scope, already qualified identifier
+	string simpleScope3 = "$g::somescope::anotherscope";
+	wcIdentifierScope simpleIdentScope3(simpleScope3), copyConstructedScope(simpleIdentScope3);
+	if (copyConstructedScope != simpleScope3)										return 16;
+	if (copyConstructedScope != simpleIdentScope3)									return 17;
+	if (copyConstructedScope.Size() != string("somescope::anotherscope").size())	return 18;
+	if (copyConstructedScope.to_string() != simpleScope3)							return 19;
+	if (copyConstructedScope.to_unqualified_string() != "anotherscope")				return 20;
+	if (copyConstructedScope.to_string_no_global() != "somescope::anotherscope")	return 21;
 
 	return 0;
 }
@@ -197,18 +285,132 @@ int weec::test::lex::Test_wcScopeIdentifier1()
 
 int weec::test::lex::Test_wcFullIdentifier1()
 {
+	//constructors tests...
+	
 	//a blank wcIdentifier
 	string emtpyString = "";
 	wcFullIdentifier blankIdentifier;
-	if (blankIdentifier != emtpyString || blankIdentifier.Size() != 0 || blankIdentifier.IsFunction())
-		return 1;
+	if (blankIdentifier != emtpyString)												return 1;
+	if (blankIdentifier.Size() != 0) 												return 2;
+	if (blankIdentifier.IsFunction())												return 3;
+	if (blankIdentifier.to_string() != ParserConsts.GlobalIdentifier)				return 4;
+	if (blankIdentifier.to_unqualified_string() != emtpyString)						return 5;
+	if (blankIdentifier.to_string_no_global() != emtpyString)						return 6;
+	if (blankIdentifier.to_string_no_arguments() != ParserConsts.GlobalIdentifier)	return 7;
+	if (blankIdentifier.to_string_no_arguments_no_global() != emtpyString)			return 8;
+	if (blankIdentifier.to_string_unqualified_no_arguments() != emtpyString)		return 9;
+
 
 	//string constructed wcFullIdentifier
-	string ns = "namespace", ident = "ident", fullIdentString1 = ns + ParserConsts.ScopeDelimiter + ident;
-	wcFullIdentifier constructor1(fullIdentString1);
-	if (constructor1 != fullIdentString1 || constructor1.to_string() != fullIdentString1)
-		return 1;
+	string ident1 = "ident", full_ident1 = ParserConsts.GlobalIdentPrefix + ident1;
+	wcFullIdentifier constructor1(ident1);
+	if (constructor1 != full_ident1)									return 11;
+	if (constructor1.Size() != ident1.size()) 							return 12;
+	if (constructor1.IsFunction())										return 13;
+	if (constructor1.to_string() != full_ident1)						return 14;
+	if (constructor1.to_unqualified_string() != ident1)					return 15;
+	if (constructor1.to_string_no_global() != ident1)					return 16;
+	if (constructor1.to_string_no_arguments() != full_ident1)			return 17;
+	if (constructor1.to_string_no_arguments_no_global() != ident1)		return 18;
+	if (constructor1.to_string_unqualified_no_arguments() != ident1)	return 19;
 
+	//string constructed wcFullIdentifier with namespace
+	string ident2 = "namespace::ident", full_ident2 = ParserConsts.GlobalIdentPrefix + ident2;
+	wcFullIdentifier constructor2(ident2);
+	if (constructor2 != full_ident2)										return 21;
+	if (constructor2.Size() != ident2.size()) 								return 22;
+	if (constructor2.IsFunction())											return 23;
+	if (constructor2.to_string() != full_ident2)							return 24;
+	if (constructor2.to_unqualified_string() != "ident")					return 25;
+	if (constructor2.to_string_no_global() != ident2)						return 26;
+	if (constructor2.to_string_no_arguments() != full_ident2)				return 27;
+	if (constructor2.to_string_no_arguments_no_global() != ident2)			return 28;
+	if (constructor2.to_string_unqualified_no_arguments() != "ident")		return 29;
+
+	//string constructed wcFullIdentifier with function and namespace
+	string ident3 = "namespace::ident()", full_ident3 = ParserConsts.GlobalIdentPrefix + ident3;
+	wcFullIdentifier constructor3(ident3);
+	if (constructor3 != full_ident3)											return 31;
+	if (constructor3.Size() != ident3.size()) 									return 32;
+	if (!constructor3.IsFunction())												return 33;
+	if (constructor3.to_string() != full_ident3)								return 34;
+	if (constructor3.to_unqualified_string() != "ident()")						return 35;
+	if (constructor3.to_string_no_global() != ident3)							return 36;
+	if (constructor3.to_string_no_arguments() != "$g::namespace::ident")		return 37;
+	if (constructor3.to_string_no_arguments_no_global() != "namespace::ident")	return 38;
+	if (constructor3.to_string_unqualified_no_arguments() != "ident")			return 39;
+
+
+	//string constructed wcFullIdentifier with namespace and global 
+	string ident4 = "$g::NS::anotherNS::SomeIdentifier";
+	wcFullIdentifier constructor4(ident4);
+	if (constructor4 != ident4)																return 41;
+	if (constructor4.Size() != string("NS::anotherNS::SomeIdentifier").size()) 				return 42;
+	if (constructor4.IsFunction())															return 44;
+	if (constructor4.to_string() != ident4)													return 44;
+	if (constructor4.to_unqualified_string() != "SomeIdentifier")							return 45;
+	if (constructor4.to_string_no_global() != "NS::anotherNS::SomeIdentifier")				return 46;
+	if (constructor4.to_string_no_arguments() != ident4)									return 47;
+	if (constructor4.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 48;
+	if (constructor4.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 49;
+
+	//string constructed wcFullIdentifier with function, namespace and global 
+	string ident5 = "$g::NS::anotherNS::SomeIdentifier()";
+	wcFullIdentifier constructor5(ident5);
+	if (constructor5 != ident5)																return 51;
+	if (constructor5.Size() != string("NS::anotherNS::SomeIdentifier()").size()) 			return 52;
+	if (!constructor5.IsFunction())															return 55;
+	if (constructor5.to_string() != ident5)													return 55;
+	if (constructor5.to_unqualified_string() != "SomeIdentifier()")							return 55;
+	if (constructor5.to_string_no_global() != "NS::anotherNS::SomeIdentifier()")			return 56;
+	if (constructor5.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")		return 57;
+	if (constructor5.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 58;
+	if (constructor5.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 59;
+
+
+	//copy constructed wcFullIdentifier with function, namespace and global 
+	wcFullIdentifier original1("$g::NS::anotherNS::SomeIdentifier()"),	copyConstructed1(original1);
+	if (copyConstructed1 != "$g::NS::anotherNS::SomeIdentifier()")								return 61;
+	if (copyConstructed1 != original1)															return 62;
+	if (copyConstructed1.Size() != string("NS::anotherNS::SomeIdentifier()").size()) 			return 63;
+	if (!copyConstructed1.IsFunction())															return 64;
+	if (copyConstructed1.to_string() != "$g::NS::anotherNS::SomeIdentifier()")					return 65;
+	if (copyConstructed1.to_unqualified_string() != "SomeIdentifier()")							return 66;
+	if (copyConstructed1.to_string_no_global() != "NS::anotherNS::SomeIdentifier()")			return 67;
+	if (copyConstructed1.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")		return 68;
+	if (copyConstructed1.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 69;
+	if (copyConstructed1.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 70;
+
+
+	//part constructed wcFullIdentifier with function, namespace and global 
+	wcIdentifierScope scope1("$g::NS::anotherNS");
+	wcIdentifier identifier1("SomeIdentifier()");
+	wcFullIdentifier fullIdent1(scope1, identifier1);
+	if (fullIdent1 != "$g::NS::anotherNS::SomeIdentifier()")								return 61;
+	//if (original1 != original1)															return 62;
+	if (fullIdent1.Size() != string("NS::anotherNS::SomeIdentifier()").size()) 				return 63;
+	if (!fullIdent1.IsFunction())															return 64;
+	if (fullIdent1.to_string() != "$g::NS::anotherNS::SomeIdentifier()")					return 65;
+	if (fullIdent1.to_unqualified_string() != "SomeIdentifier()")							return 66;
+	if (fullIdent1.to_string_no_global() != "NS::anotherNS::SomeIdentifier()")				return 67;
+	if (fullIdent1.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")			return 68;
+	if (fullIdent1.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 69;
+	if (fullIdent1.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 70;
+
+	//part constructed wcFullIdentifier with function, namespace and global 
+	wcIdentifierScope scope1("$g::NS::anotherNS");
+	wcIdentifier identifier1("SomeIdentifier()");
+	wcFullIdentifier fullIdent1(scope1, identifier1);
+	if (fullIdent1 != "$g::NS::anotherNS::SomeIdentifier()")								return 61;
+	//if (original1 != original1)															return 62;
+	if (fullIdent1.Size() != string("NS::anotherNS::SomeIdentifier()").size()) 				return 63;
+	if (!fullIdent1.IsFunction())															return 64;
+	if (fullIdent1.to_string() != "$g::NS::anotherNS::SomeIdentifier()")					return 65;
+	if (fullIdent1.to_unqualified_string() != "SomeIdentifier()")							return 66;
+	if (fullIdent1.to_string_no_global() != "NS::anotherNS::SomeIdentifier()")				return 67;
+	if (fullIdent1.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")			return 68;
+	if (fullIdent1.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 69;
+	if (fullIdent1.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 70;
 
 	return 0;
 }
@@ -613,7 +815,7 @@ int weec::test::lex::Test_wcParseNode_6()
 }
 */
 
-std::string AnyToString(std::any In)
+string AnyToString(any In)
 {
 	if (strcmp(In.type().name(), "int") == 0)
 		return to_string(any_cast<int>(In));
@@ -628,7 +830,7 @@ std::string AnyToString(std::any In)
 	return "";
 }
 
-bool printIsExpected(wcInterpreter Interp, std::any ExpectedResult)
+bool printIsExpected(wcInterpreter Interp, any ExpectedResult)
 {
 	if (Interp.Error.Code != wcInterpreterErrorCode::None)
 		cout << "Interp error: " << to_string((int)Interp.Error.Code) << " " << to_string(Interp.Error.Code) << endl;
@@ -638,50 +840,50 @@ bool printIsExpected(wcInterpreter Interp, std::any ExpectedResult)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<int>(Interp.Return) == std::any_cast<int>(ExpectedResult);
-			cout << "Expected: " << std::any_cast<int>(ExpectedResult) << "   ";
+			IsExpected = any_cast<int>(Interp.Return) == any_cast<int>(ExpectedResult);
+			cout << "Expected: " << any_cast<int>(ExpectedResult) << "   ";
 		}
-			cout << "Out: " << std::any_cast<int>(Interp.Return) << std::endl;
+		cout << "Out: " << any_cast<int>(Interp.Return) << endl;
 	}
 	else if (strcmp(Interp.Return.type().name(), "unsigned int") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<unsigned int>(Interp.Return) == std::any_cast<int>(ExpectedResult);
-			cout << "Expected: " << std::any_cast<unsigned int>(ExpectedResult) << "   ";
+			IsExpected = any_cast<unsigned int>(Interp.Return) == any_cast<int>(ExpectedResult);
+			cout << "Expected: " << any_cast<unsigned int>(ExpectedResult) << "   ";
 		}
-			cout << "Out: " << std::any_cast<unsigned int>(Interp.Return) << std::endl;
+		cout << "Out: " << any_cast<unsigned int>(Interp.Return) << endl;
 	}
 	else if (strcmp(Interp.Return.type().name(), "float") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<float>(Interp.Return) == std::any_cast<float>(ExpectedResult);
-			cout << "Expected: " << std::any_cast<float>(ExpectedResult) << "   ";
+			IsExpected = any_cast<float>(Interp.Return) == any_cast<float>(ExpectedResult);
+			cout << "Expected: " << any_cast<float>(ExpectedResult) << "   ";
 		}
-			cout << "Out: " << std::any_cast<float>(Interp.Return) << std::endl;
+		cout << "Out: " << any_cast<float>(Interp.Return) << endl;
 	}
 	else if (strcmp(Interp.Return.type().name(), "double") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<double>(Interp.Return) == std::any_cast<double>(ExpectedResult);
-			cout << "Expected: " << std::any_cast<double>(ExpectedResult) << "   ";
+			IsExpected = any_cast<double>(Interp.Return) == any_cast<double>(ExpectedResult);
+			cout << "Expected: " << any_cast<double>(ExpectedResult) << "   ";
 		}
-			cout << "Out: " << std::any_cast<double>(Interp.Return) << std::endl;
+		cout << "Out: " << any_cast<double>(Interp.Return) << endl;
 	}
 	else if (strcmp(Interp.Return.type().name(), "bool") == 0)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = std::any_cast<bool>(Interp.Return) == std::any_cast<bool>(ExpectedResult);
-			cout << "Expected: " << std::any_cast<bool>(ExpectedResult) << "   ";
+			IsExpected = any_cast<bool>(Interp.Return) == any_cast<bool>(ExpectedResult);
+			cout << "Expected: " << any_cast<bool>(ExpectedResult) << "   ";
 		}
-		cout << "Out: " << std::any_cast<bool>(Interp.Return) << std::endl;
+		cout << "Out: " << any_cast<bool>(Interp.Return) << endl;
 	}
-	cout << "EAX: " << AnyToString(Interp.EAX) << std::endl;
+	cout << "EAX: " << AnyToString(Interp.EAX) << endl;
 	auto t = Interp.Return.type().name();
-	cout << "Type: " << Interp.Return.type().name() << std::endl;
+	cout << "Type: " << Interp.Return.type().name() << endl;
 	return IsExpected;
 }
 
@@ -697,18 +899,18 @@ int Test_ParserTemplate(string Listing)
 
 	if (Parsed.Error.Code != wcParserErrorCode::None)
 	{
-		cout << std::endl << "Error code: " << (int)Parsed.Error.Code << "  " << to_string(Parsed.Error.Code) << std::endl;
+		cout << endl << "Error code: " << (int)Parsed.Error.Code << "  " << to_string(Parsed.Error.Code) << endl;
 		return (int)Parsed.Error.Code;
 	}
 
 	auto Interp = wcInterpreter(Parsed);
 	auto Result = Interp.Exec();
 
-	return (Parsed.Error.Code == wcParserErrorCode::None && printIsExpected(Interp, std::any())) ? 0 : 1;
+	return (Parsed.Error.Code == wcParserErrorCode::None && printIsExpected(Interp, any())) ? 0 : 1;
 }
 
 
-int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
+int Test_ExpressionParserTemplate(string Listing, any ExpectedResult)
 {
 	wcTokenizer tokenizer(Listing); //tokenizer.NextToken();
 
@@ -720,7 +922,7 @@ int Test_ExpressionParserTemplate(string Listing, std::any ExpectedResult)
 
 	if (Expr.Error.Code != wcParserErrorCode::None)
 	{
-		cout << std::endl << "Error code: " << (int)Expr.Error.Code << "  " << to_string(Expr.Error.Code) << std::endl;
+		cout << endl << "Error code: " << (int)Expr.Error.Code << "  " << to_string(Expr.Error.Code) << endl;
 		return (int)Expr.Error.Code;
 	}
 	auto Interp = wcInterpreter(Expr);

@@ -49,24 +49,23 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 	if (ExpectToken(SemiColon))
 	{
 		//add to symbol table
-		SymbolTable.Add(wcParseSymbol(wcParseSymbolType::Variable, DeclarationIdent, DeclarationType, IdentToken));
+		Output.SymbolTable.Add(wcParseSymbol(wcParseSymbolType::Variable, DeclarationIdent, DeclarationType, IdentToken));
 
-		return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable).Parse());
+		return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(wcSemiColonParser(Tokenizer, Output.SymbolTable).Parse());
 	}
 	//function declaration
 	else if (ExpectToken(OpenParenthesis))
 	{
-		wcParseOutput ParametersNode, BodyNode;
-
-		//function declaration prototype
+		wcParseOutput ParametersNode;
 		vector<wcParseParameter> Parameters;
+		if((ParametersNode = ParseParameters(Parameters)).Error.Code != None)
+			return Output;
 
-		ParametersNode = ParseParameters(Parameters);
 		//(++IdentNode.AST.begin()).node->data.Token.StringToken.Data = TrueFunctionName.to_string();
 
 		//add to symbol table
 		auto FunctionSignature = wcParseFunctionSignature(DeclarationType, IdentToken, Parameters, wcFunctionIdentifier(DeclarationIdent, Parameters));
-		SymbolTable.Add(FunctionSignature, Parameters);
+		Output.SymbolTable.Add(FunctionSignature, Parameters);
 		
 		//hack - adjust ident node to have correct function name (including parameters)
 		for (auto& It : IdentNode.AST)
@@ -75,18 +74,18 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		//hack - adjust parameter nodes to have correct scope, we didnt have the scope at the time
 		for (auto& It : ParametersNode.AST)
 			if (It.Type == wcParseNodeType::Parameter_Ident)
-				It.Token.StringToken.Data = wcFullIdentifier(wcFullIdentifier(It.Token.StringToken.Data).ShortIdentifier.to_string(), FunctionSignature.FunctionIdentifier.to_string()).to_string();
+				It.Token.StringToken.Data = wcFullIdentifier(FunctionSignature.FunctionIdentifier.to_string(), wcFullIdentifier(It.Token.StringToken.Data).ShortIdentifier.to_string()).to_string();
 
 		//optional semi colon
 		if (ExpectToken(SemiColon))
-			return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(ParametersNode).AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable).Parse());
+			return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(ParametersNode).AddAsChild(wcSemiColonParser(Tokenizer, Output.SymbolTable).Parse());
 
 		//no semi colon, must be a full declaration with body
-		SymbolTable.SetScope(FunctionSignature.FunctionIdentifier.to_string());
+		Output.SymbolTable.SetScope(FunctionSignature.FunctionIdentifier.to_string());
 
-		BodyNode = wcBlockParser(Tokenizer, SymbolTable).Parse(true);
+		wcParseOutput BodyNode = wcBlockParser(Tokenizer, Output.SymbolTable).Parse(true);
 
-		SymbolTable.SetScope(OriginalScope);
+		Output.SymbolTable.SetScope(OriginalScope);
 		return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(ParametersNode).AddAsChild(BodyNode);
 	}
 	else if (!ExpectToken(AssignOperator))
@@ -95,7 +94,7 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		return wcParseOutput(wcParserError(UnexpectedEOF, GetToken()));
 
 	//add to symbol table, must be a variable
-	SymbolTable.Add(wcParseSymbolType::Variable, DeclarationIdent, IdentToken);
+	Output.SymbolTable.Add(wcParseSymbolType::Variable, DeclarationIdent, IdentToken);
 
 	//optional assignment expression;
 	wcParseOutput ExpNode;
@@ -254,7 +253,7 @@ wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier,	
 		break;
 	}
 
-	ResolvedFullIdentifier = wcFullIdentifier(ParsedIdentifier.to_string(), SymbolTable.GetCurrentScope().FullIdent.to_string());
+	ResolvedFullIdentifier = wcFullIdentifier(SymbolTable.GetCurrentScope().FullIdent.to_string(), ParsedIdentifier);
 
 	//consume the identifier token if told so (ie when expression parsing)
 	if(Consume && !NextToken())
@@ -1275,7 +1274,7 @@ wcParseNodeType wcTokenTypeToParseNodeType(wcTokenType Type)
 	}
 }
 
-weec::parse::wcParseSymbolTable::wcParseSymbolTable() : NullSymbol(wcParseSymbolType::Null, wcFullIdentifier("", ""), wcToken())
+weec::parse::wcParseSymbolTable::wcParseSymbolTable() : NullSymbol(wcParseSymbolType::Null, wcFullIdentifier(string(""), string("")), wcToken())
 {
 	//global stackframe
 	wcParseStackFrame GlobalFrame(ParserConsts.GlobalIdentifier);
@@ -1285,13 +1284,13 @@ weec::parse::wcParseSymbolTable::wcParseSymbolTable() : NullSymbol(wcParseSymbol
 	Add(wcParseSymbolType::Namespace, wcFullIdentifier(ParserConsts.GlobalIdentifier, ParserConsts.GlobalIdentifier), wcToken(), true);
 
 	//built-in types
-	Add(wcParseSymbolType::Type, wcFullIdentifier("void", ParserConsts.GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("int", ParserConsts.GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("uint", ParserConsts.GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("double", ParserConsts.GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("float", ParserConsts.GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("bool", ParserConsts.GlobalIdentifier), wcToken());
-	Add(wcParseSymbolType::Type, wcFullIdentifier("string", ParserConsts.GlobalIdentifier), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier(ParserConsts.GlobalIdentifier, string("void")), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier(ParserConsts.GlobalIdentifier, string("int")), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier(ParserConsts.GlobalIdentifier, string("uint")), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier(ParserConsts.GlobalIdentifier, string("double")), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier(ParserConsts.GlobalIdentifier, string("float")), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier(ParserConsts.GlobalIdentifier, string("bool")), wcToken());
+	Add(wcParseSymbolType::Type, wcFullIdentifier(ParserConsts.GlobalIdentifier, string("string")), wcToken());
 
 }
 
@@ -1336,6 +1335,7 @@ bool weec::parse::wcParseSymbolTable::Add(wcParseSymbol Sym, bool SetScopeToThis
 	if (Exists(Sym.FullIdent))
 		return false;
 
+	Sym.Registered = true;
 	Container.insert(make_pair(Sym.FullIdent.to_string(), Sym));
 	StackFrames.top().Symbols.push_back(Sym.FullIdent);
 
@@ -1352,7 +1352,7 @@ bool weec::parse::wcParseSymbolTable::Add(wcParseSymbolType Type, wcFullIdentifi
 
 	if (Exists(FullIdent))
 		return false;
-
+	Symbol.Registered = true;
 	Container.insert(make_pair(FullIdent.to_string(), Symbol));
 	StackFrames.top().Symbols.push_back(FullIdent);
 
@@ -1411,25 +1411,6 @@ wcParseSymbol  weec::parse::wcParseSymbolTable::GetCurrentScope() const
 	return CurrentScope;
 }
 
-wcParseSymbol weec::parse::wcParseSymbolTable::ClassifyIdent(lex::wcToken Ident)
-{
-	wcFullIdentifier FullIdent;
-
-	//check if ident is fully qualified
-	if (wcTokenTypeAlizer().IsIdentQualified(Ident.StringToken.Data))
-		FullIdent = wcFullIdentifier(Ident.StringToken.Data);
-	else
-		FullIdent = wcFullIdentifier(wcIdentifierScope(GetCurrentScope().FullIdent.to_string()), wcIdentifier(Ident.StringToken.Data));
-
-	if (Exists(FullIdent))
-	{
-
-	}
-
-	return wcParseSymbol(wcParseSymbolType::Variable, FullIdent, Ident);
-}
-
-
 
 weec::parse::wcIdentifier::wcIdentifier(const wcIdentifier& Other) : Identifier(Other.Identifier)
 {
@@ -1439,11 +1420,6 @@ weec::parse::wcIdentifier::wcIdentifier(const wcIdentifier& Other) : Identifier(
 weec::parse::wcIdentifier::wcIdentifier(std::string _Data)
 {
 	Identifier = _Data;
-}
-
-weec::parse::wcFullIdentifier::wcFullIdentifier(std::string RawIdentifier)
-{
-	wcIdentalyzer().Create(RawIdentifier, ScopeIdentifier, ShortIdentifier);
 }
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vector<wcParseSymbol> Arguments)
@@ -1545,26 +1521,6 @@ weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vect
 	ShortIdentifier = wcFullIdentifier(FullIdent + "(" + ArgStr + ")").ShortIdentifier;
 }
 
-
-weec::parse::wcFullIdentifier::wcFullIdentifier(std::string _Ident, std::string _Scope)
-{
-	ShortIdentifier = wcIdentifier(_Ident);
-	ScopeIdentifier = wcIdentifierScope(_Scope);
-}
-
-weec::parse::wcFullIdentifier::wcFullIdentifier( wcIdentifierScope _Scope, wcIdentifier _Ident)
-{
-	ShortIdentifier = wcIdentifier(_Ident);
-	ScopeIdentifier = wcIdentifierScope(_Scope);
-}
-
-
-weec::parse::wcFullIdentifier::wcFullIdentifier(const wcFullIdentifier& Other)
-{
-	ShortIdentifier = wcIdentifier(Other.ShortIdentifier);
-	ScopeIdentifier = wcIdentifierScope(Other.ScopeIdentifier);
-}
-
 weec::parse::wcParseSymbol::wcParseSymbol() : FullIdent()
 {
 	Type = wcParseSymbolType::Null;
@@ -1587,6 +1543,8 @@ weec::parse::wcParseSymbol::wcParseSymbol(wcParseSymbolType _Type, wcFullIdentif
 	FullIdent = wcFullIdentifier(_FullIdent);
 	Type = _Type;
 	IdentToken = _Token;
+	Const = false;
+	Registered = false;
 	HasOverloads = false;
 	Arguments = 0;
 }

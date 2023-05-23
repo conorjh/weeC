@@ -121,7 +121,6 @@ namespace weec
 			bool IsQualified(std::string), IsFunction(std::string), IsValid(std::string), IsQualifiedWithGlobal(std::string);
 		};
 
-
 		class wcBaseIdentifier
 		{
 
@@ -302,13 +301,30 @@ namespace weec
 
 		public:
 			wcFullIdentifier() {}
-			wcFullIdentifier(const wcFullIdentifier&);
-			wcFullIdentifier(wcIdentifierScope, wcIdentifier);
-			wcFullIdentifier(std::string);
 			wcFullIdentifier(std::string, std::vector<wcParseExpression>);
 			wcFullIdentifier(std::string, std::vector<wcParseParameter>);
 			wcFullIdentifier(std::string, std::vector<wcParseSymbol>);
-			wcFullIdentifier(std::string, std::string);
+			wcFullIdentifier(const wcFullIdentifier& Other) 
+			{
+				ShortIdentifier = Other.ShortIdentifier;
+				ScopeIdentifier = Other.ScopeIdentifier;
+			}
+
+			wcFullIdentifier(wcIdentifierScope _Scope, wcIdentifier _Ident)
+			{
+				ShortIdentifier = _Ident;
+				ScopeIdentifier = _Scope;
+			}
+
+			wcFullIdentifier(const char * RawIdentifier)
+			{
+				wcIdentalyzer().Create(RawIdentifier, ScopeIdentifier, ShortIdentifier);
+			}
+
+			wcFullIdentifier(std::string RawIdentifier)
+			{
+				wcIdentalyzer().Create(RawIdentifier, ScopeIdentifier, ShortIdentifier);
+			}
 
 			bool operator==(const wcFullIdentifier& p) const
 			{
@@ -320,6 +336,11 @@ namespace weec
 				return wcIdentalyzer().IsQualifiedWithGlobal(p)
 					? to_string() == p
 					: to_string_no_global() == p;
+			}
+
+			bool operator==(const char * p) const
+			{
+				return operator==(std::string(p));
 			}
 
 			wcFullIdentifier& operator=(const wcFullIdentifier& Other)
@@ -342,7 +363,7 @@ namespace weec
 			std::string to_string() const
 			{
 				return ShortIdentifier.Size()
-					? ScopeIdentifier.to_string() + ParserConsts.ScopeDelimiter.c_str() + ShortIdentifier.to_string()
+					? ScopeIdentifier.to_string() + ParserConsts.ScopeDelimiter + ShortIdentifier.to_string()
 					: ScopeIdentifier.to_string();
 			}
 
@@ -552,15 +573,19 @@ namespace weec
 
 				Exists(wcFullIdentifier FullIdent) const;
 
-			wcIdentifierResolveResult Resolve(wcIdentifier Ident, wcFullIdentifier& Output);
 
 			wcParseSymbol Get(wcFullIdentifier FullIdent) const;
 
+			unsigned int Count() const
+			{
+				return Container.size();
+			}
+
+			wcIdentifierResolveResult Resolve(wcIdentifier Ident, wcFullIdentifier& Output);
 			bool SetScope(wcFullIdentifier FullIdent), SetScope(wcParseSymbol&);
 			wcParseSymbol GetCurrentScope() const;
 
 			const  wcParseSymbol NullSymbol;
-			wcParseSymbol ClassifyIdent(lex::wcToken);
 		};
 
 		class wcParseOutput
@@ -675,7 +700,6 @@ namespace weec
 
 		class wcDeclarationParser : wcSubParser
 		{
-
 			wcParseOutput ParseType(wcFullIdentifier& DeclarationType, wcParseNodeType NodeType),
 				ParseIdent(wcFullIdentifier& DeclarationFullIdentifier, lex::wcToken& IdentAsSeen),
 				ParseParameters(std::vector<wcParseParameter>& ParametersOut),

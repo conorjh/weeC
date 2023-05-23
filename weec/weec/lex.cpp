@@ -457,8 +457,10 @@ weec::lex::wcTokenizerError::wcTokenizerError(wcTokenizerErrorCode _Code, wcStri
 	Msg = _Msg;
 }
 
-weec::lex::wcTokenizer::wcTokenizer(std::string& _source) : stringTokenizer(_source)
+weec::lex::wcTokenizer::wcTokenizer(std::string& _source, bool _NextToken) : stringTokenizer(_source)
 {
+	if (_NextToken)
+		NextToken();
 }
 
 wcTokenizer& weec::lex::wcTokenizer::operator=(wcTokenizer& Other)

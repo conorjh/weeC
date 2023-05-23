@@ -21,7 +21,16 @@ namespace wcc
 
 	struct CompilerProfile
 	{
-		CompilerProfile();
+		CompilerProfile()
+		{
+			//defaults
+			Action = CompilerAction::REPL;
+			BinaryType = CompilerBinaryType::AST;
+			VerboseOutput = false;
+			BuildSymbolTable = false;
+			SymbolTableFilepath = "";
+			DestinationFilepath = SourceFilepath = "";
+		}
 
 		CompilerAction Action;
 		CompilerBinaryType BinaryType;

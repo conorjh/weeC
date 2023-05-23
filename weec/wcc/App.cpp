@@ -91,7 +91,6 @@ bool App::CommandLineSettings::ParseCommandLine(Cmd_Line CmdLine)
 	return true;
 }
 
-
 App::Application::Application(int argc, char* argv[]) : CmdLine(argc, argv), IO(Data)
 {
 	spdlog::set_level(spdlog::level::level_enum::critical);

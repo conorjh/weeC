@@ -286,7 +286,7 @@ int weec::test::lex::Test_wcScopeIdentifier1()
 int weec::test::lex::Test_wcFullIdentifier1()
 {
 	//constructors tests...
-	
+
 	//a blank wcIdentifier
 	string emtpyString = "";
 	wcFullIdentifier blankIdentifier;
@@ -369,7 +369,7 @@ int weec::test::lex::Test_wcFullIdentifier1()
 
 
 	//copy constructed wcFullIdentifier with function, namespace and global 
-	wcFullIdentifier original1("$g::NS::anotherNS::SomeIdentifier()"),	copyConstructed1(original1);
+	wcFullIdentifier original1("$g::NS::anotherNS::SomeIdentifier()"), copyConstructed1(original1);
 	if (copyConstructed1 != "$g::NS::anotherNS::SomeIdentifier()")								return 61;
 	if (copyConstructed1 != original1)															return 62;
 	if (copyConstructed1.Size() != string("NS::anotherNS::SomeIdentifier()").size()) 			return 63;
@@ -397,7 +397,7 @@ int weec::test::lex::Test_wcFullIdentifier1()
 	if (fullIdent1.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 69;
 	if (fullIdent1.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 70;
 	/*
-	//part constructed wcFullIdentifier with function, namespace and global 
+	//part constructed wcFullIdentifier with function, namespace and global
 	wcIdentifierScope scope1("$g::NS::anotherNS");
 	wcIdentifier identifier1("SomeIdentifier()");
 	wcFullIdentifier fullIdent1(scope1, identifier1);
@@ -412,6 +412,139 @@ int weec::test::lex::Test_wcFullIdentifier1()
 	if (fullIdent1.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 69;
 	if (fullIdent1.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 70;
 	*/
+	return 0;
+}
+
+int weec::test::lex::Test_wcParseSymbolTable1()
+{
+	//default constructor, check built in types
+	wcParseSymbolTable SymTab1;
+	if (!SymTab1.Exists("void"))	return 1;
+	if (!SymTab1.Exists("int"))		return 1;
+	if (!SymTab1.Exists("uint"))	return 1;
+	if (!SymTab1.Exists("double"))	return 1;
+	if (!SymTab1.Exists("float"))	return 1;
+	if (!SymTab1.Exists("bool"))	return 1;
+	if (!SymTab1.Exists("string"))	return 1;
+
+	auto IntSymbol = SymTab1.Get("int");
+	if (IntSymbol.Arguments != 0) 					return 2;
+	if (IntSymbol.Const != false) 					return 3;
+	if (IntSymbol.DataType != "") 					return 4;
+	if (IntSymbol.FullIdent != "int") 				return 5;
+	if (IntSymbol.HasOverloads != false) 			return 6;
+	if (IntSymbol.IdentToken != wcToken()) 			return 7;
+	if (IntSymbol.Registered != true) 				return 8;
+	if (IntSymbol.Type != wcParseSymbolType::Type)	return 9;
+
+	auto UIntSymbol = SymTab1.Get("uint");
+	if (UIntSymbol.Arguments != 0) 					return 3;
+	if (UIntSymbol.Const != false) 					return 3;
+	if (UIntSymbol.DataType != "") 					return 3;
+	if (UIntSymbol.FullIdent != "uint") 			return 3;
+	if (UIntSymbol.HasOverloads != false) 			return 3;
+	if (UIntSymbol.IdentToken != wcToken()) 		return 3;
+	if (UIntSymbol.Registered != true) 				return 3;
+	if (UIntSymbol.Type != wcParseSymbolType::Type)	return 3;
+
+	auto DoubleSymbol = SymTab1.Get("double");
+	if (DoubleSymbol.Arguments != 0) 					return 4;
+	if (DoubleSymbol.Const != false) 					return 4;
+	if (DoubleSymbol.DataType != "") 					return 4;
+	if (DoubleSymbol.FullIdent != "double") 			return 4;
+	if (DoubleSymbol.HasOverloads != false) 			return 4;
+	if (DoubleSymbol.IdentToken != wcToken()) 			return 4;
+	if (DoubleSymbol.Registered != true) 				return 4;
+	if (DoubleSymbol.Type != wcParseSymbolType::Type)	return 4;
+
+	auto FloatSymbol = SymTab1.Get("float");
+	if (FloatSymbol.Arguments != 0) 					return 5;
+	if (FloatSymbol.Const != false) 					return 5;
+	if (FloatSymbol.DataType != "") 					return 5;
+	if (FloatSymbol.FullIdent != "float") 				return 5;
+	if (FloatSymbol.HasOverloads != false) 				return 5;
+	if (FloatSymbol.IdentToken != wcToken()) 			return 5;
+	if (FloatSymbol.Registered != true) 				return 5;
+	if (FloatSymbol.Type != wcParseSymbolType::Type)	return 5;
+
+	auto BoolSymbol = SymTab1.Get("bool");
+	if (BoolSymbol.Arguments != 0) 					return 6;
+	if (BoolSymbol.Const != false) 					return 6;
+	if (BoolSymbol.DataType != "") 					return 6;
+	if (BoolSymbol.FullIdent != "bool") 			return 6;
+	if (BoolSymbol.HasOverloads != false) 			return 6;
+	if (BoolSymbol.IdentToken != wcToken()) 		return 6;
+	if (BoolSymbol.Registered != true) 				return 6;
+	if (BoolSymbol.Type != wcParseSymbolType::Type)	return 6;
+
+	auto StringSymbol = SymTab1.Get("string");
+	if (StringSymbol.Arguments != 0) 					return 7;
+	if (StringSymbol.Const != false) 					return 7;
+	if (StringSymbol.DataType != "") 					return 7;
+	if (StringSymbol.FullIdent != "string") 			return 7;
+	if (StringSymbol.HasOverloads != false) 			return 7;
+	if (StringSymbol.IdentToken != wcToken()) 			return 7;
+	if (StringSymbol.Registered != true) 				return 7;
+	if (StringSymbol.Type != wcParseSymbolType::Type)	return 7;
+
+	return 0;
+}
+
+int weec::test::lex::Test_wcParseSymbolTable2()
+{	
+	wcParseSymbolTable SymTab1;
+	wcToken FakeToken(wcStringToken("a", wcStringTokenType::Alpha, 0, 0));
+
+	auto SymbolCountBeforeAdd = SymTab1.Count();
+	SymTab1.Add(wcParseSymbol(wcParseSymbolType::Variable, wcFullIdentifier("a"), wcFullIdentifier("int"), FakeToken));
+	if (SymTab1.Count() != SymbolCountBeforeAdd + 1)	return 1;
+
+	auto OurSymbol = SymTab1.Get("a");
+	if (OurSymbol.Arguments != 0) 					return 7;
+	if (OurSymbol.Const != false) 					return 7;
+	if (OurSymbol.DataType != "int") 				return 7;
+	if (OurSymbol.FullIdent != "a") 				return 7;
+	if (OurSymbol.HasOverloads != false) 			return 7;
+	if (OurSymbol.IdentToken != FakeToken) 			return 7;
+	if (OurSymbol.Registered != true) 				return 7;
+	if (OurSymbol.Type != wcParseSymbolType::Type)	return 7;
+
+	return 0;
+}
+
+int weec::test::lex::Test_wcBlockParser1()
+{
+	std::string Source1 = "{}", Source2 = "{\n{\n}\n}";
+
+	auto Output1 = wcBlockParser(*new wcTokenizer(Source1), *new wcParseSymbolTable()).Parse(true);
+	auto Output2 = wcBlockParser(*new wcTokenizer(Source2), *new wcParseSymbolTable()).Parse(true);
+
+	return 0;
+}
+
+int weec::test::lex::Test_wcDeclarationParser1()
+{
+	string Source1 = "int a;";
+	auto Output1 = wcDeclarationParser(*new wcTokenizer(Source1, true), *new wcParseSymbolTable()).Parse();
+	if (Output1.Error.Code != wcParserErrorCode::None)				return 1;
+	if (!Output1.SymbolTable.Exists(wcFullIdentifier("a")))			return 2;
+
+	string Source2 = "int jiminy = 0;";
+	auto Output2 = wcDeclarationParser(*new wcTokenizer(Source2, true), *new wcParseSymbolTable()).Parse();
+	if (Output2.Error.Code != wcParserErrorCode::None)				return 3;
+	if (!Output2.SymbolTable.Exists(wcFullIdentifier("jiminy")))	return 4;
+
+	string Source3 = "int methodName(){ return 0; }";
+	auto Output3 = wcDeclarationParser(*new wcTokenizer(Source3, true), *new wcParseSymbolTable()).Parse();
+	if (Output3.Error.Code != wcParserErrorCode::None)									return 5;
+	if (!Output3.SymbolTable.Exists(wcFullIdentifier("methodName()")))					return 6;
+	if (Output3.SymbolTable.Get(wcFullIdentifier("methodName()")).DataType != "int")	return 7;
+
+	string Source4 = "int methodNameWithArgs(int a, int b){ return 0; }";
+	auto Output4 = wcDeclarationParser(*new wcTokenizer(Source4, true), *new wcParseSymbolTable()).Parse();
+	if (Output4.Error.Code != wcParserErrorCode::None)											return 5;
+	if (!Output4.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))	return 6;
+
 	return 0;
 }
 

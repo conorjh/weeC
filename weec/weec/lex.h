@@ -213,7 +213,7 @@ namespace weec
 
 		public:
 			wcTokenizerError Error;
-			wcTokenizer(std::string& _source);
+			wcTokenizer(std::string& _source, bool _NextToken = false);
 			wcTokenizer& operator=(wcTokenizer&);
 
 			wcToken GetToken() const;

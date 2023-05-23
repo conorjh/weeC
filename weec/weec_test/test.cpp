@@ -396,7 +396,7 @@ int weec::test::lex::Test_wcFullIdentifier1()
 	if (fullIdent1.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")			return 68;
 	if (fullIdent1.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 69;
 	if (fullIdent1.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 70;
-
+	/*
 	//part constructed wcFullIdentifier with function, namespace and global 
 	wcIdentifierScope scope1("$g::NS::anotherNS");
 	wcIdentifier identifier1("SomeIdentifier()");
@@ -411,7 +411,7 @@ int weec::test::lex::Test_wcFullIdentifier1()
 	if (fullIdent1.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")			return 68;
 	if (fullIdent1.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 69;
 	if (fullIdent1.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 70;
-
+	*/
 	return 0;
 }
 

@@ -108,8 +108,17 @@ namespace weec
 				GetIdentifierFromQualifiedIdentifier(std::string IdentifierString),
 				StripArgumentsFromFunctionIdentifier(std::string FunctionIdentifierString);
 
-			bool IsQualified(std::string), IsFunction(std::string), IsValid(std::string), IsQualifiedWithGlobal(std::string),
-				ContainsNamespace(std::string), ContainsGlobal(std::string);
+			bool ContainsGlobal(std::string Identifier) const
+			{
+				return Identifier.find(ParserConsts.GlobalIdentifier) != std::string::npos;
+			}
+
+			bool ContainsNamespace(std::string Identifier) const
+			{
+				return Identifier.find(ParserConsts.ScopeDelimiter) != std::string::npos;
+			}
+
+			bool IsQualified(std::string), IsFunction(std::string), IsValid(std::string), IsQualifiedWithGlobal(std::string);
 		};
 
 
@@ -127,8 +136,13 @@ namespace weec
 			bool operator==(const wcIdentifier& p) const
 			{
 				//strip arguments from either side
-				auto l = to_string().find("(") != to_string().npos ? to_string().substr(0, to_string().find_first_of("(")) : to_string();
-				auto r = p.to_string().find("(") != p.to_string().npos ? p.to_string().substr(0, p.to_string().find_first_of("(")) : p.to_string();
+				auto l = to_string().find("(") != to_string().npos 
+					? to_string().substr(0, to_string().find_first_of("(")) 
+					: to_string();
+
+				auto r = p.to_string().find("(") != p.to_string().npos 
+					? p.to_string().substr(0, p.to_string().find_first_of("(")) 
+					: p.to_string();
 
 				return l == r;
 			}
@@ -136,8 +150,13 @@ namespace weec
 			bool operator==(const std::string& p) const
 			{
 				//strip arguments from either side
-				auto l = to_string().find("(") != to_string().npos ? to_string().substr(0, to_string().find_first_of("(")) : to_string();
-				auto r = p.find("(") != p.npos ? p.substr(0, p.find_first_of("(")) : p;
+				auto l = to_string().find("(") != to_string().npos 
+					? to_string().substr(0, to_string().find_first_of("(")) 
+					: to_string();
+
+				auto r = p.find("(") != p.npos 
+					? p.substr(0, p.find_first_of("(")) 
+					: p;
 
 				return l == r;
 			}
@@ -160,13 +179,10 @@ namespace weec
 			std::string to_unqualified_string() const
 			{
 				//remove $g:: and any other namespaces
-				if (ContainsNamespace())
-				{
-					auto l = Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1, Identifier.size() - (Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1));	//todo remove debug line 
-					return l;
-				}
+				if (wcIdentalyzer().ContainsNamespace(Identifier))
+					return Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1, Identifier.size() - (Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1));				
 
-				if (ContainsTheGlobalIdentifier())
+				if (wcIdentalyzer().ContainsGlobal(Identifier))
 					return "";	//no namespace delimiter, but a present global ident... must be just "$g". the unqualified version of this is an empty string
 
 				//no namespace, no global, this identifier already is unqualified
@@ -175,10 +191,10 @@ namespace weec
 
 			std::string to_string_no_global() const
 			{
-				if (!ContainsTheGlobalIdentifier())
+				if (!wcIdentalyzer().ContainsGlobal(Identifier))
 					return Identifier;	//global wasnt present
 				else
-					if (ContainsNamespace())
+					if (wcIdentalyzer().ContainsNamespace(Identifier))
 					{
 						auto l = Identifier.substr(Identifier.find_first_of(ParserConsts.GlobalIdentPrefix) + 4, Identifier.size() - (Identifier.find_first_of(ParserConsts.GlobalIdentPrefix) + 4));	//todo remove debug line 
 						return l;
@@ -210,8 +226,8 @@ namespace weec
 
 			unsigned int Size() const
 			{
-				if (ContainsTheGlobalIdentifier())
-					if (ContainsNamespace())
+				if (wcIdentalyzer().ContainsGlobal(Identifier))
+					if (wcIdentalyzer().ContainsNamespace(Identifier))
 					{
 						auto l = Identifier.substr(Identifier.find_first_of(ParserConsts.ScopeDelimiter) + 2, Identifier.size() - (Identifier.find_first_of(ParserConsts.ScopeDelimiter) + 2));	//todo remove debug line 
 						return l.size();
@@ -223,16 +239,6 @@ namespace weec
 			}
 
 		private:
-			bool ContainsTheGlobalIdentifier() const
-			{
-				return Identifier.find(ParserConsts.GlobalIdentifier) != std::string::npos;
-			}
-
-			bool ContainsNamespace() const
-			{
-				return Identifier.find("::") != std::string::npos;
-			}
-
 			std::string Identifier;
 		};
 
@@ -626,14 +632,17 @@ namespace weec
 			{
 				return Tokenizer.GetToken();
 			}
+
 			bool NextToken()
 			{
 				return Tokenizer.NextToken();
 			}
+
 			bool ExpectToken(lex::wcTokenType TokenType)
 			{
 				return Tokenizer.GetToken().Type == TokenType;
 			}
+
 			bool ExpectNextToken(lex::wcTokenType TokenType)
 			{
 				return Tokenizer.NextToken(TokenType);

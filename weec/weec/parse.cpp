@@ -1228,7 +1228,8 @@ wcParseNodeType wcTokenTypeToParseNodeType(wcTokenType Type)
 	}
 }
 
-weec::parse::wcParseSymbolTable::wcParseSymbolTable() : NullSymbol(wcParseSymbolType::Null, wcFullIdentifier(string(""), string("")), wcToken())
+weec::parse::wcParseSymbolTable::wcParseSymbolTable() 
+	: NullSymbol(wcParseSymbolType::Null, wcFullIdentifier(string(""), string("")), wcToken())
 {
 
 	//global scope
@@ -1589,13 +1590,6 @@ bool weec::parse::wcIdentalyzer::IsFunction(std::string PossibleIdentifier)
 bool weec::parse::wcIdentalyzer::IsValid(std::string PossibleIdentifier)
 {
 	return lex::wcTokenTypeAlizer().IsValidIdent(PossibleIdentifier);
-}
-
-weec::parse::wcParseScopes::wcParseScopes()
-{
-	//global stackframe
-	wcParseScope GlobalFrame(ParserConsts.GlobalIdentifier);
-	Scopes.push(GlobalFrame);	
 }
 
 const wcParseScope& weec::parse::wcParseScopes::Top() const

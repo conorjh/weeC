@@ -512,6 +512,15 @@ int weec::test::lex::Test_wcParseSymbolTable2()
 	return 0;
 }
 
+int weec::test::lex::Test_wcParseScopes()
+{
+	wcParseScopes Scopes;
+
+
+
+	return 0;
+}
+
 int weec::test::lex::Test_wcBlockParser1()
 {
 	std::string Source1 = "{}", Source2 = "{\n{\n}\n}";

@@ -540,7 +540,11 @@ namespace weec
 		{
 			std::stack<wcParseScope> Scopes;
 		public:
-			wcParseScopes();
+			wcParseScopes()
+			{
+				//global stackframe
+				Scopes.push(wcParseScope(ParserConsts.GlobalIdentifier));
+			}
 
 			const wcParseScope& Top() const;
 			void Push(const wcParseScope&), Pop();

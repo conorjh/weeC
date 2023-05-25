@@ -516,8 +516,8 @@ int weec::test::lex::Test_wcBlockParser1()
 {
 	std::string Source1 = "{}", Source2 = "{\n{\n}\n}";
 
-	auto Output1 = wcBlockParser(*new wcTokenizer(Source1), *new wcParseSymbolTable(), *new std::stack<wcParseScope>()).Parse(true);
-	auto Output2 = wcBlockParser(*new wcTokenizer(Source2), *new wcParseSymbolTable(), *new std::stack<wcParseScope>()).Parse(true);
+	auto Output1 = wcBlockParser(*new wcTokenizer(Source1), *new wcParseSymbolTable(), *new wcParseScopes()).Parse(true);
+	auto Output2 = wcBlockParser(*new wcTokenizer(Source2), *new wcParseSymbolTable(), *new wcParseScopes()).Parse(true);
 
 	return 0;
 }
@@ -525,23 +525,23 @@ int weec::test::lex::Test_wcBlockParser1()
 int weec::test::lex::Test_wcDeclarationParser1()
 {
 	string Source1 = "int a;";
-	auto Output1 = wcDeclarationParser(*new wcTokenizer(Source1, true), *new wcParseSymbolTable(), *new std::stack<wcParseScope>()).Parse();
+	auto Output1 = wcDeclarationParser(*new wcTokenizer(Source1, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
 	if (Output1.Error.Code != wcParserErrorCode::None)				return 1;
 	if (!Output1.SymbolTable.Exists(wcFullIdentifier("a")))			return 2;
 
 	string Source2 = "int jiminy = 0;";
-	auto Output2 = wcDeclarationParser(*new wcTokenizer(Source2, true), *new wcParseSymbolTable(), *new std::stack<wcParseScope>()).Parse();
+	auto Output2 = wcDeclarationParser(*new wcTokenizer(Source2, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
 	if (Output2.Error.Code != wcParserErrorCode::None)				return 3;
 	if (!Output2.SymbolTable.Exists(wcFullIdentifier("jiminy")))	return 4;
 
 	string Source3 = "int methodName(){ return 0; }";
-	auto Output3 = wcDeclarationParser(*new wcTokenizer(Source3, true), *new wcParseSymbolTable(), *new std::stack<wcParseScope>()).Parse();
+	auto Output3 = wcDeclarationParser(*new wcTokenizer(Source3, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
 	if (Output3.Error.Code != wcParserErrorCode::None)									return 5;
 	if (!Output3.SymbolTable.Exists(wcFullIdentifier("methodName()")))					return 6;
 	if (Output3.SymbolTable.Get(wcFullIdentifier("methodName()")).DataType != "int")	return 7;
 
 	string Source4 = "int methodNameWithArgs(int a, int b){ return 0; }";
-	auto Output4 = wcDeclarationParser(*new wcTokenizer(Source4, true), *new wcParseSymbolTable(), *new std::stack<wcParseScope>()).Parse();
+	auto Output4 = wcDeclarationParser(*new wcTokenizer(Source4, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
 	if (Output4.Error.Code != wcParserErrorCode::None)											return 5;
 	if (!Output4.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))	return 6;
 

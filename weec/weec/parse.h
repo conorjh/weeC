@@ -135,12 +135,12 @@ namespace weec
 			bool operator==(const wcIdentifier& p) const
 			{
 				//strip arguments from either side
-				auto l = to_string().find("(") != to_string().npos 
-					? to_string().substr(0, to_string().find_first_of("(")) 
+				auto l = to_string().find("(") != to_string().npos
+					? to_string().substr(0, to_string().find_first_of("("))
 					: to_string();
 
-				auto r = p.to_string().find("(") != p.to_string().npos 
-					? p.to_string().substr(0, p.to_string().find_first_of("(")) 
+				auto r = p.to_string().find("(") != p.to_string().npos
+					? p.to_string().substr(0, p.to_string().find_first_of("("))
 					: p.to_string();
 
 				return l == r;
@@ -149,12 +149,12 @@ namespace weec
 			bool operator==(const std::string& p) const
 			{
 				//strip arguments from either side
-				auto l = to_string().find("(") != to_string().npos 
-					? to_string().substr(0, to_string().find_first_of("(")) 
+				auto l = to_string().find("(") != to_string().npos
+					? to_string().substr(0, to_string().find_first_of("("))
 					: to_string();
 
-				auto r = p.find("(") != p.npos 
-					? p.substr(0, p.find_first_of("(")) 
+				auto r = p.find("(") != p.npos
+					? p.substr(0, p.find_first_of("("))
 					: p;
 
 				return l == r;
@@ -179,7 +179,7 @@ namespace weec
 			{
 				//remove $g:: and any other namespaces
 				if (wcIdentalyzer().ContainsNamespace(Identifier))
-					return Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1, Identifier.size() - (Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1));				
+					return Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1, Identifier.size() - (Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1));
 
 				if (wcIdentalyzer().ContainsGlobal(Identifier))
 					return "";	//no namespace delimiter, but a present global ident... must be just "$g". the unqualified version of this is an empty string
@@ -202,21 +202,21 @@ namespace weec
 						return "";  //must be just "$g"
 			}
 
-			std::string to_string_no_arguments() const 
-			{ 				
+			std::string to_string_no_arguments() const
+			{
 				return IsFunction()
 					? wcIdentalyzer().StripArgumentsFromFunctionIdentifier(to_string())
 					: to_string();
 			}
 
-			std::string to_string_unqualified_no_arguments() const 
-			{ 
+			std::string to_string_unqualified_no_arguments() const
+			{
 				return IsFunction()
 					? wcIdentalyzer().StripArgumentsFromFunctionIdentifier(to_unqualified_string())
 					: to_unqualified_string();
 			}
 
-			std::string to_string_no_arguments_no_global() const 
+			std::string to_string_no_arguments_no_global() const
 			{
 				return IsFunction()
 					? wcIdentalyzer().StripArgumentsFromFunctionIdentifier(to_string_no_global())
@@ -290,9 +290,9 @@ namespace weec
 
 			std::string to_string() const { return Identifier.to_string(); }
 
-			std::string to_unqualified_string() const {	return Identifier.to_unqualified_string();	}
+			std::string to_unqualified_string() const { return Identifier.to_unqualified_string(); }
 
-			std::string to_string_no_global() const	{	return Identifier.to_string_no_global();	}
+			std::string to_string_no_global() const { return Identifier.to_string_no_global(); }
 
 		};
 
@@ -306,7 +306,7 @@ namespace weec
 			wcFullIdentifier(std::string, std::vector<wcParseExpression>);
 			wcFullIdentifier(std::string, std::vector<wcParseParameter>);
 			wcFullIdentifier(std::string, std::vector<wcParseSymbol>);
-			wcFullIdentifier(const wcFullIdentifier& Other) 
+			wcFullIdentifier(const wcFullIdentifier& Other)
 			{
 				ShortIdentifier = Other.ShortIdentifier;
 				ScopeIdentifier = Other.ScopeIdentifier;
@@ -318,7 +318,7 @@ namespace weec
 				ScopeIdentifier = _Scope;
 			}
 
-			wcFullIdentifier(const char * RawIdentifier)
+			wcFullIdentifier(const char* RawIdentifier)
 			{
 				wcIdentalyzer().Create(RawIdentifier, ScopeIdentifier, ShortIdentifier);
 			}
@@ -340,7 +340,7 @@ namespace weec
 					: to_string_no_global() == p;
 			}
 
-			bool operator==(const char * p) const
+			bool operator==(const char* p) const
 			{
 				return operator==(std::string(p));
 			}
@@ -536,6 +536,21 @@ namespace weec
 			std::vector<wcFullIdentifier> Symbols;
 		};
 
+		class wcParseScopes
+		{
+			std::stack<wcParseScope> Scopes;
+		public:
+			wcParseScopes();
+
+			const wcParseScope& Top() const;
+			void Push(const wcParseScope&), Pop();
+
+			unsigned int Size() const
+			{
+				return Scopes.size();
+			}
+		};
+
 		enum class wcIdentifierResolveResult
 		{
 			Ambiguous = -1,
@@ -545,14 +560,13 @@ namespace weec
 
 		class wcIdentifierResolver
 		{
-			std::stack<wcParseScope>& StackFrames;
+			wcParseScopes& Scopes;
 		public:
-			wcIdentifierResolver(std::stack<wcParseScope>& _StackFrames) :
-				StackFrames(_StackFrames) {}
+			wcIdentifierResolver(wcParseScopes& _Scopes) :
+				Scopes(_Scopes) {}
 
 			wcIdentifierResolveResult Resolve(wcIdentifier In, wcFullIdentifier& Out, bool ForceResolve = true);
 		};
-
 
 		class wcParseSymbolTable 
 		{
@@ -639,10 +653,10 @@ namespace weec
 		protected:
 			lex::wcTokenizer& Tokenizer;
 			wcParseSymbolTable& SymbolTable;
-			std::stack<wcParseScope>& Scopes;
+			wcParseScopes& Scopes;
 
 		public:
-			wcSubParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcSubParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: Tokenizer(_Tokenizer), SymbolTable(_SymbolTable), Scopes(_Scopes) {}
 
 			lex::wcToken GetToken()
@@ -676,7 +690,7 @@ namespace weec
 				ParseExpression_Term(), ParseExpression_Factor(),
 				ParseExpression_Unary(), ParseExpression_Call(), ParseExpression_CallArguments(wcParseExpression Callee), ParseExpression_Primary();
 		public:
-			wcExpressionParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcExpressionParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput ParseExpression(), ParseExpression(wcParseSymbol);
@@ -685,7 +699,7 @@ namespace weec
 		class wcIdentParser : wcSubParser
 		{
 		public:
-			wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes);
+			wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes);
 
 			wcParseOutput Parse(wcIdentifier&, wcFullIdentifier& ResolvedFullIdentifier, bool Consume = true, bool ExpectDeclared = false);
 		};
@@ -698,7 +712,7 @@ namespace weec
 				ParseParameter(wcParseParameter& ParameterOutput);
 
 		public:
-			wcDeclarationParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcDeclarationParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse();
@@ -708,7 +722,7 @@ namespace weec
 		{
 
 		public:
-			wcStatementParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcStatementParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse(bool AllowDeclarations);
@@ -718,7 +732,7 @@ namespace weec
 		{
 
 		public:
-			wcBlockParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcBlockParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse(bool AllowDeclarations);
@@ -727,7 +741,7 @@ namespace weec
 		class wcIfParser : wcSubParser
 		{
 		public:
-			wcIfParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcIfParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse();
@@ -736,7 +750,7 @@ namespace weec
 		class wcSemiColonParser : wcSubParser
 		{
 		public:
-			wcSemiColonParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcSemiColonParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse();
@@ -745,7 +759,7 @@ namespace weec
 		class wcReturnParser : wcSubParser
 		{
 		public:
-			wcReturnParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcReturnParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse();
@@ -754,7 +768,7 @@ namespace weec
 		class wcWhileParser : wcSubParser
 		{
 		public:
-			wcWhileParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+			wcWhileParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse();
@@ -767,7 +781,7 @@ namespace weec
 
 			lex::wcTokenizer& Tokenizer;
 			wcParseSymbolTable SymbolTable;
-			std::stack<wcParseScope> Scopes;
+			wcParseScopes Scopes;
 
 		public:
 			wcParser(lex::wcTokenizer& _Tokenizer);

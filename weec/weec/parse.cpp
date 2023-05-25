@@ -80,12 +80,12 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 			return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(ParametersNode).AddAsChild(wcSemiColonParser(Tokenizer, Output.SymbolTable, Scopes).Parse());
 
 		//no semi colon, must be a full declaration with body
-		Scopes.push(FunctionSignature.FunctionIdentifier.to_string());			
+		Scopes.Push(FunctionSignature.FunctionIdentifier.to_string());			
 
 		wcParseOutput BodyNode = wcBlockParser(Tokenizer, Output.SymbolTable, Scopes).Parse(true);
 
 		//pop here?  todo
-		Scopes.pop();
+		Scopes.Pop();
 
 		return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(ParametersNode).AddAsChild(BodyNode);
 	}
@@ -217,7 +217,7 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseParameter(wcParseParameter&
 	return ParameterNode;
 }
 
-weec::parse::wcIdentParser::wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, std::stack<wcParseScope>& _Scopes)
+weec::parse::wcIdentParser::wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 	: wcSubParser(_Tokenizer, _SymbolTable, _Scopes)
 {
 
@@ -255,7 +255,7 @@ wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier,	
 		break;
 	}
 
-	ResolvedFullIdentifier = wcFullIdentifier(Scopes.top().Name.to_string(), ParsedIdentifier);
+	ResolvedFullIdentifier = wcFullIdentifier(Scopes.Top().Name.to_string(), ParsedIdentifier);
 
 	//consume the identifier token if told so (ie when expression parsing)
 	if(Consume && !NextToken())
@@ -1220,7 +1220,7 @@ wcParseNodeType wcTokenTypeToParseNodeType(wcTokenType Type)
 {
 	switch (Type)
 	{
-	case Null:
+	case NullToken:
 		return wcParseNodeType::Head;
 
 	default:
@@ -1230,9 +1230,6 @@ wcParseNodeType wcTokenTypeToParseNodeType(wcTokenType Type)
 
 weec::parse::wcParseSymbolTable::wcParseSymbolTable() : NullSymbol(wcParseSymbolType::Null, wcFullIdentifier(string(""), string("")), wcToken())
 {
-	//global stackframe
-	wcParseScope GlobalFrame(ParserConsts.GlobalIdentifier);
-	//Scopes.push(GlobalFrame);	<< todo
 
 	//global scope
 	Add(wcParseSymbol(wcParseSymbolType::Namespace, wcFullIdentifier(ParserConsts.GlobalIdentifier, ParserConsts.GlobalIdentifier), wcToken()));
@@ -1473,10 +1470,10 @@ wcIdentifierResolveResult weec::parse::wcIdentifierResolver::Resolve(wcIdentifie
 	unsigned int MatchingIdentifierCount = 0;
 	auto Result = wcIdentifierResolveResult::Unresolved;
 
-	while (StackFrames.size() > 0)
+	while (Scopes.Size() > 0)
 	{
 		//check if top stackframe declares the given identifier
-		for (auto& Symbol : StackFrames.top().Symbols)
+		for (auto& Symbol : Scopes.Top().Symbols)
 			if (Symbol.ShortIdentifier == In)
 			{
 				//found it
@@ -1490,18 +1487,18 @@ wcIdentifierResolveResult weec::parse::wcIdentifierResolver::Resolve(wcIdentifie
 			}
 
 		//pop this stackframe, try the next if there is one
-		Receiver.push(StackFrames.top());
-		StackFrames.pop();
+		Receiver.push(Scopes.Top());
+		Scopes.Pop();
 	}
 
 	//mutliple or nothing found
 	Result = MatchingIdentifierCount > 1 ? wcIdentifierResolveResult::Ambiguous : wcIdentifierResolveResult::Unresolved;
 
-	//restore StackFrames
+	//restore Scopes
 	_wcIdentifierResolver_Resolve_Cleanup:
 	while (Receiver.size() > 0)
 	{
-		StackFrames.push(Receiver.top());
+		Scopes.Push(Receiver.top());
 		Receiver.pop();
 	}
 
@@ -1594,5 +1591,24 @@ bool weec::parse::wcIdentalyzer::IsValid(std::string PossibleIdentifier)
 	return lex::wcTokenTypeAlizer().IsValidIdent(PossibleIdentifier);
 }
 
+weec::parse::wcParseScopes::wcParseScopes()
+{
+	//global stackframe
+	wcParseScope GlobalFrame(ParserConsts.GlobalIdentifier);
+	Scopes.push(GlobalFrame);	
+}
 
+const wcParseScope& weec::parse::wcParseScopes::Top() const
+{
+	return Scopes.top();
+}
 
+void weec::parse::wcParseScopes::Pop()
+{
+	Scopes.pop();
+}
+
+void weec::parse::wcParseScopes::Push(const wcParseScope& Scope)
+{
+	Scopes.push(Scope);
+}

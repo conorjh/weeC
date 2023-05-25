@@ -31,6 +31,7 @@ namespace weec
 		struct wcStringToken
 		{
 			wcStringToken();
+			wcStringToken(std::string& _data, wcStringTokenType _type, int _line, int _column);
 			wcStringToken(std::string _data, wcStringTokenType _type, int _line, int _column);
 			wcStringToken& operator=(wcStringToken);
 			bool operator==(const wcStringToken&), operator==(wcStringToken&);
@@ -42,7 +43,7 @@ namespace weec
 
 		enum class wcTokenType
 		{
-			Null,
+			NullToken,
 
 			//value types
 			IntLiteral, StringLiteral, FloatLiteral, CharLiteral,
@@ -98,11 +99,11 @@ namespace weec
 			wcTokenDefinitionsBank();
 			wcTokenDefinitionsBank(const std::vector<wcTokenDefinition>&);
 
-			bool exists(std::string),
-				exists(char), exists(wcTokenType);
+			bool exists(const std::string&) ,
+				exists(const char&), exists(const wcTokenType&);
 
-			const wcTokenDefinition find(std::string) const,
-				find(char) const, find(wcTokenType) const;
+			const wcTokenDefinition find(const std::string&) const,
+				find(const char&) const, find(const wcTokenType&) const;
 
 		private:
 			const wcTokenDefinition* cache;
@@ -113,7 +114,7 @@ namespace weec
 		struct wcToken
 		{
 			wcToken();
-			wcToken(wcStringToken _string);
+			wcToken(const wcStringToken& _string);
 
 			wcToken& operator=(const wcToken&);
 			bool operator==(const wcToken&), operator==(wcToken&);
@@ -222,7 +223,7 @@ namespace weec
 
 		const wcTokenDefinition definitions[WC_VAR_DEFINITIONCOUNT] =
 		{
-			wcTokenDefinition(wcTokenType::Null, ""),
+			wcTokenDefinition(wcTokenType::NullToken, ""),
 			wcTokenDefinition(wcTokenType::Whitespace, " ", true, true),
 			wcTokenDefinition(wcTokenType::NewLine, "\n", true),
 			wcTokenDefinition(wcTokenType::Tab, "\t", true),

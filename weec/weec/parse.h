@@ -19,6 +19,7 @@ namespace weec
 			std::string GlobalIdentifier = "$g",
 				ScopeDelimiter = "::",
 				GlobalIdentPrefix = GlobalIdentifier + ScopeDelimiter;
+			unsigned int BasicTypeCount = 7;
 		};
 
 		static wcParserConsts ParserConsts;
@@ -95,7 +96,7 @@ namespace weec
 			InvalidIdentifier, ShortIdentifier, QualifiedIdentifier, ShortFunction, QualifiedFunction
 		};
 
-		class wcIdentifier; class wcIdentifierScope;
+		class wcIdentifier; class wcIdentifierScope; struct wcParseParameter;
 
 		class wcIdentalyzer
 		{
@@ -103,7 +104,8 @@ namespace weec
 			wcIdentalyzerAnalyzeResultCode Analyze(std::string);
 
 			bool Create(std::string IdentifierString, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
-
+			bool Create(std::string IdentifierString, std::vector<wcParseParameter> Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
+			
 			std::string GetNamespaceFromQualifiedIdentifier(std::string IdentifierString),
 				GetIdentifierFromQualifiedIdentifier(std::string IdentifierString),
 				StripArgumentsFromFunctionIdentifier(std::string FunctionIdentifierString);
@@ -352,6 +354,11 @@ namespace weec
 				return *this;
 			}
 
+			wcIdentifier GetIdentifier() const
+			{
+				return ShortIdentifier;
+			}
+
 			bool IsFunction() const
 			{
 				return ShortIdentifier.IsFunction();
@@ -402,12 +409,20 @@ namespace weec
 					: to_string_no_global();
 			}
 
+		private:
 			wcIdentifier ShortIdentifier;
 			wcIdentifierScope ScopeIdentifier;
 		};
 
 		struct wcParseParameter
 		{
+			wcParseParameter() {}
+			wcParseParameter(wcFullIdentifier _TypeIdentifier, wcFullIdentifier _Identifier)
+			{
+				TypeIdentifier = _TypeIdentifier;
+				Identifier = _Identifier;
+			}
+
 			lex::wcToken TypeToken, IdentifierToken;
 			wcFullIdentifier TypeIdentifier, Identifier;
 		};
@@ -429,7 +444,14 @@ namespace weec
 
 			bool operator==(const wcFullIdentifier& p) const
 			{
-				return to_string_no_parameters() == p.to_string();
+				return to_string_no_arguments() == p.to_string();
+			}
+
+			bool operator==(const std::string& p) const
+			{
+				return wcIdentalyzer().IsFunction(p)
+					? to_string() == p
+					: to_string_no_arguments() == p;
 			}
 
 			wcFunctionIdentifier& operator=(const wcFunctionIdentifier& Other)
@@ -439,19 +461,14 @@ namespace weec
 				return *this;
 			}
 
-			wcFullIdentifier no_arguments() const
-			{
-				return wcFullIdentifier(Identifier.ShortIdentifier.to_string());
-			}
-
 			std::string to_string() const
 			{
 				return Identifier.to_string();
 			}
 
-			std::string to_string_no_parameters() const
+			std::string to_string_no_arguments() const
 			{
-				return no_arguments().to_string();
+				return Identifier.to_string_no_arguments();
 			}
 
 			unsigned int ArgumentCount() const
@@ -459,6 +476,7 @@ namespace weec
 				return ParameterTypes.size();
 			}
 
+		private:
 			wcFullIdentifier Identifier;
 			std::vector<wcFullIdentifier> ParameterTypes;
 		};
@@ -498,7 +516,7 @@ namespace weec
 
 			std::string to_string_no_parameters() const
 			{
-				return DataType.to_string() + " " + FunctionIdentifier.to_string_no_parameters();
+				return DataType.to_string() + " " + FunctionIdentifier.to_string_no_arguments();
 			}
 
 			wcFullIdentifier DataType;
@@ -531,45 +549,83 @@ namespace weec
 				Name = _Name;
 			}
 
+			wcParseScope(std::string _Name, std::initializer_list<wcFullIdentifier> _Symbols)
+			{
+				for (auto Item : _Symbols)
+					Container.insert(make_pair(Item.to_string(), Item));
+				Name = _Name;
+			}
+
+			bool Exists(const wcFullIdentifier& FullIdent) const
+			{
+				for (auto Item : Container)
+					if (Item.second == FullIdent)
+						return true;
+				return false;
+			}
+
+			unsigned int Count() const
+			{
+				return Container.size();
+			}
+
+			wcParseSymbol Get(wcFullIdentifier FullIdent) const;
+
 			wcFullIdentifier Name;
-
-			std::vector<wcFullIdentifier> Symbols;
+			std::unordered_map<std::string, wcFullIdentifier> Container;
 		};
 
-		class wcParseScopes
-		{
-			std::stack<wcParseScope> Scopes;
-		public:
-			wcParseScopes()
-			{
-				//global stackframe
-				Scopes.push(wcParseScope(ParserConsts.GlobalIdentifier));
-			}
-
-			const wcParseScope& Top() const;
-			void Push(const wcParseScope&), Pop();
-
-			unsigned int Size() const
-			{
-				return Scopes.size();
-			}
-		};
-
-		enum class wcIdentifierResolveResult
+		enum class wcParseScopeResolveResult
 		{
 			Ambiguous = -1,
 			Unresolved = 0,
 			Resolved = 1
 		};
 
-		class wcIdentifierResolver
+		class wcParseScopes
 		{
-			wcParseScopes& Scopes;
+			std::stack<wcParseScope> Scopes;
 		public:
-			wcIdentifierResolver(wcParseScopes& _Scopes) :
-				Scopes(_Scopes) {}
+			wcParseScopes();
+			wcParseScopes(wcParseScope _Scope)
+			{
+				Push(_Scope);
+			}
 
-			wcIdentifierResolveResult Resolve(wcIdentifier In, wcFullIdentifier& Out, bool ForceResolve = true);
+			const wcParseScope& Top() const
+			{
+				return Scopes.top();
+			}
+
+			void Push(const wcParseScope& Scope)
+			{
+				Scopes.push(Scope);			
+			}
+
+			void Pop()
+			{
+				Scopes.pop();
+			}
+
+			void SwapTop(const wcParseScope& Scope)
+			{
+				Scopes.pop();
+				Scopes.push(Scope);
+			}
+
+			void AddSymbol(const wcFullIdentifier& Ident) 
+			{
+				auto Temp = Scopes.top();
+				Temp.Container.insert(make_pair(Ident.to_string(), Ident));
+				SwapTop(Temp);
+			}
+
+			wcParseScopeResolveResult Resolve(wcIdentifier In, wcFullIdentifier& Out, bool ReturnFirstMatch = false);
+
+			unsigned int Size() const
+			{
+				return Scopes.size();
+			}
 		};
 
 		class wcParseSymbolTable 
@@ -712,8 +768,8 @@ namespace weec
 		{
 			wcParseOutput ParseType(wcFullIdentifier& DeclarationType, wcParseNodeType NodeType),
 				ParseIdent(wcFullIdentifier& DeclarationFullIdentifier, lex::wcToken& IdentAsSeen),
-				ParseParameters(std::vector<wcParseParameter>& ParametersOut),
-				ParseParameter(wcParseParameter& ParameterOutput);
+				ParseParameters(wcFullIdentifier DeclarationIdent, std::vector<wcParseParameter>& ParametersOut),
+				ParseParameter(wcFullIdentifier DeclarationIdent, wcParseParameter& ParameterOutput);
 
 		public:
 			wcDeclarationParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)

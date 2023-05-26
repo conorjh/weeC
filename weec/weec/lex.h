@@ -121,6 +121,11 @@ namespace weec
 
 			bool IsOperator() const, IsBuiltinType() const;
 
+			std::string to_string() const
+			{
+				return StringToken.Data;
+			}
+
 			wcTokenType Type;
 			wcStringToken StringToken;
 		};

@@ -415,6 +415,43 @@ int weec::test::lex::Test_wcFullIdentifier1()
 	return 0;
 }
 
+int weec::test::lex::Test_wcFunctionIdentifier1()
+{
+	wcFunctionIdentifier FuncIdent;
+	if (FuncIdent.ArgumentCount() != 0)					return 1;
+	if (FuncIdent.to_string() != "$g")					return 3;
+	if (FuncIdent.to_string_no_arguments() != "$g")		return 4;
+	if (FuncIdent != string("$g"))						return 5;
+
+	wcFunctionIdentifier FuncIdent1("test()", {});
+	if (FuncIdent1.ArgumentCount() != 0)							return 11;
+	if (FuncIdent1.to_string() != "$g::test()")						return 13;
+	if (FuncIdent1.to_string_no_arguments() != string("$g::test"))	return 14;
+	if (FuncIdent1 != string("$g::test()"))							return 15;
+
+	//construct with no parenthesis in identifier
+	wcFunctionIdentifier FuncIdent2("testWithoutParens", {});
+	if (FuncIdent2.ArgumentCount() != 0)										return 21;
+	if (FuncIdent2.to_string() != string(""))									return 23;
+	if (FuncIdent2.to_string_no_arguments() != string("testWithoutParens"))	return 24;
+	if (FuncIdent2 != string("testWithoutParens()"))							return 25;
+
+
+	wcFunctionIdentifier FuncIdent3("test()", {});
+	if (FuncIdent3.ArgumentCount() != 0)							return 31;
+	if (FuncIdent3.to_string() != string(""))						return 33;
+	if (FuncIdent3.to_string_no_arguments() != string("test"))		return 34;
+	if (FuncIdent3 != string("test()"))								return 35;
+
+	wcFunctionIdentifier FuncIdent4("testWithParens()", { wcParseParameter("int", "param1"), wcParseParameter("int", "param2") });
+	if (FuncIdent4.ArgumentCount() != 2)									return 41;
+	if (FuncIdent4.to_string() != string(""))								return 43;
+	if (FuncIdent4.to_string_no_arguments() != string("testWithParens"))	return 44;
+	if (FuncIdent4 != string("testWithParens()"))							return 45;
+
+	return 0;
+}
+
 int weec::test::lex::Test_wcParseSymbolTable1()
 {
 	//default constructor, check built in types
@@ -487,6 +524,16 @@ int weec::test::lex::Test_wcParseSymbolTable1()
 	if (StringSymbol.Registered != true) 				return 7;
 	if (StringSymbol.Type != wcParseSymbolType::Type)	return 7;
 
+	auto VoidSymbol = SymTab1.Get("void");
+	if (VoidSymbol.Arguments != 0) 					return 7;
+	if (VoidSymbol.Const != false) 					return 7;
+	if (VoidSymbol.DataType != "") 					return 7;
+	if (VoidSymbol.FullIdent != "void") 			return 7;
+	if (VoidSymbol.HasOverloads != false) 			return 7;
+	if (VoidSymbol.IdentToken != wcToken()) 			return 7;
+	if (VoidSymbol.Registered != true) 				return 7;
+	if (VoidSymbol.Type != wcParseSymbolType::Type)	return 7;
+
 	return 0;
 }
 
@@ -512,11 +559,40 @@ int weec::test::lex::Test_wcParseSymbolTable2()
 	return 0;
 }
 
+int weec::test::lex::Test_wcParseScope()
+{
+	wcParseScope Scope("Test");
+	if (Scope.Name != "Test")		return 1;
+	if (Scope.Container.size())		return 2;
+
+	wcParseScope Scope2("Namespace::Test", { "Symbol1", "Symbol2", "Symbol3" });
+	if (Scope2.Name != "Namespace::Test")	return 1;
+	if (!Scope2.Exists("Symbol2"))			return 2;
+	if (!Scope2.Exists("Symbol2"))			return 3;
+	if (!Scope2.Exists("Symbol3"))			return 4;
+	if (Scope2.Container.size() != 3)		return 5;
+
+	return 0;
+}
+
 int weec::test::lex::Test_wcParseScopes()
 {
 	wcParseScopes Scopes;
+	if (Scopes.Size() != 1)										return 1;
+	if (Scopes.Top().Exists("void") != true)					return 2;
+	if (Scopes.Top().Exists("int") != true)						return 2;
+	if (Scopes.Top().Exists("uint") != true)					return 3;
+	if (Scopes.Top().Exists("float") != true)					return 4;
+	if (Scopes.Top().Exists("double") != true)					return 5;
+	if (Scopes.Top().Exists("bool") != true)					return 6;
+	if (Scopes.Top().Exists("string") != true)					return 7;
+	if (Scopes.Top().Count() != ParserConsts.BasicTypeCount)	return 8;
 
+	Scopes.Push(wcParseScope("test"));
+	if (Scopes.Size() != 2)				return 2;
+	if (Scopes.Top().Name != "test")	return 3;
 
+		
 
 	return 0;
 }

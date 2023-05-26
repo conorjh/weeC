@@ -132,7 +132,9 @@ namespace weec
 			int Test_wcIdentifier1();
 			int Test_wcScopeIdentifier1();
 			int Test_wcFullIdentifier1();
+			int Test_wcFunctionIdentifier1();
 			int Test_wcParseSymbolTable1(), Test_wcParseSymbolTable2();
+			int Test_wcParseScope();
 			int Test_wcParseScopes();
 			int Test_wcBlockParser1();
 
@@ -178,7 +180,11 @@ namespace weec
 
 				Test_wcFullIdentifier1,
 
+				Test_wcFunctionIdentifier1,
+
 				Test_wcParseSymbolTable1, Test_wcParseSymbolTable2,
+				
+				Test_wcParseScope,
 
 				Test_wcParseScopes,
 

@@ -737,15 +737,15 @@ any weec::interpreter::wcInterpreter::ExecDeclaration()
 		//register args
 		for (auto Arg : Arguments)
 			if (TypeToken.StringToken.Data == "int")
-				SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdentifier.to_string());
+				SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
 			else if (TypeToken.StringToken.Data == "float")
-				SymbolTable.Add(any_cast<float>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdentifier.to_string());
+				SymbolTable.Add(any_cast<float>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
 			else if (TypeToken.StringToken.Data == "unsigned int")
-				SymbolTable.Add(any_cast<unsigned int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdentifier.to_string());
+				SymbolTable.Add(any_cast<unsigned int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
 			else if (TypeToken.StringToken.Data == "double")
-				SymbolTable.Add(any_cast<double>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdentifier.to_string());
+				SymbolTable.Add(any_cast<double>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
 			else if (TypeToken.StringToken.Data == "bool")
-				SymbolTable.Add(any_cast<bool>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).ShortIdentifier.to_string());
+				SymbolTable.Add(any_cast<bool>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
 
 
 		FunctionTable.Add(wcInterpreterFunctionSignature(Input, *this, Arguments, TypeToken.StringToken.Data, DecBlockPC), IdentToken.StringToken.Data);

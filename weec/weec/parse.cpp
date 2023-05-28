@@ -48,9 +48,9 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 	if (ExpectToken(SemiColon))
 	{
 		//done, simple declaration no expression. add to symbol table
-		Output.SymbolTable.Add(wcParseSymbol(wcParseSymbolType::Variable, DeclarationIdent, DeclarationType, IdentToken));
+		AddSymbol(Output.SymbolTable, wcParseSymbol(wcParseSymbolType::Variable, DeclarationIdent, DeclarationType, IdentToken));
 
-		return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(wcSemiColonParser(Tokenizer, Output.SymbolTable, Scopes).Parse());
+		return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable, Scopes).Parse());
 	}
 	//function declaration
 	else if (ExpectToken(OpenParenthesis))
@@ -62,8 +62,6 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 
 		//generate the correct scope, now including parameters
 		wcFunctionIdentifier TrueFunctionName(DeclarationIdent, ParameterList);
-		auto FunctionSignature = wcParseFunctionSignature(DeclarationType, IdentToken, ParameterList, TrueFunctionName);
-		Output.SymbolTable.Add(FunctionSignature, ParameterList);
 
 		//hack - adjust ident node to have correct function name (including parameters)
 		for (auto& It : IdentNode.AST)
@@ -72,14 +70,24 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		//hack - adjust parameter identifiers to have correct scope, we didnt have the scope at the time without all arguments
 		for (auto& It : ParametersNode.AST)
 			if (It.Type == wcParseNodeType::Parameter_Ident)
-				It.Token.StringToken.Data = wcFullIdentifier(TrueFunctionName.to_string(), It.Token.StringToken.Data).to_string();
+				It.Token.StringToken.Data = wcFullIdentifier(TrueFunctionName.to_string(), wcIdentalyzer().GetIdentifierFromQualifiedIdentifier(It.Token.StringToken.Data)).to_string();
+		for (auto& Param : ParameterList)
+			Param.Identifier = wcFullIdentifier(TrueFunctionName.to_string(), Param.Identifier.to_unqualified_string());
 
+		//register this function and its parameters
+		auto FunctionSignature = wcParseFunctionSignature(DeclarationType, IdentToken, ParameterList, TrueFunctionName);
+		AddSymbol(Output.SymbolTable, FunctionSignature);
+		
 		//optional semi colon
 		if (ExpectToken(SemiColon))
-			return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(ParametersNode).AddAsChild(wcSemiColonParser(Tokenizer, Output.SymbolTable, Scopes).Parse());
-
+		{
+			Scopes.Pop();
+			return Output.AddAsChild(TypeNode).AddAsChild(IdentNode)
+				.AddAsChild(ParametersNode).AddAsChild(wcSemiColonParser(Tokenizer, Output.SymbolTable, Scopes).Parse());
+		}
+		
 		//no semi colon, must be a full declaration with body
-		Scopes.Push(FunctionSignature.FunctionIdentifier.to_string());
+		//Scopes.Push(FunctionSignature.FunctionIdentifier.to_string());
 
 		wcParseOutput BodyNode = wcBlockParser(Tokenizer, Output.SymbolTable, Scopes).Parse(true);
 
@@ -94,7 +102,7 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		return wcParseOutput(wcParserError(UnexpectedEOF, GetToken()));
 
 	//add to symbol table, must be a variable
-	Output.SymbolTable.Add(wcParseSymbol(wcParseSymbolType::Variable, DeclarationIdent, IdentToken));
+	AddSymbol(Output.SymbolTable, wcParseSymbol(wcParseSymbolType::Variable, DeclarationIdent, IdentToken));
 
 	//optional assignment expression;
 	wcParseOutput ExpNode;
@@ -203,8 +211,8 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseParameter(wcFullIdentifier 
 
 	//Parameter identifier
 	auto ParameterIdentifier = ParameterOutput.IdentifierToken = GetToken();
-	auto ParameterScope = DeclarationIdent.to_string();	//this wont be correct until we collect all the parameters, will need to edit
-	ParameterOutput.Identifier = wcFullIdentifier(ParameterScope, ParameterIdentifier.to_string());
+	//auto ParameterScope = ?;	//cant create the scope without all parameters...
+	ParameterOutput.Identifier = wcFullIdentifier(wcIdentifierScope(""), ParameterIdentifier.to_string());
 
 	if ((ParameterNode.AddAsChild(wcParseNode(wcParseNodeType::Parameter_Ident, ParameterOutput.IdentifierToken, ParameterOutput.Identifier))).Error.Code != None)
 		return ParameterNode;
@@ -236,7 +244,7 @@ wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier, 
 
 	//try to resovlve it, output the fully qualified identifier to ResolvedFullIdentifier. 
 	//raise an error if it needs to be previously declared (ie ExpectDeclared)
-	switch (Scopes.Resolve(ParsedIdentifier, ResolvedFullIdentifier))
+	switch (Scopes.Resolve(ParsedIdentifier, ResolvedFullIdentifier, true))
 	{
 	case wcParseScopeResolveResult::Ambiguous:
 		if (!IsDeclaration)
@@ -410,7 +418,8 @@ wcParseOutput weec::parse::wcSemiColonParser::Parse()
 			return wcParseOutput(wcParserError(UnexpectedToken, GetToken()));		//error
 
 	NextToken();
-	return wcParseOutput();	//no nodes created
+
+	return wcParseOutput(SymbolTable);	//no nodes created
 }
 
 wcParseOutput weec::parse::wcReturnParser::Parse()
@@ -1314,73 +1323,17 @@ weec::parse::wcIdentifier::wcIdentifier(std::string _Data)
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vector<wcParseSymbol> Arguments)
 {
-	//$global::functionNameWithParams($global::a,$global::b)
-	if (FullIdent.find(ParserConsts.ScopeDelimiter) == std::string::npos)
-	{
-		//not qualified as expected, global scope
-		ShortIdentifier = wcIdentifier(FullIdent);
-		ScopeIdentifier = wcIdentifierScope();
-		return;
-	}
-
-	//argument specifier, must be a function
-	string IdentWithoutArguments = FullIdent, ShortIdentWithArguments = "";
-	if (IdentWithoutArguments.find_first_of("(") != std::string::npos)
-	{
-		IdentWithoutArguments = IdentWithoutArguments.substr(0, IdentWithoutArguments.find_first_of("("));	//$global::functionNameWithParams
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind(ParserConsts.ScopeDelimiter, FullIdent.find_first_of("(")) + 2);
-	}
-	else
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of(ParserConsts.ScopeDelimiter) + 1);
-
-	//todo fill me in bruv
-	string ArgStr = "";
-	for (auto Argument : Arguments)
-		ArgStr += Argument.DataType.to_string() + ",";
-	if (ArgStr.size() && strcmp(ArgStr.substr(ArgStr.size() - 1, 1).c_str(), ",") == 0)
-		ArgStr = ArgStr.substr(0, ArgStr.size() - 1);
-
-	//get scope
-	ScopeIdentifier = wcIdentifierScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of(ParserConsts.ScopeDelimiter) - 1));			//$global
-	ShortIdentifier = wcFullIdentifier(FullIdent + "(" + ArgStr + ")").ShortIdentifier;
+	//wcIdentalyzer().Create(FullIdent, Arguments, ScopeIdentifier, ShortIdentifier);
 }
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vector<wcParseExpression> Arguments)
 {
-	//$global::functionNameWithParams($global::a,$global::b)
-	if (FullIdent.find(ParserConsts.ScopeDelimiter) == std::string::npos)
-	{
-		//not qualified as expected, global scope
-		ShortIdentifier = wcIdentifier(FullIdent);
-		ScopeIdentifier = wcIdentifierScope();
-		return;
-	}
-
-	//argument specifier, must be a function
-	string IdentWithoutArguments = FullIdent, ShortIdentWithArguments = "";
-	if (IdentWithoutArguments.find_first_of("(") != std::string::npos)
-	{
-		IdentWithoutArguments = IdentWithoutArguments.substr(0, IdentWithoutArguments.find_first_of("("));	//$global::functionNameWithParams
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.rfind(ParserConsts.ScopeDelimiter, FullIdent.find_first_of("(")) + 2);
-	}
-	else
-		ShortIdentWithArguments = FullIdent.substr(FullIdent.find_last_of(ParserConsts.ScopeDelimiter) + 1);
-
-	//todo fill me in bruv
-	string ArgStr = "";
-	for (auto Argument : Arguments)
-		ArgStr += Argument.DataType.to_string() + ",";
-	if (ArgStr.size() && strcmp(ArgStr.substr(ArgStr.size() - 1, 1).c_str(), ",") == 0)
-		ArgStr = ArgStr.substr(0, ArgStr.size() - 1);
-
-	//get scope
-	ScopeIdentifier = wcIdentifierScope(FullIdent.substr(0, IdentWithoutArguments.find_last_of(ParserConsts.ScopeDelimiter) - 1));			//$global
-	ShortIdentifier = wcFullIdentifier(FullIdent + "(" + ArgStr + ")").ShortIdentifier;
+	wcIdentalyzer().Create(FullIdent, Arguments, ScopeIdentifier, ShortIdentifier);
 }
 
 weec::parse::wcFullIdentifier::wcFullIdentifier(std::string FullIdent, std::vector<wcParseParameter> Parameters)
 {
-		wcIdentalyzer().Create(FullIdent, Parameters, ScopeIdentifier, ShortIdentifier);
+	wcIdentalyzer().Create(FullIdent, Parameters, ScopeIdentifier, ShortIdentifier);
 }
 
 weec::parse::wcParseSymbol::wcParseSymbol() : FullIdent()
@@ -1475,17 +1428,32 @@ bool weec::parse::wcIdentalyzer::Create(string IdentifierString, wcIdentifierSco
 	return false;
 }
 
-bool weec::parse::wcIdentalyzer::Create(string IdentifierString, vector<wcParseParameter> Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput)
+bool weec::parse::wcIdentalyzer::Create(string IdentifierString, const vector<wcParseExpression>& Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput)
+{
+	vector<wcParseParameter> NewParams;
+	for (auto& Param : Parameters)
+		NewParams.push_back(wcParseParameter(Param.DataType, ""));
+	return Create(IdentifierString, NewParams, ScopeOutput, IdentifierOutput);
+}
+
+bool weec::parse::wcIdentalyzer::Create(string IdentifierString, const vector<wcParseParameter>& Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput)
 {
 	switch (Analyze(IdentifierString))
 	{
-	case wcIdentalyzerAnalyzeResultCode::ShortFunction:
 	case wcIdentalyzerAnalyzeResultCode::ShortIdentifier:
+		ScopeOutput = wcIdentifierScope();
+		IdentifierOutput = wcIdentifier(IdentifierString + "("+ GetParameterListIdentifierString(Parameters) + ")");
+		return true;
+
+	case wcIdentalyzerAnalyzeResultCode::ShortFunction:
 		ScopeOutput = wcIdentifierScope();
 		IdentifierOutput = wcIdentifier(IdentifierString);
 		return true;
 
 	case wcIdentalyzerAnalyzeResultCode::QualifiedIdentifier:
+		ScopeOutput = wcIdentifierScope(GetNamespaceFromQualifiedIdentifier(IdentifierString));
+		IdentifierOutput = wcIdentifier(GetIdentifierFromQualifiedIdentifier(IdentifierString) + "(" + GetParameterListIdentifierString(Parameters) + ")");
+		return true;
 	case wcIdentalyzerAnalyzeResultCode::QualifiedFunction:
 		ScopeOutput = wcIdentifierScope(GetNamespaceFromQualifiedIdentifier(IdentifierString));
 		IdentifierOutput = wcIdentifier(GetIdentifierFromQualifiedIdentifier(IdentifierString));
@@ -1509,6 +1477,30 @@ std::string weec::parse::wcIdentalyzer::GetNamespaceFromQualifiedIdentifier(std:
 	return IsQualified(IdentifierString)
 		? IdentifierString.substr(0, IdentifierString.find_last_of(ParserConsts.ScopeDelimiter) - 1)
 		: IdentifierString;
+}
+
+std::string weec::parse::wcIdentalyzer::GetParameterListIdentifierString(const std::vector<wcParseParameter>& Parameters)
+{
+	std::string ParameterListString;
+
+	for (auto& Parameter : Parameters)
+		ParameterListString += ParameterListString.size()
+		? "," + Parameter.TypeIdentifier.to_string()
+		: Parameter.TypeIdentifier.to_string();
+
+	return ParameterListString;
+}
+
+std::string weec::parse::wcIdentalyzer::GetParameterListIdentifierString(const std::vector<wcFullIdentifier>& Parameters)
+{
+	std::string ParameterListString;
+
+	for (auto& Parameter : Parameters)
+		ParameterListString += ParameterListString.size()
+		? "," + Parameter.to_string()
+		: Parameter.to_string();
+
+	return ParameterListString;
 }
 
 std::string weec::parse::wcIdentalyzer::StripArgumentsFromFunctionIdentifier(std::string FunctionIdentifierString)

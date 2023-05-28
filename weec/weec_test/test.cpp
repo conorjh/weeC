@@ -126,6 +126,37 @@ int weec::test::lex::Test_StringTokenizer1()
 	return 0;
 }
 
+int weec::test::lex::Test_wcIdentalyzer1()
+{
+	if (!wcIdentalyzer().ContainsGlobal(ParserConsts.GlobalIdentifier))		return 1;
+	if (wcIdentalyzer().ContainsGlobal("shouldFail"))						return 2;
+
+	if (!wcIdentalyzer().ContainsNamespace(ParserConsts.GlobalIdentPrefix))	return 3;
+	if (!wcIdentalyzer().ContainsNamespace("testNS::testIdentifier"))		return 4;
+	if (wcIdentalyzer().ContainsNamespace("shouldFail"))					return 5;
+
+	if (!wcIdentalyzer().IsFunction("function()"))							return 6;
+	if (!wcIdentalyzer().IsFunction("$g::ns::function()"))					return 7;
+	if (wcIdentalyzer().IsFunction("shouldFail"))							return 8;
+
+	if (!wcIdentalyzer().IsQualified("$g::ns::ident"))						return 9;
+	if (wcIdentalyzer().IsQualified("shouldFail"))							return 10;
+
+	if (!wcIdentalyzer().IsQualifiedWithGlobal("$g::ns::ident"))			return 11;
+	if (wcIdentalyzer().IsQualifiedWithGlobal("ns::shouldFail"))			return 12;
+	if (wcIdentalyzer().IsQualifiedWithGlobal("shouldFail"))				return 13;
+
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident") != "ident")		return 14;
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident()") != "ident()")	return 15;
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("ns::ident") != "ident")			return 16;
+
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident") != "$g::ns")		return 17;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident()") != "$g::ns")		return 18;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("ns::ident") != "ns")				return 19;
+
+	return 0;
+}
+
 int weec::test::lex::Test_wcIdentifier1()
 {
 	//a blank wcIdentifier
@@ -429,25 +460,24 @@ int weec::test::lex::Test_wcFunctionIdentifier1()
 	if (FuncIdent1.to_string_no_arguments() != string("$g::test"))	return 14;
 	if (FuncIdent1 != string("$g::test()"))							return 15;
 
-	//construct with no parenthesis in identifier
+	//construct with no parenthesis in identifier, should be corrected
 	wcFunctionIdentifier FuncIdent2("testWithoutParens", {});
 	if (FuncIdent2.ArgumentCount() != 0)										return 21;
-	if (FuncIdent2.to_string() != string(""))									return 23;
-	if (FuncIdent2.to_string_no_arguments() != string("testWithoutParens"))	return 24;
-	if (FuncIdent2 != string("testWithoutParens()"))							return 25;
-
-
-	wcFunctionIdentifier FuncIdent3("test()", {});
-	if (FuncIdent3.ArgumentCount() != 0)							return 31;
-	if (FuncIdent3.to_string() != string(""))						return 33;
-	if (FuncIdent3.to_string_no_arguments() != string("test"))		return 34;
-	if (FuncIdent3 != string("test()"))								return 35;
+	if (FuncIdent2.to_string() != string("$g::testWithoutParens()"))			return 23;
+	if (FuncIdent2.to_string_no_arguments() != string("$g::testWithoutParens"))	return 24;
+	if (FuncIdent2 != string("$g::testWithoutParens()"))						return 25;
 
 	wcFunctionIdentifier FuncIdent4("testWithParens()", { wcParseParameter("int", "param1"), wcParseParameter("int", "param2") });
-	if (FuncIdent4.ArgumentCount() != 2)									return 41;
-	if (FuncIdent4.to_string() != string(""))								return 43;
-	if (FuncIdent4.to_string_no_arguments() != string("testWithParens"))	return 44;
-	if (FuncIdent4 != string("testWithParens()"))							return 45;
+	if (FuncIdent4.ArgumentCount() != 2)											return 41;
+	if (FuncIdent4.to_string() != string("$g::testWithParens($g::int,$g::int)"))	return 43;
+	if (FuncIdent4.to_string_no_arguments() != string("$g::testWithParens"))		return 44;
+	if (FuncIdent4 != string("$g::testWithParens($g::int,$g::int)"))				return 45;
+
+	wcFunctionIdentifier FuncIdent5("NS::NS2::testWithParensAndNS()", { wcParseParameter("string", "param1"), wcParseParameter("float", "param2") });
+	if (FuncIdent5.ArgumentCount() != 2)															return 51;
+	if (FuncIdent5.to_string() != string("$g::NS::NS2::testWithParensAndNS($g::string,$g::float)"))	return 53;
+	if (FuncIdent5.to_string_no_arguments() != string("$g::NS::NS2::testWithParensAndNS"))			return 54;
+	if (FuncIdent5 != string("$g::NS::NS2::testWithParensAndNS($g::string,$g::float)"))				return 55;
 
 	return 0;
 }
@@ -530,7 +560,7 @@ int weec::test::lex::Test_wcParseSymbolTable1()
 	if (VoidSymbol.DataType != "") 					return 7;
 	if (VoidSymbol.FullIdent != "void") 			return 7;
 	if (VoidSymbol.HasOverloads != false) 			return 7;
-	if (VoidSymbol.IdentToken != wcToken()) 			return 7;
+	if (VoidSymbol.IdentToken != wcToken()) 		return 7;
 	if (VoidSymbol.Registered != true) 				return 7;
 	if (VoidSymbol.Type != wcParseSymbolType::Type)	return 7;
 
@@ -587,10 +617,18 @@ int weec::test::lex::Test_wcParseScopes()
 	if (Scopes.Top().Exists("bool") != true)					return 6;
 	if (Scopes.Top().Exists("string") != true)					return 7;
 	if (Scopes.Top().Count() != ParserConsts.BasicTypeCount)	return 8;
+	if (Scopes.Size() != 1)				return 2;
 
 	Scopes.Push(wcParseScope("test"));
-	if (Scopes.Size() != 2)				return 2;
-	if (Scopes.Top().Name != "test")	return 3;
+	if (Scopes.Size() != 2)										return 9;
+	if (Scopes.Top().Count() != 0 )	return 10;
+	if (Scopes.Top().Name != "test")							return 11;
+
+	Scopes.AddSymbol("testSymbol");
+	if (Scopes.Size() != 2)											return 12;
+	if (Scopes.Top().Count() != 1)	return 13;
+	if (!Scopes.Top().Exists("testSymbol"))							return 14;
+
 
 		
 
@@ -629,6 +667,14 @@ int weec::test::lex::Test_wcDeclarationParser1()
 	auto Output4 = wcDeclarationParser(*new wcTokenizer(Source4, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
 	if (Output4.Error.Code != wcParserErrorCode::None)											return 5;
 	if (!Output4.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))	return 6;
+
+	string Source5 = "int methodNameWithArgs(int a, int b){ return a + b; }";
+	auto Output5 = wcDeclarationParser(*new wcTokenizer(Source5, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	if (Output5.Error.Code != wcParserErrorCode::None)											return 5;
+	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))	return 6;
+	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)::a")))	return 7;
+	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)::b")))	return 8;
+	printTree(Output5.AST);
 
 	return 0;
 }

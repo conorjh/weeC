@@ -96,7 +96,7 @@ namespace weec
 			InvalidIdentifier, ShortIdentifier, QualifiedIdentifier, ShortFunction, QualifiedFunction
 		};
 
-		class wcIdentifier; class wcIdentifierScope; struct wcParseParameter;
+		class wcIdentifier; class wcIdentifierScope; class wcFullIdentifier; struct wcParseParameter; class wcParseExpression;
 
 		class wcIdentalyzer
 		{
@@ -104,11 +104,14 @@ namespace weec
 			wcIdentalyzerAnalyzeResultCode Analyze(std::string);
 
 			bool Create(std::string IdentifierString, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
-			bool Create(std::string IdentifierString, std::vector<wcParseParameter> Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
+			bool Create(std::string IdentifierString, const std::vector<wcParseParameter>& Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
+			bool Create(std::string IdentifierString, const std::vector<wcParseExpression>& Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
 			
 			std::string GetNamespaceFromQualifiedIdentifier(std::string IdentifierString),
 				GetIdentifierFromQualifiedIdentifier(std::string IdentifierString),
-				StripArgumentsFromFunctionIdentifier(std::string FunctionIdentifierString);
+				StripArgumentsFromFunctionIdentifier(std::string FunctionIdentifierString),
+				GetParameterListIdentifierString(const std::vector<wcParseParameter>& Parameters),
+				GetParameterListIdentifierString(const std::vector<wcFullIdentifier>& Parameters);
 
 			bool ContainsGlobal(std::string Identifier) const
 			{
@@ -262,7 +265,9 @@ namespace weec
 			{
 				//ensure global scope is appended 
 				if (!Data.starts_with(ParserConsts.GlobalIdentPrefix) && Data != ParserConsts.GlobalIdentifier)
-					Data = ParserConsts.GlobalIdentPrefix + Data;
+					Data = Data.size()
+					? ParserConsts.GlobalIdentPrefix + Data
+					: ParserConsts.GlobalIdentifier;
 
 				Identifier = Data;
 			}
@@ -433,6 +438,7 @@ namespace weec
 			wcFunctionIdentifier(wcFullIdentifier _Identifier, std::vector<wcParseParameter> Parameters)
 			{
 				Identifier = wcFullIdentifier(_Identifier.to_string(), Parameters);
+
 				for (auto Parameter : Parameters)
 					ParameterTypes.push_back(Parameter.TypeIdentifier);
 			}
@@ -463,7 +469,9 @@ namespace weec
 
 			std::string to_string() const
 			{
-				return Identifier.to_string();
+				return ArgumentCount()
+					? Identifier.to_string_no_arguments() + "(" + wcIdentalyzer().GetParameterListIdentifierString(ParameterTypes) + ")"
+					: Identifier.to_string();
 			}
 
 			std::string to_string_no_arguments() const
@@ -517,6 +525,16 @@ namespace weec
 			std::string to_string_no_parameters() const
 			{
 				return DataType.to_string() + " " + FunctionIdentifier.to_string_no_arguments();
+			}
+
+			std::string to_string_no_type() const
+			{
+				return FunctionIdentifier.to_string();
+			}
+
+			std::string to_string_no_type_no_parameters() const
+			{
+				return FunctionIdentifier.to_string_no_arguments();
 			}
 
 			wcFullIdentifier DataType;
@@ -613,11 +631,15 @@ namespace weec
 				Scopes.push(Scope);
 			}
 
-			void AddSymbol(const wcFullIdentifier& Ident) 
+			bool AddSymbol(const wcFullIdentifier& Ident) 
 			{
 				auto Temp = Scopes.top();
+				if (Temp.Exists(Ident))
+					return false;
 				Temp.Container.insert(make_pair(Ident.to_string(), Ident));
 				SwapTop(Temp);
+
+				return true;
 			}
 
 			wcParseScopeResolveResult Resolve(wcIdentifier In, wcFullIdentifier& Out, bool ReturnFirstMatch = false);
@@ -661,6 +683,10 @@ namespace weec
 			wcParseOutput();
 			wcParseOutput(wcParserError);
 			wcParseOutput(wcParseNode, bool PointToChild = false);
+			wcParseOutput(const wcParseSymbolTable& _SymbolTable)
+			{
+				SymbolTable = _SymbolTable;
+			}
 
 			wcParseOutput& AddAsChild(wcParseOutput, bool PointToChild = false);
 			wcParseOutput& AddAsChild(wcParseNode, bool PointToChild = false);
@@ -737,6 +763,26 @@ namespace weec
 			bool ExpectNextToken(lex::wcTokenType TokenType)
 			{
 				return Tokenizer.NextToken(TokenType);
+			}
+
+			bool AddSymbol(wcParseSymbolTable& SymTab, const wcParseSymbol& Symbol)
+			{
+				bool SymbolAdd = SymTab.Add(Symbol);
+				return (Scopes.AddSymbol(Symbol.FullIdent) && SymbolAdd)
+					? true
+					: false;
+			}
+
+			bool AddSymbol(wcParseSymbolTable& SymTab, const wcParseFunctionSignature& Sig)
+			{
+				SymTab.Add(Sig);
+				Scopes.AddSymbol(Sig.to_string_no_type());
+				Scopes.Push(Sig.to_string_no_type());
+
+				for (auto& Param : Sig.Parameters)
+					AddSymbol(SymTab, wcParseSymbol(wcParseSymbolType::Variable, Param.Identifier, Param.IdentifierToken));
+
+				return true;
 			}
 		};
 

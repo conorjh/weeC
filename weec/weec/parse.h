@@ -88,7 +88,7 @@ namespace weec
 
 		enum class wcParseSymbolType
 		{
-			Null, Type, Variable, Function, Namespace
+			Null, Type, Variable, Function, Namespace, FunctionAlias
 		};
 
 		enum class wcIdentalyzerAnalyzeResultCode
@@ -667,12 +667,18 @@ namespace weec
 
 			wcParseSymbol Get(wcFullIdentifier FullIdent) const;
 
+			void Merge(const wcParseSymbolTable& OtherTable)
+			{
+				for (auto& OtherSymbol : OtherTable.Container)
+					Add(OtherSymbol.second);
+			}
+
 			unsigned int Count() const
 			{
 				return Container.size();
 			}
 
-			const  wcParseSymbol NullSymbol;
+			const wcParseSymbol NullSymbol;
 		};
 
 		class wcParseOutput
@@ -780,7 +786,7 @@ namespace weec
 				Scopes.Push(Sig.to_string_no_type());
 
 				for (auto& Param : Sig.Parameters)
-					AddSymbol(SymTab, wcParseSymbol(wcParseSymbolType::Variable, Param.Identifier, Param.IdentifierToken));
+					AddSymbol(SymTab, wcParseSymbol(wcParseSymbolType::Variable, Param.Identifier, Param.TypeIdentifier, Param.IdentifierToken));
 
 				return true;
 			}

@@ -22,7 +22,7 @@ wcParseOutput weec::parse::wcParser::Parse()
 	Tokenizer.NextToken();
 
 	while (!Tokenizer.IsFinished() && !Tokenizer.IsErrored() && Output.Error.Code == None)
-		Output.AddAsChild(wcStatementParser(Tokenizer, SymbolTable, Scopes).Parse(true));
+		Output.AddAsChild(wcStatementParser(Tokenizer, Output.SymbolTable, Scopes).Parse(true));
 
 	Output.SymbolTable = SymbolTable;
 
@@ -317,6 +317,7 @@ wcParseOutput weec::parse::wcStatementParser::Parse(bool AllowDeclarations)
 
 		case wcParseSymbolType::Variable:
 		case wcParseSymbolType::Function:
+		case wcParseSymbolType::FunctionAlias:
 			if ((Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable, Scopes).ParseExpression(SymbolTable.Get(ResolvedIdentifier)))).Error.Code != None)
 				return Output;
 			return Output.AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable, Scopes).Parse());
@@ -1032,6 +1033,7 @@ wcParseOutput& weec::parse::wcParseOutput::AddAsChild(wcParseOutput Child, bool 
 			AST.append_child(NodeIndex, Child.GetSubHead());
 
 	Error = Child.Error;
+	SymbolTable.Merge(Child.SymbolTable);
 
 	return *this;
 }
@@ -1042,6 +1044,7 @@ wcParseOutput& weec::parse::wcParseOutput::AddAsChild(wcParseNode Node, bool Poi
 		NodeIndex = AST.append_child(NodeIndex, Node);
 	else
 		AST.append_child(NodeIndex, Node);
+
 
 	return *this;
 }
@@ -1077,6 +1080,7 @@ wcParseOutput weec::parse::wcParseOutput::operator+(wcParseOutput other)
 {
 	AST.insert_subtree(AST.begin(), other.AST.begin());
 	Error = other.Error;
+	SymbolTable.Merge(other.SymbolTable);
 
 	return *this;
 }
@@ -1085,7 +1089,7 @@ wcParseOutput weec::parse::wcParseOutput::operator=(wcParseOutput other)
 {
 	AST = other.AST;
 	Error = other.Error;
-	SymbolTable = other.SymbolTable;
+	SymbolTable.Merge(other.SymbolTable);
 
 	return *this;
 }
@@ -1267,6 +1271,11 @@ bool weec::parse::wcParseSymbolTable::Add(wcParseFunctionSignature Sig, vector<w
 	//add the function signature
 	FunctionContainer.insert(make_pair(Sig.to_string(), Sig));
 
+	auto FunctionAlias = wcParseSymbol(Sig);
+	FunctionAlias.Type = wcParseSymbolType::FunctionAlias;
+	FunctionAlias.FullIdent = wcParseSymbol(Sig).FullIdent.to_string_no_arguments();
+	Add(FunctionAlias);
+
 	//register parameters as variables scoped to this function
 	//Scopes.push(wcParseScope(Sig.to_string())); << todo
 
@@ -1283,6 +1292,15 @@ bool weec::parse::wcParseSymbolTable::Add(wcParseSymbol Sym, bool SetScopeToThis
 
 	Sym.Registered = true;
 	Container.insert(make_pair(Sym.FullIdent.to_string(), Sym));
+
+	if(Sym.Type == wcParseSymbolType::Function)
+	{
+		auto FunctionAlias = Sym;
+		FunctionAlias.Type = wcParseSymbolType::FunctionAlias;
+		FunctionAlias.FullIdent = Sym.FullIdent.to_string_no_arguments();
+		Add(FunctionAlias);
+	}
+
 	//Scopes.top().Symbols.push_back(Sym.FullIdent);	<< todo
 
 	return true;
@@ -1467,6 +1485,15 @@ bool weec::parse::wcIdentalyzer::Create(string IdentifierString, const vector<wc
 
 std::string weec::parse::wcIdentalyzer::GetIdentifierFromQualifiedIdentifier(std::string IdentifierString)
 {
+	if (IsFunction(IdentifierString))
+		if (IsQualified(IdentifierString))
+		{
+			auto noArgs = IdentifierString.substr(0, IdentifierString.find_first_of("("));
+			return IdentifierString.substr(noArgs.find_last_of(ParserConsts.ScopeDelimiter) + 1, IdentifierString.size() - noArgs.find_last_of(ParserConsts.ScopeDelimiter) + 1);
+		}
+		else
+			return IdentifierString;		 
+	
 	return IsQualified(IdentifierString)
 		? IdentifierString.substr(IdentifierString.find_last_of(ParserConsts.ScopeDelimiter) + 1, IdentifierString.size() - IdentifierString.find_last_of(ParserConsts.ScopeDelimiter) + 1)
 		: IdentifierString;
@@ -1475,7 +1502,9 @@ std::string weec::parse::wcIdentalyzer::GetIdentifierFromQualifiedIdentifier(std
 std::string weec::parse::wcIdentalyzer::GetNamespaceFromQualifiedIdentifier(std::string IdentifierString)
 {
 	return IsQualified(IdentifierString)
-		? IdentifierString.substr(0, IdentifierString.find_last_of(ParserConsts.ScopeDelimiter) - 1)
+		? IsFunction(IdentifierString)
+			? wcIdentalyzer().StripArgumentsFromFunctionIdentifier(IdentifierString).substr(0, wcIdentalyzer().StripArgumentsFromFunctionIdentifier(IdentifierString).find_last_of(ParserConsts.ScopeDelimiter) - 1)
+			: IdentifierString.substr(0, IdentifierString.find_last_of(ParserConsts.ScopeDelimiter) - 1)
 		: IdentifierString;
 }
 
@@ -1512,9 +1541,12 @@ std::string weec::parse::wcIdentalyzer::StripArgumentsFromFunctionIdentifier(std
 
 bool weec::parse::wcIdentalyzer::IsQualified(std::string PossibleIdentifier)
 {
-	if (PossibleIdentifier.find(ParserConsts.ScopeDelimiter) != std::string::npos)
-		return true;	//could still be an invalid ident
-	return false;
+	if (IsFunction(PossibleIdentifier))
+		return StripArgumentsFromFunctionIdentifier(PossibleIdentifier).find(ParserConsts.ScopeDelimiter) != std::string::npos
+		? true
+		: false;
+	else
+		return PossibleIdentifier.find(ParserConsts.ScopeDelimiter) != std::string::npos;	//could still be an invalid ident
 }
 
 bool weec::parse::wcIdentalyzer::IsQualifiedWithGlobal(std::string PossibleIdentifier)
@@ -1526,7 +1558,8 @@ bool weec::parse::wcIdentalyzer::IsQualifiedWithGlobal(std::string PossibleIdent
 
 bool weec::parse::wcIdentalyzer::IsFunction(std::string PossibleIdentifier)
 {
-	if (PossibleIdentifier.find_first_of("(") != std::string::npos && PossibleIdentifier.find_last_of(")") != std::string::npos)
+	if (PossibleIdentifier.find_first_of("(") != std::string::npos 
+		&& PossibleIdentifier.find_last_of(")") == PossibleIdentifier.size() - 1 )
 		return true;	//could still be an invalid ident
 	return false;
 }
@@ -1535,8 +1568,6 @@ bool weec::parse::wcIdentalyzer::IsValid(std::string PossibleIdentifier)
 {
 	return lex::wcTokenTypeAlizer().IsValidIdent(PossibleIdentifier);
 }
-
-
 
 weec::parse::wcParseScopes::wcParseScopes()
 {
@@ -1554,7 +1585,7 @@ wcParseScopeResolveResult weec::parse::wcParseScopes::Resolve(wcIdentifier In, w
 	{
 		//check if top stackframe declares the given identifier
 		for (auto& Symbol : Top().Container)
-			if (Symbol.second.GetIdentifier() == In)
+			if (Symbol.second.GetIdentifier().to_string_no_arguments() == In)
 			{
 				//found it
 				MatchingIdentifierCount++;

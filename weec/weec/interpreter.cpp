@@ -734,21 +734,33 @@ any weec::interpreter::wcInterpreter::ExecDeclaration()
 	}
 	else
 	{
+		if (TypeToken.StringToken.Data == "int")
+			SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data);
+		else if (TypeToken.StringToken.Data == "float")
+			SymbolTable.Add(any_cast<float>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data);
+		else if (TypeToken.StringToken.Data == "unsigned int")
+			SymbolTable.Add(any_cast<unsigned int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data);
+		else if (TypeToken.StringToken.Data == "double")
+			SymbolTable.Add(any_cast<double>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data);
+		else if (TypeToken.StringToken.Data == "bool")
+			SymbolTable.Add(any_cast<bool>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data);
+
+		//auto t = ;
+		FunctionTable.Add(wcInterpreterFunctionSignature(Input, *this, Arguments, TypeToken.StringToken.Data, DecBlockPC), IdentToken.StringToken.Data);
+		//SymbolTable.StackFrames.push(wcInterpreterStackFrame(IdentToken.StringToken.Data, PC, {}));
+
 		//register args
 		for (auto Arg : Arguments)
-			if (TypeToken.StringToken.Data == "int")
-				SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
-			else if (TypeToken.StringToken.Data == "float")
-				SymbolTable.Add(any_cast<float>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
-			else if (TypeToken.StringToken.Data == "unsigned int")
-				SymbolTable.Add(any_cast<unsigned int>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
-			else if (TypeToken.StringToken.Data == "double")
-				SymbolTable.Add(any_cast<double>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
-			else if (TypeToken.StringToken.Data == "bool")
-				SymbolTable.Add(any_cast<bool>(EAX.has_value() ? EAX : 0), IdentToken.StringToken.Data + "::" + wcFullIdentifier(Arg.Ident.StringToken.Data).GetIdentifier().to_string());
-
-
-		FunctionTable.Add(wcInterpreterFunctionSignature(Input, *this, Arguments, TypeToken.StringToken.Data, DecBlockPC), IdentToken.StringToken.Data);
+			if (Arg.Type.StringToken.Data == "int")
+				SymbolTable.Add(any_cast<int>(EAX.has_value() ? EAX : 0), Arg.Ident.StringToken.Data);
+			else if (Arg.Type.StringToken.Data == "float")
+				SymbolTable.Add(any_cast<float>(EAX.has_value() ? EAX : 0), Arg.Ident.StringToken.Data);
+			else if (Arg.Type.StringToken.Data == "unsigned int")
+				SymbolTable.Add(any_cast<unsigned int>(EAX.has_value() ? EAX : 0), Arg.Ident.StringToken.Data);
+			else if (Arg.Type.StringToken.Data == "double")
+				SymbolTable.Add(any_cast<double>(EAX.has_value() ? EAX : 0), Arg.Ident.StringToken.Data);
+			else if (Arg.Type.StringToken.Data == "bool")
+				SymbolTable.Add(any_cast<bool>(EAX.has_value() ? EAX : 0), Arg.Ident.StringToken.Data);
 	}
 
 	return EAX;

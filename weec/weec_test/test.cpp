@@ -137,22 +137,33 @@ int weec::test::lex::Test_wcIdentalyzer1()
 
 	if (!wcIdentalyzer().IsFunction("function()"))							return 6;
 	if (!wcIdentalyzer().IsFunction("$g::ns::function()"))					return 7;
-	if (wcIdentalyzer().IsFunction("shouldFail"))							return 8;
+	if (!wcIdentalyzer().IsFunction("function($g::int)"))					return 8;
+	if (!wcIdentalyzer().IsFunction("$g::ns::function($g::int)"))			return 9;
+	if (wcIdentalyzer().IsFunction("shouldFail"))							return 10;
+	if (wcIdentalyzer().IsFunction("shouldFail()::a"))						return 10;
+	if (wcIdentalyzer().IsFunction("$g::ns::shouldFail()::a"))				return 10;
 
 	if (!wcIdentalyzer().IsQualified("$g::ns::ident"))						return 9;
+	if (!wcIdentalyzer().IsQualified("$g::ns::ident()"))					return 9;
+	if (!wcIdentalyzer().IsQualified("$g::ns::ident($g::int)"))				return 9;
 	if (wcIdentalyzer().IsQualified("shouldFail"))							return 10;
 
 	if (!wcIdentalyzer().IsQualifiedWithGlobal("$g::ns::ident"))			return 11;
 	if (wcIdentalyzer().IsQualifiedWithGlobal("ns::shouldFail"))			return 12;
 	if (wcIdentalyzer().IsQualifiedWithGlobal("shouldFail"))				return 13;
 
-	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident") != "ident")		return 14;
-	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident()") != "ident()")	return 15;
-	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("ns::ident") != "ident")			return 16;
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident") != "ident")									return 14;
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident()") != "ident()")								return 15;
+	auto t = wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident($g::int)");
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident($g::int)") != "ident($g::int)")					return 15;
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident($g::int,$g::int)") != "ident($g::int,$g::int)")	return 15;
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("ns::ident") != "ident")										return 16;
 
-	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident") != "$g::ns")		return 17;
-	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident()") != "$g::ns")		return 18;
-	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("ns::ident") != "ns")				return 19;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident") != "$g::ns")						return 17;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident()") != "$g::ns")						return 18;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident($g::int)") != "$g::ns")				return 18;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident($g::int,$g::int)") != "$g::ns")		return 18;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("ns::ident") != "ns")								return 19;
 
 	return 0;
 }
@@ -670,11 +681,11 @@ int weec::test::lex::Test_wcDeclarationParser1()
 
 	string Source5 = "int methodNameWithArgs(int a, int b){ return a + b; }";
 	auto Output5 = wcDeclarationParser(*new wcTokenizer(Source5, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
-	if (Output5.Error.Code != wcParserErrorCode::None)											return 5;
-	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))	return 6;
+	if (Output5.Error.Code != wcParserErrorCode::None)												return 5;
+	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))		return 6;
 	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)::a")))	return 7;
 	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)::b")))	return 8;
-	printTree(Output5.AST);
+
 
 	return 0;
 }

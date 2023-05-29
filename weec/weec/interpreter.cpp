@@ -231,9 +231,9 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 	for (int t = 0; t < FuncSig.Arguments.size(); ++t)
 	{
 		auto IdentString = Ident.StringToken.Data;
-		SymTab.StackFrames.top().Add(ArgumentValues[t], wcFullIdentifier(IdentString));
+		SymTab.StackFrames.top().Add(ArgumentValues[t], FuncSig.Arguments[t].Ident.to_string());
 
-		PackedArgs.push_back(wcInterpreterIdentPlusValue(wcFullIdentifier(IdentString), ArgumentValues[t]));
+		PackedArgs.push_back(wcInterpreterIdentPlusValue(FuncSig.Arguments[t].Ident.to_string(), ArgumentValues[t]));
 	}
 	auto t = FuncSig.Invoke(PackedArgs);
 	SymTab.StackFrames.pop();
@@ -650,7 +650,6 @@ any weec::interpreter::wcInterpreter::ExecWhile()
 
 		if (!ExprTrue)
 			return false;
-
 	}
 
 	return ExprTrue;
@@ -774,6 +773,7 @@ weec::interpreter::wcInterpreterSymbolTable::wcInterpreterSymbolTable()
 
 bool weec::interpreter::wcInterpreterSymbolTable::Add(any Value, wcFullIdentifier FullIdent)
 {
+	Container.insert(make_pair(FullIdent.to_string(), Value));
 	StackFrames.top().Add(Value, FullIdent.to_string());
 	return true;
 }

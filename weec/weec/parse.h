@@ -20,6 +20,7 @@ namespace weec
 				ScopeDelimiter = "::",
 				GlobalIdentPrefix = GlobalIdentifier + ScopeDelimiter;
 			unsigned int BasicTypeCount = 7;
+
 		};
 
 		static wcParserConsts ParserConsts;

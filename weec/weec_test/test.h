@@ -219,11 +219,6 @@ namespace weec
 
 		}
 
-		namespace parse
-		{
-
-
-		}
 	}
 }
 

@@ -135,35 +135,44 @@ int weec::test::lex::Test_wcIdentalyzer1()
 	if (!wcIdentalyzer().ContainsNamespace("testNS::testIdentifier"))		return 4;
 	if (wcIdentalyzer().ContainsNamespace("shouldFail"))					return 5;
 
-	if (!wcIdentalyzer().IsFunction("function()"))							return 6;
-	if (!wcIdentalyzer().IsFunction("$g::ns::function()"))					return 7;
-	if (!wcIdentalyzer().IsFunction("function($g::int)"))					return 8;
-	if (!wcIdentalyzer().IsFunction("$g::ns::function($g::int)"))			return 9;
-	if (wcIdentalyzer().IsFunction("shouldFail"))							return 10;
-	if (wcIdentalyzer().IsFunction("shouldFail()::a"))						return 10;
-	if (wcIdentalyzer().IsFunction("$g::ns::shouldFail()::a"))				return 10;
-
-	if (!wcIdentalyzer().IsQualified("$g::ns::ident"))						return 9;
-	if (!wcIdentalyzer().IsQualified("$g::ns::ident()"))					return 9;
-	if (!wcIdentalyzer().IsQualified("$g::ns::ident($g::int)"))				return 9;
-	if (wcIdentalyzer().IsQualified("shouldFail"))							return 10;
+	if (!wcIdentalyzer().IsFunction("function()"))						return 6;
+	if (!wcIdentalyzer().IsFunction("$g::ns::function()"))				return 7;
+	if (!wcIdentalyzer().IsFunction("function($g::int)"))				return 8;
+	if (!wcIdentalyzer().IsFunction("$g::ns::function($g::int)"))		return 9;
+	if (wcIdentalyzer().IsFunction("shouldFail"))						return 10;
+	if (wcIdentalyzer().IsFunction("shouldFail()::a"))					return 10;
+	if (wcIdentalyzer().IsFunction("shouldFail($g::int)::a"))			return 10;
+	if (wcIdentalyzer().IsFunction("$g::ns::shouldFail()::a"))			return 10;
+	
+	if (!wcIdentalyzer().IsQualified("$g::ns::ident"))				return 9;
+	if (!wcIdentalyzer().IsQualified("$g::ns::ident()"))			return 9;
+	if (!wcIdentalyzer().IsQualified("$g::ns::ident($g::int)"))		return 9;
+	if (!wcIdentalyzer().IsQualified("ident()::a"))					return 10;
+	if (wcIdentalyzer().IsQualified("shouldFail"))					return 10;
+	if (wcIdentalyzer().IsQualified("shouldFail($g::int)"))			return 10;
 
 	if (!wcIdentalyzer().IsQualifiedWithGlobal("$g::ns::ident"))			return 11;
 	if (wcIdentalyzer().IsQualifiedWithGlobal("ns::shouldFail"))			return 12;
 	if (wcIdentalyzer().IsQualifiedWithGlobal("shouldFail"))				return 13;
+	if (wcIdentalyzer().IsQualifiedWithGlobal("shouldFail()::a"))			return 13;
+	if (wcIdentalyzer().IsQualifiedWithGlobal("shouldFail($g::int)::a"))	return 13;
 
 	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident") != "ident")									return 14;
 	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident()") != "ident()")								return 15;
-	auto t = wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident($g::int)");
 	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident($g::int)") != "ident($g::int)")					return 15;
 	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident($g::int,$g::int)") != "ident($g::int,$g::int)")	return 15;
 	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("ns::ident") != "ident")										return 16;
 
-	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident") != "$g::ns")						return 17;
-	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident()") != "$g::ns")						return 18;
-	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident($g::int)") != "$g::ns")				return 18;
-	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident($g::int,$g::int)") != "$g::ns")		return 18;
-	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("ns::ident") != "ns")								return 19;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident") != "$g::ns")					return 17;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident()") != "$g::ns")					return 18;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident($g::int)") != "$g::ns")			return 18;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident($g::int,$g::int)") != "$g::ns")	return 18;
+	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("ns::ident") != "ns")							return 19;
+
+	auto paramList1 = { wcFullIdentifier("$g::int")};
+	auto paramList2 = { wcFullIdentifier("$g::int"), wcFullIdentifier("$g::int") };
+	if (wcIdentalyzer().GetParameterListIdentifierString(paramList1) != "$g::int")			return 20;
+	if (wcIdentalyzer().GetParameterListIdentifierString(paramList2) != "$g::int,$g::int")	return 20;
 
 	return 0;
 }
@@ -173,30 +182,30 @@ int weec::test::lex::Test_wcIdentifier1()
 	//a blank wcIdentifier
 	string emptyString = "";
 	wcIdentifier blankIdent;
-	if (blankIdent != emptyString)													return 1;
-	if (blankIdent.Size() != 0)														return 2;
-	if (blankIdent.IsQualified())													return 3;
-	if (blankIdent.IsFunction())													return 4;
-	if (blankIdent.to_string() != emptyString)										return 5;
-	if (blankIdent.to_string_no_global() != emptyString)							return 6;
-	if (blankIdent.to_unqualified_string() != emptyString)							return 7;
-	if (blankIdent.to_string_no_arguments() != emptyString)							return 8;
-	if (blankIdent.to_string_no_arguments_no_global() != emptyString)				return 9;
-	if (blankIdent.to_string_unqualified_no_arguments() != emptyString)				return 10;
+	if (blankIdent != emptyString)											return 1;
+	if (blankIdent.Size() != 0)												return 2;
+	if (blankIdent.IsQualified())											return 3;
+	if (blankIdent.IsFunction())											return 4;
+	if (blankIdent.to_string() != emptyString)								return 5;
+	if (blankIdent.to_string_no_global() != emptyString)					return 6;
+	if (blankIdent.to_unqualified_string() != emptyString)					return 7;
+	if (blankIdent.to_string_no_arguments() != emptyString)					return 8;
+	if (blankIdent.to_string_no_arguments_no_global() != emptyString)		return 9;
+	if (blankIdent.to_string_unqualified_no_arguments() != emptyString)		return 10;
 
 
 	//a string constructed wcIdentifier
 	string identString1 = "_TestIdent1";	wcIdentifier constructedIdentifier(identString1);
-	if (constructedIdentifier != identString1)													return 11;
-	if (constructedIdentifier.Size() != identString1.size())									return 12;
-	if (constructedIdentifier.IsQualified())													return 13;
-	if (constructedIdentifier.IsFunction())														return 14;
-	if (constructedIdentifier.to_string() != identString1)										return 15;
-	if (constructedIdentifier.to_string_no_global() != identString1)							return 16;
-	if (constructedIdentifier.to_unqualified_string() != identString1)							return 17;
-	if (constructedIdentifier.to_string_no_arguments() != identString1)							return 18;
-	if (constructedIdentifier.to_string_no_arguments_no_global() != identString1)				return 19;
-	if (constructedIdentifier.to_string_unqualified_no_arguments() != identString1)				return 20;
+	if (constructedIdentifier != identString1)											return 11;
+	if (constructedIdentifier.Size() != identString1.size())							return 12;
+	if (constructedIdentifier.IsQualified())											return 13;
+	if (constructedIdentifier.IsFunction())												return 14;
+	if (constructedIdentifier.to_string() != identString1)								return 15;
+	if (constructedIdentifier.to_string_no_global() != identString1)					return 16;
+	if (constructedIdentifier.to_unqualified_string() != identString1)					return 17;
+	if (constructedIdentifier.to_string_no_arguments() != identString1)					return 18;
+	if (constructedIdentifier.to_string_no_arguments_no_global() != identString1)		return 19;
+	if (constructedIdentifier.to_string_unqualified_no_arguments() != identString1)		return 20;
 
 
 	//a string constructed wcIdentifier, with a namespace in the string (or a fully qualified identifier) 

@@ -276,8 +276,8 @@ wcParseOutput weec::parse::wcStatementParser::Parse(bool AllowDeclarations)
 	wcIdentifier Identifier;	wcFullIdentifier ResolvedIdentifier;	wcParseOutput IdentNode;
 	switch (ThisToken.Type)
 	{
-		WC_SWITCHCASE_TOKENS_LITERAL
-			WC_SWITCHCASE_TOKENS_OPERATORS_ALL
+	WC_SWITCHCASE_TOKENS_LITERAL
+	WC_SWITCHCASE_TOKENS_OPERATORS_ALL
 	case OpenParenthesis:
 		if ((Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable, Scopes).ParseExpression())).Error.Code != None)
 			return Output;	//error occurred
@@ -1546,7 +1546,7 @@ bool weec::parse::wcIdentalyzer::IsQualified(std::string PossibleIdentifier)
 
 bool weec::parse::wcIdentalyzer::IsQualifiedWithGlobal(std::string PossibleIdentifier)
 {
-	if (PossibleIdentifier.starts_with(ParserConsts.GlobalIdentPrefix))
+	if (PossibleIdentifier.starts_with(ParserConsts.GlobalIdentPrefix) || (PossibleIdentifier == ParserConsts.GlobalIdentifier))
 		return true;	//could still be an invalid ident
 	return false;
 }

@@ -138,9 +138,10 @@ namespace weec
 			int Test_wcParseSymbolTable1(), Test_wcParseSymbolTable2();
 			int Test_wcParseScope();
 			int Test_wcParseScopes();
-			int Test_wcBlockParser1();
 
+			int Test_wcBlockParser1();
 			int Test_wcDeclarationParser1();
+			int Test_wcIfParser1();
 
 			int Test_wcParser_1(), Test_wcParser_2(), Test_wcParser_3(), Test_wcParser_4(), Test_wcParser_5(),
 				Test_wcParser_6(), Test_wcParser_7(), Test_wcParser_8(), Test_wcParser_9(), Test_wcParser_10(),
@@ -195,6 +196,7 @@ namespace weec
 				Test_wcBlockParser1,
 
 				Test_wcDeclarationParser1,
+				Test_wcIfParser1,
 
 				Test_wcParser_1, Test_wcParser_2, Test_wcParser_3, Test_wcParser_4, Test_wcParser_5,
 				Test_wcParser_6, Test_wcParser_7, Test_wcParser_8, Test_wcParser_9, Test_wcParser_10,

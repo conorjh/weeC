@@ -148,6 +148,7 @@ int weec::test::lex::Test_wcIdentalyzer1()
 	if (!wcIdentalyzer().IsQualified("$g::ns::ident()"))			return 9;
 	if (!wcIdentalyzer().IsQualified("$g::ns::ident($g::int)"))		return 9;
 	if (!wcIdentalyzer().IsQualified("ident()::a"))					return 10;
+	if (!wcIdentalyzer().IsQualified("ident($g::int)::a"))			return 10;
 	if (wcIdentalyzer().IsQualified("shouldFail"))					return 10;
 	if (wcIdentalyzer().IsQualified("shouldFail($g::int)"))			return 10;
 
@@ -162,6 +163,8 @@ int weec::test::lex::Test_wcIdentalyzer1()
 	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident($g::int)") != "ident($g::int)")					return 15;
 	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("$g::ns::ident($g::int,$g::int)") != "ident($g::int,$g::int)")	return 15;
 	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("ns::ident") != "ident")										return 16;
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("ns::ident()::a") != "a")										return 16;
+	if (wcIdentalyzer().GetIdentifierFromQualifiedIdentifier("ns::ident($g::int)::a") != "a")								return 16;
 
 	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident") != "$g::ns")					return 17;
 	if (wcIdentalyzer().GetNamespaceFromQualifiedIdentifier("$g::ns::ident()") != "$g::ns")					return 18;
@@ -171,8 +174,19 @@ int weec::test::lex::Test_wcIdentalyzer1()
 
 	auto paramList1 = { wcFullIdentifier("$g::int")};
 	auto paramList2 = { wcFullIdentifier("$g::int"), wcFullIdentifier("$g::int") };
-	if (wcIdentalyzer().GetParameterListIdentifierString(paramList1) != "$g::int")			return 20;
-	if (wcIdentalyzer().GetParameterListIdentifierString(paramList2) != "$g::int,$g::int")	return 20;
+	auto paramList3 = { wcFullIdentifier("$g::float"), wcFullIdentifier("$g::string"), wcFullIdentifier("$g::ns::customType")};
+	if (wcIdentalyzer().GetParameterListIdentifierString(paramList1) != "$g::int")									return 20;
+	if (wcIdentalyzer().GetParameterListIdentifierString(paramList2) != "$g::int,$g::int")							return 20;
+	if (wcIdentalyzer().GetParameterListIdentifierString(paramList3) != "$g::float,$g::string,$g::ns::customType")	return 20;
+
+
+	if (wcIdentalyzer().StripArgumentsFromFunctionIdentifier("function()") != "function")							return 6;
+	if (wcIdentalyzer().StripArgumentsFromFunctionIdentifier("$g::ns::function()") != "$g::ns::function")			return 7;
+	if (wcIdentalyzer().StripArgumentsFromFunctionIdentifier("function($g::int)") != "function")					return 8;
+	if (wcIdentalyzer().StripArgumentsFromFunctionIdentifier("$g::ns::function($g::int)") != "$g::ns::function")	return 9;
+	if (wcIdentalyzer().StripArgumentsFromFunctionIdentifier("ident") != "ident")						return 10;
+	if (wcIdentalyzer().StripArgumentsFromFunctionIdentifier("shouldFail()::a") != "shouldFail()::a")					return 10;
+
 
 	return 0;
 }
@@ -694,6 +708,27 @@ int weec::test::lex::Test_wcDeclarationParser1()
 	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))		return 6;
 	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)::a")))	return 7;
 	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)::b")))	return 8;
+
+
+	return 0;
+}
+
+int weec::test::lex::Test_wcIfParser1()
+{
+	string IfStatement1 = "if(true)	true;";
+	auto Output1 = wcIfParser(*new wcTokenizer(IfStatement1, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	if (Output1.Error.Code != wcParserErrorCode::None)	return 1;
+
+	string IfStatement2 = "if(true)	true; else false;";
+	auto Output2 = wcIfParser(*new wcTokenizer(IfStatement2, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	if (Output2.Error.Code != wcParserErrorCode::None)	return 2;
+	tree<wcParseNode>::pre_order_iterator PC2 = Output2.GetHead();
+	PC2++;		
+	printTree(Output2.AST);
+
+	string IfStatement3 = "if(true)\n{\n true;\n }\n else \n{\n false;\n }";
+	auto Output3 = wcIfParser(*new wcTokenizer(IfStatement3, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	if (Output3.Error.Code != wcParserErrorCode::None)	return 3;
 
 
 	return 0;

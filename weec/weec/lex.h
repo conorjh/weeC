@@ -16,7 +16,7 @@
 		case wcTokenType::FloatKeyword: case wcTokenType::BoolKeyword: case wcTokenType::CharKeyword: case wcTokenType::ObjectKeyword: case wcTokenType::VarKeyword: \
 		case wcTokenType::NamespaceKeyword: case wcTokenType::FunctionKeyword: case wcTokenType::IfKeyword: case wcTokenType::ElseKeyword: case wcTokenType::ElseIfKeyword:\
 		case wcTokenType::WhileKeyword: case wcTokenType::BreakKeyword: case wcTokenType::ContinueKeyword: case wcTokenType::ReturnKeyword: case wcTokenType::ConstKeyword: 
-#define WC_SWITCHCASE_TOKENS_LITERAL case wcTokenType::IntLiteral: case wcTokenType::StringLiteral: case wcTokenType::FloatLiteral: case wcTokenType::CharLiteral: 
+#define WC_SWITCHCASE_TOKENS_LITERAL case wcTokenType::IntLiteral: case wcTokenType::StringLiteral: case wcTokenType::FloatLiteral: case wcTokenType::CharLiteral: case wcTokenType::TrueKeyword: case wcTokenType::FalseKeyword: 
 #define WC_SWITCHCASE_TOKENS_BUILTIN_TYPES case wcTokenType::IntKeyword: case wcTokenType::StringKeyword: case wcTokenType::FloatKeyword: case wcTokenType::CharKeyword: case wcTokenType::UIntKeyword: 
 
 namespace weec

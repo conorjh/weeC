@@ -196,7 +196,7 @@ namespace weec
 
 			std::string to_string_no_global() const
 			{
-				if (!wcIdentalyzer().ContainsGlobal(Identifier))
+				if (!wcIdentalyzer().IsQualifiedWithGlobal(Identifier))
 					return Identifier;	//global wasnt present
 				else
 					if (wcIdentalyzer().ContainsNamespace(Identifier))

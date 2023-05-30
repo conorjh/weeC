@@ -87,8 +87,6 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		}
 		
 		//no semi colon, must be a full declaration with body
-		//Scopes.Push(FunctionSignature.FunctionIdentifier.to_string());
-
 		wcParseOutput BodyNode = wcBlockParser(Tokenizer, Output.SymbolTable, Scopes).Parse(true);
 
 		//pop here?  todo
@@ -175,12 +173,10 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseParameters(wcFullIdentifier
 	//check for any arguments
 	while (!Tokenizer.IsFinished() && !Tokenizer.IsErrored() && GetToken().Type != CloseParenthesis)
 	{
-		wcParseParameter Parameter;
-
 		//parse a parameter
+		wcParseParameter Parameter;
 		if ((ParameterNode.AddAsChild(ParseParameter(DeclarationIdent, Parameter))).Error.Code != None)
 			return ParameterNode;
-
 		ParametersOut.push_back(Parameter);
 
 		//move on to closing parenthesis if we dont encounter a comma
@@ -270,7 +266,6 @@ wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier, 
 
 	//success
 	return wcParseOutput(wcParseNode(wcParseNodeType::Identifier, IdentToken));
-
 }
 
 wcParseOutput weec::parse::wcStatementParser::Parse(bool AllowDeclarations)

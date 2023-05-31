@@ -214,8 +214,8 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 	auto IdentDepth = Input.AST.depth(PC);
 	auto ReturnAddress = PC;
 	PC++;
-	vector<any> ArgumentValues;
 
+	vector<any> ArgumentValues;
 	while (Input.AST.depth(PC) > IdentDepth)
 		ArgumentValues.push_back(this->Exec());
 
@@ -235,7 +235,10 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 		PackedArgs.push_back(wcInterpreterIdentPlusValue(FuncSig.Arguments[t].Ident.to_string(), ArgumentValues[t]));
 	}
 	auto t = FuncSig.Invoke(PackedArgs);
-	PC = ReturnAddress++;
+	PC=ReturnAddress;
+	tree<wcParseNode>::sibling_iterator sib(PC);
+	sib++;
+	PC = sib;
 	SymTab.StackFrames.pop();
 	return t;
 }
@@ -492,6 +495,7 @@ any weec::interpreter::wcInterpreter::ExecStatement()
 			Halt = true;
 			return Return;
 		}
+	return Return;
 }
 
 any weec::interpreter::wcInterpreter::ExecReturn()

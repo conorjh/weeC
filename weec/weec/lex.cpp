@@ -702,10 +702,11 @@ bool weec::lex::wcTokenizer::NextToken_Ident()
 			stringTokenizer.NextStringToken();
 			continue;
 
-			WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
+		case wcTokenType::IntLiteral:
+		WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
 		case wcTokenType::Identifier:
-			if (!LastPartWasASeperator)
-				return true;	//two idents in a row somehow, possible error?
+			//if (!LastPartWasASeperator)
+			//	return true;	//two idents in a row somehow, possible error?
 
 			TokenBuffer.StringToken.Data += Buffer.Data;
 			LastPartWasASeperator = false;

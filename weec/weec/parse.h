@@ -184,10 +184,10 @@ namespace weec
 			std::string to_unqualified_string() const
 			{
 				//remove $g:: and any other namespaces
-				if (wcIdentalyzer().ContainsNamespace(Identifier))
+				if (wcIdentalyzer().IsQualified(Identifier))
 					return Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1, Identifier.size() - (Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1));
 
-				if (wcIdentalyzer().ContainsGlobal(Identifier))
+				if (Identifier == ParserConsts.GlobalIdentifier)
 					return "";	//no namespace delimiter, but a present global ident... must be just "$g". the unqualified version of this is an empty string
 
 				//no namespace, no global, this identifier already is unqualified

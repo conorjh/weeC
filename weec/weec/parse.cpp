@@ -289,7 +289,7 @@ wcParseOutput weec::parse::wcStatementParser::Parse(bool AllowDeclarations)
 		return Output.AddAsChild(wcDeclarationParser(Tokenizer, SymbolTable, Scopes).Parse());
 
 	case wcTokenType::SemiColon:
-		return Output.AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable, Scopes).Parse());
+		return wcSemiColonParser(Tokenizer, SymbolTable, Scopes).Parse();
 
 	case wcTokenType::IfKeyword:
 		return Output.AddAsChild(wcIfParser(Tokenizer, SymbolTable, Scopes).Parse());

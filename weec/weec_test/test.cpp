@@ -75,10 +75,9 @@ int weec::test::lex::Test_AllParse()
 
 int weec::test::lex::Test_StringTokenizer1()
 {
+
 	string input = listing::list_stringtokenizer4;
 	wcStringTokenizer stringTokenizer(input);
-
-
 	if (!stringTokenizer.NextStringToken() || stringTokenizer.GetStringToken().Data != "Hello")
 		return 1;
 
@@ -461,6 +460,36 @@ int weec::test::lex::Test_wcFullIdentifier1()
 	if (fullIdent1.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")			return 68;
 	if (fullIdent1.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")	return 69;
 	if (fullIdent1.to_string_unqualified_no_arguments() != "SomeIdentifier")				return 70;
+
+
+	//part constructed wcFullIdentifier with function, parameters, namespace and global 
+	wcIdentifier identifier2("SomeIdentifier($g::int,$g::int)");
+	wcFullIdentifier fullIdent2(scope1, identifier2);
+	if (fullIdent2 != "$g::NS::anotherNS::SomeIdentifier($g::int,$g::int)")						return 61;
+	if (fullIdent2.Size() != string("NS::anotherNS::SomeIdentifier($g::int,$g::int)").size()) 	return 63;
+	if (!fullIdent2.IsFunction())																return 64;
+	if (fullIdent2.to_string() != "$g::NS::anotherNS::SomeIdentifier($g::int,$g::int)")			return 65;
+	if (fullIdent2.to_unqualified_string() != "SomeIdentifier($g::int,$g::int)")				return 66;
+	if (fullIdent2.to_string_no_global() != "NS::anotherNS::SomeIdentifier($g::int,$g::int)")	return 67;
+	if (fullIdent2.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier")				return 68;
+	if (fullIdent2.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")		return 69;
+	if (fullIdent2.to_string_unqualified_no_arguments() != "SomeIdentifier")					return 70;
+
+
+	//part constructed wcFullIdentifier with a function local
+	wcIdentifier identifier3("SomeIdentifier($g::int,$g::int)::a");
+	wcFullIdentifier fullIdent3(scope1, identifier3);
+	if (fullIdent3 != "$g::NS::anotherNS::SomeIdentifier($g::int,$g::int)::a")									return 61;
+	if (fullIdent3.Size() != string("NS::anotherNS::SomeIdentifier($g::int,$g::int)::a").size()) 				return 63;
+	if (fullIdent3.IsFunction())																				return 64;
+	if (fullIdent3.to_string() != "$g::NS::anotherNS::SomeIdentifier($g::int,$g::int)::a")						return 65;
+	if (fullIdent3.to_unqualified_string() != "a")																return 66;
+	if (fullIdent3.to_string_no_global() != "NS::anotherNS::SomeIdentifier($g::int,$g::int)::a")				return 67;
+	if (fullIdent3.to_string_no_arguments() != "$g::NS::anotherNS::SomeIdentifier($g::int,$g::int)::a")			return 68;
+	if (fullIdent3.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier($g::int,$g::int)::a")	return 69;
+	if (fullIdent3.to_string_unqualified_no_arguments() != "a")													return 70;
+
+
 	/*
 	//part constructed wcFullIdentifier with function, namespace and global
 	wcIdentifierScope scope1("$g::NS::anotherNS");
@@ -710,6 +739,19 @@ int weec::test::lex::Test_wcDeclarationParser1()
 	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)::b")))	return 8;
 
 
+	string Source6 = "int aaa(int a, int b){ return a + b; } \n int bbb(int a, int b){ return a + b; }";
+	auto Tok6 = *new wcTokenizer(Source6, true); auto SymTab6 = *new wcParseSymbolTable(); 
+	auto Output6 = wcDeclarationParser(Tok6, SymTab6, *new wcParseScopes()).Parse();
+    Output6 += wcDeclarationParser(Tok6, SymTab6, *new wcParseScopes()).Parse();
+	if (Output6.Error.Code != wcParserErrorCode::None)								return 5;
+    if (!Output6.SymbolTable.Exists(wcFullIdentifier("aaa($g::int,$g::int)")))	return 6;
+	if (!Output6.SymbolTable.Exists(wcFullIdentifier("aaa($g::int,$g::int)::a")))	return 7;
+	if (!Output6.SymbolTable.Exists(wcFullIdentifier("aaa($g::int,$g::int)::b")))	return 8;
+	if (!Output6.SymbolTable.Exists(wcFullIdentifier("bbb($g::int,$g::int)")))	return 6;
+	if (!Output6.SymbolTable.Exists(wcFullIdentifier("bbb($g::int,$g::int)::a")))	return 7;
+	if (!Output6.SymbolTable.Exists(wcFullIdentifier("bbb($g::int,$g::int)::b")))	return 8;
+
+
 	return 0;
 }
 
@@ -722,9 +764,6 @@ int weec::test::lex::Test_wcIfParser1()
 	string IfStatement2 = "if(true)	true; else false;";
 	auto Output2 = wcIfParser(*new wcTokenizer(IfStatement2, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
 	if (Output2.Error.Code != wcParserErrorCode::None)	return 2;
-	tree<wcParseNode>::pre_order_iterator PC2 = Output2.GetHead();
-	PC2++;		
-	printTree(Output2.AST);
 
 	string IfStatement3 = "if(true)\n{\n true;\n }\n else \n{\n false;\n }";
 	auto Output3 = wcIfParser(*new wcTokenizer(IfStatement3, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
@@ -997,12 +1036,30 @@ int weec::test::lex::Test_Tokenizer12()
 	string input = listing::list_tokenizer12;
 	wcTokenizer tokenizer(input);
 
-	// ident.withMember ident::withNamespace::withObject.withMember
+	// ident.withMember ident::withNamespace::withObject.withMember ns::method1() ns2::method2(a,b)
 
-	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier && tokenizer.GetToken().StringToken.Data == "ident.withMember")
+ 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier && tokenizer.GetToken().StringToken.Data == "ident.withMember")
 		return 1;
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier && tokenizer.GetToken().StringToken.Data == "ident::withNamespace::withObject.withMember")
 		return 2;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier && tokenizer.GetToken().StringToken.Data == "ns::method1")
+		return 3;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::OpenParenthesis)
+		return 4;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::CloseParenthesis)
+		return 5;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier && tokenizer.GetToken().StringToken.Data == "ns::method2")
+		return 6;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::OpenParenthesis)
+		return 7;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier && tokenizer.GetToken().StringToken.Data == "a")
+		return 8;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Comma)
+		return 7;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier && tokenizer.GetToken().StringToken.Data == "b")
+		return 8;
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::CloseParenthesis)
+		return 9;
 
 	return 0;
 }
@@ -1216,9 +1273,9 @@ int Test_ParserTemplate(string Listing)
 
 	printTree(Parsed.AST);
 
+	cout << endl << "Error code: " << (int)Parsed.Error.Code << "  " << to_string(Parsed.Error.Code) << endl;
 	if (Parsed.Error.Code != wcParserErrorCode::None)
 	{
-		cout << endl << "Error code: " << (int)Parsed.Error.Code << "  " << to_string(Parsed.Error.Code) << endl;
 		return (int)Parsed.Error.Code;
 	}
 
@@ -1322,7 +1379,7 @@ int weec::test::lex::Test_wcParser_29()
 
 int weec::test::lex::Test_wcParser_28()
 {
-	return Test_ParserTemplate(listing::list_parser28);
+	return Test_ParserTemplate(listing::list_parser28); 
 }
 
 int weec::test::lex::Test_wcParser_27()

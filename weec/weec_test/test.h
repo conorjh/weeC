@@ -22,7 +22,7 @@ namespace weec
 
 			std::string list_tokenizer10 = "int IdentTest; char IdentTest::WithNamespace";
 			std::string list_tokenizer11 = "x = 88 + (42 / 99)";
-			std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember";
+			std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember ns::method1() ns2::method2(a,b)";
 
 			//declarations
 			std::string list_parser1 = "int a;";

@@ -82,7 +82,6 @@ namespace weec
 			wcInterpreterFunctionSignature Get(std::string FullIdent);
 		};
 
-
 		class ImplementationTypes
 		{
 			std::unordered_map<std::string, ImplementationType> EasyTypeNames;
@@ -144,7 +143,6 @@ namespace weec
 		public:
 			std::any DoOp(wcInterpreterSymbolTable&, lex::wcTokenType Op, std::any a);
 		};
-
 
 		class wcExpressionInterpreter
 		{
@@ -215,7 +213,7 @@ namespace weec
 				Exec(tree<parse::wcParseNode>::iterator NewPC), 
 				Exec(tree<parse::wcParseNode>::iterator NewPC, std::vector<wcInterpreterIdentPlusValue> Arguments),
 				
-				ExecBlock(), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecDeclaration();
+				ExecBlock(tree<parse::wcParseNode>::iterator NewPC = nullptr), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecDeclaration();
 
 			wcInterpreterError Error;
 			bool Halt;

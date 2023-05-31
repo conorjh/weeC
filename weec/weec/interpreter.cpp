@@ -235,6 +235,7 @@ any weec::interpreter::wcExpressionInterpreter::ExecCall()
 		PackedArgs.push_back(wcInterpreterIdentPlusValue(FuncSig.Arguments[t].Ident.to_string(), ArgumentValues[t]));
 	}
 	auto t = FuncSig.Invoke(PackedArgs);
+	PC = ReturnAddress++;
 	SymTab.StackFrames.pop();
 	return t;
 }
@@ -400,8 +401,6 @@ weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& _Input)
 
 	//wcInterpreterFunctionSignature GlobalFuncSig(Input, this, vector<wcInterpreterArgument>(), "$g::int", PC);
 
-	//push global stack frame
-	SymbolTable.StackFrames.push(wcInterpreterStackFrame("$g", PC, vector<any>()));
 }
 
 void weec::interpreter::wcInterpreter::Reset()
@@ -426,7 +425,6 @@ any weec::interpreter::wcInterpreter::Exec()
 	if (Input.Error.Code != wcParserErrorCode::None)
 		return wcInterpreterError(wcInterpreterErrorCode::BadInput, *Input.AST.begin());
 
-	any ExpressionResult, ReturnResult;
 	while (PC != Input.AST.end() && PC != nullptr && !Halt)
 	{
 		switch (PC->Type)
@@ -440,6 +438,8 @@ any weec::interpreter::wcInterpreter::Exec()
 			break;
 
 		case Head:
+			//push global stack frame
+			SymbolTable.StackFrames.push(wcInterpreterStackFrame("$g", PC, vector<any>()));
 			PC++;
 			break;
 
@@ -475,29 +475,23 @@ any weec::interpreter::wcInterpreter::ExecStatement()
 			break;
 
 		case ReturnStatement:
-			Return = ExecReturn();
-			break;
+			return (Return = ExecReturn());
 
 		case IfStatement:
-			ExecIf();
-			break;
+			return ExecIf();
 
 		case WhileStatement:
-			ExecWhile();
-			break;
+			return ExecWhile();
 
 		case Declaration:
-			ExecDeclaration();
-			break;
+			return ExecDeclaration();
 
 		default:
 			Error.Node = *PC;
 			Error.Code = wcInterpreterErrorCode::InvalidNode;
 			Halt = true;
-			break;
+			return Return;
 		}
-
-	return Return;
 }
 
 any weec::interpreter::wcInterpreter::ExecReturn()
@@ -519,12 +513,14 @@ any weec::interpreter::wcInterpreter::ExecReturn()
 			break;
 		}
 
-	Halt = true;
+	//Halt = true;
 	return Return;
 }
 
-any weec::interpreter::wcInterpreter::ExecBlock()
+any weec::interpreter::wcInterpreter::ExecBlock(tree<parse::wcParseNode>::iterator NewPC )
 {
+	if (NewPC != nullptr)
+		PC = NewPC;
 	auto Begin = PC;
 	PC++;
 
@@ -546,7 +542,7 @@ any weec::interpreter::wcInterpreter::ExecBlock()
 			break;
 		}
 
-	return any();
+	return Return;
 }
 
 any weec::interpreter::wcInterpreter::SkipBlock()
@@ -838,7 +834,7 @@ any weec::interpreter::wcInterpreterFunctionSignature::Invoke()
 
 any weec::interpreter::wcInterpreterFunctionSignature::Invoke(vector<wcInterpreterIdentPlusValue> Arguments)
 {
-	return Interpreter.Exec(Block, Arguments);
+	return Interpreter.ExecBlock(Block);
 }
 
 bool weec::interpreter::wcInterpreterStackFrame::Add(std::any Value, parse::wcFullIdentifier FullIdent)

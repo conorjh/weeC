@@ -70,7 +70,7 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		//hack - adjust parameter identifiers to have correct scope, we didnt have the scope at the time without all arguments
 		for (auto& It : ParametersNode.AST)
 			if (It.Type == wcParseNodeType::Parameter_Ident)
-				It.Token.StringToken.Data = wcFullIdentifier(TrueFunctionName.to_string(), wcIdentalyzer().GetIdentifierFromQualifiedIdentifier(It.Token.StringToken.Data)).to_string();
+				It.Token.StringToken.Data = wcFullIdentifier(TrueFunctionName.to_string(), wcIdentalyzer().GetIdentifierFromQualifiedIdentifier(It.Token.to_string())).to_string();
 		for (auto& Param : ParameterList)
 			Param.Identifier = wcFullIdentifier(TrueFunctionName.to_string(), Param.Identifier.to_unqualified_string());
 
@@ -119,7 +119,7 @@ wcParseOutput weec::parse::wcDeclarationParser::ParseType(wcFullIdentifier& Decl
 		return wcParseOutput(wcParserError(InvalidType, TypeToken));		//error - expected built in or user type
 
 	//resolve type - built in types are registered in symbol table
-	switch (Scopes.Resolve(wcIdentifier(TypeToken.StringToken.Data), DeclarationType))
+	switch (Scopes.Resolve(wcIdentifier(TypeToken.to_string()), DeclarationType))
 	{
 	case wcParseScopeResolveResult::Ambiguous:
 		return wcParseOutput(wcParserError(AmbiguousType, TypeToken));		//failed to resolve type
@@ -236,7 +236,7 @@ wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier, 
 	auto IdentToken = GetToken();
 
 	//output the identifier as it was seen in source
-	ParsedIdentifier = wcIdentifier(IdentToken.StringToken.Data);
+	ParsedIdentifier = wcIdentifier(IdentToken.to_string());
 
 	//try to resovlve it, output the fully qualified identifier to ResolvedFullIdentifier. 
 	//raise an error if it needs to be previously declared (ie ExpectDeclared)
@@ -258,7 +258,8 @@ wcParseOutput weec::parse::wcIdentParser::Parse(wcIdentifier& ParsedIdentifier, 
 		break;
 	}
 
-	ResolvedFullIdentifier = wcFullIdentifier(Scopes.Top().Name.to_string(), ParsedIdentifier);
+	if(ResolvedFullIdentifier == wcFullIdentifier())
+		ResolvedFullIdentifier = wcFullIdentifier(Scopes.Top().Name.to_string(), ParsedIdentifier);
 
 	//consume the identifier token if told so (ie when expression parsing)
 	if (Consume && !NextToken())
@@ -346,7 +347,6 @@ wcParseOutput weec::parse::wcBlockParser::Parse(bool AllowDeclarations)
 
 	if (!ExpectToken(CloseBrace))
 		return wcParseOutput(wcParserError(MissingClosingBrace, GetToken()));
-
 	NextToken();
 
 	return Output;
@@ -936,10 +936,8 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_CallArguments
 	if (Arguments.size() > 255)
 		return wcParseExpression(wcParserError(wcParserErrorCode::FunctionCall_MaxArgumentsExceeded, GetToken()));
 
-
-
 	//todo get the functions full qualified name (with arugments), add as second param
-	return wcParseExpression(wcParseNodeType::Expression_Call, wcFullIdentifier(Callee.Tokens[0].StringToken.Data, Arguments), Callee, Arguments);
+	return wcParseExpression(wcParseNodeType::Expression_Call, wcFullIdentifier(Callee.Tokens[0].to_string(), Arguments), Callee, Arguments);
 }
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
@@ -958,37 +956,25 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Primary()
 	case FloatLiteral:
 	case CharLiteral:
 	case IntLiteral:
-		Output = wcParseExpression(wcParseNodeType::Expression_Primary, Operand);
 		NextToken();
-		return Output;
+		return wcParseExpression(wcParseNodeType::Expression_Primary, Operand);
 
 	case Identifier:
 		if ((IdentNode = wcIdentParser(Tokenizer, SymbolTable, Scopes).Parse(IdentAsSeen, ResolvedIdenfitifer, true, false)).Error.Code != None)
-		{
-			Output.Error = wcParserError(wcParserErrorCode::UndeclaredIdent, GetToken());
-			return Output;
-		}
+			return wcParserError(wcParserErrorCode::UndeclaredIdent, GetToken());
 		return wcParseExpression(wcParseNodeType::Expression_Primary, ResolvedIdenfitifer, SymbolTable.Get(ResolvedIdenfitifer).DataType, Operand);
 
 	case OpenParenthesis:
 		//consume opening parenthesis
 		if (Tokenizer.IsFinished() || !NextToken())
-		{
-			//end of file before last paren
-			Output.Error = wcParserError(wcParserErrorCode::UnexpectedEOF, GetToken());
-			return Output;
-		}
+			return wcParserError(wcParserErrorCode::UnexpectedEOF, GetToken());			//end of file before last paren
 
 		if ((Output = ParseExpression_SubExpression()).Error.Code != None)
 			return Output;
 
 		//consume closing parenthesis
 		if (Tokenizer.IsFinished() || GetToken().Type != CloseParenthesis)
-		{
-			//didnt find one, madness
-			Output.Error = wcParserError(wcParserErrorCode::Expression_MissingClosingParenthesis, GetToken());
-			return Output;
-		}
+			return wcParserError(wcParserErrorCode::Expression_MissingClosingParenthesis, GetToken());			//didnt find one, madness
 		NextToken();
 		return Output;
 

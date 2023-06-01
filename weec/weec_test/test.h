@@ -61,9 +61,31 @@ namespace weec
 			std::string list_parser26 = "int functionNameWithBody()\n{\n\treturn 123;\n}";
 			std::string list_parser27 = "int functionNameWithParams(int a, int b)\n{\n\treturn a * b;\n}";
 			std::string list_parser28 = "int functionName()\n{\n\treturn 2345;;\n}\n\nreturn functionName();";
-			std::string list_parser29 = "int functionNameWithParams(int a, int b)\n{\n\treturn a + b;\n}\nint functionNameWithParams2(int a, int b)\n{\n\treturn a + b;\n}\nfunctionNameWithParams(2,3) + functionNameWithParams2(11,11);";
+			std::string list_parser29 = "int functionNameWithParams(int a, int b)\n{\n\treturn a + b;\n}\nint functionNameWithParams2(int a, int b)\n{\n\treturn a + b;\n}\nreturn functionNameWithParams(2,3) + functionNameWithParams2(11,11);";
 			std::string list_parser30 = "int functionNameWithParams(int a, int b)\n{\n\treturn a + b;\n}\n\nfunctionNameWithParams(2,3);";
 			std::string list_parser31 = "int functionNameWithParamsAndRecursion(int a, int b)\n{\n\tif(a+b < 1000)\n\t\treturn functionNameWithParamsAndRecursion(a + b, b);\n\telse\nreturn a + b;\n}\n\nreturn functionNameWithParamsAndRecursion(2,3);";
+			std::string list_fibonacci =
+				"int fibonacci(int num)\n"
+				"{\n"
+				"	if (num == 0)\n"
+				"		return 0;\n"
+				"\n"
+				"	else if (num == 1)\n"
+				"		return 1; \n"
+				"\n"
+				"	else\n"
+				"		return fibonacci(num - 1) + fibonacci(num - 2);\n"
+				"}\n"
+				"\n"
+				"int num = 10; // variable to store how many elements to be displayed in the series\n"
+				"int i = 0;\n"
+				"int ret = 0;\n"
+				"while (i < num)\n"
+				"{\n"
+				"	ret = fibonacci(i);\n"
+				"	i = i + 1;\n"
+				"}\n"
+				"return ret;";
 
 
 			std::string list_expression1 = "2 + 3;";
@@ -148,7 +170,8 @@ namespace weec
 				Test_wcParser_11(), Test_wcParser_12(), Test_wcParser_13(), Test_wcParser_14(), Test_wcParser_15(),
 				Test_wcParser_16(), Test_wcParser_17(), Test_wcParser_18(), Test_wcParser_19(), Test_wcParser_20(),
 				Test_wcParser_21(), Test_wcParser_22(), Test_wcParser_23(), Test_wcParser_24(), Test_wcParser_25(),
-				Test_wcParser_26(), Test_wcParser_27(), Test_wcParser_28(), Test_wcParser_29(), Test_wcParser_30();
+				Test_wcParser_26(), Test_wcParser_27(), Test_wcParser_28(), Test_wcParser_29(), Test_wcParser_30(),
+				Test_wcParser_31(), Test_Fibonacci();
 
 			int Test_wcExpressionParser_1(), Test_wcExpressionParser_2(), Test_wcExpressionParser_3(), Test_wcExpressionParser_4(), Test_wcExpressionParser_5(),
 				Test_wcExpressionParser_6(), Test_wcExpressionParser_7(), Test_wcExpressionParser_8(), Test_wcExpressionParser_9(), Test_wcExpressionParser_10(),
@@ -203,7 +226,8 @@ namespace weec
 				Test_wcParser_11, Test_wcParser_12, Test_wcParser_13, Test_wcParser_14, Test_wcParser_15,
 				Test_wcParser_16, Test_wcParser_17, Test_wcParser_18, Test_wcParser_19, Test_wcParser_20,
 				Test_wcParser_21, Test_wcParser_22, Test_wcParser_23, Test_wcParser_24, Test_wcParser_25,
-				Test_wcParser_26, Test_wcParser_27, Test_wcParser_28, Test_wcParser_29, Test_wcParser_30,
+				Test_wcParser_26, Test_wcParser_27, Test_wcParser_28, Test_wcParser_29, Test_wcParser_30, Test_wcParser_31,
+				Test_Fibonacci,
 
 				Test_wcExpressionParser_1, Test_wcExpressionParser_2, Test_wcExpressionParser_3, Test_wcExpressionParser_4, Test_wcExpressionParser_5,
 				Test_wcExpressionParser_6, Test_wcExpressionParser_7, Test_wcExpressionParser_8, Test_wcExpressionParser_9, Test_wcExpressionParser_10,

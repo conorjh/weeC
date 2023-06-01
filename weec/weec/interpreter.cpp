@@ -199,6 +199,7 @@ any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, any a)
 
 weec::interpreter::wcExpressionInterpreter::wcExpressionInterpreter(wcInterpreterSymbolTable& _SymTab, wcInterpreterFunctionTable& _FuncTab, parse::wcParseOutput _Input, tree<parse::wcParseNode>::iterator& _PC, any& _EAX)
 	: Input(_Input), SymTab(_SymTab), FuncTab(_FuncTab), PC(_PC), EAX(_EAX)
+
 {
 }
 

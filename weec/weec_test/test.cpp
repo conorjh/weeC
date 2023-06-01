@@ -1516,6 +1516,16 @@ int weec::test::lex::Test_wcParser_1()
 	return Test_ParserTemplate(listing::list_parser1);
 }
 
+int weec::test::lex::Test_Fibonacci()
+{
+	return Test_ParserTemplate(listing::list_fibonacci);
+}
+
+int weec::test::lex::Test_wcParser_31()
+{
+	return 0;
+}
+
 int weec::test::lex::Test_wcExpressionParser_3()
 {
 	return Test_ExpressionParserTemplate(listing::list_expression3, 89);

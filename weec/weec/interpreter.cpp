@@ -623,6 +623,12 @@ any weec::interpreter::wcInterpreter::ExecWhile()
 			ExprPC = PC;
 			ExpressionResult = wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec();
 			ExprTrue = any_cast<bool>(ExpressionResult);
+
+			if (!ExprTrue)
+			{ 
+				SkipBlock();	//todo skip statement also
+				return false;
+			}
 			break;
 
 		case Block:
@@ -648,8 +654,6 @@ any weec::interpreter::wcInterpreter::ExecWhile()
 			break;
 		}
 
-		if (!ExprTrue)
-			return false;
 	}
 
 	return ExprTrue;

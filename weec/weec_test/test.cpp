@@ -1266,7 +1266,6 @@ bool printIsExpected(wcInterpreter Interp, any ExpectedResult)
 
 int Test_ParserTemplate(string Listing)
 {
-
 	wcTokenizer tokenizer(Listing); //tokenizer.NextToken();
 
 	auto parseStart = chrono::system_clock::now();
@@ -1288,7 +1287,6 @@ int Test_ParserTemplate(string Listing)
 	auto Interp = wcInterpreter(Parsed);
 	auto Result = Interp.Exec();
 	auto execEnd = chrono::system_clock::now();
-
 	
 	cout << "Exec time: " << chrono::duration_cast<chrono::milliseconds>(execEnd - execStart).count() << "ms" << endl;
 	return (Parsed.Error.Code == wcParserErrorCode::None && printIsExpected(Interp, any())) ? 0 : 1;

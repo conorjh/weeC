@@ -298,6 +298,9 @@ wcParseOutput weec::parse::wcStatementParser::Parse(bool AllowDeclarations)
 	case wcTokenType::ReturnKeyword:
 		return Output.AddAsChild(wcReturnParser(Tokenizer, SymbolTable, Scopes).Parse());
 
+	case wcTokenType::PrintKeyword:
+		return Output.AddAsChild(wcPrintParser(Tokenizer, SymbolTable, Scopes).Parse());
+
 	case wcTokenType::WhileKeyword:
 		return Output.AddAsChild(wcWhileParser(Tokenizer, SymbolTable, Scopes).Parse());
 
@@ -465,6 +468,25 @@ wcParseOutput weec::parse::wcWhileParser::Parse()
 		return Output.AddAsChild(wcBlockParser(Tokenizer, SymbolTable, Scopes).Parse(false));
 	else
 		return Output.AddAsChild(wcStatementParser(Tokenizer, SymbolTable, Scopes).Parse(false));
+}
+
+
+wcParseOutput weec::parse::wcPrintParser::Parse()
+{
+	wcParseOutput Output(wcParseNode(wcParseNodeType::PrintStatement), true);
+
+	//print keyword;
+	if (!ExpectToken(PrintKeyword))
+		return wcParseOutput(wcParserError(UnexpectedToken, GetToken()));		//error	
+	if (!NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, GetToken()));		//error
+
+	//expression
+	if (Output.AddAsChild(wcExpressionParser(Tokenizer, SymbolTable, Scopes).ParseExpression()).Error.Code != None)
+		return Output;
+
+	//semi colon
+	return Output.AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable, Scopes).Parse());
 }
 
 tree<wcParseNode>::pre_order_iterator weec::parse::wcParseExpression::GetExpressionRootNodeBegin()
@@ -1159,6 +1181,7 @@ std::string weec::parse::to_string(wcParseNodeType Type)
 	case wcParseNodeType::Empty:				return "Empty";
 	case wcParseNodeType::WhileStatement:		return "WhileStatement";
 	case wcParseNodeType::ReturnStatement:		return "ReturnStatement";
+	case wcParseNodeType::PrintStatement:		return "PrintStatement";
 	case wcParseNodeType::Return_Expression:	return "Return_Expression";
 	case wcParseNodeType::IfStatement:			return "IfStatement";
 	case wcParseNodeType::If_Expression:		return "If_Expression";
@@ -1584,3 +1607,4 @@ _wcIdentifierResolver_Resolve_Cleanup:
 
 	return Result;
 }
+

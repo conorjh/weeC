@@ -37,6 +37,8 @@ namespace weec
 
 			ReturnStatement, Return_Expression,
 
+			PrintStatement,
+
 			Declaration, Declaration_Type, Declaration_Ident, Parameters, Parameter, Parameter_Type, Parameter_Ident, DeclaratationBody,
 
 			//Temporary, hackish
@@ -882,6 +884,15 @@ namespace weec
 		{
 		public:
 			wcWhileParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
+				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+
+			wcParseOutput Parse();
+		};
+
+		class wcPrintParser : wcSubParser
+		{
+		public:
+			wcPrintParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse();

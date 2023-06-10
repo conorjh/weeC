@@ -58,7 +58,7 @@ namespace weec
 			TrueKeyword, FalseKeyword,
 			StringKeyword, DoubleKeyword, IntKeyword, UIntKeyword, FloatKeyword, BoolKeyword, CharKeyword, ObjectKeyword, VarKeyword,
 			NamespaceKeyword, FunctionKeyword, IfKeyword, ElseKeyword, 
-			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, ConstKeyword,
+			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, ConstKeyword, PrintKeyword,
 
 			//misc
 			Comment, MultiLineCommentStart, MultiLineCommentEnd, Identifier,
@@ -91,7 +91,7 @@ namespace weec
 			const std::vector<std::string> identifiers;
 		};
 
-		const unsigned int WC_VAR_DEFINITIONCOUNT = 64;
+		const unsigned int WC_VAR_DEFINITIONCOUNT = 65;
 
 		//definitions used for creating wcToken
 		struct wcTokenDefinitionsBank
@@ -293,6 +293,7 @@ namespace weec
 			wcTokenDefinition(wcTokenType::IfKeyword, "if"),
 			wcTokenDefinition(wcTokenType::ElseKeyword, "else"),
 			wcTokenDefinition(wcTokenType::ReturnKeyword, "return"),
+			wcTokenDefinition(wcTokenType::PrintKeyword, "print"),
 			wcTokenDefinition(wcTokenType::WhileKeyword, "while"),
 			wcTokenDefinition(wcTokenType::BreakKeyword, "break"),
 			wcTokenDefinition(wcTokenType::ContinueKeyword, "continue"),

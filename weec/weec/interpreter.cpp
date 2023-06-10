@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include <iostream>
 
 using enum weec::parse::wcParseNodeType;
 
@@ -397,6 +398,30 @@ any weec::interpreter::wcExpressionInterpreter::ExecEquality()
 	return DoOp(OpType, Lh, Rh);
 }
 
+
+void weec::interpreter::wcInterpreter::Print(std::any Value)
+{	
+	auto FindA = SymbolTable.ImplTypes.GetByInternal(Value.type().name());
+	if (FindA.Name == "")
+	{
+		cout << ">" << "";
+		return;
+	}
+
+	if (FindA.Name == "int")
+		cout << ">" << any_cast<int>(Value) << endl;
+	else if (FindA.Name == "unsigned int")
+		cout << ">" << any_cast<unsigned int>(Value) << endl;
+	else if (FindA.Name == "float")
+		cout << ">" << any_cast<float>(Value) << endl;
+	else if (FindA.Name == "double")
+		cout << ">" << any_cast<double>(Value) << endl;
+	else if (FindA.Name == "bool")
+		cout << ">" << any_cast<bool>(Value) << endl;
+	else if (FindA.Name == "string")
+		cout << ">" << any_cast<string>(Value) << endl;
+}
+
 weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& _Input)
 	: ExpressionInterp(SymbolTable, FunctionTable, _Input, PC, EAX), Input(_Input), FunctionTable(_Input)
 {
@@ -459,6 +484,33 @@ any weec::interpreter::wcInterpreter::Exec()
 	return Return;
 }
 
+std::any weec::interpreter::wcInterpreter::ExecPrint()
+{
+	auto Begin = PC;
+	PC++;
+
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && !Halt))
+		switch (PC->Type)
+		{
+		case Expression:
+			Print(wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec());
+			break;
+
+		default:
+			Error.Node = *PC;
+			Error.Code = wcInterpreterErrorCode::InvalidNode;
+			Halt = true;
+			break;
+		}
+
+	return Return;
+}
+
+std::any weec::interpreter::wcInterpreter::Exec(tree<parse::wcParseNode>::iterator NewPC)
+{
+	return std::any();
+}
+
 any weec::interpreter::wcInterpreter::ExecStatement()
 {
 	auto Begin = PC;
@@ -480,6 +532,9 @@ any weec::interpreter::wcInterpreter::ExecStatement()
 
 		case ReturnStatement:
 			return (Return = ExecReturn());
+
+		case PrintStatement:
+			return ExecPrint();
 
 		case IfStatement:
 			return ExecIf();

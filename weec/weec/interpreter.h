@@ -204,6 +204,8 @@ namespace weec
 			wcInterpreterSymbolTable SymbolTable;
 			wcInterpreterFunctionTable FunctionTable;
 
+			void Print(std::any);
+
 		public:
 			wcExpressionInterpreter ExpressionInterp;
 			wcInterpreter(parse::wcParseOutput& Input);
@@ -213,7 +215,7 @@ namespace weec
 				Exec(tree<parse::wcParseNode>::iterator NewPC), 
 				Exec(tree<parse::wcParseNode>::iterator NewPC, std::vector<wcInterpreterIdentPlusValue> Arguments),
 				
-				ExecBlock(tree<parse::wcParseNode>::iterator NewPC = nullptr), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecDeclaration();
+				ExecBlock(tree<parse::wcParseNode>::iterator NewPC = nullptr), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecPrint(), ExecDeclaration();
 
 			wcInterpreterError Error;
 			bool Halt;
@@ -422,28 +424,17 @@ namespace weec
 			
 			switch (Op)
 			{
-			case lex::wcTokenType::MultiplyOperator:
-				return std::any_cast<T1>(a) * std::any_cast<T2>(b);
-			case lex::wcTokenType::PlusOperator:
-				return std::any_cast<T1>(a) + std::any_cast<T2>(b);
-			case lex::wcTokenType::MinusOperator:
-				return std::any_cast<T1>(a) - std::any_cast<T2>(b);
-			case lex::wcTokenType::GreaterEqualOperator:
-				return std::any_cast<T1>(a) >= std::any_cast<T2>(b);
-			case lex::wcTokenType::GreaterOperator:
-				return std::any_cast<T1>(a) > std::any_cast<T2>(b);
-			case lex::wcTokenType::LessEqualOperator:
-				return std::any_cast<T1>(a) <= std::any_cast<T2>(b);
-			case lex::wcTokenType::LessOperator:
-				return std::any_cast<T1>(a) < std::any_cast<T2>(b);
-			case lex::wcTokenType::LogAndOperator:
-				return std::any_cast<T1>(a) && std::any_cast<T2>(b);
-			case lex::wcTokenType::LogOrOperator:
-				return std::any_cast<T1>(a) || std::any_cast<T2>(b);
-			case lex::wcTokenType::EqualOperator:
-				return std::any_cast<T1>(a) == std::any_cast<T2>(b);
-			case lex::wcTokenType::NotEqualOperator:
-				return std::any_cast<T1>(a) != std::any_cast<T2>(b);
+			case lex::wcTokenType::MultiplyOperator:		return std::any_cast<T1>(a) * std::any_cast<T2>(b);
+			case lex::wcTokenType::PlusOperator:			return std::any_cast<T1>(a) + std::any_cast<T2>(b);
+			case lex::wcTokenType::MinusOperator:			return std::any_cast<T1>(a) - std::any_cast<T2>(b);
+			case lex::wcTokenType::GreaterEqualOperator:	return std::any_cast<T1>(a) >= std::any_cast<T2>(b);
+			case lex::wcTokenType::GreaterOperator:			return std::any_cast<T1>(a) > std::any_cast<T2>(b);
+			case lex::wcTokenType::LessEqualOperator:		return std::any_cast<T1>(a) <= std::any_cast<T2>(b);
+			case lex::wcTokenType::LessOperator:			return std::any_cast<T1>(a) < std::any_cast<T2>(b);
+			case lex::wcTokenType::LogAndOperator:			return std::any_cast<T1>(a) && std::any_cast<T2>(b);
+			case lex::wcTokenType::LogOrOperator:			return std::any_cast<T1>(a) || std::any_cast<T2>(b);
+			case lex::wcTokenType::EqualOperator:			return std::any_cast<T1>(a) == std::any_cast<T2>(b);
+			case lex::wcTokenType::NotEqualOperator:		return std::any_cast<T1>(a) != std::any_cast<T2>(b);
 
 			case lex::wcTokenType::AssignOperator:
 				SymTab.Set(std::any_cast<std::string>(a), std::any_cast<T1>(b));
@@ -458,12 +449,9 @@ namespace weec
 		{
 			switch (Op)
 			{
-			case lex::wcTokenType::LogNotOperator:
-				return !std::any_cast<T1>(a);
-			case lex::wcTokenType::MinusOperator:
-				return -std::any_cast<T1>(a);
-			case lex::wcTokenType::PlusOperator:
-				return +std::any_cast<T1>(a);
+			case lex::wcTokenType::LogNotOperator:	return !std::any_cast<T1>(a);
+			case lex::wcTokenType::MinusOperator:	return -std::any_cast<T1>(a);
+			case lex::wcTokenType::PlusOperator:	return +std::any_cast<T1>(a);
 			}
 
 			return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err

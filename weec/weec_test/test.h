@@ -57,7 +57,7 @@ namespace weec
 			std::string list_parser24 = "int a = 1;\n\n//single line while loop \nwhile(a<100)\n\ta = a + 1;\nreturn a;";
 
 			//function declarations
-			std::string list_parser25 = "int functionName();";
+			std::string list_parser25 = "int functionName()";
 			std::string list_parser26 = "int functionNameWithBody()\n{\n\treturn 123;\n}";
 			std::string list_parser27 = "int functionNameWithParams(int a, int b)\n{\n\treturn a * b;\n}";
 			std::string list_parser28 = "int functionName()\n{\n\treturn 2345;;\n}\n\nreturn functionName();";
@@ -90,13 +90,13 @@ namespace weec
 				"		return fibonacci(num - 1) + fibonacci(num - 2);\n"
 				"}\n"
 				"\n"
-				"int num = 10; // variable to store how many elements to be displayed in the series\n"
+				"int num = 20; // variable to store how many elements to be displayed in the series\n"
 				"int i = 0;\n"
 				"int ret = 0;\n"
 				"while (i < num)\n"
 				"{\n"
 				"	ret = fibonacci(i);\n"
-				"	i = i + 1;\n"
+				"	print i = i + 1;\n"
 				"}\n"
 				"return ret;";
 

@@ -346,7 +346,7 @@ bool weec::lex::wcTokenTypeAlizer::IsIdentQualified(std::string Ident)
 	if (!IsValidIdent(Ident))
 		return false;
 
-	(Ident.find("::") != std::string::npos || Ident.find(".") != std::string::npos)
+	return (Ident.find("::") != std::string::npos || Ident.find(".") != std::string::npos)
 		? true
 		: false;
 }
@@ -356,7 +356,7 @@ bool  weec::lex::wcTokenTypeAlizer::IsPartValidIdent(std::string Ident)
 	if (Ident.size() == 0)
 		return false;	//cant be empty
 
-	(Ident[0] != '_' && !isalpha(Ident[0]))
+	return (Ident[0] != '_' && !isalpha(Ident[0]))
 		? false	//must start with an underscore or letter
 		: true;
 

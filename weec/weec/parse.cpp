@@ -394,10 +394,9 @@ wcParseOutput weec::parse::wcIfParser::Parse()
 
 	//optional else block/statement
 	Output.AddAsChild(wcParseNode(wcParseNodeType::If_ElseBlock), true);
-	if (GetToken().Type == OpenBrace)
-		Output.AddAsChild(wcBlockParser(Tokenizer, SymbolTable, Scopes).Parse(false));
-	else
-		Output.AddAsChild(wcStatementParser(Tokenizer, SymbolTable, Scopes).Parse(false));
+	GetToken().Type == OpenBrace 
+		? Output.AddAsChild(wcBlockParser(Tokenizer, SymbolTable, Scopes).Parse(false))
+		: Output.AddAsChild(wcStatementParser(Tokenizer, SymbolTable, Scopes).Parse(false));
 	Output.Up();	//return pointer to parent of else block
 
 	return Output;
@@ -408,10 +407,9 @@ wcParseOutput weec::parse::wcIfParser::Parse()
 wcParseOutput weec::parse::wcSemiColonParser::Parse()
 {
 	if (GetToken().Type != SemiColon)
-		if (Tokenizer.IsFinished())
-			return wcParseOutput(wcParserError(UnexpectedEOF, GetToken()));		//error
-		else
-			return wcParseOutput(wcParserError(UnexpectedToken, GetToken()));		//error
+		return Tokenizer.IsFinished()
+			? wcParseOutput(wcParserError(UnexpectedEOF, GetToken()))		
+			: wcParseOutput(wcParserError(UnexpectedToken, GetToken()));		
 
 	NextToken();
 
@@ -711,20 +709,12 @@ wcParseOutput weec::parse::wcExpressionParser::ParseExpression(wcParseSymbol Sym
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Expression()
 {
-	wcParseExpression Expression1;
-
-	Expression1 = ParseExpression_SubExpression();
-
-	return Expression1;
+	return ParseExpression_SubExpression();
 }
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_SubExpression()
 {
-	auto Expression = ParseExpression_Assignment();
-
-	//if(!Tokenizer.IsFinished())
-
-	return Expression;
+	return  ParseExpression_Assignment();
 }
 
 wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
@@ -1008,10 +998,9 @@ weec::parse::wcParseOutput::wcParseOutput(wcParseNode _Node, bool PointToChild)
 wcParseOutput& weec::parse::wcParseOutput::AddAsChild(wcParseOutput Child, bool PointToChild)
 {
 	if (Child.AST.size() > 1)
-		if (PointToChild)
-			NodeIndex = AST.append_child(NodeIndex, Child.GetSubHead());
-		else
-			AST.append_child(NodeIndex, Child.GetSubHead());
+		(PointToChild)
+			?	NodeIndex = AST.append_child(NodeIndex, Child.GetSubHead())
+			:	AST.append_child(NodeIndex, Child.GetSubHead());
 
 	Error = Child.Error;
 	SymbolTable.Merge(Child.SymbolTable);
@@ -1021,11 +1010,9 @@ wcParseOutput& weec::parse::wcParseOutput::AddAsChild(wcParseOutput Child, bool 
 
 wcParseOutput& weec::parse::wcParseOutput::AddAsChild(wcParseNode Node, bool PointToChild)
 {
-	if (PointToChild)
-		NodeIndex = AST.append_child(NodeIndex, Node);
-	else
-		AST.append_child(NodeIndex, Node);
-
+	(PointToChild)
+		? NodeIndex = AST.append_child(NodeIndex, Node)
+		: AST.append_child(NodeIndex, Node);
 
 	return *this;
 }
@@ -1392,15 +1379,13 @@ wcIdentalyzerAnalyzeResultCode weec::parse::wcIdentalyzer::Analyze(std::string P
 {
 	//if(IsValid(PossibleIdentifier))
 	if (IsQualified(PossibleIdentifier))
-		if (IsFunction(PossibleIdentifier))
-			return wcIdentalyzerAnalyzeResultCode::QualifiedFunction;
-		else
-			return wcIdentalyzerAnalyzeResultCode::QualifiedIdentifier;
+		return IsFunction(PossibleIdentifier)
+			? wcIdentalyzerAnalyzeResultCode::QualifiedFunction
+			: wcIdentalyzerAnalyzeResultCode::QualifiedIdentifier;
 	else
-		if (IsFunction(PossibleIdentifier))
-			return wcIdentalyzerAnalyzeResultCode::ShortFunction;
-		else
-			return wcIdentalyzerAnalyzeResultCode::ShortIdentifier;
+		return IsFunction(PossibleIdentifier)
+			? wcIdentalyzerAnalyzeResultCode::ShortFunction
+			: wcIdentalyzerAnalyzeResultCode::ShortIdentifier;
 	//else
 	//	return wcIdentalyzerAnalyzeResultCode::InvalidIdentifier;
 }
@@ -1495,8 +1480,8 @@ std::string weec::parse::wcIdentalyzer::GetParameterListIdentifierString(const s
 
 	for (auto& Parameter : Parameters)
 		ParameterListString += ParameterListString.size()
-		? "," + Parameter.TypeIdentifier.to_string()
-		: Parameter.TypeIdentifier.to_string();
+			? "," + Parameter.TypeIdentifier.to_string()
+			: Parameter.TypeIdentifier.to_string();
 
 	return ParameterListString;
 }
@@ -1507,8 +1492,8 @@ std::string weec::parse::wcIdentalyzer::GetParameterListIdentifierString(const s
 
 	for (auto& Parameter : Parameters)
 		ParameterListString += ParameterListString.size()
-		? "," + Parameter.to_string()
-		: Parameter.to_string();
+			? "," + Parameter.to_string()
+			: Parameter.to_string();
 
 	return ParameterListString;
 }
@@ -1524,25 +1509,24 @@ bool weec::parse::wcIdentalyzer::IsQualified(std::string PossibleIdentifier)
 {
 	if (IsFunction(PossibleIdentifier))
 		return StripArgumentsFromFunctionIdentifier(PossibleIdentifier).find(ParserConsts.ScopeDelimiter) != std::string::npos
-		? true
-		: false;
+			? true
+			: false;
 	else
 		return PossibleIdentifier.find(ParserConsts.ScopeDelimiter) != std::string::npos;	//could still be an invalid ident
 }
 
 bool weec::parse::wcIdentalyzer::IsQualifiedWithGlobal(std::string PossibleIdentifier)
 {
-	if (PossibleIdentifier.starts_with(ParserConsts.GlobalIdentPrefix) || (PossibleIdentifier == ParserConsts.GlobalIdentifier))
-		return true;	//could still be an invalid ident
-	return false;
+	return (PossibleIdentifier.starts_with(ParserConsts.GlobalIdentPrefix) || (PossibleIdentifier == ParserConsts.GlobalIdentifier))
+		? true	//could still be an invalid ident
+		: false;
 }
 
 bool weec::parse::wcIdentalyzer::IsFunction(std::string PossibleIdentifier)
 {
-	if (PossibleIdentifier.find_first_of("(") != std::string::npos 
-		&& PossibleIdentifier.find_last_of(")") == PossibleIdentifier.size() - 1 )
-		return true;	//could still be an invalid ident
-	return false;
+	return (PossibleIdentifier.find_first_of("(") != std::string::npos	&& PossibleIdentifier.find_last_of(")") == PossibleIdentifier.size() - 1 )
+		? true	//could still be an invalid ident
+		: false;
 }
 
 bool weec::parse::wcIdentalyzer::IsValid(std::string PossibleIdentifier)

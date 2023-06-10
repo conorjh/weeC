@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <chrono>
 
 using namespace std;
 
@@ -1265,23 +1266,31 @@ bool printIsExpected(wcInterpreter Interp, any ExpectedResult)
 
 int Test_ParserTemplate(string Listing)
 {
+
 	wcTokenizer tokenizer(Listing); //tokenizer.NextToken();
 
+	auto parseStart = chrono::system_clock::now();
 	auto Parsed = wcParser(tokenizer).Parse();
+	auto parseEnd = chrono::system_clock::now();
 
 	cout << endl << endl << Listing << endl;
 
 	printTree(Parsed.AST);
 
+	cout << "Parse time: " << chrono::duration_cast<chrono::milliseconds>(parseEnd - parseStart).count() << "ms" << endl;
 	cout << endl << "Error code: " << (int)Parsed.Error.Code << "  " << to_string(Parsed.Error.Code) << endl;
 	if (Parsed.Error.Code != wcParserErrorCode::None)
 	{
 		return (int)Parsed.Error.Code;
 	}
 
+	auto execStart = chrono::system_clock::now();
 	auto Interp = wcInterpreter(Parsed);
 	auto Result = Interp.Exec();
+	auto execEnd = chrono::system_clock::now();
 
+	
+	cout << "Exec time: " << chrono::duration_cast<chrono::milliseconds>(execEnd - execStart).count() << "ms" << endl;
 	return (Parsed.Error.Code == wcParserErrorCode::None && printIsExpected(Interp, any())) ? 0 : 1;
 }
 
@@ -1516,6 +1525,11 @@ int weec::test::lex::Test_wcParser_1()
 	return Test_ParserTemplate(listing::list_parser1);
 }
 
+int weec::test::lex::Test_wcParser_32()
+{
+	return Test_ParserTemplate(listing::list_parser32);
+}
+
 int weec::test::lex::Test_Fibonacci()
 {
 	return Test_ParserTemplate(listing::list_fibonacci);
@@ -1523,7 +1537,7 @@ int weec::test::lex::Test_Fibonacci()
 
 int weec::test::lex::Test_wcParser_31()
 {
-	return 0;
+	return Test_ParserTemplate(listing::list_parser31);
 }
 
 int weec::test::lex::Test_wcExpressionParser_3()

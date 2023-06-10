@@ -40,15 +40,11 @@ namespace App
 					case '//':
 					case '-':	//command			
 						if (parsingParams)
-						{
-							Arguments.push_back(arg);
-							arg = Cmd_LineArgument();
-						}
+							Arguments.push_back(arg), arg = Cmd_LineArgument();
 
-						if (argv[index][0] == '--')
-							arg.Type = Cmd_LineArgumentType::OptionalArgument;
-						else
-							arg.Type = Cmd_LineArgumentType::Argument;
+						(argv[index][0] == '--')
+							? arg.Type = Cmd_LineArgumentType::OptionalArgument
+							: arg.Type = Cmd_LineArgumentType::Argument;
 
 						arg.Data = std::string(argv[index]).substr(1, strlen(argv[index]) - 1);
 						parsingParams = true;

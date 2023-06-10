@@ -346,18 +346,19 @@ bool weec::lex::wcTokenTypeAlizer::IsIdentQualified(std::string Ident)
 	if (!IsValidIdent(Ident))
 		return false;
 
-	if (Ident.find("::") != std::string::npos || Ident.find(".") != std::string::npos)
-		return true;
-	return false;
+	(Ident.find("::") != std::string::npos || Ident.find(".") != std::string::npos)
+		? true
+		: false;
 }
 
 bool  weec::lex::wcTokenTypeAlizer::IsPartValidIdent(std::string Ident)
 {
 	if (Ident.size() == 0)
 		return false;	//cant be empty
-	if (Ident[0] != '_' && !isalpha(Ident[0]))
-		return false;	//must start with an underscore or letter
-	return true;
+
+	(Ident[0] != '_' && !isalpha(Ident[0]))
+		? false	//must start with an underscore or letter
+		: true;
 
 }
 
@@ -365,9 +366,10 @@ wcTokenType weec::lex::wcTokenTypeAlizer::Get(std::string _testString)
 {
 	if (definitionsBank.exists(_testString))
 		return definitionsBank.find(_testString).Type;
-	if (IsValidIdent(_testString))
-		return wcTokenType::Identifier;
-	return wcTokenType::NullToken;
+	
+	return IsValidIdent(_testString)
+		? wcTokenType::Identifier
+		: wcTokenType::NullToken;
 }
 
 wcToken& weec::lex::wcToken::operator=(const wcToken& _rvalue)
@@ -379,9 +381,9 @@ wcToken& weec::lex::wcToken::operator=(const wcToken& _rvalue)
 
 bool weec::lex::wcToken::operator==(const wcToken& Other)
 {
-	if (Other.StringToken == StringToken && Other.Type == Type)
-		return true;
-	return false;
+	return (Other.StringToken == StringToken && Other.Type == Type)
+		? true
+		: false;
 }
 
 bool weec::lex::wcToken::operator==(wcToken& Other)
@@ -394,16 +396,16 @@ bool weec::lex::wcToken::operator==(wcToken& Other)
 
 bool weec::lex::operator==(const wcToken& lhs, wcToken& rhs)
 {
-	if (lhs.StringToken == rhs.StringToken && lhs.Type == rhs.Type)
-		return true;
-	return false;
+	return (lhs.StringToken == rhs.StringToken && lhs.Type == rhs.Type)
+		? true
+		: false;
 }
 
 bool weec::lex::operator==(wcToken& lhs, const wcToken& rhs)
 {
-	if (lhs.StringToken == rhs.StringToken && lhs.Type == rhs.Type)
-		return true;
-	return false;
+	return (lhs.StringToken == rhs.StringToken && lhs.Type == rhs.Type)
+		? true
+		: false;
 }
 
 wcLineFeeder::wcLineFeeder(std::string& _source) : Source(_source)
@@ -624,8 +626,8 @@ bool weec::lex::wcTokenizer::NextToken_Number()
 		if (stringTokenizer.LookaheadAndMatch(buffer1, 2, wcStringTokenType::Number))
 		{
 			//float literal
-			stringTokenizer.NextStringToken();
-			stringTokenizer.NextStringToken();
+			stringTokenizer.NextStringToken();	stringTokenizer.NextStringToken();
+
 			TokenBuffer.StringToken = wcStringToken(TokenBuffer.StringToken.Data + "." + buffer1.Data, wcStringTokenType::FloatNumber, TokenBuffer.StringToken.Line, TokenBuffer.StringToken.Column);
 			TokenBuffer.Type = FloatLiteral;
 			return true;
@@ -643,9 +645,9 @@ bool weec::lex::wcTokenizer::NextToken_Special()
 
 bool weec::lex::wcTokenizer::NextToken_Alpha()
 {
-	if (TokenBuffer.Type == wcTokenType::Identifier)
-		return NextToken_Ident();
-	return true;
+	return (TokenBuffer.Type == wcTokenType::Identifier)
+		? NextToken_Ident()
+		: true;
 }
 
 bool weec::lex::wcTokenizer::NextToken_Punctuation()
@@ -805,10 +807,9 @@ weec::lex::wcTokenDefinition::wcTokenDefinition(const wcTokenDefinition& input)
 
 bool weec::lex::wcTokenDefinition::isNull() const
 {
-	if (Type == wcTokenType::NullToken && !delimiter && !identifiers.size())
-		return true;
-	else
-		return false;
+	return (Type == wcTokenType::NullToken && !delimiter && !identifiers.size())
+		? true
+		: false;
 }
 
 bool weec::lex::wcTokenDefinition::isSingleCharacterToken() const

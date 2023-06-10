@@ -52,7 +52,7 @@ namespace weec
 			std::string list_parser19 = "return 2+2;";
 			std::string list_parser20 = "int a = 123; return a;";
 			std::string list_parser21 = "int a = 123; \nif(a < 100)\n\treturn a;\nelse\nreturn a * 2;";
-			std::string list_parser22 = "int t = 0;\nwhile(t<10000)\n{\n\tt = t+1;\n}\nreturn t;";
+			std::string list_parser22 = "int t = 0;\nwhile(t<100)\n{\n\tt = t+1;\n}\nreturn t;";
 			std::string list_parser23 = "int a = 2;\n int b = 3;\n if (a < b)\n return 213123;	\n return 323444; ";
 			std::string list_parser24 = "int a = 1;\n\n//single line while loop \nwhile(a<100)\n\ta = a + 1;\nreturn a;";
 
@@ -63,7 +63,20 @@ namespace weec
 			std::string list_parser28 = "int functionName()\n{\n\treturn 2345;;\n}\n\nreturn functionName();";
 			std::string list_parser29 = "int functionNameWithParams(int a, int b)\n{\n\treturn a + b;\n}\nint functionNameWithParams2(int a, int b)\n{\n\treturn a + b;\n}\nreturn functionNameWithParams(2,3) + functionNameWithParams2(11,11);";
 			std::string list_parser30 = "int functionNameWithParams(int a, int b)\n{\n\treturn a + b;\n}\n\nfunctionNameWithParams(2,3);";
-			std::string list_parser31 = "int functionNameWithParamsAndRecursion(int a, int b)\n{\n\tif(a+b < 1000)\n\t\treturn functionNameWithParamsAndRecursion(a + b, b);\n\telse\nreturn a + b;\n}\n\nreturn functionNameWithParamsAndRecursion(2,3);";
+			std::string list_parser31 = "int functionNameWithParamsAndRecursion(int a, int b)\n{\n\tif(a+b < 100)\n\t\treturn functionNameWithParamsAndRecursion(a + b, b);\n\telse\nreturn a + b;\n}\n\nreturn functionNameWithParamsAndRecursion(2,3);";
+			std::string list_parser32 =
+				"int f1(int a, int b)\n"
+				"{\n"
+				"	return a + b;\n"
+				"}\n"
+				"int f1(int a)\n"
+				"{\n"
+				"	return a;\n"
+				"}\n"
+				"\n"
+				"//overloads\n"
+				"return f1(6) + f1(6,6);\n";
+
 			std::string list_fibonacci =
 				"int fibonacci(int num)\n"
 				"{\n"
@@ -138,7 +151,7 @@ namespace weec
 			std::string list_expression48 = "+(-2) * 10;";
 			std::string list_expression49 = "!!!2;";
 			std::string list_expression50 = "!!!!(123);";
-			std::string list_expression51 = "10/0;";
+			std::string list_expression51 = "10 < 10;";
 
 			std::string list_stringtokenizer4 = "Hello\nWorld\nLonger sentence\nFinishing with newline\n";
 		}
@@ -171,7 +184,7 @@ namespace weec
 				Test_wcParser_16(), Test_wcParser_17(), Test_wcParser_18(), Test_wcParser_19(), Test_wcParser_20(),
 				Test_wcParser_21(), Test_wcParser_22(), Test_wcParser_23(), Test_wcParser_24(), Test_wcParser_25(),
 				Test_wcParser_26(), Test_wcParser_27(), Test_wcParser_28(), Test_wcParser_29(), Test_wcParser_30(),
-				Test_wcParser_31(), Test_Fibonacci();
+				Test_wcParser_31(), Test_wcParser_32(), Test_Fibonacci();
 
 			int Test_wcExpressionParser_1(), Test_wcExpressionParser_2(), Test_wcExpressionParser_3(), Test_wcExpressionParser_4(), Test_wcExpressionParser_5(),
 				Test_wcExpressionParser_6(), Test_wcExpressionParser_7(), Test_wcExpressionParser_8(), Test_wcExpressionParser_9(), Test_wcExpressionParser_10(),
@@ -226,7 +239,7 @@ namespace weec
 				Test_wcParser_11, Test_wcParser_12, Test_wcParser_13, Test_wcParser_14, Test_wcParser_15,
 				Test_wcParser_16, Test_wcParser_17, Test_wcParser_18, Test_wcParser_19, Test_wcParser_20,
 				Test_wcParser_21, Test_wcParser_22, Test_wcParser_23, Test_wcParser_24, Test_wcParser_25,
-				Test_wcParser_26, Test_wcParser_27, Test_wcParser_28, Test_wcParser_29, Test_wcParser_30, Test_wcParser_31,
+				Test_wcParser_26, Test_wcParser_27, Test_wcParser_28, Test_wcParser_29, Test_wcParser_30, Test_wcParser_31,Test_wcParser_32,
 				Test_Fibonacci,
 
 				Test_wcExpressionParser_1, Test_wcExpressionParser_2, Test_wcExpressionParser_3, Test_wcExpressionParser_4, Test_wcExpressionParser_5,

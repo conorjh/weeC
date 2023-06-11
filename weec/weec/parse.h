@@ -41,6 +41,8 @@ namespace weec
 
 			Declaration, Declaration_Type, Declaration_Ident, Parameters, Parameter, Parameter_Type, Parameter_Ident, DeclaratationBody,
 
+			StructDeclaration,
+
 			//Temporary, hackish
 			Identifier,
 
@@ -895,6 +897,15 @@ namespace weec
 		{
 		public:
 			wcPrintParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
+				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+
+			wcParseOutput Parse();
+		};
+
+		class wcStructParser : wcSubParser
+		{
+		public:
+			wcStructParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
 
 			wcParseOutput Parse();

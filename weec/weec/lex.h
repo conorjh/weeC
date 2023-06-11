@@ -58,7 +58,7 @@ namespace weec
 			TrueKeyword, FalseKeyword,
 			StringKeyword, DoubleKeyword, IntKeyword, UIntKeyword, FloatKeyword, BoolKeyword, CharKeyword, ObjectKeyword, VarKeyword,
 			NamespaceKeyword, FunctionKeyword, IfKeyword, ElseKeyword, 
-			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, ConstKeyword, PrintKeyword,
+			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, ConstKeyword, PrintKeyword, StructKeyword,
 
 			//misc
 			Comment, MultiLineCommentStart, MultiLineCommentEnd, Identifier,
@@ -294,6 +294,7 @@ namespace weec
 			wcTokenDefinition(wcTokenType::IfKeyword, "if"),
 			wcTokenDefinition(wcTokenType::ElseKeyword, "else"),
 			wcTokenDefinition(wcTokenType::ReturnKeyword, "return"),
+			wcTokenDefinition(wcTokenType::StructKeyword, "struct"),
 			wcTokenDefinition(wcTokenType::PrintKeyword, "print"),
 			wcTokenDefinition(wcTokenType::WhileKeyword, "while"),
 			wcTokenDefinition(wcTokenType::BreakKeyword, "break"),

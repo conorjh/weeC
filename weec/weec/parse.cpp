@@ -469,6 +469,22 @@ wcParseOutput weec::parse::wcPrintParser::Parse()
 	return Output.AddAsChild(wcSemiColonParser(Tokenizer, SymbolTable, Scopes).Parse());
 }
 
+wcParseOutput weec::parse::wcStructParser::Parse()
+{
+	wcParseOutput Output(wcParseNode(wcParseNodeType::StructDeclaration), true);
+
+	ExpectAndNext(StructKeyword);
+
+	if (!ExpectToken(StructKeyword))
+		return wcParseOutput(wcParserError(UnexpectedToken, GetToken()));		//error	
+	if (!NextToken())
+		return wcParseOutput(wcParserError(UnexpectedEOF, GetToken()));		//error
+
+
+
+	return wcParseOutput();
+}
+
 tree<wcParseNode>::pre_order_iterator weec::parse::wcParseExpression::GetExpressionRootNodeBegin()
 {
 	auto it = AST.begin();

@@ -162,7 +162,7 @@ namespace weec
 			wcExpressionInterpreter(wcInterpreterSymbolTable& SymTab, wcInterpreterFunctionTable& FuncTab,parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX);
 
 			std::any ExecSubExpression(),
-				ExecEquality(), ExecAssignment(), ExecLogicOr(),
+				ExecEquality(), ExecAssignment(), ExecTernary(), ExecLogicOr(),
 				ExecLogicAnd(), ExecComparison(),
 				ExecTerm(), ExecFactor(),
 				ExecUnary(), ExecCall(), ExecPrimary(bool),

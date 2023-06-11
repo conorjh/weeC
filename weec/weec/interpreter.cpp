@@ -43,6 +43,8 @@ any weec::interpreter::wcExpressionInterpreter::EvalNode(wcParseNodeType Type, p
 		return ExecEquality();
 	case Expression_Assignment:
 		return ExecAssignment();
+	case Expression_Ternary:
+		return ExecTernary();
 	case Expression_LogicOr:
 		return ExecLogicOr();
 	case Expression_LogicAnd:
@@ -208,6 +210,47 @@ any weec::interpreter::wcExpressionInterpreter::ExecSubExpression()
 {
 	PC++;
 	return EvalNode(PC->Type, Expression);
+}
+
+std::any weec::interpreter::wcExpressionInterpreter::ExecTernary()
+{
+	auto OpType = PC->Token.Type;
+	PC++;
+
+	any Middle, Right;
+	auto Left = EvalNode(PC->Type, Expression);
+	if (!strcmp(Left.type().name(), "struct weec::interpreter::wcInterpreterError") || strcmp(Left.type().name(), "bool"))
+		return Left;
+
+	if (any_cast<bool>(Left))
+	{
+		//true block
+		Middle = EvalNode(PC->Type, Expression);
+		if (!strcmp(Middle.type().name(), "struct weec::interpreter::wcInterpreterError"))
+			return Middle;
+
+		//skip false block
+		tree<parse::wcParseNode>::sibling_iterator skipIterator = PC;
+		skipIterator++;
+		PC = skipIterator;
+
+		return Middle;
+		
+	}
+	else
+	{
+		//skip true block
+		tree<parse::wcParseNode>::sibling_iterator skipIterator = PC;
+		skipIterator++;
+		PC = skipIterator;
+
+		//false block
+		Right = EvalNode(PC->Type, Expression);
+		if (!strcmp(Right.type().name(), "struct weec::interpreter::wcInterpreterError"))
+			return Right;
+
+		return Right;
+	}
 }
 
 any weec::interpreter::wcExpressionInterpreter::ExecCall()

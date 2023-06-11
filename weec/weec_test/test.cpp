@@ -1254,10 +1254,10 @@ bool printIsExpected(wcInterpreter Interp, any ExpectedResult)
 	{
 		if (ExpectedResult.has_value())
 		{
-			IsExpected = any_cast<bool>(Interp.Return) == any_cast<bool>(ExpectedResult);
-			cout << "Expected: " << any_cast<bool>(ExpectedResult) << "   ";
+			//IsExpected = any_cast<bool>(Interp.Return) == any_cast<bool>(ExpectedResult);
+//			cout << "Expected: " << any_cast<bool>(ExpectedResult) << "   ";
 		}
-		cout << "Out: " << any_cast<bool>(Interp.Return) << endl;
+		//cout << "Out: " << any_cast<bool>(Interp.Return) << endl;
 	}
 	cout << "EAX: " << AnyToString(Interp.EAX) << endl;
 	auto t = Interp.Return.type().name();

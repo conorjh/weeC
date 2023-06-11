@@ -8,14 +8,14 @@
 		case wcTokenType::AssignOperator: case wcTokenType::PlusAssignOperator: case wcTokenType::MinusAssignOperator: case wcTokenType::MultAssignOperator: \
 		case wcTokenType::DivAssignOperator: case wcTokenType::GreaterOperator: case wcTokenType::LessOperator: case wcTokenType::EqualOperator:\
 		case wcTokenType::NotEqualOperator: case wcTokenType::GreaterEqualOperator: case wcTokenType::LessEqualOperator: case wcTokenType::LogNotOperator: \
-		case wcTokenType::LogOrOperator: case wcTokenType::LogAndOperator: 
+		case wcTokenType::LogOrOperator: case wcTokenType::LogAndOperator:  case wcTokenType::TernaryOperator: 
 #define WC_SWITCHCASE_TOKENS_OPERATORS_ARITHMETIC case wcTokenType::MinusOperator: case wcTokenType::PlusOperator: case wcTokenType::DivideOperator:\
 		case wcTokenType::MultiplyOperator: case wcTokenType::ModulusOperator: case wcTokenType::ExponentOperator: case wcTokenType::IncrementOperator:\
 		case wcTokenType::DecrementOperator: 
 #define WC_SWITCHCASE_TOKENS_OPERATORS_KEYWORD case wcTokenType::TrueKeyword: case wcTokenType::FalseKeyword: case wcTokenType::StringKeyword: case wcTokenType::IntKeyword: \
 		case wcTokenType::FloatKeyword: case wcTokenType::BoolKeyword: case wcTokenType::CharKeyword: case wcTokenType::ObjectKeyword: case wcTokenType::VarKeyword: \
 		case wcTokenType::NamespaceKeyword: case wcTokenType::FunctionKeyword: case wcTokenType::IfKeyword: case wcTokenType::ElseKeyword: case wcTokenType::ElseIfKeyword:\
-		case wcTokenType::WhileKeyword: case wcTokenType::BreakKeyword: case wcTokenType::ContinueKeyword: case wcTokenType::ReturnKeyword: case wcTokenType::ConstKeyword: 
+		case wcTokenType::WhileKeyword: case wcTokenType::BreakKeyword: case wcTokenType::ContinueKeyword: case wcTokenType::ReturnKeyword: case wcTokenType::ConstKeyword:  case wcTokenType::StructKeyword: 
 #define WC_SWITCHCASE_TOKENS_LITERAL case wcTokenType::IntLiteral: case wcTokenType::StringLiteral: case wcTokenType::FloatLiteral: case wcTokenType::CharLiteral: case wcTokenType::TrueKeyword: case wcTokenType::FalseKeyword: 
 #define WC_SWITCHCASE_TOKENS_BUILTIN_TYPES case wcTokenType::IntKeyword: case wcTokenType::StringKeyword: case wcTokenType::FloatKeyword: case wcTokenType::CharKeyword: case wcTokenType::UIntKeyword: 
 
@@ -64,7 +64,7 @@ namespace weec
 			Comment, MultiLineCommentStart, MultiLineCommentEnd, Identifier,
 			OpenParenthesis, CloseParenthesis, OpenBracket, CloseBracket, OpenBrace, CloseBrace,
 			SemiColon, Colon, DoubleColon, Comma, Period, SingleQuote, DoubleQuote,
-			Dollar, Amper, BackSlash, QMark, Pipe, Underscore, Tilde, Hash,
+			Dollar, Amper, BackSlash, TernaryOperator, Pipe, Underscore, Tilde, Hash,
 			Tab, Whitespace, NewLine, Eos, Eof
 		};
 
@@ -91,7 +91,7 @@ namespace weec
 			const std::vector<std::string> identifiers;
 		};
 
-		const unsigned int WC_VAR_DEFINITIONCOUNT = 65;
+		const unsigned int WC_VAR_DEFINITIONCOUNT = 67;
 
 		//definitions used for creating wcToken
 		struct wcTokenDefinitionsBank
@@ -275,6 +275,7 @@ namespace weec
 			wcTokenDefinition(wcTokenType::LessEqualOperator, "<=", true),
 			wcTokenDefinition(wcTokenType::EqualOperator, "==", true),
 			wcTokenDefinition(wcTokenType::NotEqualOperator, "!=", true),
+			wcTokenDefinition(wcTokenType::TernaryOperator, "?", true),
 			wcTokenDefinition(wcTokenType::Comment, "//"),
 			wcTokenDefinition(wcTokenType::MultiLineCommentStart, "/*"),
 			wcTokenDefinition(wcTokenType::MultiLineCommentEnd,  "*/"),

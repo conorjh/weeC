@@ -77,7 +77,7 @@ bool weec::lex::wcToken::IsOperator() const
 		Type == wcTokenType::IncrementOperator || Type == wcTokenType::LessEqualOperator || Type == wcTokenType::LessOperator || Type == wcTokenType::LogAndOperator ||
 		Type == wcTokenType::LogOrOperator || Type == wcTokenType::MinusAssignOperator || Type == wcTokenType::MinusOperator || Type == wcTokenType::ModulusOperator ||
 		Type == wcTokenType::MultAssignOperator || Type == wcTokenType::MultiplyOperator || Type == wcTokenType::NotEqualOperator || Type == wcTokenType::PlusAssignOperator ||
-		Type == wcTokenType::PlusOperator)
+		Type == wcTokenType::PlusOperator || Type == wcTokenType::TernaryOperator)
 		return true;
 	return false;
 }

@@ -44,7 +44,7 @@ namespace weec
 			//Temporary, hackish
 			Identifier,
 
-			Expression, Expression_Equality, Expression_Assignment, Expression_LogicOr, Expression_LogicAnd, Expression_Comparison, Expression_Term,
+			Expression, Expression_Equality, Expression_Assignment, Expression_Ternary, Expression_LogicOr, Expression_LogicAnd, Expression_Comparison, Expression_Term,
 			Expression_Factor, Expression_Call, Expression_Unary, Expression_Primary, Expression_Operator,
 
 			Type, Variable, Array, Function
@@ -714,7 +714,7 @@ namespace weec
 
 		enum class wcParseExpressionType
 		{
-			Literal, Variable, Unary, Call, Binary, Logical, Grouping, Assignment
+			Literal, Variable, Unary, Call, Binary, Logical, Grouping, Ternary, Assignment
 		};
 
 		class wcParseExpression
@@ -731,6 +731,7 @@ namespace weec
 			wcParseExpression();
 			wcParseExpression(wcParserError _Error);
 			wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken Operator, wcParseExpression RightHand);		//binary / logical / assignment
+			wcParseExpression(wcParseNodeType HeadType, wcParseExpression LeftHand, lex::wcToken Operator, wcParseExpression Middle, wcParseExpression RightHand);		//ternary
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken Operator, wcParseExpression RightHand);									//unary
 			wcParseExpression(wcParseNodeType HeadType, wcFullIdentifier FullIdent, wcParseExpression Callee, std::vector<wcParseExpression> Arguments);					//call
 			wcParseExpression(wcParseNodeType HeadType, lex::wcToken OperatorOrLiteral);														//literal/operator
@@ -800,10 +801,11 @@ namespace weec
 			wcParserError Error;
 
 			wcParseExpression ParseExpression_Expression(), ParseExpression_SubExpression(),
-				ParseExpression_Equality(), ParseExpression_Assignment(), ParseExpression_LogicOr(),
-				ParseExpression_LogicAnd(), ParseExpression_Comparison(),
-				ParseExpression_Term(), ParseExpression_Factor(),
-				ParseExpression_Unary(), ParseExpression_Call(), ParseExpression_CallArguments(wcParseExpression Callee), ParseExpression_Primary();
+				ParseExpression_Equality(), ParseExpression_Assignment(), ParseExpression_Ternary(),
+				ParseExpression_LogicOr(),	ParseExpression_LogicAnd(), ParseExpression_Comparison(),
+				ParseExpression_Term(), ParseExpression_Factor(), ParseExpression_Unary(), 
+				ParseExpression_Call(), ParseExpression_CallArguments(wcParseExpression Callee), ParseExpression_Primary();
+
 		public:
 			wcExpressionParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
 				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}

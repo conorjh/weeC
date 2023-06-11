@@ -42,6 +42,7 @@ int main(int argc, char* argv[])
 {
 	weec::test::lex::Test_AllLex();
 	weec::test::lex::Test_AllParse();
+	cin;
 }
 
 int weec::test::lex::Test_AllLex()

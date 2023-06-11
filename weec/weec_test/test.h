@@ -93,7 +93,7 @@ namespace weec
 				"int num = 20; // variable to store how many elements to be displayed in the series\n"
 				"int i = 0;\n"
 				"int ret = 0;\n"
-				"while (i < num)\n"
+				"while (i <= num)\n"
 				"{\n"
 				"	ret = fibonacci(i);\n"
 				"	print i = i + 1;\n"
@@ -151,7 +151,7 @@ namespace weec
 			std::string list_expression48 = "+(-2) * 10;";
 			std::string list_expression49 = "!!!2;";
 			std::string list_expression50 = "!!!!(123);";
-			std::string list_expression51 = "10 < 10;";
+			std::string list_expression51 = "return 10 < 10 ? 123 : 456;";
 
 			std::string list_stringtokenizer4 = "Hello\nWorld\nLonger sentence\nFinishing with newline\n";
 		}

@@ -151,7 +151,7 @@ namespace weec
 			std::string list_expression48 = "+(-2) * 10;";
 			std::string list_expression49 = "!!!2;";
 			std::string list_expression50 = "!!!!(123);";
-			std::string list_expression51 = "return 10 < 10 ? 123 : 456;";
+			std::string list_expression51 = "return 10 < 10 \n\t? 123 < 123 \n\t\t? 123 \n\t\t: 124 \n\t: 456 < 456 \n\t\t? 456 \n\t\t: 457;";
 
 			std::string list_stringtokenizer4 = "Hello\nWorld\nLonger sentence\nFinishing with newline\n";
 		}

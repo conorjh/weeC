@@ -214,6 +214,7 @@ any weec::interpreter::wcExpressionInterpreter::ExecSubExpression()
 
 std::any weec::interpreter::wcExpressionInterpreter::ExecTernary()
 {
+	//inspired by https://github.com/HanKruiger/jlox
 	auto OpType = PC->Token.Type;
 	PC++;
 
@@ -234,8 +235,7 @@ std::any weec::interpreter::wcExpressionInterpreter::ExecTernary()
 		skipIterator++;
 		PC = skipIterator;
 
-		return Middle;
-		
+		return Middle;		
 	}
 	else
 	{

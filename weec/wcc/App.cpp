@@ -123,7 +123,7 @@ bool App::Application::Init()
 void REPL_Loop()
 {
 	cout << ">";
-	std::string Buffer, FullSource;
+	string Buffer, FullSource;
 
 	getline(cin, Buffer);
 	while (Buffer != "#run")
@@ -174,7 +174,6 @@ void App::Application::Splash()
 {
 	cout << "weeC Compiler" << endl
 		<< Version << endl
-		//<< "by Conor Haddock" << endl
 		<< endl;
 
 }

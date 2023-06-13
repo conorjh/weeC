@@ -79,7 +79,7 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 		//register this function and its parameters
 		auto FunctionSignature = wcParseFunctionSignature(DeclarationType, IdentToken, ParameterList, TrueFunctionName);
 		AddSymbol(Output.SymbolTable, FunctionSignature);
-		
+
 		//optional semi colon
 		if (ExpectToken(SemiColon))
 		{
@@ -87,7 +87,7 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 			return Output.AddAsChild(TypeNode).AddAsChild(IdentNode)
 				.AddAsChild(ParametersNode).AddAsChild(wcSemiColonParser(Tokenizer, Output.SymbolTable, Scopes).Parse());
 		}
-		
+
 		//no semi colon, must be a full declaration with body
 		wcParseOutput BodyNode = wcBlockParser(Tokenizer, Output.SymbolTable, Scopes).Parse(true);
 
@@ -96,10 +96,7 @@ wcParseOutput weec::parse::wcDeclarationParser::Parse()
 
 		return Output.AddAsChild(TypeNode).AddAsChild(IdentNode).AddAsChild(ParametersNode).AddAsChild(BodyNode);
 	}
-	else if (!ExpectToken(AssignOperator))
-		return Output;
-	if (!NextToken())
-		return wcParseOutput(wcParserError(UnexpectedEOF, GetToken()));
+	else ExpectAndNext(AssignOperator);
 
 	//add to symbol table, must be a variable
 	AddSymbol(Output.SymbolTable, wcParseSymbol(wcParseSymbolType::Variable, DeclarationIdent, IdentToken));
@@ -474,13 +471,11 @@ wcParseOutput weec::parse::wcStructParser::Parse()
 	wcParseOutput Output(wcParseNode(wcParseNodeType::StructDeclaration), true);
 
 	ExpectAndNext(StructKeyword);
+	ExpectAndNext(OpenBrace);
 
-	if (!ExpectToken(StructKeyword))
-		return wcParseOutput(wcParserError(UnexpectedToken, GetToken()));		//error	
-	if (!NextToken())
-		return wcParseOutput(wcParserError(UnexpectedEOF, GetToken()));		//error
+	Output.AddAsChild(wcBlockParser(Tokenizer, SymbolTable, Scopes).Parse(true));
 
-
+	ExpectAndNext(CloseBrace);
 
 	return wcParseOutput();
 }

@@ -3,7 +3,6 @@
 
 #include "highlighter.h"
 
-//! [0]
 Highlighter::Highlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
 {
@@ -23,81 +22,70 @@ Highlighter::Highlighter(QTextDocument *parent)
         QStringLiteral("\\bunion\\b"), QStringLiteral("\\bunsigned\\b"), QStringLiteral("\\bvirtual\\b"),
         QStringLiteral("\\bvoid\\b"), QStringLiteral("\\bvolatile\\b"), QStringLiteral("\\bbool\\b")
     };
-    for (const QString &pattern : keywordPatterns) {
+    for (const QString &pattern : keywordPatterns) 
+    {
         rule.pattern = QRegularExpression(pattern);
         rule.format = keywordFormat;
         highlightingRules.append(rule);
-//! [0] //! [1]
     }
-//! [1]
 
-//! [2]
     classFormat.setFontWeight(QFont::Bold);
     classFormat.setForeground(Qt::darkMagenta);
     rule.pattern = QRegularExpression(QStringLiteral("\\bQ[A-Za-z]+\\b"));
     rule.format = classFormat;
     highlightingRules.append(rule);
-//! [2]
 
-//! [3]
     singleLineCommentFormat.setForeground(Qt::red);
     rule.pattern = QRegularExpression(QStringLiteral("//[^\n]*"));
     rule.format = singleLineCommentFormat;
     highlightingRules.append(rule);
 
     multiLineCommentFormat.setForeground(Qt::red);
-//! [3]
 
-//! [4]
     quotationFormat.setForeground(Qt::darkGreen);
     rule.pattern = QRegularExpression(QStringLiteral("\".*\""));
     rule.format = quotationFormat;
     highlightingRules.append(rule);
-//! [4]
 
-//! [5]
     functionFormat.setFontItalic(true);
     functionFormat.setForeground(Qt::blue);
     rule.pattern = QRegularExpression(QStringLiteral("\\b[A-Za-z0-9_]+(?=\\()"));
     rule.format = functionFormat;
     highlightingRules.append(rule);
-//! [5]
 
-//! [6]
     commentStartExpression = QRegularExpression(QStringLiteral("/\\*"));
     commentEndExpression = QRegularExpression(QStringLiteral("\\*/"));
 }
-//! [6]
 
-//! [7]
 void Highlighter::highlightBlock(const QString &text)
 {
-    for (const HighlightingRule &rule : std::as_const(highlightingRules)) {
+    for (const HighlightingRule &rule : std::as_const(highlightingRules)) 
+    {
         QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
-        while (matchIterator.hasNext()) {
+        while (matchIterator.hasNext())
+        {
             QRegularExpressionMatch match = matchIterator.next();
             setFormat(match.capturedStart(), match.capturedLength(), rule.format);
         }
     }
-//! [7] //! [8]
-    setCurrentBlockState(0);
-//! [8]
 
-//! [9]
+    setCurrentBlockState(0);
+
     int startIndex = 0;
     if (previousBlockState() != 1)
         startIndex = text.indexOf(commentStartExpression);
 
-//! [9] //! [10]
-    while (startIndex >= 0) {
-//! [10] //! [11]
+    while (startIndex >= 0) 
+    {
         QRegularExpressionMatch match = commentEndExpression.match(text, startIndex);
         int endIndex = match.capturedStart();
         int commentLength = 0;
-        if (endIndex == -1) {
+        if (endIndex == -1) 
+        {
             setCurrentBlockState(1);
             commentLength = text.length() - startIndex;
-        } else {
+        } else 
+        {
             commentLength = endIndex - startIndex
                             + match.capturedLength();
         }
@@ -105,4 +93,4 @@ void Highlighter::highlightBlock(const QString &text)
         startIndex = text.indexOf(commentStartExpression, startIndex + commentLength);
     }
 }
-//! [11]
+

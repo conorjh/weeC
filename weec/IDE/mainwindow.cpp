@@ -1,10 +1,10 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+#include <chrono>
 #include <QtWidgets>
 #include "app.h"
 #include "mainwindow.h"
-#include "weec.h"
 #include <QActionGroup>
 #include <QLayout>
 #include <QMenu>
@@ -30,9 +30,10 @@ Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
 QT_FORWARD_DECLARE_CLASS(QAction)
 
 //! [0]
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
+    Interpreter = new QInterpreter(Parsed, this);
     setupFileMenu();
     setupBuildMenu();
     setupProjectMenu();
@@ -73,27 +74,61 @@ void MainWindow::openFile(const QString &path)
 
 void MainWindow::build()
 {
+    using namespace std;
     using namespace weec;
     using namespace weec::lex;
     using namespace weec::parse;
 
+    Parsed = wcParseOutput();
+    buildTextEdit->clear();
+    Filename == ""
+        ? printToBuild("Starting build...")
+        : printToBuild("Starting build... (" + Filename + ")");
+
     //get text editor contents
-    std::string ScriptBuffer = editor->toPlainText().toStdString();
+    string ScriptBuffer = editor->toPlainText().toStdString();
 
     //parse
+    printToBuild("Parsing...");
+
+    auto parseStart = chrono::system_clock::now();
     wcTokenizer Tokenizer(ScriptBuffer);
-    auto Parsed = wcParser(Tokenizer).Parse();
+    Parsed = wcParser(Tokenizer).Parse();
+    auto timeTaken = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - parseStart).count();
+
     if (Parsed.Error.Code != wcParserErrorCode::None)
     {
-        //printToOutput("Error code: " + (int)Parsed.Error.Code + "  " + to_string(Parsed.Error.Code) + endl);
+        printToBuild("Error code: " + string(to_string(int(Parsed.Error.Code))) + "  " + to_string(Parsed.Error.Code));
+        printToBuild(Parsed.Error.Token.to_string() + " (" + to_string(Parsed.Error.Token.StringToken.Line) + "," + to_string(Parsed.Error.Token.StringToken.Column) + ")");
         return;
     }
+    printTree(Parsed.AST);
 
     //write to file
+    printToBuild("");
+    printToBuild("Build complete");
+    printToBuild("Time taken: " + to_string(timeTaken) + string("ms") + "\n");
 }
+
 
 void MainWindow::buildAndRun()
 {
+    build();
+
+    if (Parsed.IsErrored())
+        return;
+
+    using namespace std;
+    using namespace weec;
+    using namespace weec::interpreter;
+
+    auto execStart = chrono::system_clock::now();
+    delete Interpreter;
+    Interpreter = new QInterpreter(Parsed, this);
+    auto Result = Interpreter->Exec();
+    auto timeTaken = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - execStart).count();
+
+    printToBuild("Execution time: " + to_string(timeTaken) + string("ms") + "\n");
 }
 
 void MainWindow::projectSettings()
@@ -114,7 +149,7 @@ void MainWindow::setupEditor()
 
     highlighter = new Highlighter(editor->document());
 
-    QFile file("mainwindow.h");
+    QFile file("../scripts/fibonacci.wc");
     if (file.open(QFile::ReadOnly | QFile::Text))
         editor->setPlainText(file.readAll());
 }
@@ -189,8 +224,16 @@ void MainWindow::setupDockWidgets()
     outputDockWidget = new QDockWidget();
     outputDockWidget->setObjectName("Output");
     outputDockWidget->setWindowTitle("Output");
-    outputDockWidget->setWidget(new QTextEdit);
+    outputDockWidget->setWidget(outputTextEdit = new QTextEdit());
     addDockWidget(Qt::BottomDockWidgetArea, outputDockWidget);
+
+    buildDockWidget = new QDockWidget();
+    buildDockWidget->setObjectName("Build");
+    buildDockWidget->setWindowTitle("Build");
+    buildDockWidget->setWidget(buildTextEdit = new QTextEdit());
+    addDockWidget(Qt::BottomDockWidgetArea, buildDockWidget);
+
+    tabifyDockWidget(outputDockWidget, buildDockWidget);
 
     projectDockWidget = new QDockWidget();
     projectDockWidget->setObjectName("Project");
@@ -226,7 +269,16 @@ void MainWindow::toggleObjectBrowserDockWidget()
     objectBrowserDockWidget->addAction(toggleAction);
 }
 
-void MainWindow::printToOutput()
+void MainWindow::printToOutput(std::string Input)
 {
+    QTextCursor curs(outputTextEdit->textCursor());
+    curs.movePosition(outputTextEdit->textCursor().End);
+    curs.insertText(std::string(Input + "\n").c_str());
+}
 
+void MainWindow::printToBuild(std::string Input)
+{
+    QTextCursor curs(buildTextEdit->textCursor());
+    curs.movePosition(buildTextEdit->textCursor().End);
+    curs.insertText(std::string(Input + "\n").c_str());
 }

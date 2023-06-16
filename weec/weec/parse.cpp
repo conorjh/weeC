@@ -21,7 +21,7 @@ wcParseOutput weec::parse::wcParser::Parse()
 	while (!Tokenizer.IsFinished() && !IsErrored(Output))
 		Output.AddAsChild(wcStatementParser(wcParseState(State.Tokenizer, Output.SymbolTable, State.Scopes)).Parse(true));
 
-	Output.SymbolTable = SymbolTable;
+	//Output.SymbolTable = SymbolTable;
 
 	return Output;
 }
@@ -422,8 +422,7 @@ wcParseOutput weec::parse::wcWhileParser::Parse()
 	wcParseOutput Output(wcParseNode(wcParseNodeType::WhileStatement), true);
 
 	//while keyword
-	if (!ExpectToken(WhileKeyword))
-		return wcParseOutput(wcParserError(UnexpectedToken, GetToken()));		//error - expected built in or user type
+	ExpectAndExpectNext(WhileKeyword);
 
 	// ( 
 	ExpectAndExpectNext(OpenParenthesis);
@@ -1226,20 +1225,26 @@ std::string weec::parse::to_string(wcParserErrorCode Code)
 {
 	switch (Code)
 	{
-	case None:									return "Head";
-	case FuckKnows:								return "FuckKnows";
-	case UnexpectedToken:						return "UnexpectedToken";
-	case If_MissingClosingParenthesis:			return "If_MissingClosingParenthesis";
-	case While_MissingClosingParenthesis:		return "While_MissingClosingParenthesis";
-	case MissingClosingBrace:					return "MissingClosingBrace";
-	case InvalidType:							return "InvalidType";
-	case IdentRedeclaration:					return "IdentRedeclaration";
-	case UndeclaredIdent:						return "UndeclaredIdent";
-	case UnexpectedEOF:							return "UnexpectedEOF";
-	case Expression_Empty:						return "Expression_Empty";
-	case Expression_UnexpectedToken:			return "Expression_UnexpectedToken";
-	case Expression_MissingClosingParenthesis:	return "Expression_MissingClosingParenthesis";
-	case Expression_UnexpectedEOF:				return "Expression_UnexpectedEOF";
+	case None:											return "Head";
+	case FuckKnows:										return "FuckKnows";
+	case UnexpectedToken:								return "UnexpectedToken";
+	case InvalidType:									return "InvalidType";
+	case If_MissingClosingParenthesis:					return "If_MissingClosingParenthesis";
+	case MissingClosingBrace:							return "MissingClosingBrace";
+	case While_MissingClosingParenthesis:				return "While_MissingClosingParenthesis";
+	case IdentRedeclaration:							return "IdentRedeclaration";
+	case UndeclaredIdent:								return "UndeclaredIdent";
+	case CouldntResolveIdentifier:						return "CouldntResolveIdentifier";
+	case CouldntResolveType:							return "CouldntResolveType";
+	case DeclarationsProhibited:						return "DeclarationsProhibited";
+	case UnexpectedEOF:									return "UnexpectedEOF";
+	case Expression_Empty:								return "Expression_Empty";
+	case Expression_UnexpectedToken:					return "Expression_UnexpectedToken";
+	case Expression_MissingClosingParenthesis:			return "Expression_MissingClosingParenthesis";
+	case Expression_UnexpectedEOF:						return "Expression_UnexpectedEOF";
+	case Expression_NotAnLValue:						return "Expression_NotAnLValue";
+	case Expression_FunctionCallMissingOpenParenthesis:	return "Expression_FunctionCallMissingOpenParenthesis";
+	case FunctionCall_MaxArgumentsExceeded:				return "FunctionCall_MaxArgumentsExceeded";
 	default:
 		return "";
 	}

@@ -1,0 +1,12 @@
+struct Position
+{
+	int x;
+	int y;
+};
+
+Position pos;
+pos.x = 32;
+pos.y = 64;
+
+print pos.x;
+print pos.y;

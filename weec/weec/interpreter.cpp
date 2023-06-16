@@ -202,7 +202,6 @@ any weec::interpreter::wcExpressionInterpreter::DoOp(lex::wcTokenType Op, any a)
 
 weec::interpreter::wcExpressionInterpreter::wcExpressionInterpreter(wcInterpreterSymbolTable& _SymTab, wcInterpreterFunctionTable& _FuncTab, parse::wcParseOutput _Input, tree<parse::wcParseNode>::iterator& _PC, any& _EAX)
 	: Input(_Input), SymTab(_SymTab), FuncTab(_FuncTab), PC(_PC), EAX(_EAX)
-
 {
 }
 
@@ -445,24 +444,28 @@ any weec::interpreter::wcExpressionInterpreter::ExecEquality()
 void weec::interpreter::wcInterpreter::Print(std::any Value)
 {	
 	auto FindA = SymbolTable.ImplTypes.GetByInternal(Value.type().name());
-	if (FindA.Name == "")
+	if (FindA.Name == "" || FindA.Name == "void")
 	{
-		cout << ">" << "";
+		PrintFunc(">");
 		return;
 	}
 
 	if (FindA.Name == "int")
-		cout << ">" << any_cast<int>(Value) << endl;
+		PrintFunc(">" + std::to_string(any_cast<int>(Value)) + "\n");
 	else if (FindA.Name == "unsigned int")
-		cout << ">" << any_cast<unsigned int>(Value) << endl;
+		PrintFunc(">" + std::to_string(any_cast<unsigned int>(Value)) + "\n");
 	else if (FindA.Name == "float")
-		cout << ">" << any_cast<float>(Value) << endl;
+		PrintFunc(">" + std::to_string(any_cast<float>(Value)) + "\n");
 	else if (FindA.Name == "double")
-		cout << ">" << any_cast<double>(Value) << endl;
+		PrintFunc(">" + std::to_string(any_cast<double>(Value)) + "\n");
 	else if (FindA.Name == "bool")
-		cout << ">" << any_cast<bool>(Value) << endl;
+		PrintFunc(">" + std::to_string(any_cast<bool>(Value)) + "\n");
 	else if (FindA.Name == "string")
-		cout << ">" << any_cast<string>(Value) << endl;
+		PrintFunc(">" + any_cast<string>(Value) + "\n");
+}
+void weec::interpreter::DefaultPrintFunc(std::string In)
+{
+	std::cout << In << std::endl;
 }
 
 weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& _Input)
@@ -470,6 +473,19 @@ weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& _Input)
 {
 	Input = _Input;
 	PC = Input.AST.begin();
+	PrintFunc = DefaultPrintFunc;
+	Halt = false;
+
+	//wcInterpreterFunctionSignature GlobalFuncSig(Input, this, vector<wcInterpreterArgument>(), "$g::int", PC);
+
+}
+weec::interpreter::wcInterpreter::wcInterpreter(void (*p_func)(std::string), wcParseOutput& _Input)
+	: ExpressionInterp(SymbolTable, FunctionTable, _Input, PC, EAX), Input(_Input), FunctionTable(_Input)
+{
+	Input = _Input;
+	PC = Input.AST.begin();
+	PrintFunc = p_func;
+	Halt = false;
 
 	//wcInterpreterFunctionSignature GlobalFuncSig(Input, this, vector<wcInterpreterArgument>(), "$g::int", PC);
 
@@ -485,9 +501,6 @@ void weec::interpreter::wcInterpreter::Reset()
 
 any weec::interpreter::wcInterpreter::Exec(tree<wcParseNode>::iterator NewPC, vector<wcInterpreterIdentPlusValue> _Arguments)
 {
-
-	//Arguments.push(_Arguments);
-
 	PC = NewPC;
 	return Exec();
 }
@@ -499,6 +512,7 @@ any weec::interpreter::wcInterpreter::Exec()
 
 	while (PC != Input.AST.end() && PC != nullptr && !Halt)
 	{
+		auto t = PC->Type;
 		switch (PC->Type)
 		{
 		case Statement:
@@ -521,7 +535,6 @@ any weec::interpreter::wcInterpreter::Exec()
 			Halt = true;
 			break;
 		}
-
 	}
 
 	return Return;

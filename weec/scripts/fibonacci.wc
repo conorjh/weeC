@@ -1,0 +1,21 @@
+int fibonacci(int num)
+{
+        if (num == 0)
+                return 0;
+
+        else if (num == 1)
+                return 1;
+
+        else
+                return fibonacci(num - 1) + fibonacci(num - 2);
+}
+
+int num = 20; // variable to store how many elements to be displayed in the series
+int i = 0;
+int ret = 0;
+while (i <= num)
+{
+        ret = fibonacci(i);
+        print i = i + 1;
+}
+return ret;

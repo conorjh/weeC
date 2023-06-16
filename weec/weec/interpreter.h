@@ -7,12 +7,13 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "../include/tree.hh"
-#include "lex.h"
-#include "parse.h"
+#include <iostream>
 #include <typeindex>
 #include <functional>
 #include <stack>
+#include "../include/tree.hh"
+#include "lex.h"
+#include "parse.h"
 
 namespace weec
 {
@@ -197,27 +198,31 @@ namespace weec
 			parse::wcParseNode Node;
 		};
 
+		void DefaultPrintFunc(std::string In);
 		class wcInterpreter
 		{
+		protected:
 			parse::wcParseOutput& Input;
 			tree<parse::wcParseNode>::iterator PC;
-			wcInterpreterSymbolTable SymbolTable;
-			wcInterpreterFunctionTable FunctionTable;
 
-			void Print(std::any);
+			virtual void Print(std::any);
+			void (*PrintFunc)(std::string);
 
 		public:
 			wcExpressionInterpreter ExpressionInterp;
 			wcInterpreter(parse::wcParseOutput& Input);
+			wcInterpreter(void (*)(std::string), parse::wcParseOutput& Input);
 
 			void Reset();
-			std::any Exec(), 
+			virtual std::any Exec(), 
 				Exec(tree<parse::wcParseNode>::iterator NewPC), 
 				Exec(tree<parse::wcParseNode>::iterator NewPC, std::vector<wcInterpreterIdentPlusValue> Arguments),
 				
 				ExecBlock(tree<parse::wcParseNode>::iterator NewPC = nullptr), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecPrint(), ExecDeclaration();
 
 			wcInterpreterError Error;
+			wcInterpreterSymbolTable SymbolTable;
+			wcInterpreterFunctionTable FunctionTable;
 			bool Halt;
 			std::any EAX, Return;
 		};

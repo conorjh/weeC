@@ -11,8 +11,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "weec_test", "weec_test\weec
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wcc", "wcc\wcc.vcxproj", "{4E2CC6C1-3B3B-49D7-99BE-9A75D60F4379}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4A495829-3E46-474F-BFA8-B5F46FAA759B} = {4A495829-3E46-474F-BFA8-B5F46FAA759B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IDE", "IDE\IDE.vcxproj", "{BD7CE1A2-0CB1-43DB-85F9-E84EAB06EEC6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4A495829-3E46-474F-BFA8-B5F46FAA759B} = {4A495829-3E46-474F-BFA8-B5F46FAA759B}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "tree.hh"
+#include "../include/tree.hh"
 #include "lex.h"
 #include "parse.h"
 #include <typeindex>

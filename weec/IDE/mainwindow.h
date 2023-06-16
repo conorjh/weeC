@@ -36,7 +36,9 @@ public slots:
     void build();
     void buildAndRun();
     void projectSettings();
-
+    void toggleProjectDockWidget();  
+    void toggleOutputDockWidget();
+    void toggleObjectBrowserDockWidget();
 private:
     void setupEditor();
     void setupFileMenu();
@@ -47,10 +49,13 @@ private:
     
     void setupDockWidgets();
 
+    void printToOutput();
+
     QList<ToolBar*> toolBars;
     QDockWidget* projectDockWidget, *outputDockWidget, *objectBrowserDockWidget;
     QMenu* dockWidgetMenu;
     QList<QDockWidget*> extraDockWidgets;
+    QMenu* viewMenu;
 
     QTextEdit *editor;
     Highlighter *highlighter;

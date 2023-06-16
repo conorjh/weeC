@@ -144,7 +144,7 @@ int weec::test::lex::Test_wcIdentalyzer1()
 	if (wcIdentalyzer().IsFunction("shouldFail()::a"))					return 10;
 	if (wcIdentalyzer().IsFunction("shouldFail($g::int)::a"))			return 10;
 	if (wcIdentalyzer().IsFunction("$g::ns::shouldFail()::a"))			return 10;
-	
+
 	if (!wcIdentalyzer().IsQualified("$g::ns::ident"))				return 9;
 	if (!wcIdentalyzer().IsQualified("$g::ns::ident()"))			return 9;
 	if (!wcIdentalyzer().IsQualified("$g::ns::ident($g::int)"))		return 9;
@@ -152,6 +152,17 @@ int weec::test::lex::Test_wcIdentalyzer1()
 	if (!wcIdentalyzer().IsQualified("ident($g::int)::a"))			return 10;
 	if (wcIdentalyzer().IsQualified("shouldFail"))					return 10;
 	if (wcIdentalyzer().IsQualified("shouldFail($g::int)"))			return 10;
+
+	if (wcIdentalyzer().IsMember("$g::ns::ident"))				return 9;
+	if (wcIdentalyzer().IsMember("$g::ns::ident()"))			return 9;
+	if (wcIdentalyzer().IsMember("$g::ns::ident($g::int)"))		return 9;
+	if (!wcIdentalyzer().IsMember("$g::ns::ident.member"))		return 9;
+	if (wcIdentalyzer().IsMember("ident()::a"))					return 10;
+	if (!wcIdentalyzer().IsMember("ident()::a.a"))				return 10;
+	if (wcIdentalyzer().IsMember("ident($g::int)::a"))			return 10;
+	if (!wcIdentalyzer().IsMember("ident($g::int).a"))			return 10;
+	if (wcIdentalyzer().IsMember("shouldFail"))					return 10;
+	if (wcIdentalyzer().IsMember("shouldFail($g::int)"))			return 10;
 
 	if (!wcIdentalyzer().IsQualifiedWithGlobal("$g::ns::ident"))			return 11;
 	if (wcIdentalyzer().IsQualifiedWithGlobal("ns::shouldFail"))			return 12;
@@ -704,8 +715,8 @@ int weec::test::lex::Test_wcBlockParser1()
 {
 	std::string Source1 = "{}", Source2 = "{\n{\n}\n}";
 
-	auto Output1 = wcBlockParser(*new wcTokenizer(Source1), *new wcParseSymbolTable(), *new wcParseScopes()).Parse(true);
-	auto Output2 = wcBlockParser(*new wcTokenizer(Source2), *new wcParseSymbolTable(), *new wcParseScopes()).Parse(true);
+	auto Output1 = wcBlockParser(*new wcParseState(*new wcTokenizer(Source1), *new wcParseSymbolTable(), *new wcParseScopes())).Parse(true);
+	auto Output2 = wcBlockParser(*new wcParseState(*new wcTokenizer(Source1), *new wcParseSymbolTable(), *new wcParseScopes())).Parse(true);
 
 	return 0;
 }
@@ -713,28 +724,28 @@ int weec::test::lex::Test_wcBlockParser1()
 int weec::test::lex::Test_wcDeclarationParser1()
 {
 	string Source1 = "int a;";
-	auto Output1 = wcDeclarationParser(*new wcTokenizer(Source1, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	auto Output1 = wcDeclarationParser(*new wcParseState(*new wcTokenizer(Source1, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();
 	if (Output1.Error.Code != wcParserErrorCode::None)				return 1;
 	if (!Output1.SymbolTable.Exists(wcFullIdentifier("a")))			return 2;
 
 	string Source2 = "int jiminy = 0;";
-	auto Output2 = wcDeclarationParser(*new wcTokenizer(Source2, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	auto Output2 = wcDeclarationParser(*new wcParseState(*new wcTokenizer(Source2, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();
 	if (Output2.Error.Code != wcParserErrorCode::None)				return 3;
 	if (!Output2.SymbolTable.Exists(wcFullIdentifier("jiminy")))	return 4;
 
 	string Source3 = "int methodName(){ return 0; }";
-	auto Output3 = wcDeclarationParser(*new wcTokenizer(Source3, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	auto Output3 = wcDeclarationParser(*new wcParseState(*new wcTokenizer(Source3, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();
 	if (Output3.Error.Code != wcParserErrorCode::None)									return 5;
 	if (!Output3.SymbolTable.Exists(wcFullIdentifier("methodName()")))					return 6;
 	if (Output3.SymbolTable.Get(wcFullIdentifier("methodName()")).DataType != "int")	return 7;
 
 	string Source4 = "int methodNameWithArgs(int a, int b){ return 0; }";
-	auto Output4 = wcDeclarationParser(*new wcTokenizer(Source4, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	auto Output4 = wcDeclarationParser(*new wcParseState(*new wcTokenizer(Source4, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();
 	if (Output4.Error.Code != wcParserErrorCode::None)											return 5;
 	if (!Output4.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))	return 6;
 
 	string Source5 = "int methodNameWithArgs(int a, int b){ return a + b; }";
-	auto Output5 = wcDeclarationParser(*new wcTokenizer(Source5, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	auto Output5 = wcDeclarationParser(*new wcParseState(*new wcTokenizer(Source5, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();
 	if (Output5.Error.Code != wcParserErrorCode::None)												return 5;
 	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)")))		return 6;
 	if (!Output5.SymbolTable.Exists(wcFullIdentifier("methodNameWithArgs($g::int,$g::int)::a")))	return 7;
@@ -743,8 +754,8 @@ int weec::test::lex::Test_wcDeclarationParser1()
 
 	string Source6 = "int aaa(int a, int b){ return a + b; } \n int bbb(int a, int b){ return a + b; }";
 	auto Tok6 = *new wcTokenizer(Source6, true); auto SymTab6 = *new wcParseSymbolTable(); 
-	auto Output6 = wcDeclarationParser(Tok6, SymTab6, *new wcParseScopes()).Parse();
-    Output6 += wcDeclarationParser(Tok6, SymTab6, *new wcParseScopes()).Parse();
+	auto Output6 = wcDeclarationParser(*new wcParseState(Tok6, SymTab6, *new wcParseScopes())).Parse();
+    Output6 += wcDeclarationParser(*new wcParseState(Tok6, SymTab6, *new wcParseScopes())).Parse();
 	if (Output6.Error.Code != wcParserErrorCode::None)								return 5;
     if (!Output6.SymbolTable.Exists(wcFullIdentifier("aaa($g::int,$g::int)")))	return 6;
 	if (!Output6.SymbolTable.Exists(wcFullIdentifier("aaa($g::int,$g::int)::a")))	return 7;
@@ -760,15 +771,15 @@ int weec::test::lex::Test_wcDeclarationParser1()
 int weec::test::lex::Test_wcIfParser1()
 {
 	string IfStatement1 = "if(true)	true;";
-	auto Output1 = wcIfParser(*new wcTokenizer(IfStatement1, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	auto Output1 = wcIfParser(*new wcParseState(*new wcTokenizer(IfStatement1, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();
 	if (Output1.Error.Code != wcParserErrorCode::None)	return 1;
 
 	string IfStatement2 = "if(true)	true; else false;";
-	auto Output2 = wcIfParser(*new wcTokenizer(IfStatement2, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	auto Output2 = wcIfParser(*new wcParseState(*new wcTokenizer(IfStatement2, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();
 	if (Output2.Error.Code != wcParserErrorCode::None)	return 2;
 
 	string IfStatement3 = "if(true)\n{\n true;\n }\n else \n{\n false;\n }";
-	auto Output3 = wcIfParser(*new wcTokenizer(IfStatement3, true), *new wcParseSymbolTable(), *new wcParseScopes()).Parse();
+	auto Output3 = wcIfParser(*new wcParseState(*new wcTokenizer(IfStatement3, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();
 	if (Output3.Error.Code != wcParserErrorCode::None)	return 3;
 
 
@@ -1522,6 +1533,11 @@ int weec::test::lex::Test_wcParser_2()
 int weec::test::lex::Test_wcParser_1()
 {
 	return Test_ParserTemplate(listing::list_parser1);
+}
+
+int weec::test::lex::Test_wcParser_33()
+{
+	return Test_ParserTemplate(listing::list_parser33);
 }
 
 int weec::test::lex::Test_wcParser_32()

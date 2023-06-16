@@ -17,7 +17,7 @@
 		case wcTokenType::NamespaceKeyword: case wcTokenType::FunctionKeyword: case wcTokenType::IfKeyword: case wcTokenType::ElseKeyword: case wcTokenType::ElseIfKeyword:\
 		case wcTokenType::WhileKeyword: case wcTokenType::BreakKeyword: case wcTokenType::ContinueKeyword: case wcTokenType::ReturnKeyword: case wcTokenType::ConstKeyword:  case wcTokenType::StructKeyword: 
 #define WC_SWITCHCASE_TOKENS_LITERAL case wcTokenType::IntLiteral: case wcTokenType::StringLiteral: case wcTokenType::FloatLiteral: case wcTokenType::CharLiteral: case wcTokenType::TrueKeyword: case wcTokenType::FalseKeyword: 
-#define WC_SWITCHCASE_TOKENS_BUILTIN_TYPES case wcTokenType::IntKeyword: case wcTokenType::StringKeyword: case wcTokenType::FloatKeyword: case wcTokenType::CharKeyword: case wcTokenType::UIntKeyword: 
+#define WC_SWITCHCASE_TOKENS_BUILTIN_TYPES case wcTokenType::IntKeyword: case wcTokenType::StringKeyword: case wcTokenType::FloatKeyword: case wcTokenType::CharKeyword: case wcTokenType::UIntKeyword: case wcTokenType::VoidKeyword: 
 
 namespace weec
 {
@@ -56,7 +56,7 @@ namespace weec
 
 			//reserved words
 			TrueKeyword, FalseKeyword,
-			StringKeyword, DoubleKeyword, IntKeyword, UIntKeyword, FloatKeyword, BoolKeyword, CharKeyword, ObjectKeyword, VarKeyword,
+			StringKeyword, DoubleKeyword, IntKeyword, UIntKeyword, FloatKeyword, BoolKeyword, CharKeyword, VoidKeyword, ObjectKeyword, VarKeyword,
 			NamespaceKeyword, FunctionKeyword, IfKeyword, ElseKeyword, 
 			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, ConstKeyword, PrintKeyword, StructKeyword,
 
@@ -91,7 +91,7 @@ namespace weec
 			const std::vector<std::string> identifiers;
 		};
 
-		const unsigned int WC_VAR_DEFINITIONCOUNT = 67;
+		const unsigned int WC_VAR_DEFINITIONCOUNT = 68;
 
 		//definitions used for creating wcToken
 		struct wcTokenDefinitionsBank
@@ -172,7 +172,7 @@ namespace weec
 
 			wcStringToken GetStringToken() const;
 			bool NextStringToken(), NextStringToken(wcStringTokenType),
-				NextStringToken(char), NextStringToken(std::string), IsFinished();
+				NextStringToken(char), NextStringToken(std::string), IsFinished() const;
 
 			bool Lookahead(wcStringToken& output), Lookahead(wcStringToken& output, int lookaheadCount),
 				LookaheadAndMatch(wcStringToken& output, int lookaheadCount, char matchChar),
@@ -223,7 +223,7 @@ namespace weec
 			wcTokenizer& operator=(wcTokenizer&);
 
 			wcToken GetToken() const;
-			bool NextToken(), NextToken(wcTokenType Type), IsErrored(), IsFinished();
+			bool NextToken(), NextToken(wcTokenType Type), IsErrored() const, IsFinished() const;
 		};
 
 		const wcTokenDefinition definitions[WC_VAR_DEFINITIONCOUNT] =
@@ -287,6 +287,7 @@ namespace weec
 			wcTokenDefinition(wcTokenType::StringKeyword, "string"),
 			wcTokenDefinition(wcTokenType::DoubleKeyword, "double"),
 			wcTokenDefinition(wcTokenType::FloatKeyword, "float"),
+			wcTokenDefinition(wcTokenType::VoidKeyword, "void"),
 			wcTokenDefinition(wcTokenType::ConstKeyword, "const"),
 			wcTokenDefinition(wcTokenType::BoolKeyword, "bool"),
 			wcTokenDefinition(wcTokenType::TrueKeyword, "true"),

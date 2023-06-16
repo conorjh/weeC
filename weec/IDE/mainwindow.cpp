@@ -4,7 +4,7 @@
 #include <QtWidgets>
 #include "app.h"
 #include "mainwindow.h"
-
+#include "weec.h"
 #include <QActionGroup>
 #include <QLayout>
 #include <QMenu>
@@ -73,6 +73,23 @@ void MainWindow::openFile(const QString &path)
 
 void MainWindow::build()
 {
+    using namespace weec;
+    using namespace weec::lex;
+    using namespace weec::parse;
+
+    //get text editor contents
+    std::string ScriptBuffer = editor->toPlainText().toStdString();
+
+    //parse
+    wcTokenizer Tokenizer(ScriptBuffer);
+    auto Parsed = wcParser(Tokenizer).Parse();
+    if (Parsed.Error.Code != wcParserErrorCode::None)
+    {
+        //printToOutput("Error code: " + (int)Parsed.Error.Code + "  " + to_string(Parsed.Error.Code) + endl);
+        return;
+    }
+
+    //write to file
 }
 
 void MainWindow::buildAndRun()
@@ -128,23 +145,23 @@ void MainWindow::setupBuildMenu()
 
 void MainWindow::setupViewMenu()
 {
-    QMenu* buildMenu = new QMenu(tr("&View"), this);
-    menuBar()->addMenu(buildMenu);
+    viewMenu = new QMenu(tr("&View"), this);
+    menuBar()->addMenu(viewMenu);
     
-    auto action = buildMenu->addAction(tr("&Project"), this, &MainWindow::build);
+    auto action = viewMenu->addAction(tr("&Project"), this, &MainWindow::toggleProjectDockWidget);
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
-    //connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+    connect(action, &QAction::toggled, this, &MainWindow::toggleProjectDockWidget);
 
-    action = buildMenu->addAction(tr("&Output"), this, &MainWindow::build);
+    action = viewMenu->addAction(tr("&Output"), this, &MainWindow::toggleOutputDockWidget);
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
-   // connect(action, &QAction::toggled, this, &MainWindow::setDockOptions);
+    connect(action, &QAction::toggled, this, &MainWindow::toggleOutputDockWidget);
 
-    action = buildMenu->addAction(tr("Ob&ject Browser"), this, &MainWindow::build);
+    action = viewMenu->addAction(tr("Ob&ject Browser"), this, &MainWindow::toggleObjectBrowserDockWidget);
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
-   // connect(action, &QAction::toggled, this, &MainWindow::);
+    connect(action, &QAction::toggled, this, &MainWindow::toggleObjectBrowserDockWidget);;
 
 }
 
@@ -188,4 +205,28 @@ void MainWindow::setupDockWidgets()
     addDockWidget(Qt::RightDockWidgetArea, objectBrowserDockWidget);
 
     tabifyDockWidget(objectBrowserDockWidget, projectDockWidget);
+}
+
+void MainWindow::toggleProjectDockWidget()
+{
+    auto toggleAction = projectDockWidget->toggleViewAction();
+    projectDockWidget->addAction(toggleAction);
+}
+
+void MainWindow::toggleOutputDockWidget()
+{
+    auto toggleAction = outputDockWidget->toggleViewAction();
+    outputDockWidget->addAction(toggleAction);
+}
+
+void MainWindow::toggleObjectBrowserDockWidget()
+{
+    auto toggleAction = objectBrowserDockWidget->toggleViewAction();
+
+    objectBrowserDockWidget->addAction(toggleAction);
+}
+
+void MainWindow::printToOutput()
+{
+
 }

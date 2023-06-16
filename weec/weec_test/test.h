@@ -14,7 +14,7 @@ namespace weec
 			std::string list_tokenizer2 = "\"Hello World\"";
 			std::string list_tokenizer3 = "'Char literal'";
 			std::string list_tokenizer4 = "const int TestIdent =99 *44";
-			std::string list_tokenizer5 = "string TestIdent = \"Hello World\"";
+			std::string list_tokenizer5 = "string Test_Ident = \"Hello World\"";
 			std::string list_tokenizer6 = "- + += * / + ( ) { } [ ] # \\ / % & ^ ? |";
 			std::string list_tokenizer7 = "int main(int argc, char* argv[])\n{\nreturn 0;\n}";
 			std::string list_tokenizer8 = "// comment  \n /* multi \n  line \n comment */";
@@ -75,7 +75,29 @@ namespace weec
 				"}\n"
 				"\n"
 				"//overloads\n"
-				"return f1(6) + f1(6,6);\n";
+				"return f1(6) + f1(6,6);\n"; 
+			std::string list_parser33 =
+				"struct s1\n"
+				"{\n"
+				"\tint member1;\n"
+				"\n"
+				"\tvoid set(int value)\n"
+				"\t{\n"
+				"\t\tmember1 = value;\n"
+				"\t}\n"
+				"\tint get()\n"
+				"\t{\n"
+				"\t\treturn member1;\n"
+				"\t}\n"
+				"};\n"
+				"\n"
+				"s1 testStruct;\n"
+				"testStruct.member1 = 10;\n"
+				"print testStruct.member1;\n"
+				"testStruct.set(11);\n"
+				"print testStruct.get();\n"
+				"return testStruct.member1;\n";
+
 
 			std::string list_fibonacci =
 				"int fibonacci(int num)\n"
@@ -184,7 +206,7 @@ namespace weec
 				Test_wcParser_16(), Test_wcParser_17(), Test_wcParser_18(), Test_wcParser_19(), Test_wcParser_20(),
 				Test_wcParser_21(), Test_wcParser_22(), Test_wcParser_23(), Test_wcParser_24(), Test_wcParser_25(),
 				Test_wcParser_26(), Test_wcParser_27(), Test_wcParser_28(), Test_wcParser_29(), Test_wcParser_30(),
-				Test_wcParser_31(), Test_wcParser_32(), Test_Fibonacci();
+				Test_wcParser_31(), Test_wcParser_32(), Test_wcParser_33(), Test_Fibonacci();
 
 			int Test_wcExpressionParser_1(), Test_wcExpressionParser_2(), Test_wcExpressionParser_3(), Test_wcExpressionParser_4(), Test_wcExpressionParser_5(),
 				Test_wcExpressionParser_6(), Test_wcExpressionParser_7(), Test_wcExpressionParser_8(), Test_wcExpressionParser_9(), Test_wcExpressionParser_10(),
@@ -239,7 +261,7 @@ namespace weec
 				Test_wcParser_11, Test_wcParser_12, Test_wcParser_13, Test_wcParser_14, Test_wcParser_15,
 				Test_wcParser_16, Test_wcParser_17, Test_wcParser_18, Test_wcParser_19, Test_wcParser_20,
 				Test_wcParser_21, Test_wcParser_22, Test_wcParser_23, Test_wcParser_24, Test_wcParser_25,
-				Test_wcParser_26, Test_wcParser_27, Test_wcParser_28, Test_wcParser_29, Test_wcParser_30, Test_wcParser_31,Test_wcParser_32,
+				Test_wcParser_26, Test_wcParser_27, Test_wcParser_28, Test_wcParser_29, Test_wcParser_30, Test_wcParser_31,Test_wcParser_32,Test_wcParser_33,
 				Test_Fibonacci,
 
 				Test_wcExpressionParser_1, Test_wcExpressionParser_2, Test_wcExpressionParser_3, Test_wcExpressionParser_4, Test_wcExpressionParser_5,

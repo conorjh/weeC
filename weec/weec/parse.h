@@ -7,7 +7,8 @@
 #include <vector>
 #include <stack>
 #include <unordered_map>
-#include "tree.hh"
+
+#include "../include/tree.hh"
 #include "lex.h"
 
 namespace weec
@@ -18,6 +19,7 @@ namespace weec
 		{
 			std::string GlobalIdentifier = "$g",
 				ScopeDelimiter = "::",
+				MemberDelimiter = ".",
 				GlobalIdentPrefix = GlobalIdentifier + ScopeDelimiter;
 			unsigned int BasicTypeCount = 7;
 
@@ -128,7 +130,7 @@ namespace weec
 				return Identifier.find(ParserConsts.ScopeDelimiter) != std::string::npos;
 			}
 
-			bool IsQualified(std::string), IsFunction(std::string), IsValid(std::string), IsQualifiedWithGlobal(std::string);
+			bool IsQualified(std::string), IsFunction(std::string), IsValid(std::string), IsQualifiedWithGlobal(std::string), IsMember(std::string);
 		};
 
 		class wcBaseIdentifier
@@ -178,6 +180,11 @@ namespace weec
 			bool IsQualified() const
 			{
 				return wcIdentalyzer().IsQualified(Identifier);
+			}
+
+			bool IsMember() const
+			{
+				return wcIdentalyzer().IsMember(Identifier);
 			}
 
 			std::string to_string() const
@@ -694,6 +701,7 @@ namespace weec
 			wcParseOutput();
 			wcParseOutput(wcParserError);
 			wcParseOutput(wcParseNode, bool PointToChild = false);
+			wcParseOutput(const wcParseSymbolTable& _SymbolTable, wcParseNode, bool PointToChild = false);
 			wcParseOutput(const wcParseSymbolTable& _SymbolTable)
 			{
 				SymbolTable = _SymbolTable;
@@ -706,6 +714,11 @@ namespace weec
 
 			tree<wcParseNode>::pre_order_iterator GetHead() { return UnofficialHead; }
 			tree<wcParseNode>::pre_order_iterator GetSubHead();
+
+			bool IsErrored() const
+			{
+				return Error.Code != wcParserErrorCode::None;
+			}
 
 			wcParseOutput operator+(wcParseOutput), operator+=(wcParseOutput), operator=(wcParseOutput);
 
@@ -746,41 +759,61 @@ namespace weec
 			bool IsErrored();
 		};
 
-		class wcSubParser
+		struct wcParseState
 		{
-		protected:
+			wcParseState(const wcParseState& OtherState)
+				: Tokenizer(OtherState.Tokenizer), SymbolTable(OtherState.SymbolTable), Scopes(OtherState.Scopes) {}
+			wcParseState(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
+				: Tokenizer(_Tokenizer), SymbolTable(_SymbolTable), Scopes(_Scopes) {}
+
 			lex::wcTokenizer& Tokenizer;
 			wcParseSymbolTable& SymbolTable;
 			wcParseScopes& Scopes;
+		};
+
+		class wcSubParser
+		{
+		protected:
+			wcParseState State;
 
 		public:
-			wcSubParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: Tokenizer(_Tokenizer), SymbolTable(_SymbolTable), Scopes(_Scopes) {}
+			wcSubParser(wcParseState _State)
+				: State(_State) {}
 
 			lex::wcToken GetToken()
 			{
-				return Tokenizer.GetToken();
+				return State.Tokenizer.GetToken();
 			}
 
 			bool NextToken()
 			{
-				return Tokenizer.NextToken();
+				return State.Tokenizer.NextToken();
 			}
 
 			bool ExpectToken(lex::wcTokenType TokenType)
 			{
-				return Tokenizer.GetToken().Type == TokenType;
+				return State.Tokenizer.GetToken().Type == TokenType;
 			}
 
 			bool ExpectNextToken(lex::wcTokenType TokenType)
 			{
-				return Tokenizer.NextToken(TokenType);
+				return State.Tokenizer.NextToken(TokenType);
+			}
+
+			bool IsErrored()
+			{
+				return State.Tokenizer.IsErrored();
+			}
+
+			bool IsErrored(const wcParseOutput& Output) const
+			{
+				return State.Tokenizer.IsErrored() || Output.IsErrored();
 			}
 
 			bool AddSymbol(wcParseSymbolTable& SymTab, const wcParseSymbol& Symbol)
 			{
 				bool SymbolAdd = SymTab.Add(Symbol);
-				return (Scopes.AddSymbol(Symbol.FullIdent) && SymbolAdd)
+				return (State.Scopes.AddSymbol(Symbol.FullIdent) && SymbolAdd)
 					? true
 					: false;
 			}
@@ -788,11 +821,22 @@ namespace weec
 			bool AddSymbol(wcParseSymbolTable& SymTab, const wcParseFunctionSignature& Sig)
 			{
 				SymTab.Add(Sig);
-				Scopes.AddSymbol(Sig.to_string_no_type());
-				Scopes.Push(Sig.to_string_no_type());
+				State.Scopes.AddSymbol(Sig.to_string_no_type());
+				State.Scopes.Push(Sig.to_string_no_type());
 
 				for (auto& Param : Sig.Parameters)
 					AddSymbol(SymTab, wcParseSymbol(wcParseSymbolType::Variable, Param.Identifier, Param.TypeIdentifier, Param.IdentifierToken));
+
+				return true;
+			}
+
+			bool AddStructSymbol(wcParseSymbolTable& SymTab, const wcParseSymbol& Symbol)
+			{
+				SymTab.Add(Symbol);
+				State.Scopes.AddSymbol(Symbol.FullIdent);
+				State.Scopes.Push(Symbol.FullIdent.to_string());
+
+				//add memebers?
 
 				return true;
 			}
@@ -809,8 +853,8 @@ namespace weec
 				ParseExpression_Call(), ParseExpression_CallArguments(wcParseExpression Callee), ParseExpression_Primary();
 
 		public:
-			wcExpressionParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcExpressionParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput ParseExpression(), ParseExpression(wcParseSymbol);
 		};
@@ -818,7 +862,8 @@ namespace weec
 		class wcIdentParser : wcSubParser
 		{
 		public:
-			wcIdentParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes);
+			wcIdentParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse(wcIdentifier&, wcFullIdentifier& ResolvedFullIdentifier, bool Consume = true, bool ExpectDeclared = false);
 		};
@@ -826,13 +871,13 @@ namespace weec
 		class wcDeclarationParser : wcSubParser
 		{
 			wcParseOutput ParseType(wcFullIdentifier& DeclarationType, wcParseNodeType NodeType),
-				ParseIdent(wcFullIdentifier& DeclarationFullIdentifier, lex::wcToken& IdentAsSeen),
+				ParseIdent(const wcFullIdentifier& DeclarationType, wcFullIdentifier& DeclarationFullIdentifier, lex::wcToken& IdentAsSeen),
 				ParseParameters(wcFullIdentifier DeclarationIdent, std::vector<wcParseParameter>& ParametersOut),
 				ParseParameter(wcFullIdentifier DeclarationIdent, wcParseParameter& ParameterOutput);
 
 		public:
-			wcDeclarationParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcDeclarationParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse();
 		};
@@ -841,8 +886,8 @@ namespace weec
 		{
 
 		public:
-			wcStatementParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcStatementParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse(bool AllowDeclarations);
 		};
@@ -851,8 +896,8 @@ namespace weec
 		{
 
 		public:
-			wcBlockParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcBlockParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse(bool AllowDeclarations);
 		};
@@ -860,8 +905,8 @@ namespace weec
 		class wcIfParser : wcSubParser
 		{
 		public:
-			wcIfParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcIfParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse();
 		};
@@ -869,8 +914,8 @@ namespace weec
 		class wcSemiColonParser : wcSubParser
 		{
 		public:
-			wcSemiColonParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcSemiColonParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse();
 		};
@@ -878,8 +923,8 @@ namespace weec
 		class wcReturnParser : wcSubParser
 		{
 		public:
-			wcReturnParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcReturnParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse();
 		};
@@ -887,8 +932,8 @@ namespace weec
 		class wcWhileParser : wcSubParser
 		{
 		public:
-			wcWhileParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcWhileParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse();
 		};
@@ -896,8 +941,8 @@ namespace weec
 		class wcPrintParser : wcSubParser
 		{
 		public:
-			wcPrintParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcPrintParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse();
 		};
@@ -905,8 +950,8 @@ namespace weec
 		class wcStructParser : wcSubParser
 		{
 		public:
-			wcStructParser(lex::wcTokenizer& _Tokenizer, wcParseSymbolTable& _SymbolTable, wcParseScopes& _Scopes)
-				: wcSubParser(_Tokenizer, _SymbolTable, _Scopes) {}
+			wcStructParser(wcParseState _State)
+				: wcSubParser(_State) {}
 
 			wcParseOutput Parse();
 		};
@@ -919,11 +964,23 @@ namespace weec
 			lex::wcTokenizer& Tokenizer;
 			wcParseSymbolTable SymbolTable;
 			wcParseScopes Scopes;
+			wcParseState State;
 
 		public:
-			wcParser(lex::wcTokenizer& _Tokenizer);
+			wcParser(lex::wcTokenizer& _Tokenizer)
+				: Tokenizer(_Tokenizer), State(Tokenizer, SymbolTable, Scopes) {}
 
 			wcParseOutput Parse();
+
+			bool IsErrored() const
+			{
+				return Tokenizer.IsErrored();
+			}
+
+			bool IsErrored(const wcParseOutput& Output) const
+			{
+				return Tokenizer.IsErrored() || Output.IsErrored();
+			}
 		};
 
 	}

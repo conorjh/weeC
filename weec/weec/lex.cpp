@@ -85,7 +85,7 @@ bool weec::lex::wcToken::IsOperator() const
 bool weec::lex::wcToken::IsBuiltinType() const
 {
 	if (Type == wcTokenType::IntKeyword || Type == wcTokenType::FloatKeyword || Type == wcTokenType::CharKeyword || Type == wcTokenType::StringKeyword ||
-		Type == wcTokenType::UIntKeyword || Type == wcTokenType::StringKeyword)
+		Type == wcTokenType::UIntKeyword || Type == wcTokenType::StringKeyword || Type == wcTokenType::VoidKeyword)
 		return true;
 	return false;
 }
@@ -170,7 +170,7 @@ bool weec::lex::wcStringTokenizer::NextStringToken()
 	return NextStringToken(wcStringTokenType::Null);
 }
 
-bool weec::lex::wcStringTokenizer::IsFinished()
+bool weec::lex::wcStringTokenizer::IsFinished() const
 {
 	return Finished;
 }
@@ -221,7 +221,8 @@ bool weec::lex::wcStringTokenizer::IncIndex()
 	{
 		thisType = wcStringTokenTypeAlizer().Get(Line.at(Index));
 
-		if ((lastType != wcStringTokenType::Null && lastType != thisType) || lastType == wcStringTokenType::Punctuation || lastType == wcStringTokenType::Special)
+		if (((lastType != wcStringTokenType::Null && lastType != thisType) || lastType == wcStringTokenType::Punctuation || lastType == wcStringTokenType::Special)
+			&& !(lastType == wcStringTokenType::Alpha && Line.at(Index) == '_') )
 			break;
 
 		TokenBuffer.Data += Line.at(Index);
@@ -509,11 +510,15 @@ bool weec::lex::wcTokenizer::NextToken(wcTokenType Type)
 	return true;
 }
 
-bool weec::lex::wcTokenizer::IsFinished()
+bool weec::lex::wcTokenizer::IsFinished() const
 {
 	return stringTokenizer.IsFinished();
 }
 
+bool weec::lex::wcTokenizer::IsErrored() const
+{
+	return (Error.Code != wcTokenizerErrorCode::None);
+}
 
 //returns false for unknown tokens, or if we reached end of input
 bool weec::lex::wcTokenizer::NextToken()
@@ -756,11 +761,6 @@ bool weec::lex::wcTokenizer::NextToken_MultiLineComment()
 
 	//error, never found a closing comment token
 	return false;
-}
-
-bool weec::lex::wcTokenizer::IsErrored()
-{
-	return (Error.Code != wcTokenizerErrorCode::None);
 }
 
 

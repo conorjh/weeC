@@ -83,7 +83,10 @@ void MainWindow::build()
     using namespace weec::parse;
 
     Parsed = wcParseOutput();
+    buildDockWidget->show();
+    buildDockWidget->raise();
     buildTextEdit->clear();
+    outputTextEdit->clear();
     Filename == ""
         ? printToBuild("Starting build...")
         : printToBuild("Starting build... (" + Filename + ")");
@@ -130,17 +133,18 @@ void MainWindow::buildAndRun()
 
     outputDockWidget->show();
     outputDockWidget->raise();
+    outputTextEdit->clear();
 
     QThread* thread = new QThread();
     InterpreterWorker* worker = new InterpreterWorker(Parsed, this);
     worker->moveToThread(thread);
-    //connect(worker, &InterpreterWorker::error, this, &InterpreterWorker::errorString);
-    
-    connect(worker, &InterpreterWorker::finished, this, [this]() { InterpreterRunning = false; });
+
+    //connect(worker, &InterpreterWorker::error, this, &InterpreterWorker::errorString);    
     connect(worker, &InterpreterWorker::printed, this, &MainWindow::printToOutput);
     connect(thread, &QThread::started, worker, &InterpreterWorker::process);
     connect(worker, &InterpreterWorker::finished, thread, &QThread::quit);
     connect(worker, &InterpreterWorker::finished, worker, &InterpreterWorker::deleteLater);
+    connect(worker, &InterpreterWorker::finished, this, [this]() { InterpreterRunning = false; });
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
     thread->start();

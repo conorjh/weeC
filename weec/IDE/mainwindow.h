@@ -42,12 +42,16 @@ public slots:
     void about();
     void newFile();
     void openFile(const QString& path = QString());
+    void saveFile();
+    void saveFileAs();
     void build();
-    void buildAndRun();
+    void buildAndRun();    
+    void run();
     void projectSettings();
+
     void toggleProjectDockWidget();  
     void toggleOutputDockWidget();
-    void toggleObjectBrowserDockWidget();
+    void toggleTreeBrowserDockWidget();
 
 protected:
     void setupEditor();
@@ -74,7 +78,7 @@ protected:
     }
 
     QList<ToolBar*> toolBars;
-    QDockWidget* projectDockWidget, * buildDockWidget, *outputDockWidget, *objectBrowserDockWidget;
+    QDockWidget* projectDockWidget, * buildDockWidget, *outputDockWidget, *TreeBrowserDockWidget;
     QTextEdit* buildTextEdit,*outputTextEdit;
 
     QMenu* dockWidgetMenu;
@@ -84,7 +88,7 @@ protected:
     QTextEdit *editor;
     Highlighter *highlighter;
 
-    bool InterpreterRunning = false;
+    bool ParserRunning = false, InterpreterRunning = false, RunFlag = false;
 
 };
 //! [0]
@@ -161,14 +165,37 @@ public:
     }
 };
 
+class ParserWorker : public QObject {
+    Q_OBJECT
+public:
+    ParserWorker(const std::string& _Input, weec::parse::wcParseOutput& _Output)
+        : Output(_Output) 
+    {
+        Input = _Input;
+    }
+
+    ~ParserWorker();
+
+public slots:
+    void process();
+
+signals:
+    void finished();
+    void error(QString err);
+    void printed(std::string msg);
+
+private:
+    std::string Input;
+    weec::parse::wcParseOutput& Output;
+};
+
 class InterpreterWorker : public QObject {
     Q_OBJECT
 public:
-    InterpreterWorker(weec::parse::wcParseOutput _Input, MainWindow* _Win)
+    InterpreterWorker(weec::parse::wcParseOutput _Input)
     {
         Input = _Input;
         Interpreter = new QInterpreter(Input, this);
-        Win = _Win;
     }
 
     ~InterpreterWorker();
@@ -183,8 +210,6 @@ signals:
 private:
     QInterpreter* Interpreter;
     weec::parse::wcParseOutput Input;
-    MainWindow* Win;
-    // add your variables here
 };
 
 #endif // MAINWINDOW_H

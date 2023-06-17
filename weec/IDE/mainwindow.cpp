@@ -72,9 +72,23 @@ void MainWindow::openFile(const QString &path)
     }
 }
 
+void MainWindow::saveFile()
+{
+}
+
+void MainWindow::saveFileAs()
+{
+}
+
+void MainWindow::buildAndRun()
+{
+    RunFlag = true;
+    build();
+}
+
 void MainWindow::build()
 {
-    if (InterpreterRunning)
+    if (ParserRunning)
         return;
 
     using namespace std;
@@ -94,37 +108,28 @@ void MainWindow::build()
     //get text editor contents
     string ScriptBuffer = editor->toPlainText().toStdString();
 
-    //parse
-    printToBuild("Parsing...");
+    QThread* thread = new QThread();
+    ParserWorker* worker = new ParserWorker(ScriptBuffer, Parsed);
+    worker->moveToThread(thread);
 
-    auto parseStart = chrono::system_clock::now();
-    wcTokenizer Tokenizer(ScriptBuffer);
-    Parsed = wcParser(Tokenizer).Parse();
-    auto timeTaken = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - parseStart).count();
-
-    if (Parsed.Error.Code != wcParserErrorCode::None)
-    {
-        printToBuild("Error code: " + string(to_string(int(Parsed.Error.Code))) + "  " + to_string(Parsed.Error.Code));
-        printToBuild(Parsed.Error.Token.to_string() + " (" + to_string(Parsed.Error.Token.StringToken.Line) + "," + to_string(Parsed.Error.Token.StringToken.Column) + ")");
-        return;
-    }
-    printTree(Parsed.AST);
-
-    //write to file
-    printToBuild("");
-    printToBuild("Build complete");
-    printToBuild("Time taken: " + to_string(timeTaken) + string("ms") + "\n");
+    //connect(worker, &ParserWorker::error, this, &ParserWorker::errorString);    
+    connect(worker, &ParserWorker::printed, this, &MainWindow::printToBuild);
+    connect(thread, &QThread::started, worker, &ParserWorker::process);
+    connect(worker, &ParserWorker::finished, thread, &QThread::quit);
+    connect(worker, &ParserWorker::finished, worker, &ParserWorker::deleteLater);
+    connect(worker, &ParserWorker::finished, this, [this]() { ParserRunning = false; });
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    if(RunFlag)
+        connect(worker, &ParserWorker::finished, this, &MainWindow::run);   //trigger the run once ere finished parsing
+    RunFlag = false;
+    thread->start();
+    ParserRunning = true;
 }
 
 
-void MainWindow::buildAndRun()
+void MainWindow::run()
 {
-    if (InterpreterRunning)
-        return;
-
-    build();
-
-    if (Parsed.IsErrored())
+    if (InterpreterRunning || ParserRunning || Parsed.IsErrored())
         return;
 
     using namespace std;
@@ -136,7 +141,7 @@ void MainWindow::buildAndRun()
     outputTextEdit->clear();
 
     QThread* thread = new QThread();
-    InterpreterWorker* worker = new InterpreterWorker(Parsed, this);
+    InterpreterWorker* worker = new InterpreterWorker(Parsed);
     worker->moveToThread(thread);
 
     //connect(worker, &InterpreterWorker::error, this, &InterpreterWorker::errorString);    
@@ -149,7 +154,6 @@ void MainWindow::buildAndRun()
 
     thread->start();
     InterpreterRunning = true;
-
 }
 
 void MainWindow::projectSettings()
@@ -185,6 +189,10 @@ void MainWindow::setupFileMenu()
         this, &MainWindow::newFile);
     fileMenu->addAction(tr("&Open..."), QKeySequence::Open,
         this, [this]() { openFile(); });
+    fileMenu->addAction(tr("&Save..."), QKeySequence::Save,
+        this, [this]() { saveFile(); });
+    fileMenu->addAction(tr("Save &As..."), QKeySequence::SaveAs,
+        this, [this]() { saveFileAs(); });
     fileMenu->addAction(tr("E&xit"), QKeySequence::Quit,
         qApp, &QApplication::quit);
 }
@@ -214,10 +222,10 @@ void MainWindow::setupViewMenu()
     action->setChecked(dockOptions() & AnimatedDocks);
     connect(action, &QAction::toggled, this, &MainWindow::toggleOutputDockWidget);
 
-    action = viewMenu->addAction(tr("Ob&ject Browser"), this, &MainWindow::toggleObjectBrowserDockWidget);
+    action = viewMenu->addAction(tr("Tree Browser"), this, &MainWindow::toggleTreeBrowserDockWidget);
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
-    connect(action, &QAction::toggled, this, &MainWindow::toggleObjectBrowserDockWidget);;
+    connect(action, &QAction::toggled, this, &MainWindow::toggleTreeBrowserDockWidget);;
 
 }
 
@@ -262,13 +270,13 @@ void MainWindow::setupDockWidgets()
     projectDockWidget->setWidget(new QTextEdit);
     addDockWidget(Qt::RightDockWidgetArea, projectDockWidget);
 
-    objectBrowserDockWidget = new QDockWidget();
-    objectBrowserDockWidget->setObjectName("Object Browser");
-    objectBrowserDockWidget->setWindowTitle("Object Browser");
-    objectBrowserDockWidget->setWidget(new QTextEdit);
-    addDockWidget(Qt::RightDockWidgetArea, objectBrowserDockWidget);
+    TreeBrowserDockWidget = new QDockWidget();
+    TreeBrowserDockWidget->setObjectName("Object Browser");
+    TreeBrowserDockWidget->setWindowTitle("Object Browser");
+    TreeBrowserDockWidget->setWidget(new QTextEdit);
+    addDockWidget(Qt::RightDockWidgetArea, TreeBrowserDockWidget);
 
-    tabifyDockWidget(objectBrowserDockWidget, projectDockWidget);
+    tabifyDockWidget(TreeBrowserDockWidget, projectDockWidget);
 }
 
 void MainWindow::toggleProjectDockWidget()
@@ -283,11 +291,11 @@ void MainWindow::toggleOutputDockWidget()
     outputDockWidget->addAction(toggleAction);
 }
 
-void MainWindow::toggleObjectBrowserDockWidget()
+void MainWindow::toggleTreeBrowserDockWidget()
 {
-    auto toggleAction = objectBrowserDockWidget->toggleViewAction();
+    auto toggleAction = TreeBrowserDockWidget->toggleViewAction();
 
-    objectBrowserDockWidget->addAction(toggleAction);
+    TreeBrowserDockWidget->addAction(toggleAction);
 }
 
 void MainWindow::printToOutput(std::string Input)
@@ -337,4 +345,37 @@ inline QInterpreter::QInterpreter(weec::parse::wcParseOutput& _Input, Interprete
 inline void QInterpreter::PrintFunc(std::string In)
 {
     emit Worker->printed(In);
+}
+
+ParserWorker::~ParserWorker()
+{
+}
+
+void ParserWorker::process()
+{
+    using namespace std;
+    using namespace weec;
+    using namespace weec::lex;
+    using namespace weec::parse;
+
+    emit printed("Parsing...");
+    auto parseStart = chrono::system_clock::now();
+    wcTokenizer Tokenizer(Input);
+    Output = wcParser(Tokenizer).Parse();
+    auto timeTaken = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - parseStart).count();
+
+    if (Output.Error.Code != wcParserErrorCode::None)
+    {
+        emit printed("= = = Parsing Failed = = =");
+        emit printed("Error code: " + string(to_string(int(Output.Error.Code))) + "  " + to_string(Output.Error.Code));
+        emit printed(Output.Error.Token.to_string() + " (" + to_string(Output.Error.Token.StringToken.Line) + "," + to_string(Output.Error.Token.StringToken.Column) + ")");
+        return;
+    }
+
+    //write to file
+
+    emit printed("");
+    emit printed("Build complete");
+    emit printed("Time taken: " + to_string(timeTaken) + string("ms") + "\n");
+    emit finished();
 }

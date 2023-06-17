@@ -206,6 +206,7 @@ namespace weec
 			tree<parse::wcParseNode>::iterator PC;
 
 			virtual void Print(std::any);
+			virtual void Print(std::string);
 			void (*PrintFunc)(std::string);
 
 		public:

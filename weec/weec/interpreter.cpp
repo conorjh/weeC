@@ -440,6 +440,10 @@ any weec::interpreter::wcExpressionInterpreter::ExecEquality()
 	return DoOp(OpType, Lh, Rh);
 }
 
+void weec::interpreter::wcInterpreter::Print(std::string Value)
+{
+	PrintFunc(">" + Value + "\n");
+}
 
 void weec::interpreter::wcInterpreter::Print(std::any Value)
 {	
@@ -463,6 +467,7 @@ void weec::interpreter::wcInterpreter::Print(std::any Value)
 	else if (FindA.Name == "string")
 		PrintFunc(">" + any_cast<string>(Value) + "\n");
 }
+
 void weec::interpreter::DefaultPrintFunc(std::string In)
 {
 	std::cout << In << std::endl;

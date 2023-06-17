@@ -1149,7 +1149,7 @@ wcParseOutput weec::parse::wcParseOutput::operator+(wcParseOutput other)
 
 wcParseOutput weec::parse::wcParseOutput::operator=(wcParseOutput other)
 {
-	AST = other.AST;
+	AST = tree<wcParseNode>(other.AST);
 	Error = other.Error;
 	SymbolTable.Merge(other.SymbolTable);
 
@@ -1690,4 +1690,20 @@ _wcIdentifierResolver_Resolve_Cleanup:
 	}
 
 	return Result;
+}
+
+weec::parse::wcIdentifierScope::wcIdentifierScope(const wcIdentifierScope& Other)
+{
+	Identifier = Other.Identifier;
+}
+
+weec::parse::wcIdentifierScope::wcIdentifierScope(std::string Data)
+{
+	//ensure global scope is appended 
+	if (!Data.starts_with(ParserConsts.GlobalIdentPrefix) && Data != ParserConsts.GlobalIdentifier)
+		Data = Data.size()
+		? ParserConsts.GlobalIdentPrefix + Data
+		: ParserConsts.GlobalIdentifier;
+
+	Identifier = Data;
 }

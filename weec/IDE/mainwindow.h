@@ -22,6 +22,7 @@ QT_FORWARD_DECLARE_CLASS(QAction)
 QT_FORWARD_DECLARE_CLASS(QActionGroup)
 QT_FORWARD_DECLARE_CLASS(QMenu)
 class QInterpreter;
+class InterpreterWorker;
 
 //! [0]
 class MainWindow : public QMainWindow
@@ -33,7 +34,6 @@ public:
 
     std::string Filename;
     weec::parse::wcParseOutput Parsed;
-    QInterpreter* Interpreter;
 
     void printToOutput(std::string);
     void printToBuild(std::string);
@@ -48,6 +48,7 @@ public slots:
     void toggleProjectDockWidget();  
     void toggleOutputDockWidget();
     void toggleObjectBrowserDockWidget();
+
 protected:
     void setupEditor();
     void setupFileMenu();
@@ -86,46 +87,40 @@ protected:
 };
 //! [0]
 
+class InterpreterWorker;
+
 class QInterpreter : public weec::interpreter::wcInterpreter
 {
 public:
-    QInterpreter(weec::parse::wcParseOutput& _Input, MainWindow* _Win)
-        : Win(_Win), wcInterpreter(_Input)
-    {
-        //Input = _Input;
-        PC = _Input.AST.begin();
-        Halt = false;
-    }
+    QInterpreter(weec::parse::wcParseOutput& _Input, InterpreterWorker* _Worker);
 
-    MainWindow* Win;
+    InterpreterWorker* Worker;
 
-    void PrintFunc(std::string In, MainWindow* Win)
-    {
-        Win->printToOutput(In);
-    }
+    void PrintFunc(std::string In);
 
-    virtual void Print(std::any Value)
+   virtual void Print(std::any Value)
     {
-        auto FindA = Win->Interpreter->SymbolTable.ImplTypes.GetByInternal(Value.type().name());
+        auto FindA = SymbolTable.ImplTypes.GetByInternal(Value.type().name());
         if (FindA.Name == "" || FindA.Name == "void")
         {
-            PrintFunc(">", Win);
+            PrintFunc(">");
             return;
         }
 
         if (FindA.Name == "int")
-            PrintFunc(">" + std::to_string(any_cast<int>(Value)) + "\n", Win);
+            PrintFunc(">" + std::to_string(std::any_cast<int>(Value)));
         else if (FindA.Name == "unsigned int")
-            PrintFunc(">" + std::to_string(any_cast<unsigned int>(Value)) + "\n", Win);
+            PrintFunc(">" + std::to_string(std::any_cast<unsigned int>(Value)));
         else if (FindA.Name == "float")
-            PrintFunc(">" + std::to_string(any_cast<float>(Value)) + "\n", Win);
+            PrintFunc(">" + std::to_string(std::any_cast<float>(Value)));
         else if (FindA.Name == "double")
-            PrintFunc(">" + std::to_string(any_cast<double>(Value)) + "\n", Win);
+            PrintFunc(">" + std::to_string(std::any_cast<double>(Value)));
         else if (FindA.Name == "bool")
-            PrintFunc(">" + std::to_string(any_cast<bool>(Value)) + "\n", Win);
+            PrintFunc(">" + std::to_string(std::any_cast<bool>(Value)));
         else if (FindA.Name == "string")
-            PrintFunc(">" + any_cast<std::string>(Value) + "\n", Win);
+            PrintFunc(">" + std::any_cast<std::string>(Value));
     }
+    
 
     std::any Exec()
     {
@@ -158,11 +153,36 @@ public:
                 break;
             }
 
-            Win->update();
-            Win->repaint();
         }
 
         return Return;
     }
 };
+
+class InterpreterWorker : public QObject {
+    Q_OBJECT
+public:
+    InterpreterWorker(weec::parse::wcParseOutput _Input, MainWindow* _Win)
+    {
+        Input = _Input;
+        Interpreter = new QInterpreter(Input, this);
+        Win = _Win;
+    }
+
+    ~InterpreterWorker();
+
+public slots:
+    void process();
+signals:
+    void finished();
+    void error(QString err);
+    void printed(std::string msg);
+
+private:
+    QInterpreter* Interpreter;
+    weec::parse::wcParseOutput Input;
+    MainWindow* Win;
+    // add your variables here
+};
+
 #endif // MAINWINDOW_H

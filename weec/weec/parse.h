@@ -268,21 +268,9 @@ namespace weec
 				Identifier = ParserConsts.GlobalIdentifier;
 			}
 
-			wcIdentifierScope(const wcIdentifierScope& Other)
-			{
-				Identifier = Other.Identifier;
-			}
+			wcIdentifierScope(const wcIdentifierScope& Other);
 
-			wcIdentifierScope(std::string Data)
-			{
-				//ensure global scope is appended 
-				if (!Data.starts_with(ParserConsts.GlobalIdentPrefix) && Data != ParserConsts.GlobalIdentifier)
-					Data = Data.size()
-					? ParserConsts.GlobalIdentPrefix + Data
-					: ParserConsts.GlobalIdentifier;
-
-				Identifier = Data;
-			}
+			wcIdentifierScope(std::string Data);
 
 			bool operator==(const wcIdentifierScope& p) const
 			{

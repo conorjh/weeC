@@ -25,6 +25,7 @@
 #include <QPushButton>
 #include <QTextEdit>
 #include <QDebug>
+#include <QThread>
 
 Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
 QT_FORWARD_DECLARE_CLASS(QAction)
@@ -33,7 +34,6 @@ QT_FORWARD_DECLARE_CLASS(QAction)
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
-    Interpreter = new QInterpreter(Parsed, this);
     setupFileMenu();
     setupBuildMenu();
     setupProjectMenu();
@@ -122,13 +122,19 @@ void MainWindow::buildAndRun()
     using namespace weec;
     using namespace weec::interpreter;
 
-    auto execStart = chrono::system_clock::now();
-    delete Interpreter;
-    Interpreter = new QInterpreter(Parsed, this);
-    auto Result = Interpreter->Exec();
-    auto timeTaken = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - execStart).count();
+    QThread* thread = new QThread();
+    InterpreterWorker* worker = new InterpreterWorker(Parsed, this);
+    worker->moveToThread(thread);
+    //connect(worker, &InterpreterWorker::error, this, &InterpreterWorker::errorString);
 
-    printToBuild("Execution time: " + to_string(timeTaken) + string("ms") + "\n");
+    connect(worker, &InterpreterWorker::printed, this, &MainWindow::printToOutput);
+    connect(thread, &QThread::started, worker, &InterpreterWorker::process);
+    connect(worker, &InterpreterWorker::finished, thread, &QThread::quit);
+    connect(worker, &InterpreterWorker::finished, worker, &InterpreterWorker::deleteLater);
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+
+    thread->start();
+
 }
 
 void MainWindow::projectSettings()
@@ -274,6 +280,7 @@ void MainWindow::printToOutput(std::string Input)
     QTextCursor curs(outputTextEdit->textCursor());
     curs.movePosition(outputTextEdit->textCursor().End);
     curs.insertText(std::string(Input + "\n").c_str());
+    outputTextEdit->setTextCursor(curs);
 }
 
 void MainWindow::printToBuild(std::string Input)
@@ -281,4 +288,33 @@ void MainWindow::printToBuild(std::string Input)
     QTextCursor curs(buildTextEdit->textCursor());
     curs.movePosition(buildTextEdit->textCursor().End);
     curs.insertText(std::string(Input + "\n").c_str());
+    buildTextEdit->setTextCursor(curs);
+}
+
+InterpreterWorker::~InterpreterWorker()
+{
+    delete Interpreter;
+}
+
+void InterpreterWorker::process()
+{
+    auto Result = Interpreter->Exec();
+
+    //Win->Interpreter->Print("Done");
+
+    emit finished();
+}
+
+inline QInterpreter::QInterpreter(weec::parse::wcParseOutput& _Input, InterpreterWorker* _Worker)
+    : wcInterpreter(_Input)
+{
+    Input = _Input;
+    PC = Input.AST.begin();
+    Halt = false;
+    Worker = _Worker;
+}
+
+inline void QInterpreter::PrintFunc(std::string In)
+{
+    emit Worker->printed(In);
 }

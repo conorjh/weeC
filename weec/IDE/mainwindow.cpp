@@ -74,6 +74,9 @@ void MainWindow::openFile(const QString &path)
 
 void MainWindow::build()
 {
+    if (InterpreterRunning)
+        return;
+
     using namespace std;
     using namespace weec;
     using namespace weec::lex;
@@ -113,6 +116,9 @@ void MainWindow::build()
 
 void MainWindow::buildAndRun()
 {
+    if (InterpreterRunning)
+        return;
+
     build();
 
     if (Parsed.IsErrored())
@@ -122,11 +128,15 @@ void MainWindow::buildAndRun()
     using namespace weec;
     using namespace weec::interpreter;
 
+    outputDockWidget->show();
+    outputDockWidget->raise();
+
     QThread* thread = new QThread();
     InterpreterWorker* worker = new InterpreterWorker(Parsed, this);
     worker->moveToThread(thread);
     //connect(worker, &InterpreterWorker::error, this, &InterpreterWorker::errorString);
-
+    
+    connect(worker, &InterpreterWorker::finished, this, [this]() { InterpreterRunning = false; });
     connect(worker, &InterpreterWorker::printed, this, &MainWindow::printToOutput);
     connect(thread, &QThread::started, worker, &InterpreterWorker::process);
     connect(worker, &InterpreterWorker::finished, thread, &QThread::quit);
@@ -134,6 +144,7 @@ void MainWindow::buildAndRun()
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
     thread->start();
+    InterpreterRunning = true;
 
 }
 
@@ -179,8 +190,8 @@ void MainWindow::setupBuildMenu()
     QMenu* buildMenu = new QMenu(tr("&Build"), this);
     menuBar()->addMenu(buildMenu);
 
-    buildMenu->addAction(tr("&Build"), this, &MainWindow::build);
-    buildMenu->addAction(tr("&Build and Run"), this, &MainWindow::buildAndRun);
+    buildMenu->addAction(tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::buildAndRun);
+    buildMenu->addAction(tr("&Build"), QKeySequence(Qt::Key_F7), this, &MainWindow::build);
 }
 
 
@@ -298,10 +309,15 @@ InterpreterWorker::~InterpreterWorker()
 
 void InterpreterWorker::process()
 {
+    using namespace std;
+
+    emit printed("Executing...");
+    auto parseStart = chrono::system_clock::now();
+
     auto Result = Interpreter->Exec();
 
-    //Win->Interpreter->Print("Done");
-
+    auto timeTaken = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - parseStart).count();
+    emit printed("Execution Finished: " + to_string(timeTaken) + "ms");
     emit finished();
 }
 

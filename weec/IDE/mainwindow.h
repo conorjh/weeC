@@ -84,6 +84,8 @@ protected:
     QTextEdit *editor;
     Highlighter *highlighter;
 
+    bool InterpreterRunning = false;
+
 };
 //! [0]
 

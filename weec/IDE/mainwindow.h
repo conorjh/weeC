@@ -12,6 +12,7 @@
 #include <QMap>
 #include <QString>
 #include <QSize>
+#include <QTreeView>
 
 QT_BEGIN_NAMESPACE
 class QTextEdit;
@@ -33,8 +34,13 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
 
-    std::string Filename;
+    std::string Filename = "";
     weec::parse::wcParseOutput Parsed;
+    QAction* insertRowAction;
+    QAction* removeRowAction;
+    QAction* insertColumnAction;
+    QAction* removeColumnAction;
+    QAction* insertChildAction;
 
     void printToOutput(std::string);
     void printToBuild(std::string);
@@ -50,11 +56,18 @@ public slots:
     void run();
     void projectSettings();
 
+    void updateActions();
     void toggleProjectDockWidget();  
     void toggleOutputDockWidget();
     void toggleTreeBrowserDockWidget();
 
 protected:
+    void insertChild();
+    bool insertColumn();
+    void insertRow();
+    bool removeColumn();
+    void removeRow();
+    void populateTreeView();
     void setupEditor();
     void setupFileMenu();
     void setupBuildMenu();
@@ -81,7 +94,7 @@ protected:
     QList<ToolBar*> toolBars;
     QDockWidget* projectDockWidget, * buildDockWidget, *outputDockWidget, *treeBrowserDockWidget;
     QTextEdit* buildTextEdit,*outputTextEdit;
-    TreeModel* treeBrowserTree;
+    QTreeView* view;
 
     QMenu* dockWidgetMenu;
     QList<QDockWidget*> extraDockWidgets;

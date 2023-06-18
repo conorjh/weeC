@@ -6,6 +6,8 @@
 #include <QtWidgets>
 #include "app.h"
 #include "mainwindow.h"
+#include "treemodel.h"
+#include "treeitem.h"
 #include <QActionGroup>
 #include <QLayout>
 #include <QMenu>
@@ -30,6 +32,7 @@
 
 Q_DECLARE_METATYPE(QDockWidget::DockWidgetFeatures)
 QT_FORWARD_DECLARE_CLASS(QAction)
+QT_FORWARD_DECLARE_CLASS(QTreeView)
 
 //! [0]
 MainWindow::MainWindow(QWidget* parent)
@@ -43,6 +46,7 @@ MainWindow::MainWindow(QWidget* parent)
     setupDockWidgets();
 
     setupEditor();
+
 
     setCentralWidget(editor);
     setWindowTitle(tr(App::AppTitle));
@@ -95,7 +99,8 @@ bool MainWindow::saveFileAs()
 {
     QFileDialog fileDialog(this, tr("Save as..."));
     fileDialog.setAcceptMode(QFileDialog::AcceptSave);
-    fileDialog.setNameFilter( "weeC Source (*.wc);;weeC Header (*.wh);;weeC Project (*.wcp)" );
+    fileDialog.setNameFilter("weeC Source (*.wc);;weeC Header (*.wh);;weeC Project (*.wcp)");
+    fileDialog.setDefaultSuffix("wc");
 
     if (fileDialog.exec() != QDialog::Accepted)
         return false;
@@ -112,7 +117,7 @@ void MainWindow::buildAndRun()
 
 void MainWindow::build()
 {
-    if (ParserRunning)
+    if (InterpreterRunning || ParserRunning)
         return;
 
     using namespace std;
@@ -184,6 +189,111 @@ void MainWindow::projectSettings()
 {
 }
 
+void MainWindow::insertChild()
+{
+    const QModelIndex index = view->selectionModel()->currentIndex();
+    QAbstractItemModel* model = view->model();
+
+    if (model->columnCount(index) == 0) {
+        if (!model->insertColumn(0, index))
+            return;
+    }
+
+    if (!model->insertRow(0, index))
+        return;
+
+    for (int column = 0; column < model->columnCount(index); ++column) 
+    {
+        const QModelIndex child = model->index(0, column, index);
+        model->setData(child, QVariant(tr("[No data]")), Qt::EditRole);
+        if (!model->headerData(column, Qt::Horizontal).isValid())
+            model->setHeaderData(column, Qt::Horizontal, QVariant(tr("[No header]")), Qt::EditRole);
+    }
+
+    view->selectionModel()->setCurrentIndex(model->index(0, 0, index),
+        QItemSelectionModel::ClearAndSelect);
+    updateActions();
+}
+
+bool MainWindow::insertColumn()
+{
+    QAbstractItemModel* model = view->model();
+    int column = view->selectionModel()->currentIndex().column();
+
+    // Insert a column in the parent item.
+    bool changed = model->insertColumn(column + 1);
+    if (changed)
+        model->setHeaderData(column + 1, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
+
+    updateActions();
+
+    return changed;
+}
+
+void MainWindow::insertRow()
+{
+    const QModelIndex index = view->selectionModel()->currentIndex();
+    QAbstractItemModel* model = view->model();
+
+    if (!model->insertRow(index.row() + 1, index.parent()))
+        return;
+
+    updateActions();
+
+    for (int column = 0; column < model->columnCount(index.parent()); ++column)
+    {
+        const QModelIndex child = model->index(index.row() + 1, column, index.parent());
+        model->setData(child, QVariant(tr("Data")), Qt::EditRole);
+    }
+}
+
+bool MainWindow::removeColumn()
+{
+    QAbstractItemModel* model = view->model();
+    const int column = view->selectionModel()->currentIndex().column();
+
+    // Insert columns in each child of the parent item.
+    const bool changed = model->removeColumn(column);
+    if (changed)
+        updateActions();
+
+    return changed;
+}
+
+void MainWindow::removeRow()
+{
+    const QModelIndex index = view->selectionModel()->currentIndex();
+    QAbstractItemModel* model = view->model();
+    if (model->removeRow(index.row(), index.parent()))
+        updateActions();
+}
+
+void MainWindow::populateTreeView()
+{
+
+}
+
+void MainWindow::updateActions()
+{
+    const bool hasSelection = !view->selectionModel()->selection().isEmpty();
+    removeRowAction->setEnabled(hasSelection);
+    removeColumnAction->setEnabled(hasSelection);
+
+    const bool hasCurrent = view->selectionModel()->currentIndex().isValid();
+    insertRowAction->setEnabled(hasCurrent);
+    insertColumnAction->setEnabled(hasCurrent);
+
+    if (hasCurrent) {
+        view->closePersistentEditor(view->selectionModel()->currentIndex());
+
+        const int row = view->selectionModel()->currentIndex().row();
+        const int column = view->selectionModel()->currentIndex().column();
+        if (view->selectionModel()->currentIndex().parent().isValid())
+            statusBar()->showMessage(tr("Position: (%1,%2)").arg(row).arg(column));
+        else
+            statusBar()->showMessage(tr("Position: (%1,%2) in top level").arg(row).arg(column));
+    }
+}
 
 //! [1]
 void MainWindow::setupEditor()
@@ -274,6 +384,8 @@ void MainWindow::setupDockWidgets()
 {
     qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
 
+
+
     outputDockWidget = new QDockWidget();
     outputDockWidget->setObjectName("Output");
     outputDockWidget->setWindowTitle("Output");
@@ -298,18 +410,44 @@ void MainWindow::setupDockWidgets()
     treeBrowserDockWidget->setObjectName("Object Browser");
     treeBrowserDockWidget->setWindowTitle("Object Browser");
 
-    auto view = new QTreeView();
+    view = new QTreeView();
     view->setObjectName("view");
     view->setAlternatingRowColors(true);
     view->setSelectionBehavior(QAbstractItemView::SelectItems);
     view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     view->setAnimated(false);
     view->setAllColumnsShowFocus(true);
-    TreeModel* model = new TreeModel({}, {}, this);
+
+    TreeModel* model = new TreeModel({"AST"}, {}, this);
     view->setModel(model);
     treeBrowserDockWidget->setWidget(view);
     addDockWidget(Qt::RightDockWidgetArea, treeBrowserDockWidget);
+    
+    connect(view->selectionModel(), &QItemSelectionModel::selectionChanged,
+        this, &MainWindow::updateActions);
 
+    insertRowAction = new QAction(this);
+    insertRowAction->setObjectName("insertRowAction");
+    removeRowAction = new QAction(this);
+    removeRowAction->setObjectName("removeRowAction");
+    insertColumnAction = new QAction(this);
+    insertColumnAction->setObjectName("insertColumnAction");
+    removeColumnAction = new QAction(this);
+    removeColumnAction->setObjectName("removeColumnAction");
+    insertChildAction = new QAction(this);
+    insertChildAction->setObjectName("insertChildAction");
+
+    connect(insertRowAction, &QAction::triggered, this, &MainWindow::insertRow);
+    connect(insertColumnAction, &QAction::triggered, this, &MainWindow::insertColumn);
+    connect(removeRowAction, &QAction::triggered, this, &MainWindow::removeRow);
+    connect(removeColumnAction, &QAction::triggered, this, &MainWindow::removeColumn);
+    connect(insertChildAction, &QAction::triggered, this, &MainWindow::insertChild);
+
+    updateActions();
+
+    insertRow();
+
+    //insertRow();
     tabifyDockWidget(treeBrowserDockWidget, projectDockWidget);
 }
 

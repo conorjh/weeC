@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include <chrono>
+#include <any>
 #include <QtWidgets>
 #include "app.h"
 #include "mainwindow.h"
@@ -72,12 +73,35 @@ void MainWindow::openFile(const QString &path)
     }
 }
 
-void MainWindow::saveFile()
+bool MainWindow::saveFile()
 {
+    if (Filename == "" || Filename.substr(0,2) == std::string(":/"))
+        return saveFileAs();
+
+    QTextDocumentWriter writer(Filename.c_str());
+    bool success = writer.write(editor->document());
+    if (success) {
+        editor->document()->setModified(false);
+        statusBar()->showMessage(tr("Wrote \"%1\"").arg(QDir::toNativeSeparators(Filename.c_str())));
+    }
+    else {
+        statusBar()->showMessage(tr("Could not write to file \"%1\"")
+            .arg(QDir::toNativeSeparators(Filename.c_str())));
+    }
+    return success;
 }
 
-void MainWindow::saveFileAs()
+bool MainWindow::saveFileAs()
 {
+    QFileDialog fileDialog(this, tr("Save as..."));
+    fileDialog.setAcceptMode(QFileDialog::AcceptSave);
+    fileDialog.setNameFilter( "weeC Source (*.wc);;weeC Header (*.wh);;weeC Project (*.wcp)" );
+
+    if (fileDialog.exec() != QDialog::Accepted)
+        return false;
+
+    Filename = fileDialog.selectedFiles().constFirst().toStdString();
+    return saveFile();
 }
 
 void MainWindow::buildAndRun()
@@ -222,7 +246,7 @@ void MainWindow::setupViewMenu()
     action->setChecked(dockOptions() & AnimatedDocks);
     connect(action, &QAction::toggled, this, &MainWindow::toggleOutputDockWidget);
 
-    action = viewMenu->addAction(tr("Tree Browser"), this, &MainWindow::toggleTreeBrowserDockWidget);
+    action = viewMenu->addAction(tr("&Tree Browser"), this, &MainWindow::toggleTreeBrowserDockWidget);
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
     connect(action, &QAction::toggled, this, &MainWindow::toggleTreeBrowserDockWidget);;
@@ -270,13 +294,23 @@ void MainWindow::setupDockWidgets()
     projectDockWidget->setWidget(new QTextEdit);
     addDockWidget(Qt::RightDockWidgetArea, projectDockWidget);
 
-    TreeBrowserDockWidget = new QDockWidget();
-    TreeBrowserDockWidget->setObjectName("Object Browser");
-    TreeBrowserDockWidget->setWindowTitle("Object Browser");
-    TreeBrowserDockWidget->setWidget(new QTextEdit);
-    addDockWidget(Qt::RightDockWidgetArea, TreeBrowserDockWidget);
+    treeBrowserDockWidget = new QDockWidget();
+    treeBrowserDockWidget->setObjectName("Object Browser");
+    treeBrowserDockWidget->setWindowTitle("Object Browser");
 
-    tabifyDockWidget(TreeBrowserDockWidget, projectDockWidget);
+    auto view = new QTreeView();
+    view->setObjectName("view");
+    view->setAlternatingRowColors(true);
+    view->setSelectionBehavior(QAbstractItemView::SelectItems);
+    view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    view->setAnimated(false);
+    view->setAllColumnsShowFocus(true);
+    TreeModel* model = new TreeModel({}, {}, this);
+    view->setModel(model);
+    treeBrowserDockWidget->setWidget(view);
+    addDockWidget(Qt::RightDockWidgetArea, treeBrowserDockWidget);
+
+    tabifyDockWidget(treeBrowserDockWidget, projectDockWidget);
 }
 
 void MainWindow::toggleProjectDockWidget()
@@ -293,9 +327,9 @@ void MainWindow::toggleOutputDockWidget()
 
 void MainWindow::toggleTreeBrowserDockWidget()
 {
-    auto toggleAction = TreeBrowserDockWidget->toggleViewAction();
+    auto toggleAction = treeBrowserDockWidget->toggleViewAction();
 
-    TreeBrowserDockWidget->addAction(toggleAction);
+    treeBrowserDockWidget->addAction(toggleAction);
 }
 
 void MainWindow::printToOutput(std::string Input)
@@ -322,14 +356,28 @@ InterpreterWorker::~InterpreterWorker()
 void InterpreterWorker::process()
 {
     using namespace std;
+    using namespace weec;
+    using namespace weec::lex;
+    using namespace weec::parse;
+    using namespace weec::interpreter;
 
     emit printed("Executing...");
     auto parseStart = chrono::system_clock::now();
 
     auto Result = Interpreter->Exec();
 
+    if (Interpreter->Error.Code != wcInterpreterErrorCode::None)
+    {
+        emit printed("= = = Parsing Failed = = =");
+        emit printed("Error code: " + string(to_string(int(Interpreter->Error.Code))) + "  " + to_string(Interpreter->Error.Code));
+        return;
+    }
+
     auto timeTaken = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - parseStart).count();
     emit printed("Execution Finished: " + to_string(timeTaken) + "ms");
+    emit printed("Return: " + Interpreter->to_string(Result));
+    emit printed("EAX: " + Interpreter->to_string(Interpreter->EAX));
+
     emit finished();
 }
 

@@ -5,6 +5,7 @@
 #define MAINWINDOW_H
 
 #include "highlighter.h"
+#include "treemodel.h"
 #include "weec.h"
 
 #include <QMainWindow>
@@ -42,8 +43,8 @@ public slots:
     void about();
     void newFile();
     void openFile(const QString& path = QString());
-    void saveFile();
-    void saveFileAs();
+    bool saveFile();
+    bool saveFileAs();
     void build();
     void buildAndRun();    
     void run();
@@ -78,8 +79,9 @@ protected:
     }
 
     QList<ToolBar*> toolBars;
-    QDockWidget* projectDockWidget, * buildDockWidget, *outputDockWidget, *TreeBrowserDockWidget;
+    QDockWidget* projectDockWidget, * buildDockWidget, *outputDockWidget, *treeBrowserDockWidget;
     QTextEdit* buildTextEdit,*outputTextEdit;
+    TreeModel* treeBrowserTree;
 
     QMenu* dockWidgetMenu;
     QList<QDockWidget*> extraDockWidgets;

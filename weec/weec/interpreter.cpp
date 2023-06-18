@@ -14,6 +14,30 @@ bool operator==(any& a, any& b)
 	return true;
 }
 
+std::string weec::interpreter::wcInterpreter::to_string(std::any Value)
+{
+	auto FindA = SymbolTable.ImplTypes.GetByInternal((Value.type().name()));
+
+	if (FindA.Name == "int")
+		return std::to_string(std::any_cast<int>(Value));
+	else if (FindA.Name == "unsigned int")
+		return std::to_string(std::any_cast<unsigned int>(Value));
+	else if (FindA.Name == "float")
+		return std::to_string(std::any_cast<float>(Value));
+	else if (FindA.Name == "double")
+		return std::to_string(std::any_cast<double>(Value));
+	else if (FindA.Name == "bool")
+		return std::to_string(std::any_cast<bool>(Value));
+	else if (FindA.Name == "char")
+		return std::to_string(std::any_cast<char>(Value));
+	else if (FindA.Name == "struct weec::interpreter::wcInterpreterError")
+		return to_string(std::any_cast<wcInterpreterError>(Value));
+	else if (FindA.Name == "string")
+		return to_string(std::any_cast<string>(Value));
+	else
+		return "error-" + string(std::type_index(typeid(Value)).name());
+}
+
 string weec::interpreter::to_string(wcInterpreterErrorCode Code)
 {
 	switch (Code)
@@ -386,10 +410,10 @@ any weec::interpreter::wcExpressionInterpreter::ExecLogicAnd()
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
-	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
+	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
-	if (Rh.type().name() == "struct weec::interpreter::wcInterpreterError")
+	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
@@ -401,10 +425,10 @@ any weec::interpreter::wcExpressionInterpreter::ExecLogicOr()
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
-	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
+	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
-	if (Rh.type().name() == "struct weec::interpreter::wcInterpreterError")
+	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
@@ -416,10 +440,10 @@ any weec::interpreter::wcExpressionInterpreter::ExecAssignment()
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression, true);
-	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
+	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
-	if (Rh.type().name() == "struct weec::interpreter::wcInterpreterError")
+	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
@@ -431,10 +455,10 @@ any weec::interpreter::wcExpressionInterpreter::ExecEquality()
 	PC++;
 
 	auto Lh = EvalNode(PC->Type, Expression);
-	if (Lh.type().name() == "struct weec::interpreter::wcInterpreterError")
+	if (!strcmp(Lh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Lh;
 	auto Rh = EvalNode(PC->Type, Expression);
-	if (Rh.type().name() == "struct weec::interpreter::wcInterpreterError")
+	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Rh;
 
 	return DoOp(OpType, Lh, Rh);
@@ -550,11 +574,20 @@ std::any weec::interpreter::wcInterpreter::ExecPrint()
 	auto Begin = PC;
 	PC++;
 
+	any ExpressionResult;
 	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && !Halt))
 		switch (PC->Type)
 		{
 		case Expression:
-			Print(wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec());
+			ExpressionResult = wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec();
+			if (strcmp(ExpressionResult.type().name(), "struct weec::interpreter::wcInterpreterError") == 0)
+			{
+				Error = any_cast<wcInterpreterError>(ExpressionResult);
+				Halt = true;
+				return ExpressionResult;
+			}
+
+			Print(ExpressionResult);
 			break;
 
 		default:
@@ -625,6 +658,12 @@ any weec::interpreter::wcInterpreter::ExecReturn()
 		{
 		case Expression:
 			Return = wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec();
+			if (strcmp(Return.type().name(), "struct weec::interpreter::wcInterpreterError") == 0)
+			{
+				Error = any_cast<wcInterpreterError>(Return);
+				Halt = true;
+				return Return;
+			}
 			break;
 
 		default:
@@ -692,6 +731,12 @@ any weec::interpreter::wcInterpreter::ExecIf()
 		{
 		case Expression:
 			ExpressionResult = wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec();
+			if (strcmp(ExpressionResult.type().name(), "struct weec::interpreter::wcInterpreterError") == 0)
+			{
+				Error = any_cast<wcInterpreterError>(ExpressionResult);
+				Halt = true;
+				return ExpressionResult;
+			}
 			ExprTrue = any_cast<bool>(ExpressionResult);
 			break;
 
@@ -738,6 +783,12 @@ any weec::interpreter::wcInterpreter::ExecWhile()
 		case Expression:
 			ExprPC = PC;
 			ExpressionResult = wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec();
+			if (strcmp(ExpressionResult.type().name(), "struct weec::interpreter::wcInterpreterError") == 0)
+			{
+				Error = any_cast<wcInterpreterError>(ExpressionResult);
+				Halt = true;
+				return ExpressionResult;
+			}
 			ExprTrue = any_cast<bool>(ExpressionResult);
 
 			if (!ExprTrue)
@@ -785,6 +836,7 @@ any weec::interpreter::wcInterpreter::ExecDeclaration()
 	tree<wcParseNode>::iterator DecBlockPC = PC;
 	vector<wcInterpreterArgument> Arguments;
 	string SymbolName = "";
+	any ExpressionResult;
 	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && PC.node != nullptr && !Halt))
 	{
 		switch (PC->Type)
@@ -817,7 +869,13 @@ any weec::interpreter::wcInterpreter::ExecDeclaration()
 			break;
 
 		case Expression:
-			wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec();
+			ExpressionResult = wcExpressionInterpreter(SymbolTable, FunctionTable, Input, PC, EAX).Exec();
+			if (strcmp(ExpressionResult.type().name(), "struct weec::interpreter::wcInterpreterError") == 0)
+			{
+				Error = any_cast<wcInterpreterError>(ExpressionResult);
+				Halt = true;
+				return ExpressionResult;
+			}
 			break;
 
 		case Block:
@@ -897,6 +955,7 @@ weec::interpreter::ImplementationTypes::ImplementationTypes()
 	Add("double", type_index(typeid(double)));
 	Add("bool", type_index(typeid(bool)));
 	Add("string", type_index(typeid(string)));
+	Add("struct weec::interpreter::wcInterpreterError", type_index(typeid(wcInterpreterError)));
 }
 
 void weec::interpreter::ImplementationTypes::Add(string EasyName, type_index Type)

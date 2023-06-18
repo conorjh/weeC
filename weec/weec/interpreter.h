@@ -19,6 +19,8 @@ namespace weec
 {
 	namespace interpreter
 	{
+		std::string to_string(std::any Value);
+
 		class ImplementationType
 		{
 		public:
@@ -210,6 +212,8 @@ namespace weec
 			void (*PrintFunc)(std::string);
 
 		public:
+			std::string to_string(std::any Value);
+
 			wcExpressionInterpreter ExpressionInterp;
 			wcInterpreter(parse::wcParseOutput& Input);
 			wcInterpreter(void (*)(std::string), parse::wcParseOutput& Input);

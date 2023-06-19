@@ -65,7 +65,8 @@ public slots:
     void toggleProjectDockWidget();  
     void toggleOutputDockWidget();
     void toggleTreeBrowserDockWidget();
-
+    void toggleBuildDockWidget();
+    
 protected:
     void insertChild();
     bool insertColumn();
@@ -104,7 +105,11 @@ protected:
     QTextEdit* buildTextEdit,*outputTextEdit;
     QTreeView* view;
 
-    QMenu* dockWidgetMenu;
+    QAction* File_NewSubMenu, * File_SaveSubMenu, * File_SaveAsSubMenu, * File_OpenSubMenu,
+        * Build_BuildSubMenu, * Build_RunSubMenu,
+        * View_ProjectSubMenu, * View_OutputSubMenu, * View_BuildSubMenu, * View_TreeBrowserSubMenu;
+
+     QMenu   *dockWidgetMenu;
     QList<QDockWidget*> extraDockWidgets;
     QMenu* viewMenu;
 

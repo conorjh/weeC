@@ -162,6 +162,7 @@ void MainWindow::run()
     if (InterpreterRunning || ParserRunning || Parsed.IsErrored())
         return;
 
+
     using namespace std;
     using namespace weec;
     using namespace weec::interpreter;
@@ -169,6 +170,7 @@ void MainWindow::run()
     outputDockWidget->show();
     outputDockWidget->raise();
     outputTextEdit->clear();
+    Build_RunSubMenu->setIcon(QIcon("../icons/running.png"));
 
     QThread* thread = new QThread();
     InterpreterWorker* worker = new InterpreterWorker(Parsed);
@@ -180,6 +182,7 @@ void MainWindow::run()
     connect(worker, &InterpreterWorker::finished, thread, &QThread::quit);
     connect(worker, &InterpreterWorker::finished, worker, &InterpreterWorker::deleteLater);
     connect(worker, &InterpreterWorker::finished, this, [this]() { InterpreterRunning = false; });
+    connect(worker, &InterpreterWorker::finished, this, [this]() { Build_RunSubMenu->setIcon(QIcon("../icons/run.png")); });
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
     thread->start();
@@ -397,10 +400,10 @@ void MainWindow::setupBuildMenu()
 
     const QIcon buildIcon = QIcon("../icons/build.png");
     const QIcon runIcon = QIcon("../icons/run.png");
-    auto run = buildMenu->addAction(runIcon, tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::buildAndRun);
-    auto build = buildMenu->addAction(buildIcon, tr("&Build"), QKeySequence(Qt::Key_F7), this, &MainWindow::build);
-    tb->addAction(build);
-    tb->addAction(run);
+    Build_RunSubMenu = buildMenu->addAction(runIcon, tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::buildAndRun);
+    Build_BuildSubMenu = buildMenu->addAction(buildIcon, tr("&Build"), QKeySequence(Qt::Key_F7), this, &MainWindow::build);
+    tb->addAction(Build_BuildSubMenu);
+    tb->addAction(Build_RunSubMenu);
 }
 
 
@@ -411,33 +414,36 @@ void MainWindow::setupViewMenu()
     menuBar()->addMenu(viewMenu);
 
     const QIcon projectIcon = QIcon("../icons/project.png");
-    auto action = viewMenu->addAction(projectIcon, tr("&Project"), this, &MainWindow::toggleProjectDockWidget);
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & AnimatedDocks);
-    tb->addAction(action);
-    connect(action, &QAction::toggled, this, &MainWindow::toggleProjectDockWidget);
+    View_ProjectSubMenu = viewMenu->addAction(projectIcon, tr("&Project"), this, &MainWindow::toggleProjectDockWidget);
+    View_ProjectSubMenu->setCheckable(true);
+    View_ProjectSubMenu->setChecked(dockOptions() & AnimatedDocks);
+    tb->addAction(View_ProjectSubMenu);
+    connect(View_ProjectSubMenu, &QAction::toggled, this, &MainWindow::toggleProjectDockWidget);
 
 
     const QIcon treeIcon = QIcon("../icons/tree_browser.png");
-    action = viewMenu->addAction(treeIcon, tr("&Tree Browser"), this, &MainWindow::toggleTreeBrowserDockWidget);
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & AnimatedDocks);
-    tb->addAction(action);
-    connect(action, &QAction::toggled, this, &MainWindow::toggleTreeBrowserDockWidget);
+    View_TreeBrowserSubMenu = viewMenu->addAction(treeIcon, tr("&Tree Browser"), this, &MainWindow::toggleTreeBrowserDockWidget);
+    View_TreeBrowserSubMenu->setCheckable(true);
+    View_TreeBrowserSubMenu->setChecked(dockOptions() & AnimatedDocks);
+    tb->addAction(View_TreeBrowserSubMenu);
+    connect(View_TreeBrowserSubMenu, &QAction::toggled, this, &MainWindow::toggleTreeBrowserDockWidget);
+
+    tb->addSeparator();
+    viewMenu->addSeparator();
 
     const QIcon outputIcon = QIcon("../icons/output.png");
-    action = viewMenu->addAction(outputIcon, tr("&Output"), this, &MainWindow::toggleOutputDockWidget);
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & AnimatedDocks);
-    tb->addAction(action);
-    connect(action, &QAction::toggled, this, &MainWindow::toggleOutputDockWidget);
+    View_OutputSubMenu = viewMenu->addAction(outputIcon, tr("&Output"), this, &MainWindow::toggleOutputDockWidget);
+    View_OutputSubMenu->setCheckable(true);
+    View_OutputSubMenu->setChecked(dockOptions() & AnimatedDocks);
+    tb->addAction(View_OutputSubMenu);
+    connect(View_OutputSubMenu, &QAction::toggled, this, &MainWindow::toggleOutputDockWidget);
 
     const QIcon buildIcon = QIcon("../icons/build2.png");
-    action = viewMenu->addAction(buildIcon, tr("&Build"), this, &MainWindow::build);
-    action->setCheckable(true);
-    action->setChecked(dockOptions() & AnimatedDocks);
-    tb->addAction(action);
-    connect(action, &QAction::toggled, this, &MainWindow::toggleOutputDockWidget);
+    View_BuildSubMenu = viewMenu->addAction(buildIcon, tr("&Build"), this, &MainWindow::toggleBuildDockWidget);
+    View_BuildSubMenu->setCheckable(true);
+    View_BuildSubMenu->setChecked(dockOptions() & AnimatedDocks);
+    tb->addAction(View_BuildSubMenu);
+    connect(View_BuildSubMenu, &QAction::toggled, this, &MainWindow::toggleBuildDockWidget);
 
 }
 
@@ -472,12 +478,14 @@ void MainWindow::setupDockWidgets()
     outputDockWidget = new QDockWidget();
     outputDockWidget->setObjectName("Output");
     outputDockWidget->setWindowTitle("Output");
+    outputDockWidget->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
     outputDockWidget->setWidget(outputTextEdit = new QTextEdit());
     addDockWidget(Qt::BottomDockWidgetArea, outputDockWidget);
 
     buildDockWidget = new QDockWidget();
     buildDockWidget->setObjectName("Build");
     buildDockWidget->setWindowTitle("Build");
+    buildDockWidget->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
     buildDockWidget->setWidget(buildTextEdit = new QTextEdit());
     addDockWidget(Qt::BottomDockWidgetArea, buildDockWidget);
 
@@ -487,11 +495,15 @@ void MainWindow::setupDockWidgets()
     projectDockWidget->setObjectName("Project");
     projectDockWidget->setWindowTitle("Project");
     projectDockWidget->setWidget(new QTextEdit);
+    projectDockWidget->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::RightDockWidgetArea, projectDockWidget);
+    auto projectDockWidgetAction = new QAction(projectDockWidget);
+    projectDockWidgetAction->setObjectName("Project");
 
     treeBrowserDockWidget = new QDockWidget();
     treeBrowserDockWidget->setObjectName("Tree Browser");
     treeBrowserDockWidget->setWindowTitle("Tree Browser");
+    treeBrowserDockWidget->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
 
     view = new QTreeView();
     view->setObjectName("view");
@@ -535,21 +547,73 @@ void MainWindow::setupDockWidgets()
 
 void MainWindow::toggleProjectDockWidget()
 {
-    auto toggleAction = projectDockWidget->toggleViewAction();
-    projectDockWidget->addAction(toggleAction);
+    auto tva = projectDockWidget->toggleViewAction();
+
+    if (!projectDockWidget->isVisible())
+        if (View_ProjectSubMenu->isChecked())
+        {
+            projectDockWidget->show();
+            return;
+        }
+
+    if (projectDockWidget->isVisible())
+        if (!View_ProjectSubMenu->isChecked())
+        {
+            projectDockWidget->hide();
+            return;
+        }
+
 }
 
 void MainWindow::toggleOutputDockWidget()
 {
-    auto toggleAction = outputDockWidget->toggleViewAction();
-    outputDockWidget->addAction(toggleAction);
+    if (!outputDockWidget->isVisible())
+        if (View_OutputSubMenu->isChecked())
+        {
+            outputDockWidget->show();
+            return;
+        }
+
+    if (outputDockWidget->isVisible())
+        if (!View_OutputSubMenu->isChecked())
+        {
+            outputDockWidget->hide();
+            return;
+        }
+}
+
+void MainWindow::toggleBuildDockWidget()
+{
+    if (!buildDockWidget->isVisible())
+        if (View_BuildSubMenu->isChecked())
+        {
+            buildDockWidget->show();
+            return;
+        }
+
+    if (buildDockWidget->isVisible())
+        if (!View_BuildSubMenu->isChecked())
+        {
+            buildDockWidget->hide();
+            return;
+        }
 }
 
 void MainWindow::toggleTreeBrowserDockWidget()
 {
-    auto toggleAction = treeBrowserDockWidget->toggleViewAction();
+    if (!treeBrowserDockWidget->isVisible())
+        if (View_TreeBrowserSubMenu->isChecked())
+        {
+            treeBrowserDockWidget->show();
+            return;
+        }
 
-    treeBrowserDockWidget->addAction(toggleAction);
+    if (treeBrowserDockWidget->isVisible())
+        if (!View_TreeBrowserSubMenu->isChecked())
+        {
+            treeBrowserDockWidget->hide();
+            return;
+        }
 }
 
 void MainWindow::printToOutput(std::string Input)
@@ -582,6 +646,7 @@ void InterpreterWorker::process()
     using namespace weec::interpreter;
 
     emit printed("Executing...");
+    
     auto parseStart = chrono::system_clock::now();
 
     auto Result = Interpreter->Exec();

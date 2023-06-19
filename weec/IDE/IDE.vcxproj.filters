@@ -26,16 +26,25 @@
     <ClInclude Include="app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="treeitem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="highlighter.cpp">
-      <Filter>Header Files</Filter>
+    <ClCompile Include="treemodel.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Header Files</Filter>
+    <ClCompile Include="treeitem.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mainwindow.cpp">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="highlighter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +52,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="mainwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="treemodel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -41,6 +41,11 @@ public:
     QAction* insertColumnAction;
     QAction* removeColumnAction;
     QAction* insertChildAction;
+    QAction* actionUndo;
+    QAction* actionRedo;
+    QAction* actionCut;
+    QAction* actionCopy;
+    QAction* actionPaste;
 
     void printToOutput(std::string);
     void printToBuild(std::string);
@@ -48,9 +53,9 @@ public:
 public slots:
     void about();
     void newFile();
-    void openFile(const QString& path = QString());
     bool saveFile();
     bool saveFileAs();
+    void openFile();
     void build();
     void buildAndRun();    
     void run();
@@ -72,8 +77,11 @@ protected:
     void setupFileMenu();
     void setupBuildMenu();
     void setupProjectMenu();
+    void setupEditMenu();
+    
     void setupViewMenu();
     void setupHelpMenu();
+    void setupToolBar();
     
     void setupDockWidgets();
 

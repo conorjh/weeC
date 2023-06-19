@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
     setupFileMenu();
+    setupEditMenu();
     setupBuildMenu();
     setupProjectMenu();
     setupViewMenu();
@@ -63,9 +64,9 @@ void MainWindow::newFile()
     editor->clear();
 }
 
-void MainWindow::openFile(const QString &path)
+void MainWindow::openFile()
 {
-    QString fileName = path;
+    QString fileName = Filename.c_str();
 
     if (fileName.isNull())
         fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "","weeC Files (*.wc *.wh);;weeC Projects (*.wcp)" );
@@ -317,49 +318,126 @@ void MainWindow::setupEditor()
 void MainWindow::setupFileMenu()
 {
     QMenu* fileMenu = new QMenu(tr("&File"), this);
+    QToolBar* tb = addToolBar(tr("File Actions"));
     menuBar()->addMenu(fileMenu);
 
-    fileMenu->addAction(tr("&New"), QKeySequence::New,
-        this, &MainWindow::newFile);
-    fileMenu->addAction(tr("&Open..."), QKeySequence::Open,
-        this, [this]() { openFile(); });
-    fileMenu->addAction(tr("&Save..."), QKeySequence::Save,
-        this, [this]() { saveFile(); });
-    fileMenu->addAction(tr("Save &As..."), QKeySequence::SaveAs,
-        this, [this]() { saveFileAs(); });
+    const QIcon newIcon = QIcon("../icons/new.png");
+    QAction* a = fileMenu->addAction(newIcon, tr("&New"), this, &MainWindow::newFile);
+    tb->addAction(a);
+    a->setPriority(QAction::LowPriority);
+    a->setShortcut(QKeySequence::New);
+
+    const QIcon openIcon = QIcon("../icons/open.png");
+    a = fileMenu->addAction(openIcon, tr("&Open..."), this, &MainWindow::openFile);
+    a->setShortcut(QKeySequence::Open);
+    tb->addAction(a);
+
+    tb->addSeparator();
+    const QIcon saveIcon = QIcon("../icons/save.png");
+    auto actionSave = fileMenu->addAction(saveIcon, tr("&Save"), this, &MainWindow::saveFile);
+    actionSave->setShortcut(QKeySequence::Save);
+    actionSave->setEnabled(true);
+    tb->addAction(actionSave);
+
+    const QIcon saveAsIcon = QIcon("../icons/save_as.png");
+    auto actionSaveAs = fileMenu->addAction(saveAsIcon, tr("Save &As"), this, &MainWindow::saveFileAs);
+    actionSaveAs->setShortcut(QKeySequence::SaveAs);
+    actionSaveAs->setEnabled(true);
+    tb->addAction(actionSaveAs);
+
+
     fileMenu->addAction(tr("E&xit"), QKeySequence::Quit,
         qApp, &QApplication::quit);
 }
 
+void MainWindow::setupEditMenu()
+{
+    QToolBar* tb = addToolBar(tr("Edit Actions"));
+    QMenu* menu = menuBar()->addMenu(tr("&Edit"));
+
+    const QIcon undoIcon = QIcon("../icons/undo.png");
+    actionUndo = menu->addAction(undoIcon, tr("&Undo"), editor, &QTextEdit::undo);
+    actionUndo->setShortcut(QKeySequence::Undo);
+    tb->addAction(actionUndo);
+
+    const QIcon redoIcon = QIcon("../icons/redo.png");
+    actionRedo = menu->addAction(redoIcon, tr("&Redo"), editor, &QTextEdit::redo);
+    actionRedo->setPriority(QAction::LowPriority);
+    actionRedo->setShortcut(QKeySequence::Redo);
+    tb->addAction(actionRedo);
+    menu->addSeparator();
+
+#ifndef QT_NO_CLIPBOARD
+    const QIcon cutIcon =  QIcon("../icons/cut.png");
+    actionCut = menu->addAction(cutIcon, tr("Cu&t"), editor, &QTextEdit::cut);
+    actionCut->setPriority(QAction::LowPriority);
+    actionCut->setShortcut(QKeySequence::Cut);
+    tb->addAction(actionCut);
+
+    const QIcon copyIcon = QIcon("../icons/copy.png");
+    actionCopy = menu->addAction(copyIcon, tr("&Copy"), editor, &QTextEdit::copy);
+    actionCopy->setPriority(QAction::LowPriority);
+    actionCopy->setShortcut(QKeySequence::Copy);
+    tb->addAction(actionCopy);
+
+    const QIcon pasteIcon = QIcon("../icons/paste.png");
+    actionPaste = menu->addAction(pasteIcon, tr("&Paste"), editor, &QTextEdit::paste);
+    actionPaste->setPriority(QAction::LowPriority);
+    actionPaste->setShortcut(QKeySequence::Paste);
+    tb->addAction(actionPaste);
+    if (const QMimeData* md = QGuiApplication::clipboard()->mimeData())
+        actionPaste->setEnabled(md->hasText());
+#endif
+}
 void MainWindow::setupBuildMenu()
 {
     QMenu* buildMenu = new QMenu(tr("&Build"), this);
+    QToolBar* tb = addToolBar(tr("Build Actions"));
     menuBar()->addMenu(buildMenu);
 
-    buildMenu->addAction(tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::buildAndRun);
-    buildMenu->addAction(tr("&Build"), QKeySequence(Qt::Key_F7), this, &MainWindow::build);
+    const QIcon buildIcon = QIcon("../icons/build.png");
+    const QIcon runIcon = QIcon("../icons/run.png");
+    auto run = buildMenu->addAction(runIcon, tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::buildAndRun);
+    auto build = buildMenu->addAction(buildIcon, tr("&Build"), QKeySequence(Qt::Key_F7), this, &MainWindow::build);
+    tb->addAction(build);
+    tb->addAction(run);
 }
 
 
 void MainWindow::setupViewMenu()
 {
     viewMenu = new QMenu(tr("&View"), this);
+    QToolBar* tb = addToolBar(tr("View Actions"));
     menuBar()->addMenu(viewMenu);
-    
-    auto action = viewMenu->addAction(tr("&Project"), this, &MainWindow::toggleProjectDockWidget);
+
+    const QIcon projectIcon = QIcon("../icons/project.png");
+    auto action = viewMenu->addAction(projectIcon, tr("&Project"), this, &MainWindow::toggleProjectDockWidget);
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
+    tb->addAction(action);
     connect(action, &QAction::toggled, this, &MainWindow::toggleProjectDockWidget);
 
-    action = viewMenu->addAction(tr("&Output"), this, &MainWindow::toggleOutputDockWidget);
+
+    const QIcon treeIcon = QIcon("../icons/tree_browser.png");
+    action = viewMenu->addAction(treeIcon, tr("&Tree Browser"), this, &MainWindow::toggleTreeBrowserDockWidget);
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
+    tb->addAction(action);
+    connect(action, &QAction::toggled, this, &MainWindow::toggleTreeBrowserDockWidget);
+
+    const QIcon outputIcon = QIcon("../icons/output.png");
+    action = viewMenu->addAction(outputIcon, tr("&Output"), this, &MainWindow::toggleOutputDockWidget);
+    action->setCheckable(true);
+    action->setChecked(dockOptions() & AnimatedDocks);
+    tb->addAction(action);
     connect(action, &QAction::toggled, this, &MainWindow::toggleOutputDockWidget);
 
-    action = viewMenu->addAction(tr("&Tree Browser"), this, &MainWindow::toggleTreeBrowserDockWidget);
+    const QIcon buildIcon = QIcon("../icons/build2.png");
+    action = viewMenu->addAction(buildIcon, tr("&Build"), this, &MainWindow::build);
     action->setCheckable(true);
     action->setChecked(dockOptions() & AnimatedDocks);
-    connect(action, &QAction::toggled, this, &MainWindow::toggleTreeBrowserDockWidget);;
+    tb->addAction(action);
+    connect(action, &QAction::toggled, this, &MainWindow::toggleOutputDockWidget);
 
 }
 
@@ -380,11 +458,16 @@ void MainWindow::setupHelpMenu()
     helpMenu->addAction(tr("About &Qt"), qApp, &QApplication::aboutQt);
 }
 
+void MainWindow::setupToolBar()
+{
+
+
+
+}
+
 void MainWindow::setupDockWidgets()
 {
     qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
-
-
 
     outputDockWidget = new QDockWidget();
     outputDockWidget->setObjectName("Output");
@@ -407,8 +490,8 @@ void MainWindow::setupDockWidgets()
     addDockWidget(Qt::RightDockWidgetArea, projectDockWidget);
 
     treeBrowserDockWidget = new QDockWidget();
-    treeBrowserDockWidget->setObjectName("Object Browser");
-    treeBrowserDockWidget->setWindowTitle("Object Browser");
+    treeBrowserDockWidget->setObjectName("Tree Browser");
+    treeBrowserDockWidget->setWindowTitle("Tree Browser");
 
     view = new QTreeView();
     view->setObjectName("view");
@@ -445,7 +528,6 @@ void MainWindow::setupDockWidgets()
 
     updateActions();
 
-    insertRow();
 
     //insertRow();
     tabifyDockWidget(treeBrowserDockWidget, projectDockWidget);

@@ -1622,13 +1622,11 @@ bool weec::parse::wcIdentalyzer::IsQualifiedWithGlobal(std::string PossibleIdent
 bool weec::parse::wcIdentalyzer::IsMember(std::string PossibleIdentifier)
 {
 	string PossibleMember = "";
-	if ((PossibleMember = StripArgumentsFromFunctionIdentifier(PossibleIdentifier)).find(ParserConsts.MemberDelimiter) != std::string::npos)
+	if ((PossibleMember = StripArgumentsFromFunctionIdentifier(PossibleIdentifier)).find(ParserConsts.MemberDelimiter)== std::string::npos)
 		return false;
 
 	return true;
 	//PossibleMember = PossibleMember.substr(PossibleMember.find(ParserConsts.MemberDelimiter), PossibleMember.size() - PossibleMember.find(ParserConsts.MemberDelimiter));
-
-	//return ();
 }
 
 bool weec::parse::wcIdentalyzer::IsFunction(std::string PossibleIdentifier)

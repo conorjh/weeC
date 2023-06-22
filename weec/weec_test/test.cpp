@@ -160,7 +160,7 @@ int weec::test::lex::Test_wcIdentalyzer1()
 	if (wcIdentalyzer().IsMember("ident()::a"))					return 10;
 	if (!wcIdentalyzer().IsMember("ident()::a.a"))				return 10;
 	if (wcIdentalyzer().IsMember("ident($g::int)::a"))			return 10;
-	if (!wcIdentalyzer().IsMember("ident($g::int).a"))			return 10;
+	if (!wcIdentalyzer().IsMember("ident($g::int).a.b.c"))			return 10;
 	if (wcIdentalyzer().IsMember("shouldFail"))					return 10;
 	if (wcIdentalyzer().IsMember("shouldFail($g::int)"))			return 10;
 
@@ -856,7 +856,7 @@ int weec::test::lex::Test_Tokenizer5()
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::StringKeyword || tokenizer.GetToken().StringToken.Data != "string")
 		return 1;
 
-	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier || tokenizer.GetToken().StringToken.Data != "TestIdent")
+	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Identifier || tokenizer.GetToken().StringToken.Data != "Test_Ident")
 		return 2;
 
 	if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::AssignOperator)

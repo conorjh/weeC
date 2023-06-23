@@ -38,6 +38,8 @@ QT_FORWARD_DECLARE_CLASS(QTreeView)
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
+    setupEditor();
+
     setupFileMenu();
     setupEditMenu();
     setupBuildMenu();
@@ -45,9 +47,6 @@ MainWindow::MainWindow(QWidget* parent)
     setupViewMenu();
     setupHelpMenu();
     setupDockWidgets();
-
-    setupEditor();
-
 
     setCentralWidget(editor);
     setWindowTitle(tr(App::AppTitle));
@@ -355,42 +354,42 @@ void MainWindow::setupFileMenu()
 
 void MainWindow::setupEditMenu()
 {
+    QMenu* editMenu = new QMenu(tr("&Edit"), this);
     QToolBar* tb = addToolBar(tr("Edit Actions"));
-    QMenu* menu = menuBar()->addMenu(tr("&Edit"));
+    menuBar()->addMenu(editMenu);
 
     const QIcon undoIcon = QIcon("../icons/undo.png");
-    actionUndo = menu->addAction(undoIcon, tr("&Undo"), editor, &QTextEdit::undo);
+    actionUndo = editMenu->addAction(undoIcon, tr("&Undo"), editor, &QTextEdit::undo);
     actionUndo->setShortcut(QKeySequence::Undo);
     tb->addAction(actionUndo);
 
     const QIcon redoIcon = QIcon("../icons/redo.png");
-    actionRedo = menu->addAction(redoIcon, tr("&Redo"), editor, &QTextEdit::redo);
+    actionRedo = editMenu->addAction(redoIcon, tr("&Redo"), editor, &QTextEdit::redo);
     actionRedo->setPriority(QAction::LowPriority);
     actionRedo->setShortcut(QKeySequence::Redo);
     tb->addAction(actionRedo);
-    menu->addSeparator();
+    editMenu->addSeparator();
 
-#ifndef QT_NO_CLIPBOARD
     const QIcon cutIcon =  QIcon("../icons/cut.png");
-    actionCut = menu->addAction(cutIcon, tr("Cu&t"), editor, &QTextEdit::cut);
+    actionCut = editMenu->addAction(cutIcon, tr("Cu&t"), editor, &QTextEdit::cut);
     actionCut->setPriority(QAction::LowPriority);
     actionCut->setShortcut(QKeySequence::Cut);
     tb->addAction(actionCut);
 
     const QIcon copyIcon = QIcon("../icons/copy.png");
-    actionCopy = menu->addAction(copyIcon, tr("&Copy"), editor, &QTextEdit::copy);
+    actionCopy = editMenu->addAction(copyIcon, tr("&Copy"), editor, &QTextEdit::copy);
     actionCopy->setPriority(QAction::LowPriority);
     actionCopy->setShortcut(QKeySequence::Copy);
     tb->addAction(actionCopy);
-
+    
     const QIcon pasteIcon = QIcon("../icons/paste.png");
-    actionPaste = menu->addAction(pasteIcon, tr("&Paste"), editor, &QTextEdit::paste);
+    actionPaste = editMenu->addAction(pasteIcon, tr("&Paste"), editor, &QTextEdit::paste);
     actionPaste->setPriority(QAction::LowPriority);
     actionPaste->setShortcut(QKeySequence::Paste);
     tb->addAction(actionPaste);
     if (const QMimeData* md = QGuiApplication::clipboard()->mimeData())
         actionPaste->setEnabled(md->hasText());
-#endif
+
 }
 void MainWindow::setupBuildMenu()
 {

@@ -15,7 +15,8 @@ int i = 0;
 int ret = 0;
 while (i <= num)
 {
+		print i;
         ret = fibonacci(i);
-        print i = i + 1;
+        i = i + 1;
 }
 return ret;

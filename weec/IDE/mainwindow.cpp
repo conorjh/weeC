@@ -67,13 +67,15 @@ void MainWindow::openFile()
 {
     QString fileName = Filename.c_str();
 
-    if (fileName.isNull())
+    if (fileName.isEmpty())
         fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "","weeC Files (*.wc *.wh);;weeC Projects (*.wcp)" );
 
     if (!fileName.isEmpty()) {
         QFile file(fileName);
         if (file.open(QFile::ReadOnly | QFile::Text))
             editor->setPlainText(file.readAll());
+        Filename = fileName.toStdString();
+        file.close();
     }
 }
 
@@ -346,7 +348,6 @@ void MainWindow::setupFileMenu()
     actionSaveAs->setShortcut(QKeySequence::SaveAs);
     actionSaveAs->setEnabled(true);
     tb->addAction(actionSaveAs);
-
 
     fileMenu->addAction(tr("E&xit"), QKeySequence::Quit,
         qApp, &QApplication::quit);

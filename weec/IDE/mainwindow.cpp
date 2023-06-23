@@ -701,6 +701,7 @@ void ParserWorker::process()
         emit printed("= = = Parsing Failed = = =");
         emit printed("Error code: " + string(to_string(int(Output.Error.Code))) + "  " + to_string(Output.Error.Code));
         emit printed(Output.Error.Token.to_string() + " (" + to_string(Output.Error.Token.StringToken.Line) + "," + to_string(Output.Error.Token.StringToken.Column) + ")");
+        emit finished();
         return;
     }
 

@@ -504,6 +504,7 @@ weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& _Input)
 	PC = Input.AST.begin();
 	PrintFunc = DefaultPrintFunc;
 	Halt = false;
+	Paused = false;
 
 	//wcInterpreterFunctionSignature GlobalFuncSig(Input, this, vector<wcInterpreterArgument>(), "$g::int", PC);
 
@@ -515,6 +516,7 @@ weec::interpreter::wcInterpreter::wcInterpreter(void (*p_func)(std::string), wcP
 	PC = Input.AST.begin();
 	PrintFunc = p_func;
 	Halt = false;
+	Paused = false;
 
 	//wcInterpreterFunctionSignature GlobalFuncSig(Input, this, vector<wcInterpreterArgument>(), "$g::int", PC);
 
@@ -523,8 +525,14 @@ weec::interpreter::wcInterpreter::wcInterpreter(void (*p_func)(std::string), wcP
 void weec::interpreter::wcInterpreter::Reset()
 {
 	Halt = false;
+	Paused = false;
 	EAX = any();
 	Return = any();
+}
+
+void weec::interpreter::wcInterpreter::Pause()
+{
+	Paused = !Paused;
 }
 
 
@@ -611,7 +619,11 @@ any weec::interpreter::wcInterpreter::ExecStatement()
 	PC++;
 
 	any ExpressionResult;
-	if (Input.AST.depth(PC) > Input.AST.depth(Begin))
+	while (Input.AST.depth(PC) > Input.AST.depth(Begin))
+	{
+		if (Paused)
+			continue;
+
 		switch (PC->Type)
 		{
 		case Expression:
@@ -645,6 +657,9 @@ any weec::interpreter::wcInterpreter::ExecStatement()
 			Halt = true;
 			return Return;
 		}
+
+		break;
+	}
 	return Return;
 }
 
@@ -685,6 +700,10 @@ any weec::interpreter::wcInterpreter::ExecBlock(tree<parse::wcParseNode>::iterat
 	PC++;
 
 	while (Input.AST.depth(PC) > Input.AST.depth(Begin) && (PC != Input.AST.end() && !Halt))
+	{
+		if (Paused)
+			continue;
+
 		switch (PC->Type)
 		{
 		case Statement:
@@ -701,6 +720,7 @@ any weec::interpreter::wcInterpreter::ExecBlock(tree<parse::wcParseNode>::iterat
 			Halt = true;
 			break;
 		}
+	}
 
 	return Return;
 }

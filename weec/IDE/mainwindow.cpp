@@ -113,6 +113,13 @@ bool MainWindow::saveFileAs()
 
 void MainWindow::buildAndRun()
 {
+    if ((InterpreterRunning && interpreterWorker->isPaused())
+        || (ParserRunning && parserWorker->isPaused()))
+    {
+        pauseToggle();
+        return;
+    }
+
     RunFlag = true;
     build();
 }
@@ -160,34 +167,61 @@ void MainWindow::build()
 
 void MainWindow::run()
 {
+    
+
     if (InterpreterRunning || ParserRunning || Parsed.IsErrored())
         return;
-
 
     using namespace std;
     using namespace weec;
     using namespace weec::interpreter;
 
+    //setup gui
     outputDockWidget->show();
     outputDockWidget->raise();
     outputTextEdit->clear();
     Build_RunSubMenu->setIcon(QIcon("../icons/running.png"));
 
+    //start a thread and accompanying worker so we dont stall main gui thread
     QThread* thread = new QThread();
-    InterpreterWorker* worker = new InterpreterWorker(Parsed);
-    worker->moveToThread(thread);
-
+    interpreterWorker = new InterpreterWorker(Parsed);
+    interpreterWorker->moveToThread(thread);
+    
     //connect(worker, &InterpreterWorker::error, this, &InterpreterWorker::errorString);    
-    connect(worker, &InterpreterWorker::printed, this, &MainWindow::printToOutput);
-    connect(thread, &QThread::started, worker, &InterpreterWorker::process);
-    connect(worker, &InterpreterWorker::finished, thread, &QThread::quit);
-    connect(worker, &InterpreterWorker::finished, worker, &InterpreterWorker::deleteLater);
-    connect(worker, &InterpreterWorker::finished, this, [this]() { InterpreterRunning = false; });
-    connect(worker, &InterpreterWorker::finished, this, [this]() { Build_RunSubMenu->setIcon(QIcon("../icons/run.png")); });
+    connect(interpreterWorker, &InterpreterWorker::printed, this, &MainWindow::printToOutput);
+    connect(thread, &QThread::started, interpreterWorker, &InterpreterWorker::process);
+    //connect(Build_PauseSubMenu, &QAction::triggered, interpreterWorker, &InterpreterWorker::pauseToggle);
+    connect(interpreterWorker, &InterpreterWorker::finished, thread, &QThread::quit);
+    connect(interpreterWorker, &InterpreterWorker::finished, interpreterWorker, &InterpreterWorker::deleteLater);
+    connect(interpreterWorker, &InterpreterWorker::finished, this, [this]() { InterpreterRunning = false; });
+    connect(interpreterWorker, &InterpreterWorker::finished, this, [this]() { Build_RunSubMenu->setIcon(QIcon("../icons/run.png")); });
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
     thread->start();
     InterpreterRunning = true;
+}
+
+void MainWindow::pauseToggle()
+{
+    if (InterpreterRunning)
+    {
+        interpreterWorker->pauseToggle();
+
+        interpreterWorker->isPaused()
+            ? Build_PauseSubMenu->setIcon(QIcon("../icons/paused.png"))
+            : Build_PauseSubMenu->setIcon(QIcon("../icons/pause.png"));
+        return;
+    }
+
+    if (ParserRunning)
+    {
+        parserWorker->pauseToggle();
+
+        parserWorker->isPaused()
+            ? Build_PauseSubMenu->setIcon(QIcon("../icons/paused.png"))
+            : Build_PauseSubMenu->setIcon(QIcon("../icons/pause.png"));
+        return;
+    }
 }
 
 void MainWindow::projectSettings()
@@ -400,10 +434,13 @@ void MainWindow::setupBuildMenu()
 
     const QIcon buildIcon = QIcon("../icons/build.png");
     const QIcon runIcon = QIcon("../icons/run.png");
+    const QIcon pauseIcon = QIcon("../icons/pause.png");
     Build_RunSubMenu = buildMenu->addAction(runIcon, tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::buildAndRun);
     Build_BuildSubMenu = buildMenu->addAction(buildIcon, tr("&Build"), QKeySequence(Qt::Key_F7), this, &MainWindow::build);
+    Build_PauseSubMenu = buildMenu->addAction(pauseIcon, tr("&Pause"), this, &MainWindow::pauseToggle);
     tb->addAction(Build_BuildSubMenu);
     tb->addAction(Build_RunSubMenu);
+    tb->addAction(Build_PauseSubMenu);
 }
 
 
@@ -637,6 +674,12 @@ InterpreterWorker::~InterpreterWorker()
     delete Interpreter;
 }
 
+void InterpreterWorker::pauseToggle()
+{
+    Paused = !Paused;
+    Interpreter->Pause();
+}
+
 void InterpreterWorker::process()
 {
     using namespace std;
@@ -682,6 +725,11 @@ inline void QInterpreter::PrintFunc(std::string In)
 
 ParserWorker::~ParserWorker()
 {
+}
+
+void ParserWorker::pauseToggle()
+{
+    Paused = !Paused;
 }
 
 void ParserWorker::process()

@@ -211,6 +211,7 @@ namespace weec
 			virtual void Print(std::string);
 			void (*PrintFunc)(std::string);
 
+			bool Paused;
 		public:
 			std::string to_string(std::any Value);
 
@@ -218,7 +219,7 @@ namespace weec
 			wcInterpreter(parse::wcParseOutput& Input);
 			wcInterpreter(void (*)(std::string), parse::wcParseOutput& Input);
 
-			void Reset();
+			void Reset(), Pause();
 			virtual std::any Exec(), 
 				Exec(tree<parse::wcParseNode>::iterator NewPC), 
 				Exec(tree<parse::wcParseNode>::iterator NewPC, std::vector<wcInterpreterIdentPlusValue> Arguments),

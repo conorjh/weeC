@@ -25,6 +25,7 @@ QT_FORWARD_DECLARE_CLASS(QActionGroup)
 QT_FORWARD_DECLARE_CLASS(QMenu)
 class QInterpreter;
 class InterpreterWorker;
+class ParserWorker;
 
 //! [0]
 class MainWindow : public QMainWindow
@@ -57,8 +58,9 @@ public slots:
     bool saveFileAs();
     void openFile();
     void build();
-    void buildAndRun();    
+    void buildAndRun();
     void run();
+    void pauseToggle();
     void projectSettings();
 
     void updateActions();
@@ -106,7 +108,7 @@ protected:
     QTreeView* view;
 
     QAction* File_NewSubMenu, * File_SaveSubMenu, * File_SaveAsSubMenu, * File_OpenSubMenu,
-        * Build_BuildSubMenu, * Build_RunSubMenu,
+        * Build_BuildSubMenu, * Build_RunSubMenu, * Build_PauseSubMenu,
         * View_ProjectSubMenu, * View_OutputSubMenu, * View_BuildSubMenu, * View_TreeBrowserSubMenu;
 
      QMenu   *dockWidgetMenu;
@@ -116,12 +118,14 @@ protected:
     QTextEdit *editor;
     Highlighter *highlighter;
 
+    InterpreterWorker* interpreterWorker;
+    ParserWorker* parserWorker;
+
     bool ParserRunning = false, InterpreterRunning = false, RunFlag = false;
 
 };
 //! [0]
 
-class InterpreterWorker;
 
 class QInterpreter : public weec::interpreter::wcInterpreter
 {
@@ -163,6 +167,9 @@ public:
 
         while (PC != Input.AST.end() && PC != nullptr && !Halt)
         {
+            if (Paused) 
+                continue;
+
             auto t = PC->Type;
             switch (PC->Type)
             {
@@ -202,10 +209,16 @@ public:
         Input = _Input;
     }
 
+    bool isPaused() const
+    {
+        return Paused;
+    }
+
     ~ParserWorker();
 
 public slots:
     void process();
+    void pauseToggle();
 
 signals:
     void finished();
@@ -213,6 +226,7 @@ signals:
     void printed(std::string msg);
 
 private:
+    bool Paused;
     std::string Input;
     weec::parse::wcParseOutput& Output;
 };
@@ -222,20 +236,29 @@ class InterpreterWorker : public QObject {
 public:
     InterpreterWorker(weec::parse::wcParseOutput _Input)
     {
+        Paused = false;
         Input = _Input;
         Interpreter = new QInterpreter(Input, this);
+    }
+
+    bool isPaused() const
+    {
+        return Paused;
     }
 
     ~InterpreterWorker();
 
 public slots:
     void process();
+    void pauseToggle();
+
 signals:
     void finished();
     void error(QString err);
     void printed(std::string msg);
 
 private:
+    bool Paused;
     QInterpreter* Interpreter;
     weec::parse::wcParseOutput Input;
 };

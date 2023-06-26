@@ -66,8 +66,6 @@ void MainWindow::newFile()
 void MainWindow::openFile()
 {
     QString fileName = Filename.c_str();
-
-    if (fileName.isEmpty())
         fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "","weeC Files (*.wc *.wh);;weeC Projects (*.wcp)" );
 
     if (!fileName.isEmpty()) {
@@ -167,8 +165,6 @@ void MainWindow::build()
 
 void MainWindow::run()
 {
-    
-
     if (InterpreterRunning || ParserRunning || Parsed.IsErrored())
         return;
 
@@ -237,6 +233,7 @@ void MainWindow::stop()
 
 void MainWindow::projectSettings()
 {
+
 }
 
 void MainWindow::insertChild()
@@ -524,6 +521,16 @@ void MainWindow::setupDockWidgets()
 {
     qRegisterMetaType<QDockWidget::DockWidgetFeatures>();
 
+    setupDockWidgets_OutputBuild();
+    setupDockWidgets_Project();
+    setupDockWidgets_Tree();
+
+    tabifyDockWidget(treeBrowserDockWidget, projectDockWidget);
+}
+
+void MainWindow::setupDockWidgets_OutputBuild()
+{
+
     outputDockWidget = new QDockWidget();
     outputDockWidget->setObjectName("Output");
     outputDockWidget->setWindowTitle("Output");
@@ -540,20 +547,47 @@ void MainWindow::setupDockWidgets()
 
     tabifyDockWidget(outputDockWidget, buildDockWidget);
 
+}
+
+void MainWindow::setupDockWidgets_Project()
+{
     projectDockWidget = new QDockWidget();
     projectDockWidget->setObjectName("Project");
     projectDockWidget->setWindowTitle("Project");
-    projectDockWidget->setWidget(new QTextEdit);
     projectDockWidget->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
+
+    QFileSystemModel* fileModel = new QFileSystemModel();
+    QFileIconProvider* iconProvider = new QFileIconProvider();
+    projectView = new QTreeView();
+    projectDockWidget->setWidget(projectView);
+    fileModel->setIconProvider(iconProvider);
+    fileModel->setRootPath(".");
+    projectView->setModel(fileModel);
+    const QModelIndex rootIndex = fileModel->index(QDir::cleanPath("."));
+    if (rootIndex.isValid())
+        projectView->setRootIndex(rootIndex);
+
+    // Demonstrating look and feel features
+    projectView->setAnimated(false);    projectView->setIndentation(20);    projectView->setSortingEnabled(true);
+    projectView->resize(projectView->screen()->availableGeometry().size() / 2);
+    projectView->setColumnWidth(0, projectView->width() / 3);
+
+    // Make it flickable on touchscreens
+    QScroller::grabGesture(projectView, QScroller::TouchGesture);
+    projectView->setWindowTitle(QObject::tr("Project Files"));
+    projectView->show();
+
     addDockWidget(Qt::RightDockWidgetArea, projectDockWidget);
     auto projectDockWidgetAction = new QAction(projectDockWidget);
     projectDockWidgetAction->setObjectName("Project");
+}
 
+void MainWindow::setupDockWidgets_Tree()
+{
     treeBrowserDockWidget = new QDockWidget();
     treeBrowserDockWidget->setObjectName("Tree Browser");
     treeBrowserDockWidget->setWindowTitle("Tree Browser");
     treeBrowserDockWidget->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
-
     view = new QTreeView();
     view->setObjectName("view");
     view->setAlternatingRowColors(true);
@@ -562,11 +596,11 @@ void MainWindow::setupDockWidgets()
     view->setAnimated(false);
     view->setAllColumnsShowFocus(true);
 
-    TreeModel* model = new TreeModel({"AST"}, {}, this);
+    TreeModel* model = new TreeModel({ "AST" }, {}, this);
     view->setModel(model);
     treeBrowserDockWidget->setWidget(view);
     addDockWidget(Qt::RightDockWidgetArea, treeBrowserDockWidget);
-    
+
     connect(view->selectionModel(), &QItemSelectionModel::selectionChanged,
         this, &MainWindow::updateActions);
 
@@ -588,10 +622,6 @@ void MainWindow::setupDockWidgets()
     connect(insertChildAction, &QAction::triggered, this, &MainWindow::insertChild);
 
     updateActions();
-
-
-    //insertRow();
-    tabifyDockWidget(treeBrowserDockWidget, projectDockWidget);
 }
 
 void MainWindow::toggleProjectDockWidget()

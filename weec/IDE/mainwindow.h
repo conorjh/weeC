@@ -86,8 +86,9 @@ protected:
     void setupViewMenu();
     void setupHelpMenu();
     void setupToolBar();
-    
+
     void setupDockWidgets();
+    void setupDockWidgets_OutputBuild(), setupDockWidgets_Project(), setupDockWidgets_Tree();
 
     void printTree(tree<weec::parse::wcParseNode> pTree)
     {
@@ -106,10 +107,9 @@ protected:
     QList<ToolBar*> toolBars;
     QDockWidget* projectDockWidget, * buildDockWidget, *outputDockWidget, *treeBrowserDockWidget;
     QTextEdit* buildTextEdit,*outputTextEdit;
-    QTreeView* view;
+    QTreeView* view, *projectView;
 
     QAction* File_NewSubMenu, * File_SaveSubMenu, * File_SaveAsSubMenu, * File_OpenSubMenu,
-        * Build_BuildSubMenu, * Build_RunSubMenu, * Build_PauseSubMenu,
         * Build_BuildSubMenu, * Build_RunSubMenu, * Build_PauseSubMenu, *Build_StopSubMenu,
         * View_ProjectSubMenu, * View_OutputSubMenu, * View_BuildSubMenu, * View_TreeBrowserSubMenu;
 
@@ -234,7 +234,6 @@ signals:
     void printed(std::string msg);
 
 private:
-    bool Paused;
     bool Paused, Stop;
     std::string Input;
     weec::parse::wcParseOutput& Output;
@@ -274,7 +273,6 @@ signals:
     void printed(std::string msg);
 
 private:
-    bool Paused;
     bool Paused, Stop;
     QInterpreter* Interpreter;
     weec::parse::wcParseOutput Input;

@@ -1539,6 +1539,7 @@ bool weec::parse::wcIdentalyzer::Create(string IdentifierString, const vector<wc
 		ScopeOutput = wcIdentifierScope(GetNamespaceFromQualifiedIdentifier(IdentifierString));
 		IdentifierOutput = wcIdentifier(GetIdentifierFromQualifiedIdentifier(IdentifierString) + "(" + GetParameterListIdentifierString(Parameters) + ")");
 		return true;
+
 	case wcIdentalyzerAnalyzeResultCode::QualifiedFunction:
 		ScopeOutput = wcIdentifierScope(GetNamespaceFromQualifiedIdentifier(IdentifierString));
 		IdentifierOutput = wcIdentifier(GetIdentifierFromQualifiedIdentifier(IdentifierString));
@@ -1602,7 +1603,7 @@ std::string weec::parse::wcIdentalyzer::GetParameterListIdentifierString(const s
 std::string weec::parse::wcIdentalyzer::StripArgumentsFromFunctionIdentifier(std::string FunctionIdentifierString)
 {
 	return IsFunction(FunctionIdentifierString)
-		? FunctionIdentifierString.substr(0, FunctionIdentifierString.find_first_of("("))
+		? FunctionIdentifierString.substr(0, FunctionIdentifierString.find_last_of("("))
 		: FunctionIdentifierString;
 }
 

@@ -212,6 +212,7 @@ int weec::test::lex::Test_wcIdentifier1()
 	if (blankIdent.Size() != 0)												return 2;
 	if (blankIdent.IsQualified())											return 3;
 	if (blankIdent.IsFunction())											return 4;
+	if (blankIdent.IsMember())												return 4;
 	if (blankIdent.to_string() != emptyString)								return 5;
 	if (blankIdent.to_string_no_global() != emptyString)					return 6;
 	if (blankIdent.to_unqualified_string() != emptyString)					return 7;
@@ -226,6 +227,7 @@ int weec::test::lex::Test_wcIdentifier1()
 	if (constructedIdentifier.Size() != identString1.size())							return 12;
 	if (constructedIdentifier.IsQualified())											return 13;
 	if (constructedIdentifier.IsFunction())												return 14;
+	if (constructedIdentifier.IsMember())												return 4;
 	if (constructedIdentifier.to_string() != identString1)								return 15;
 	if (constructedIdentifier.to_string_no_global() != identString1)					return 16;
 	if (constructedIdentifier.to_unqualified_string() != identString1)					return 17;
@@ -241,6 +243,7 @@ int weec::test::lex::Test_wcIdentifier1()
 	if (fullyQualifiedIdentifier.Size() != identStringWithNamespace.size())							return 22;
 	if (!fullyQualifiedIdentifier.IsQualified())													return 23;
 	if (fullyQualifiedIdentifier.IsFunction())														return 24;
+	if (fullyQualifiedIdentifier.IsMember())														return 4;
 	if (fullyQualifiedIdentifier.to_string() != identStringWithNamespace)							return 25;
 	if (fullyQualifiedIdentifier.to_string_no_global() != identStringWithNamespace)					return 26;
 	if (fullyQualifiedIdentifier.to_unqualified_string() != "IdentWithNamespace")					return 27;
@@ -258,12 +261,98 @@ int weec::test::lex::Test_wcIdentifier1()
 	if (identifierWithFunction.Size() != identStringWithFunction.size())										return 34;
 	if (identifierWithFunction.IsQualified())																	return 35;
 	if (!identifierWithFunction.IsFunction())																	return 36;
+	if (identifierWithFunction.IsMember())																		return 4;
 	if (identifierWithFunction.to_string() != identStringWithFunction)											return 37;
 	if (identifierWithFunction.to_string_no_global() != identStringWithFunction)								return 38;
 	if (identifierWithFunction.to_unqualified_string() != identStringWithFunction)								return 39;
 	if (identifierWithFunction.to_string_no_arguments() != identStringWithoutFunction)							return 40;
 	if (identifierWithFunction.to_string_no_arguments_no_global() != identStringWithoutFunction)				return 41;
 	if (identifierWithFunction.to_string_unqualified_no_arguments() != identStringWithoutFunction)				return 42;
+
+	//a string constructed wcIdentifier, with a member in the string 
+	string identStringWithMember = "ident.member";
+	wcIdentifier identifierWithMember(identStringWithMember);
+	if (identifierWithMember != identStringWithMember)														return 31;
+	if (identifierWithMember != identStringWithMember)													return 32;
+	if (identifierWithMember.to_string() != identStringWithMember)											return 33;
+	if (identifierWithMember.Size() != identStringWithMember.size())										return 34;
+	if (identifierWithMember.IsQualified())																	return 35;
+	if (identifierWithMember.IsFunction())																	return 36;
+	if (!identifierWithMember.IsMember())																		return 4;
+	if (identifierWithMember.to_string() != identStringWithMember)											return 37;
+	if (identifierWithMember.to_string_no_global() != identStringWithMember)								return 38;
+	if (identifierWithMember.to_unqualified_string() != identStringWithMember)								return 39;
+	if (identifierWithMember.to_string_no_arguments() != identStringWithMember)							return 40;
+	if (identifierWithMember.to_string_no_arguments_no_global() != identStringWithMember)				return 41;
+	if (identifierWithMember.to_string_unqualified_no_arguments() != identStringWithMember)				return 42;
+
+	//a string constructed wcIdentifier, with a function and member in the string 
+	string identStringWithFunctionAndMember = "func().member";
+	wcIdentifier identifierWithFunctionAndMember(identStringWithFunctionAndMember);
+	if (identifierWithFunctionAndMember != identStringWithFunctionAndMember)														return 31;
+	if (identifierWithFunctionAndMember != identStringWithFunctionAndMember)													return 32;
+	if (identifierWithFunctionAndMember.to_string() != identStringWithFunctionAndMember)											return 33;
+	if (identifierWithFunctionAndMember.Size() != identStringWithFunctionAndMember.size())										return 34;
+	if (identifierWithFunctionAndMember.IsQualified())																	return 35;
+	if (identifierWithFunctionAndMember.IsFunction())																	return 36;
+	if (!identifierWithFunctionAndMember.IsMember())																		return 4;
+	if (identifierWithFunctionAndMember.to_string() != identStringWithFunctionAndMember)											return 37;
+	if (identifierWithFunctionAndMember.to_string_no_global() != identStringWithFunctionAndMember)								return 38;
+	if (identifierWithFunctionAndMember.to_unqualified_string() != identStringWithFunctionAndMember)								return 39;
+	if (identifierWithFunctionAndMember.to_string_no_arguments() != identStringWithFunctionAndMember)							return 40;
+	if (identifierWithFunctionAndMember.to_string_no_arguments_no_global() != identStringWithFunctionAndMember)				return 41;
+	if (identifierWithFunctionAndMember.to_string_unqualified_no_arguments() != identStringWithFunctionAndMember)				return 42;
+
+	//a string constructed wcIdentifier, with a function and member in the string 
+	string identStringWithFunctionAsMember = "func().member()";
+	wcIdentifier identifierWithFunctionAsMember(identStringWithFunctionAsMember);
+	if (identifierWithFunctionAsMember != identStringWithFunctionAsMember)														return 31;
+	if (identifierWithFunctionAsMember != identStringWithFunctionAsMember)													return 32;
+	if (identifierWithFunctionAsMember.to_string() != identStringWithFunctionAsMember)											return 33;
+	if (identifierWithFunctionAsMember.Size() != identStringWithFunctionAsMember.size())										return 34;
+	if (identifierWithFunctionAsMember.IsQualified())																	return 35;
+	if (!identifierWithFunctionAsMember.IsFunction())																	return 36;
+	if (!identifierWithFunctionAsMember.IsMember())																		return 4;
+	if (identifierWithFunctionAsMember.to_string() != identStringWithFunctionAsMember)											return 37;
+	if (identifierWithFunctionAsMember.to_string_no_global() != identStringWithFunctionAsMember)								return 38;
+	if (identifierWithFunctionAsMember.to_unqualified_string() != identStringWithFunctionAsMember)								return 39;
+	if (identifierWithFunctionAsMember.to_string_no_arguments() != "func().member")							return 40;
+	if (identifierWithFunctionAsMember.to_string_no_arguments_no_global() != "func().member")				return 41;
+	if (identifierWithFunctionAsMember.to_string_unqualified_no_arguments() != "func().member")				return 42;
+
+	//a string constructed wcIdentifier, with a function and member in the string 
+	string identStringWithNsAndFunctionAndMember = "ns::ns2::func().x";
+	wcIdentifier identifierWithNsAndFunctionAndMember(identStringWithNsAndFunctionAndMember);
+	if (identifierWithNsAndFunctionAndMember != identStringWithNsAndFunctionAndMember)									return 31;
+	if (identifierWithNsAndFunctionAndMember != identStringWithNsAndFunctionAndMember)									return 32;
+	if (identifierWithNsAndFunctionAndMember.to_string() != identStringWithNsAndFunctionAndMember)						return 33;
+	if (identifierWithNsAndFunctionAndMember.Size() != identStringWithNsAndFunctionAndMember.size())						return 34;
+	if (!identifierWithNsAndFunctionAndMember.IsQualified())																return 35;
+	if (identifierWithNsAndFunctionAndMember.IsFunction())																return 36;
+	if (!identifierWithNsAndFunctionAndMember.IsMember())																	return 4;
+	if (identifierWithNsAndFunctionAndMember.to_string() != identStringWithNsAndFunctionAndMember)						return 37;
+	if (identifierWithNsAndFunctionAndMember.to_string_no_global() != identStringWithNsAndFunctionAndMember)				return 38;
+	if (identifierWithNsAndFunctionAndMember.to_unqualified_string() != "func().x")										return 39;
+	if (identifierWithNsAndFunctionAndMember.to_string_no_arguments() != identStringWithNsAndFunctionAndMember)			return 40;
+	if (identifierWithNsAndFunctionAndMember.to_string_no_arguments_no_global() != identStringWithNsAndFunctionAndMember)	return 41;
+	if (identifierWithNsAndFunctionAndMember.to_string_unqualified_no_arguments() != "func().x")							return 42;
+
+	//a string constructed wcIdentifier, with a function and members in the string 
+	string identStringWithFunctionNSAndMultipleMembers = "ns::ns2::func().x.func2().y()";
+	wcIdentifier identifierWithFunctionNSAndMultipleMembers(identStringWithFunctionNSAndMultipleMembers);
+	if (identifierWithFunctionNSAndMultipleMembers != identStringWithFunctionNSAndMultipleMembers)														return 31;
+	if (identifierWithFunctionNSAndMultipleMembers != identStringWithFunctionNSAndMultipleMembers)													return 32;
+	if (identifierWithFunctionNSAndMultipleMembers.to_string() != identStringWithFunctionNSAndMultipleMembers)											return 33;
+	if (identifierWithFunctionNSAndMultipleMembers.Size() != identStringWithFunctionNSAndMultipleMembers.size())										return 34;
+	if (!identifierWithFunctionNSAndMultipleMembers.IsQualified())																	return 35;
+	if (!identifierWithFunctionNSAndMultipleMembers.IsFunction())																	return 36;
+	if (!identifierWithFunctionNSAndMultipleMembers.IsMember())																		return 4;
+	if (identifierWithFunctionNSAndMultipleMembers.to_string() != identStringWithFunctionNSAndMultipleMembers)											return 37;
+	if (identifierWithFunctionNSAndMultipleMembers.to_string_no_global() != identStringWithFunctionNSAndMultipleMembers)								return 38;
+	if (identifierWithFunctionNSAndMultipleMembers.to_unqualified_string() != "func().x.func2().y()")								return 39;
+	if (identifierWithFunctionNSAndMultipleMembers.to_string_no_arguments() != "ns::ns2::func().x.func2().y")							return 40;
+	if (identifierWithFunctionNSAndMultipleMembers.to_string_no_arguments_no_global() != "ns::ns2::func().x.func2().y")		return 41;
+	if (identifierWithFunctionNSAndMultipleMembers.to_string_unqualified_no_arguments() != "func().x.func2().y")		return 42;
 
 
 	//a string constructed wcIdentifier, with a fully qualified function in the string 
@@ -275,6 +364,7 @@ int weec::test::lex::Test_wcIdentifier1()
 	if (identifierWithFunctionAndNamespace.Size() != identStringWithFunctionAndNamespace.size())						return 46;
 	if (!identifierWithFunctionAndNamespace.IsQualified())																return 47;
 	if (!identifierWithFunctionAndNamespace.IsFunction())																return 48;
+	if (identifierWithFunctionAndNamespace.IsMember())																	return 4;
 	if (identifierWithFunctionAndNamespace.to_string() != identStringWithFunctionAndNamespace)							return 49;
 	if (identifierWithFunctionAndNamespace.to_string_no_global() != identStringWithFunctionAndNamespace)				return 50;
 	if (identifierWithFunctionAndNamespace.to_unqualified_string() != "ThisIsAFunctionWithNamespace()")					return 51;
@@ -292,6 +382,7 @@ int weec::test::lex::Test_wcIdentifier1()
 	if (copyConstructedIdent.Size() != copyConstructedString.size() - 4)								return 58;
 	if (!copyConstructedIdent.IsQualified())															return 59;
 	if (copyConstructedIdent.IsFunction())																return 60;
+	if (copyConstructedIdent.IsMember())																return 4;
 	if (copyConstructedIdent.to_string() != copyConstructedString)										return 61;
 	if (copyConstructedIdent.to_string_no_global() != "NS::anotherNS::SomeIdentifier")					return 62;
 	if (copyConstructedIdent.to_unqualified_string() != "SomeIdentifier")								return 63;
@@ -309,6 +400,7 @@ int weec::test::lex::Test_wcIdentifier1()
 	if (copyConstructedIdent2.Size() != copyConstructedString2.size() - 4)							return 70;
 	if (!copyConstructedIdent2.IsQualified())														return 71;
 	if (!copyConstructedIdent2.IsFunction())														return 72;
+	if (copyConstructedIdent2.IsMember())															return 4;
 	if (copyConstructedIdent2.to_string() != copyConstructedString2)								return 73;
 	if (copyConstructedIdent2.to_string_no_global() != "NS::anotherNS::SomeIdentifier()")			return 74;
 	if (copyConstructedIdent2.to_unqualified_string() != "SomeIdentifier()")						return 75;

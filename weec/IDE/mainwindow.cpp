@@ -624,7 +624,7 @@ void MainWindow::setupDockWidgets_Tree()
 
 void MainWindow::syncPauseAndRunButtons()
 {
-    if (InterpreterRunning && interpreterWorker->isStopped())
+    if (!InterpreterRunning || (InterpreterRunning && interpreterWorker->isStopped()))
     {
         Build_PauseSubMenu->setIcon(QIcon("../icons/pause.png"));
         Build_RunSubMenu->setIcon(QIcon("../icons/run.png"));
@@ -635,15 +635,13 @@ void MainWindow::syncPauseAndRunButtons()
         Build_PauseSubMenu->setIcon(QIcon("../icons/paused.png"));
         Build_RunSubMenu->setIcon(QIcon("../icons/run.png"));
         return;
-    } 
+    }
     else
     {
         Build_PauseSubMenu->setIcon(QIcon("../icons/pause.png")); 
         Build_RunSubMenu->setIcon(QIcon("../icons/running.png"));
         return;
-    }
-
-    
+    }   
 
 }
 

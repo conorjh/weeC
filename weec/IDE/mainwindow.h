@@ -89,6 +89,7 @@ protected:
 
     void setupDockWidgets();
     void setupDockWidgets_OutputBuild(), setupDockWidgets_Project(), setupDockWidgets_Tree();
+    void syncPauseAndRunButtons();
 
     void printTree(tree<weec::parse::wcParseNode> pTree)
     {
@@ -208,6 +209,7 @@ public:
     ParserWorker(const std::string& _Input, weec::parse::wcParseOutput& _Output)
         : Output(_Output) 
     {
+        Stop = false;
         Input = _Input;
     }
 
@@ -244,6 +246,7 @@ class InterpreterWorker : public QObject {
 public:
     InterpreterWorker(weec::parse::wcParseOutput _Input)
     {
+        Stop = false;
         Paused = false;
         Input = _Input;
         Interpreter = new QInterpreter(Input, this);

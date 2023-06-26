@@ -203,9 +203,7 @@ void MainWindow::pauseToggle()
     {
         interpreterWorker->pauseToggle();
 
-        interpreterWorker->isPaused()
-            ? Build_PauseSubMenu->setIcon(QIcon("../icons/paused.png"))
-            : Build_PauseSubMenu->setIcon(QIcon("../icons/pause.png"));
+        syncPauseAndRunButtons();
         return;
     }
 
@@ -213,9 +211,7 @@ void MainWindow::pauseToggle()
     {
         parserWorker->pauseToggle();
 
-        parserWorker->isPaused()
-            ? Build_PauseSubMenu->setIcon(QIcon("../icons/paused.png"))
-            : Build_PauseSubMenu->setIcon(QIcon("../icons/pause.png"));
+        syncPauseAndRunButtons();
         return;
     }
 }
@@ -227,7 +223,9 @@ void MainWindow::stop()
 
     if (ParserRunning)
         parserWorker->stop();
-              
+
+    syncPauseAndRunButtons();
+
     return;
 }
 
@@ -624,6 +622,31 @@ void MainWindow::setupDockWidgets_Tree()
     updateActions();
 }
 
+void MainWindow::syncPauseAndRunButtons()
+{
+    if (InterpreterRunning && interpreterWorker->isStopped())
+    {
+        Build_PauseSubMenu->setIcon(QIcon("../icons/pause.png"));
+        Build_RunSubMenu->setIcon(QIcon("../icons/run.png"));
+        return;
+    }
+    else if (InterpreterRunning && interpreterWorker->isPaused())
+    {
+        Build_PauseSubMenu->setIcon(QIcon("../icons/paused.png"));
+        Build_RunSubMenu->setIcon(QIcon("../icons/run.png"));
+        return;
+    } 
+    else
+    {
+        Build_PauseSubMenu->setIcon(QIcon("../icons/pause.png")); 
+        Build_RunSubMenu->setIcon(QIcon("../icons/running.png"));
+        return;
+    }
+
+    
+
+}
+
 void MainWindow::toggleProjectDockWidget()
 {
     auto tva = projectDockWidget->toggleViewAction();
@@ -724,6 +747,7 @@ void InterpreterWorker::pauseToggle()
 
 void InterpreterWorker::stop()
 {
+    Stop = true;
     Interpreter->Halt = true;
 }
 

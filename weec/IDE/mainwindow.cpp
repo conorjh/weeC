@@ -224,6 +224,17 @@ void MainWindow::pauseToggle()
     }
 }
 
+void MainWindow::stop()
+{
+    if (InterpreterRunning)
+        interpreterWorker->stop();
+
+    if (ParserRunning)
+        parserWorker->stop();
+              
+    return;
+}
+
 void MainWindow::projectSettings()
 {
 }
@@ -432,15 +443,16 @@ void MainWindow::setupBuildMenu()
     QToolBar* tb = addToolBar(tr("Build Actions"));
     menuBar()->addMenu(buildMenu);
 
-    const QIcon buildIcon = QIcon("../icons/build.png");
-    const QIcon runIcon = QIcon("../icons/run.png");
-    const QIcon pauseIcon = QIcon("../icons/pause.png");
-    Build_RunSubMenu = buildMenu->addAction(runIcon, tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::buildAndRun);
-    Build_BuildSubMenu = buildMenu->addAction(buildIcon, tr("&Build"), QKeySequence(Qt::Key_F7), this, &MainWindow::build);
-    Build_PauseSubMenu = buildMenu->addAction(pauseIcon, tr("&Pause"), this, &MainWindow::pauseToggle);
+
+    Build_RunSubMenu = buildMenu->addAction(QIcon("../icons/run.png"), tr("&Run"), QKeySequence(Qt::Key_F5), this, &MainWindow::buildAndRun);
+    Build_BuildSubMenu = buildMenu->addAction(QIcon("../icons/build.png"), tr("&Build"), QKeySequence(Qt::Key_F7), this, &MainWindow::build);
+    Build_PauseSubMenu = buildMenu->addAction(QIcon("../icons/pause.png"), tr("&Pause"), this, &MainWindow::pauseToggle);
+    Build_StopSubMenu = buildMenu->addAction(QIcon("../icons/stop.png"), tr("&Stop"), this, &MainWindow::stop);
+
     tb->addAction(Build_BuildSubMenu);
     tb->addAction(Build_RunSubMenu);
     tb->addAction(Build_PauseSubMenu);
+    tb->addAction(Build_StopSubMenu);
 }
 
 
@@ -680,6 +692,11 @@ void InterpreterWorker::pauseToggle()
     Interpreter->Pause();
 }
 
+void InterpreterWorker::stop()
+{
+    Interpreter->Halt = true;
+}
+
 void InterpreterWorker::process()
 {
     using namespace std;
@@ -730,6 +747,15 @@ ParserWorker::~ParserWorker()
 void ParserWorker::pauseToggle()
 {
     Paused = !Paused;
+}
+
+void ParserWorker::stop()
+{
+    Stop = true;
+
+    
+
+    emit finished();
 }
 
 void ParserWorker::process()

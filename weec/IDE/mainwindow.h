@@ -61,6 +61,7 @@ public slots:
     void buildAndRun();
     void run();
     void pauseToggle();
+    void stop();
     void projectSettings();
 
     void updateActions();
@@ -109,6 +110,7 @@ protected:
 
     QAction* File_NewSubMenu, * File_SaveSubMenu, * File_SaveAsSubMenu, * File_OpenSubMenu,
         * Build_BuildSubMenu, * Build_RunSubMenu, * Build_PauseSubMenu,
+        * Build_BuildSubMenu, * Build_RunSubMenu, * Build_PauseSubMenu, *Build_StopSubMenu,
         * View_ProjectSubMenu, * View_OutputSubMenu, * View_BuildSubMenu, * View_TreeBrowserSubMenu;
 
      QMenu   *dockWidgetMenu;
@@ -214,11 +216,17 @@ public:
         return Paused;
     }
 
+    bool isStopped() const
+    {
+        return Stop;
+    }
+
     ~ParserWorker();
 
 public slots:
     void process();
     void pauseToggle();
+    void stop();
 
 signals:
     void finished();
@@ -227,6 +235,7 @@ signals:
 
 private:
     bool Paused;
+    bool Paused, Stop;
     std::string Input;
     weec::parse::wcParseOutput& Output;
 };
@@ -246,11 +255,18 @@ public:
         return Paused;
     }
 
+    bool isStopped() const
+    {
+        return Stop;
+    }
+
+
     ~InterpreterWorker();
 
 public slots:
     void process();
     void pauseToggle();
+    void stop();
 
 signals:
     void finished();
@@ -259,6 +275,7 @@ signals:
 
 private:
     bool Paused;
+    bool Paused, Stop;
     QInterpreter* Interpreter;
     weec::parse::wcParseOutput Input;
 };

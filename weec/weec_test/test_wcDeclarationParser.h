@@ -13,8 +13,6 @@ namespace weec
 
 		}
 
-
-
 		int Test_wcDeclarationParser_simple_declaration()
 		{
 			using namespace std;
@@ -34,7 +32,6 @@ namespace weec
 			using namespace std;
 			using namespace weec::lex;
 			using namespace weec::parse;
-
 
 			string SourceCode = "int jiminy = 0;";
 			auto ParseOutput = wcDeclarationParser(*new wcParseState(*new wcTokenizer(SourceCode, true), *new wcParseSymbolTable(), *new wcParseScopes())).Parse();

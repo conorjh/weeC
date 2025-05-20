@@ -28,6 +28,8 @@ namespace weec
 			if (blankIdent.to_string_no_arguments() != emptyString)					return 8;
 			if (blankIdent.to_string_no_arguments_no_global() != emptyString)		return 9;
 			if (blankIdent.to_string_unqualified_no_arguments() != emptyString)		return 10;
+
+			return 0;
 		}
 
 		int Test_wcIdentifier1_string_constructed()
@@ -50,6 +52,8 @@ namespace weec
 			if (constructedIdentifier.to_string_no_arguments() != identString1)					return 9;
 			if (constructedIdentifier.to_string_no_arguments_no_global() != identString1)		return 10;
 			if (constructedIdentifier.to_string_unqualified_no_arguments() != identString1)		return 11;
+
+			return 0;
 		}
 
 		int Test_wcIdentifier_string_constructed_with_namespace_in_string()
@@ -72,6 +76,8 @@ namespace weec
 			if (fullyQualifiedIdentifier.to_string_no_arguments() != identStringWithNamespace)				return 9;
 			if (fullyQualifiedIdentifier.to_string_no_arguments_no_global() != identStringWithNamespace)	return 10;
 			if (fullyQualifiedIdentifier.to_string_unqualified_no_arguments() != "IdentWithNamespace")		return 11;
+
+			return 0;
 		}
 
 		int Test_wcIdentifier_string_constructed_with_function_in_string()
@@ -97,6 +103,8 @@ namespace weec
 			if (identifierWithFunction.to_string_no_arguments() != identStringWithoutFunction)							return 11;
 			if (identifierWithFunction.to_string_no_arguments_no_global() != identStringWithoutFunction)				return 12;
 			if (identifierWithFunction.to_string_unqualified_no_arguments() != identStringWithoutFunction)				return 13;
+
+			return 0;
 		}
 
 		int Test_wcIdentifier_string_constructed_with_member_in_string()
@@ -121,6 +129,8 @@ namespace weec
 			if (identifierWithMember.to_string_no_arguments() != identStringWithMember)							return 11;
 			if (identifierWithMember.to_string_no_arguments_no_global() != identStringWithMember)				return 12;
 			if (identifierWithMember.to_string_unqualified_no_arguments() != identStringWithMember)				return 13;
+
+			return 0;
 		}
 
 		int Test_wcIdentifier_string_constructed_with_function_and_member_in_string1()
@@ -146,6 +156,7 @@ namespace weec
 			if (identifierWithFunctionAndMember.to_string_no_arguments_no_global() != identStringWithFunctionAndMember)			return 12;
 			if (identifierWithFunctionAndMember.to_string_unqualified_no_arguments() != identStringWithFunctionAndMember)		return 13;
 
+			return 0;
 		}
 
 		int Test_wcIdentifier_string_constructed_with_function_in_string2()
@@ -170,6 +181,8 @@ namespace weec
 			if (identifierWithFunctionAsMember.to_string_no_arguments() != "func().member")						return 11;
 			if (identifierWithFunctionAsMember.to_string_no_arguments_no_global() != "func().member")			return 12;
 			if (identifierWithFunctionAsMember.to_string_unqualified_no_arguments() != "func().member")			return 13;
+
+			return 0;
 		}
 
 		int Test_wcIdentifier_string_constructed_with_namespace_function_and_member_in_string1()
@@ -195,6 +208,7 @@ namespace weec
 			if (identifierWithNsAndFunctionAndMember.to_string_no_arguments_no_global() != identStringWithNsAndFunctionAndMember)	return 12;
 			if (identifierWithNsAndFunctionAndMember.to_string_unqualified_no_arguments() != "func().x")							return 13;
 
+			return 0;
 		}
 
 		int Test_wcIdentifier_string_constructed_with_namespace_function_and_member_in_string2()
@@ -219,6 +233,8 @@ namespace weec
 			if (identifierWithFunctionNSAndMultipleMembers.to_string_no_arguments() != "ns::ns2::func().x.func2().y")				return 11;
 			if (identifierWithFunctionNSAndMultipleMembers.to_string_no_arguments_no_global() != "ns::ns2::func().x.func2().y")		return 12;
 			if (identifierWithFunctionNSAndMultipleMembers.to_string_unqualified_no_arguments() != "func().x.func2().y")			return 13;
+
+			return 0;
 		}
 
 		int Test_wcIdentifier_string_constructed_with_fully_qualified_function_in_string()
@@ -245,6 +261,7 @@ namespace weec
 			if (identifierWithFunctionAndNamespace.to_string_no_arguments_no_global() != identStringWithoutFunctionButFunction)	return 12;
 			if (identifierWithFunctionAndNamespace.to_string_unqualified_no_arguments() != "ThisIsAFunctionWithNamespace")		return 13;
 
+			return 0;
 		}
 
 		int Test_wcIdentifier_copy_constructed_with_fully_qualified_identifier_with_global_namespace_in_string()
@@ -270,6 +287,7 @@ namespace weec
 			if (copyConstructedIdent.to_string_no_arguments_no_global() != "NS::anotherNS::SomeIdentifier")		return 12;
 			if (copyConstructedIdent.to_string_unqualified_no_arguments() != "SomeIdentifier")					return 13;
 
+			return 0;
 		}
 
 		int Test_wcIdentifier_copy_constructed_with_fully_qualified_function_identifier_with_global_namespace_in_string()

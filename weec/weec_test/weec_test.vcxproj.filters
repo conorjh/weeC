@@ -24,7 +24,7 @@
     <ClCompile Include="test_wcStringTokenizer.h">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_DeclarationParser.h">
+    <ClCompile Include="test_wcDeclarationParser.h">
       <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -48,6 +48,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_wcParseSymbolTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_wcIfParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_wcBlockParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

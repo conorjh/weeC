@@ -5,8 +5,13 @@
 #include "test_wcIdentalyzer.h"
 #include "test_wcIdentifier.h"
 #include "test_wcFullIdentifier.h"
-#include "test_wcTokenizer.h"
-#include "test_wcStringTokenizer.h"
+#include "test_wcFunctionIdentifier.h"
+//#include "test_wcTokenizer.h"
+//#include "test_wcStringTokenizer.h"
+#include "test_wcParseSymbolTable.h"
+#include "test_wcIfParser.h"
+//#include "test_wcDeclarationParser.h"
+#include "test_wcBlockParser.h"
 
 namespace weec
 {
@@ -184,69 +189,12 @@ namespace weec
 			std::string list_expression51 = "return 10 < 10 \n\t? 123 < 123 \n\t\t? 123 \n\t\t: 124 \n\t: 456 == 456 \n\t\t? 456 \n\t\t: 457;";
 
 		}
-		//wcStringTokenizer
-		int Test_StringTokenizer1();
-
-		//wcTokenizer
-		int	Test_Tokenizer1(), Test_Tokenizer2(), Test_Tokenizer3(), Test_Tokenizer4(), Test_Tokenizer5(),
-			Test_Tokenizer6(), Test_Tokenizer7(), Test_Tokenizer8(), Test_Tokenizer9(), Test_Tokenizer10(), Test_Tokenizer11(), Test_Tokenizer12();
-
-		//wcIdentifier
-		int Test_wcIdentifier_blank_identifier(),
-			Test_wcIdentifier1_string_constructed(),
-			Test_wcIdentifier_string_constructed_with_namespace_in_string(),
-			Test_wcIdentifier_string_constructed_with_function_in_string(),
-			Test_wcIdentifier_string_constructed_with_member_in_string(),
-			Test_wcIdentifier_string_constructed_with_function_and_member_in_string1(),
-			Test_wcIdentifier_string_constructed_with_function_in_string2(),
-			Test_wcIdentifier_string_constructed_with_namespace_function_and_member_in_string1(),
-			Test_wcIdentifier_string_constructed_with_namespace_function_and_member_in_string2(),
-			Test_wcIdentifier_string_constructed_with_fully_qualified_function_in_string(),
-			Test_wcIdentifier_copy_constructed_with_fully_qualified_identifier_with_global_namespace_in_string(),
-			Test_wcIdentifier_copy_constructed_with_fully_qualified_function_identifier_with_global_namespace_in_string();
-
-		//wcIdentalyzer
-		int Test_wcIdentalyzer_ContainsGlobal(),
-			Test_wcIdentalyzer_ContainsNamespace(),
-			Test_wcIdentalyzer_IsFunction(),
-			Test_wcIdentalyzer_IsQualified(),
-			Test_wcIdentalyzer_IsMember(),
-			Test_wcIdentalyzer_IsQualifiedWithGlobal(),
-			Test_wcIdentalyzer_GetIdentifierFromQualifiedIdentifier(),
-			Test_wcIdentalyzer_GetNamespaceFromQualifiedIdentifier(),
-			Test_wcIdentalyzer_GetParameterListIdentifierString(),
-			Test_wcIdentalyzer_StripArgumentsFromFunctionIdentifier();
-
-		//wcFullIdentifier
-		int Test_wcFullIdentifier_default_constructor(),
-			Test_wcFullIdentifier_default_constructor(),
-			Test_wcFullIdentifier_string_constructor(),
-			Test_wcFullIdentifier_string_constructor_with_namespace(),
-			Test_wcFullIdentifier_string_constructor_with_function_and_namespace(),
-			Test_wcFullIdentifier_string_constructor_with_namespace_and_global(),
-			Test_wcFullIdentifier_string_constructor_with_function_namespace_and_global(),
-			Test_wcFullIdentifier_copy_constructor_with_function_namespace_and_global(),
-			Test_wcFullIdentifier_part_constructor_with_function_namespace_and_global(),
-			Test_wcFullIdentifier_part_constructor_with_function_parameters_namespace_and_global(),
-			Test_wcFullIdentifier_part_constructor_with_function_local();
-
-		//wcFunctionIdentifier
-		int Test_wcFunctionIdentifier_default_constructor(),
-			Test_wcFunctionIdentifier_default_constructor(),				
-			Test_wcFunctionIdentifier_string_constructor_no_parenthesis_in_identifier(),				
-			Test_wcFunctionIdentifier_string_constructor_with_parameters(),				
-			Test_wcFunctionIdentifier_string_constructor_with_parameters_and_namespace();
 
 		namespace lex
 		{
-			int Test_wcFunctionIdentifier1();
-			int Test_wcParseSymbolTable1(), Test_wcParseSymbolTable2();
 			int Test_wcParseScope();
 			int Test_wcParseScopes();
 
-			int Test_wcBlockParser1();
-			int Test_wcDeclarationParser1();
-			int Test_wcIfParser1();
 
 			int Test_wcParser_1(), Test_wcParser_2(), Test_wcParser_3(), Test_wcParser_4(), Test_wcParser_5(),
 				Test_wcParser_6(), Test_wcParser_7(), Test_wcParser_8(), Test_wcParser_9(), Test_wcParser_10(),
@@ -269,31 +217,104 @@ namespace weec
 				Test_wcExpressionParser_51(), Test_wcExpressionParser_52(), Test_wcExpressionParser_53(), Test_wcExpressionParser_54(), Test_wcExpressionParser_55(),
 				Test_wcExpressionParser_56(), Test_wcExpressionParser_57(), Test_wcExpressionParser_58(), Test_wcExpressionParser_59(), Test_wcExpressionParser_60();
 
-			//int Test_wcParseNode_1(), Test_wcParseNode_2(), Test_wcParseNode_3(), Test_wcParseNode_4(), Test_wcParseNode_5(), Test_wcParseNode_6();
 
 			std::vector<int(*)()> allLexTests =
 			{
+				/*
 				Test_Tokenizer1  ,Test_Tokenizer2, Test_Tokenizer3, Test_Tokenizer4, Test_Tokenizer5,
 				Test_Tokenizer6, Test_Tokenizer7, Test_Tokenizer8, Test_Tokenizer9, Test_Tokenizer10, Test_Tokenizer11, Test_Tokenizer12,
-
-				Test_StringTokenizer1
+				*/
+				//Test_StringTokenizer1
 
 			};
 			int Test_AllLex();
 
 			std::vector<int(*)()> allParseTests =
 			{
-				Test_wcIdentalyzer1,
+				//wcStringTokenizer
+				//Test_StringTokenizer1,
 
-				Test_wcIdentifier1,
+				/*
+				//wcTokenizer
+				Test_Tokenizer1, Test_Tokenizer2, Test_Tokenizer3, Test_Tokenizer4, Test_Tokenizer5,
+				Test_Tokenizer6, Test_Tokenizer7, Test_Tokenizer8, Test_Tokenizer9, Test_Tokenizer10, Test_Tokenizer11, Test_Tokenizer12,
+				*/
 
-				Test_wcScopeIdentifier1,
+				//wcIdentifier
+				Test_wcIdentifier_blank_identifier,
+				Test_wcIdentifier1_string_constructed,
+				Test_wcIdentifier_string_constructed_with_namespace_in_string,
+				Test_wcIdentifier_string_constructed_with_function_in_string,
+				Test_wcIdentifier_string_constructed_with_member_in_string,
+				Test_wcIdentifier_string_constructed_with_function_and_member_in_string1,
+				Test_wcIdentifier_string_constructed_with_function_in_string2,
+				Test_wcIdentifier_string_constructed_with_namespace_function_and_member_in_string1,
+				Test_wcIdentifier_string_constructed_with_namespace_function_and_member_in_string2,
+				Test_wcIdentifier_string_constructed_with_fully_qualified_function_in_string,
+				Test_wcIdentifier_copy_constructed_with_fully_qualified_identifier_with_global_namespace_in_string,
+				Test_wcIdentifier_copy_constructed_with_fully_qualified_function_identifier_with_global_namespace_in_string,
 
-				Test_wcFullIdentifier1,
+				//wcIdentalyzer
+				Test_wcIdentalyzer_ContainsGlobal,
+				Test_wcIdentalyzer_ContainsNamespace,
+				Test_wcIdentalyzer_IsFunction,
+				Test_wcIdentalyzer_IsQualified,
+				Test_wcIdentalyzer_IsMember,
+				Test_wcIdentalyzer_IsQualifiedWithGlobal,
+				Test_wcIdentalyzer_GetIdentifierFromQualifiedIdentifier,
+				Test_wcIdentalyzer_GetNamespaceFromQualifiedIdentifier,
+				Test_wcIdentalyzer_GetParameterListIdentifierString,
+				Test_wcIdentalyzer_StripArgumentsFromFunctionIdentifier,
 
-				Test_wcFunctionIdentifier1,
+				//wcFullIdentifier
+				Test_wcFullIdentifier_default_constructor,
+				Test_wcFullIdentifier_default_constructor,
+				Test_wcFullIdentifier_string_constructor,
+				Test_wcFullIdentifier_string_constructor_with_namespace,
+				Test_wcFullIdentifier_string_constructor_with_function_and_namespace,
+				Test_wcFullIdentifier_string_constructor_with_namespace_and_global,
+				Test_wcFullIdentifier_string_constructor_with_function_namespace_and_global,
+				Test_wcFullIdentifier_copy_constructor_with_function_namespace_and_global,
+				Test_wcFullIdentifier_part_constructor_with_function_namespace_and_global,
+				Test_wcFullIdentifier_part_constructor_with_function_parameters_namespace_and_global,
+				Test_wcFullIdentifier_part_constructor_with_function_local,
 
-				Test_wcParseSymbolTable1, Test_wcParseSymbolTable2,
+				//wcFunctionIdentifier
+				Test_wcFunctionIdentifier_default_constructor,
+				Test_wcFunctionIdentifier_default_constructor,
+				Test_wcFunctionIdentifier_string_constructor_no_parenthesis_in_identifier,
+				Test_wcFunctionIdentifier_string_constructor_with_parameters,
+				Test_wcFunctionIdentifier_string_constructor_with_parameters_and_namespace,
+
+				/*
+				//wcDeclarationParser
+				Test_wcDeclarationParser_simple_declaration,
+				Test_wcDeclarationParser_simple_declaration_and_assignment,
+				Test_wcDeclarationParser_simple_function_declaration,
+				Test_wcDeclarationParser_simple_function_declaration_with_body,
+				Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body,
+				Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body2,
+				Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body3,
+				*/
+				//wcIfParser
+				Test_wcIfParser_if_true_single_line,
+				Test_wcIfParser_if_true_else_single_line,
+				Test_wcIfParser_if_true_else_newlines_and_braces,
+				Test_wcIfParser_if_true_else_newlines,
+
+				//wcFunctionIdentifier
+				Test_wcFunctionIdentifier_default_constructor,
+				Test_wcFunctionIdentifier_default_constructor,
+				Test_wcFunctionIdentifier_string_constructor_no_parenthesis_in_identifier,
+				Test_wcFunctionIdentifier_string_constructor_with_parameters,
+				Test_wcFunctionIdentifier_string_constructor_with_parameters_and_namespace,
+
+				//wcParseSymbolTable
+				Test_wcParseSymbolTable_default_constructor,
+				Test_wcParseSymbolTable_add_symbol,
+
+				Test_wcBlockParser1,
+
 
 				Test_wcParseScope,
 
@@ -301,8 +322,6 @@ namespace weec
 
 				Test_wcBlockParser1,
 
-				Test_wcDeclarationParser1,
-				Test_wcIfParser1,
 
 				Test_wcParser_1, Test_wcParser_2, Test_wcParser_3, Test_wcParser_4, Test_wcParser_5,
 				Test_wcParser_6, Test_wcParser_7, Test_wcParser_8, Test_wcParser_9, Test_wcParser_10,

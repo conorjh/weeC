@@ -22,7 +22,7 @@ namespace weec
 			return 0;
 		}
 
-		int Test_wcFunctionIdentifier_default_constructor()
+		int Test_wcFunctionIdentifier_default_constructor2()
 		{
 			using namespace std;
 			using namespace weec::parse;

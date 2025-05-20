@@ -227,7 +227,7 @@ namespace weec
 			bool NextToken(), NextToken(wcTokenType Type), IsErrored() const, IsFinished() const;
 		};
 
-		const wcTokenDefinition definitions[WC_VAR_DEFINITIONCOUNT] =
+		static const wcTokenDefinition definitions[WC_VAR_DEFINITIONCOUNT] =
 		{
 			wcTokenDefinition(wcTokenType::NullToken, ""),
 			wcTokenDefinition(wcTokenType::Whitespace, " ", true, true),

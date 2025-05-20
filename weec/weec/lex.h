@@ -92,7 +92,7 @@ namespace weec
 			const std::vector<std::string> identifiers;
 		};
 
-		const unsigned int WC_VAR_DEFINITIONCOUNT = 68;
+		const unsigned int WC_VAR_DEFINITIONCOUNT = 69;
 
 		//definitions used for creating wcToken
 		struct wcTokenDefinitionsBank
@@ -302,6 +302,7 @@ namespace weec
 			wcTokenDefinition(wcTokenType::BreakKeyword, "break"),
 			wcTokenDefinition(wcTokenType::ContinueKeyword, "continue"),
 			wcTokenDefinition(wcTokenType::NamespaceKeyword, "namespace"),
+			wcTokenDefinition(wcTokenType::FunctionKeyword, "func"),
 
 			wcTokenDefinition(wcTokenType::IntLiteral, { "0","1","2","3","4","5","6","7","8","9" })
 		};

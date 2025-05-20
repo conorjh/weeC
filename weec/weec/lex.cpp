@@ -72,23 +72,52 @@ weec::lex::wcToken::wcToken(const wcStringToken& _string)
 
 bool weec::lex::wcToken::IsOperator() const
 {
-	if (Type == wcTokenType::AssignOperator || Type == wcTokenType::DecrementOperator || Type == wcTokenType::DivAssignOperator || Type == wcTokenType::DivideOperator ||
-		Type == wcTokenType::EqualOperator || Type == wcTokenType::ExponentOperator || Type == wcTokenType::GreaterEqualOperator || Type == wcTokenType::GreaterOperator ||
-		Type == wcTokenType::IncrementOperator || Type == wcTokenType::LessEqualOperator || Type == wcTokenType::LessOperator || Type == wcTokenType::LogAndOperator ||
-		Type == wcTokenType::LogOrOperator || Type == wcTokenType::MinusAssignOperator || Type == wcTokenType::MinusOperator || Type == wcTokenType::ModulusOperator ||
-		Type == wcTokenType::MultAssignOperator || Type == wcTokenType::MultiplyOperator || Type == wcTokenType::NotEqualOperator || Type == wcTokenType::PlusAssignOperator ||
-		Type == wcTokenType::PlusOperator || Type == wcTokenType::TernaryOperator)
+	switch (Type)
+	{
+	case wcTokenType::AssignOperator:
+	case wcTokenType::DecrementOperator:
+	case wcTokenType::DivAssignOperator:
+	case wcTokenType::DivideOperator:
+	case wcTokenType::EqualOperator:
+	case wcTokenType::ExponentOperator:
+	case wcTokenType::GreaterEqualOperator:
+	case wcTokenType::GreaterOperator:
+	case wcTokenType::IncrementOperator:
+	case wcTokenType::LessEqualOperator:
+	case wcTokenType::LessOperator:
+	case wcTokenType::LogAndOperator:
+	case wcTokenType::LogOrOperator:
+	case wcTokenType::MinusAssignOperator:
+	case wcTokenType::MinusOperator:
+	case wcTokenType::ModulusOperator:
+	case wcTokenType::MultAssignOperator:
+	case wcTokenType::MultiplyOperator:
+	case wcTokenType::NotEqualOperator:
+	case wcTokenType::PlusAssignOperator:
+	case wcTokenType::PlusOperator:
+	case wcTokenType::TernaryOperator:
 		return true;
-	return false;
+	default:
+		return false;
+	}
 }
 
 bool weec::lex::wcToken::IsBuiltinType() const
 {
-	if (Type == wcTokenType::IntKeyword || Type == wcTokenType::FloatKeyword || Type == wcTokenType::CharKeyword || Type == wcTokenType::StringKeyword ||
-		Type == wcTokenType::UIntKeyword || Type == wcTokenType::StringKeyword || Type == wcTokenType::VoidKeyword)
+	switch (Type)
+	{
+	case wcTokenType::IntKeyword:
+	case wcTokenType::FloatKeyword:
+	case wcTokenType::CharKeyword:
+	case wcTokenType::StringKeyword:
+	case wcTokenType::UIntKeyword:
+	case wcTokenType::VoidKeyword:
 		return true;
-	return false;
+	default:
+		return false;
+	}
 }
+
 
 weec::lex::wcStringTokenizer::wcStringTokenizer(std::string& _source) : Feeder(_source)
 {
@@ -221,7 +250,8 @@ bool weec::lex::wcStringTokenizer::IncIndex()
 	{
 		thisType = wcStringTokenTypeAlizer().Get(Line.at(Index));
 
-		if (((lastType != wcStringTokenType::Null && lastType != thisType) || lastType == wcStringTokenType::Punctuation || lastType == wcStringTokenType::Special)
+		if (((lastType != wcStringTokenType::Null && lastType != thisType) 
+			|| lastType == wcStringTokenType::Punctuation || lastType == wcStringTokenType::Special)
 			&& !(lastType == wcStringTokenType::Alpha && Line.at(Index) == '_') )
 			break;
 

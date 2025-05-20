@@ -11,8 +11,9 @@
 		case wcTokenType::LogOrOperator: case wcTokenType::LogAndOperator:  case wcTokenType::TernaryOperator: 
 #define WC_SWITCHCASE_TOKENS_OPERATORS_ARITHMETIC case wcTokenType::MinusOperator: case wcTokenType::PlusOperator: case wcTokenType::DivideOperator:\
 		case wcTokenType::MultiplyOperator: case wcTokenType::ModulusOperator: case wcTokenType::ExponentOperator: case wcTokenType::IncrementOperator:\
-		case wcTokenType::DecrementOperator: 
-#define WC_SWITCHCASE_TOKENS_OPERATORS_KEYWORD case wcTokenType::TrueKeyword: case wcTokenType::FalseKeyword: case wcTokenType::StringKeyword: case wcTokenType::IntKeyword: \
+		case wcTokenType::DecrementOperator: case wcTokenType::AssignOperator: case wcTokenType::PlusAssignOperator: case wcTokenType::MinusAssignOperator: \
+		case wcTokenType::MultAssignOperator: case wcTokenType::DivAssignOperator:
+#define WC_SWITCHCASE_TOKENS_KEYWORDS case wcTokenType::TrueKeyword: case wcTokenType::FalseKeyword: case wcTokenType::StringKeyword: case wcTokenType::IntKeyword: \
 		case wcTokenType::FloatKeyword: case wcTokenType::BoolKeyword: case wcTokenType::CharKeyword: case wcTokenType::ObjectKeyword: case wcTokenType::VarKeyword: \
 		case wcTokenType::NamespaceKeyword: case wcTokenType::FunctionKeyword: case wcTokenType::IfKeyword: case wcTokenType::ElseKeyword: case wcTokenType::ElseIfKeyword:\
 		case wcTokenType::WhileKeyword: case wcTokenType::BreakKeyword: case wcTokenType::ContinueKeyword: case wcTokenType::ReturnKeyword: case wcTokenType::ConstKeyword:  case wcTokenType::StructKeyword: 

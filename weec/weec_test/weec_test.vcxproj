@@ -156,9 +156,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp" />
+    <ClCompile Include="test_DeclarationParser.h" />
+    <ClCompile Include="test_wcStringTokenizer.h" />
+    <ClCompile Include="test_wcTokenizer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h" />
+    <ClInclude Include="test_c_compiler.h" />
+    <ClInclude Include="test_wcFullIdentifier.h" />
+    <ClInclude Include="test_wcFunctionIdentifier.h" />
+    <ClInclude Include="test_wcIdentalyzer.h" />
+    <ClInclude Include="test_wcScopeIdentifier.h" />
+    <ClInclude Include="test_wcParseSymbolTable.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test_wcIdentifier.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

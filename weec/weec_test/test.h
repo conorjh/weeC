@@ -2,6 +2,11 @@
 #define WC_TEST_H
 #include <string>
 #include <vector>
+#include "test_wcIdentalyzer.h"
+#include "test_wcIdentifier.h"
+#include "test_wcFullIdentifier.h"
+#include "test_wcTokenizer.h"
+#include "test_wcStringTokenizer.h"
 
 namespace weec
 {
@@ -10,19 +15,22 @@ namespace weec
 
 		namespace listing
 		{
-			std::string list_tokenizer1 = "3.14";
-			std::string list_tokenizer2 = "\"Hello World\"";
-			std::string list_tokenizer3 = "'Char literal'";
-			std::string list_tokenizer4 = "const int TestIdent =99 *44";
-			std::string list_tokenizer5 = "string Test_Ident = \"Hello World\"";
-			std::string list_tokenizer6 = "- + += * / + ( ) { } [ ] # \\ / % & ^ ? |";
-			std::string list_tokenizer7 = "int main(int argc, char* argv[])\n{\nreturn 0;\n}";
-			std::string list_tokenizer8 = "// comment  \n /* multi \n  line \n comment */";
-			std::string list_tokenizer9 = "// comment  \n /* multi \n  line \n comment */\n with extra line //then comment at the end";
+			//lexing
+			std::string list_lexer_arithmetic_operators = "+ - / * ^ % ++ -- = += -= *= /=";
+			std::string list_lexer_boolean_operators = "== != < > >= <= || &&";
+			std::string list_lexer_misc = "== != < > >= <= || &&";
+			std::string list_lexer_keywords =
+				"true false string double int uint float bool char void object var namespace func if else while break continue return const print struct";
 
-			std::string list_tokenizer10 = "int IdentTest; char IdentTest::WithNamespace";
-			std::string list_tokenizer11 = "x = 88 + (42 / 99)";
-			std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember ns::method1() ns2::method2(a,b)";
+			std::string list_lexer_whitespace1 = " ";			//space
+			std::string list_lexer_whitespace2 = "\t";			//tab
+			std::string list_lexer_whitespace3 = "\n";			//newline
+			std::string list_lexer_whitespace4 = "\t\n";		//tab newline
+			std::string list_lexer_whitespace5 = "\t\n \n";		//tab newline space newline
+
+			std::string list_lexer_comments1 = "//comment\n/* multi \n  line \n comment */";
+			std::string list_lexer_comments2 = "//comment\n/* multi \n  line \n comment */\n with extra line //then comment at the end";
+
 
 			//declarations
 			std::string list_parser1 = "int a;";
@@ -75,7 +83,7 @@ namespace weec
 				"}\n"
 				"\n"
 				"//overloads\n"
-				"return f1(6) + f1(6,6);\n"; 
+				"return f1(6) + f1(6,6);\n";
 			std::string list_parser33 =
 				"struct s1\n"
 				"{\n"
@@ -175,22 +183,62 @@ namespace weec
 			std::string list_expression50 = "!!!!(123);";
 			std::string list_expression51 = "return 10 < 10 \n\t? 123 < 123 \n\t\t? 123 \n\t\t: 124 \n\t: 456 == 456 \n\t\t? 456 \n\t\t: 457;";
 
-			std::string list_stringtokenizer4 = "Hello\nWorld\nLonger sentence\nFinishing with newline\n";
 		}
+		//wcStringTokenizer
+		int Test_StringTokenizer1();
+
+		//wcTokenizer
+		int	Test_Tokenizer1(), Test_Tokenizer2(), Test_Tokenizer3(), Test_Tokenizer4(), Test_Tokenizer5(),
+			Test_Tokenizer6(), Test_Tokenizer7(), Test_Tokenizer8(), Test_Tokenizer9(), Test_Tokenizer10(), Test_Tokenizer11(), Test_Tokenizer12();
+
+		//wcIdentifier
+		int Test_wcIdentifier_blank_identifier(),
+			Test_wcIdentifier1_string_constructed(),
+			Test_wcIdentifier_string_constructed_with_namespace_in_string(),
+			Test_wcIdentifier_string_constructed_with_function_in_string(),
+			Test_wcIdentifier_string_constructed_with_member_in_string(),
+			Test_wcIdentifier_string_constructed_with_function_and_member_in_string1(),
+			Test_wcIdentifier_string_constructed_with_function_in_string2(),
+			Test_wcIdentifier_string_constructed_with_namespace_function_and_member_in_string1(),
+			Test_wcIdentifier_string_constructed_with_namespace_function_and_member_in_string2(),
+			Test_wcIdentifier_string_constructed_with_fully_qualified_function_in_string(),
+			Test_wcIdentifier_copy_constructed_with_fully_qualified_identifier_with_global_namespace_in_string(),
+			Test_wcIdentifier_copy_constructed_with_fully_qualified_function_identifier_with_global_namespace_in_string();
+
+		//wcIdentalyzer
+		int Test_wcIdentalyzer_ContainsGlobal(),
+			Test_wcIdentalyzer_ContainsNamespace(),
+			Test_wcIdentalyzer_IsFunction(),
+			Test_wcIdentalyzer_IsQualified(),
+			Test_wcIdentalyzer_IsMember(),
+			Test_wcIdentalyzer_IsQualifiedWithGlobal(),
+			Test_wcIdentalyzer_GetIdentifierFromQualifiedIdentifier(),
+			Test_wcIdentalyzer_GetNamespaceFromQualifiedIdentifier(),
+			Test_wcIdentalyzer_GetParameterListIdentifierString(),
+			Test_wcIdentalyzer_StripArgumentsFromFunctionIdentifier();
+
+		//wcFullIdentifier
+		int Test_wcFullIdentifier_default_constructor(),
+			Test_wcFullIdentifier_default_constructor(),
+			Test_wcFullIdentifier_string_constructor(),
+			Test_wcFullIdentifier_string_constructor_with_namespace(),
+			Test_wcFullIdentifier_string_constructor_with_function_and_namespace(),
+			Test_wcFullIdentifier_string_constructor_with_namespace_and_global(),
+			Test_wcFullIdentifier_string_constructor_with_function_namespace_and_global(),
+			Test_wcFullIdentifier_copy_constructor_with_function_namespace_and_global(),
+			Test_wcFullIdentifier_part_constructor_with_function_namespace_and_global(),
+			Test_wcFullIdentifier_part_constructor_with_function_parameters_namespace_and_global(),
+			Test_wcFullIdentifier_part_constructor_with_function_local();
+
+		//wcFunctionIdentifier
+		int Test_wcFunctionIdentifier_default_constructor(),
+			Test_wcFunctionIdentifier_default_constructor(),				
+			Test_wcFunctionIdentifier_string_constructor_no_parenthesis_in_identifier(),				
+			Test_wcFunctionIdentifier_string_constructor_with_parameters(),				
+			Test_wcFunctionIdentifier_string_constructor_with_parameters_and_namespace();
 
 		namespace lex
 		{
-
-			int Test_Tokenizer1(), Test_Tokenizer2(), Test_Tokenizer3(), Test_Tokenizer4(), Test_Tokenizer5(),
-				Test_Tokenizer6(), Test_Tokenizer7(), Test_Tokenizer8(), Test_Tokenizer9(), Test_Tokenizer10(),
-				Test_Tokenizer11(), Test_Tokenizer12();
-
-			int Test_StringTokenizer1();
-
-			int Test_wcIdentalyzer1();
-			int Test_wcIdentifier1();
-			int Test_wcScopeIdentifier1();
-			int Test_wcFullIdentifier1();
 			int Test_wcFunctionIdentifier1();
 			int Test_wcParseSymbolTable1(), Test_wcParseSymbolTable2();
 			int Test_wcParseScope();

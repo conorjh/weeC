@@ -110,10 +110,10 @@ namespace weec
 		public:
 			wcIdentalyzerAnalyzeResultCode Analyze(std::string);
 
-			bool Create(std::string IdentifierString, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
-			bool Create(std::string IdentifierString, const std::vector<wcParseParameter>& Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
-			bool Create(std::string IdentifierString, const std::vector<wcParseExpression>& Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
-			
+			bool Create(std::string IdentifierString, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput),
+				Create(std::string IdentifierString, const std::vector<wcParseParameter>& Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput),
+				Create(std::string IdentifierString, const std::vector<wcParseExpression>& Parameters, wcIdentifierScope& ScopeOutput, wcIdentifier& IdentifierOutput);
+
 			std::string GetNamespaceFromQualifiedIdentifier(std::string IdentifierString),
 				GetIdentifierFromQualifiedIdentifier(std::string IdentifierString),
 				StripArgumentsFromFunctionIdentifier(std::string FunctionIdentifierString),
@@ -130,12 +130,11 @@ namespace weec
 				return Identifier.find(ParserConsts.ScopeDelimiter) != std::string::npos;
 			}
 
-			bool IsQualified(std::string), IsFunction(std::string), IsValid(std::string), IsQualifiedWithGlobal(std::string), IsMember(std::string);
-		};
-
-		class wcBaseIdentifier
-		{
-
+			bool IsQualified(std::string),
+				IsFunction(std::string),
+				IsValid(std::string),
+				IsQualifiedWithGlobal(std::string),
+				IsMember(std::string);
 		};
 
 		class wcIdentifier
@@ -196,7 +195,10 @@ namespace weec
 			{
 				//remove $g:: and any other namespaces
 				if (wcIdentalyzer().IsQualified(Identifier))
-					return Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1, Identifier.size() - (Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1));
+				{
+					return Identifier.substr(Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1,
+						Identifier.size() - (Identifier.find_last_of(ParserConsts.ScopeDelimiter) + 1));
+				}
 
 				if (Identifier == ParserConsts.GlobalIdentifier)
 					return "";	//no namespace delimiter, but a present global ident... must be just "$g". the unqualified version of this is an empty string
@@ -212,8 +214,8 @@ namespace weec
 				else
 					if (wcIdentalyzer().ContainsNamespace(Identifier))
 					{
-						auto l = Identifier.substr(Identifier.find_first_of(ParserConsts.GlobalIdentPrefix) + 4, Identifier.size() - (Identifier.find_first_of(ParserConsts.GlobalIdentPrefix) + 4));	//todo remove debug line 
-						return l;
+						return Identifier.substr(Identifier.find_first_of(ParserConsts.GlobalIdentPrefix) + 4,
+							Identifier.size() - (Identifier.find_first_of(ParserConsts.GlobalIdentPrefix) + 4));
 					}
 					else
 						return "";  //must be just "$g"
@@ -617,7 +619,7 @@ namespace weec
 
 			void Push(const wcParseScope& Scope)
 			{
-				Scopes.push(Scope);			
+				Scopes.push(Scope);
 			}
 
 			void Pop()
@@ -631,7 +633,7 @@ namespace weec
 				Scopes.push(Scope);
 			}
 
-			bool AddSymbol(const wcFullIdentifier& Ident) 
+			bool AddSymbol(const wcFullIdentifier& Ident)
 			{
 				auto Temp = Scopes.top();
 				if (Temp.Exists(Ident))
@@ -650,7 +652,7 @@ namespace weec
 			}
 		};
 
-		class wcParseSymbolTable 
+		class wcParseSymbolTable
 		{
 			std::unordered_map<std::string, wcParseSymbol> Container;
 			std::unordered_map<std::string, wcParseFunctionSignature> FunctionContainer;
@@ -836,8 +838,8 @@ namespace weec
 
 			wcParseExpression ParseExpression_Expression(), ParseExpression_SubExpression(),
 				ParseExpression_Equality(), ParseExpression_Assignment(), ParseExpression_Ternary(),
-				ParseExpression_LogicOr(),	ParseExpression_LogicAnd(), ParseExpression_Comparison(),
-				ParseExpression_Term(), ParseExpression_Factor(), ParseExpression_Unary(), 
+				ParseExpression_LogicOr(), ParseExpression_LogicAnd(), ParseExpression_Comparison(),
+				ParseExpression_Term(), ParseExpression_Factor(), ParseExpression_Unary(),
 				ParseExpression_Call(), ParseExpression_CallArguments(wcParseExpression Callee), ParseExpression_Primary();
 
 		public:

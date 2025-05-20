@@ -18,10 +18,42 @@
     <ClCompile Include="test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_wcTokenizer.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_wcStringTokenizer.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_DeclarationParser.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="test_wcIdentalyzer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_c_compiler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_wcFullIdentifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_wcScopeIdentifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_wcFunctionIdentifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_wcParseSymbolTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test_wcIdentifier.h">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

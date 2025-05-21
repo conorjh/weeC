@@ -162,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h" />
+    <ClInclude Include="test_listings.h" />
     <ClInclude Include="test_wcBlockParser.h" />
     <ClInclude Include="test_c_compiler.h" />
     <ClInclude Include="test_wcFullIdentifier.h" />

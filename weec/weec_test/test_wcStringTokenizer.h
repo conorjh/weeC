@@ -7,11 +7,7 @@ namespace weec
 {
 	namespace test
 	{
-		namespace listing
-		{
-		}
-
-		int Test_StringTokenizer1()
+		inline int Test_StringTokenizer1()
 		{
 			using namespace std;
 			using namespace weec::lex;
@@ -41,7 +37,7 @@ namespace weec
 		}
 
 
-		int Test_StringTokenizer_Alphanumeric()
+		inline int Test_StringTokenizer_Alphanumeric()
 		{
 			using namespace std;
 			using namespace weec::lex;

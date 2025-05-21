@@ -7,12 +7,7 @@ namespace weec
 {
 	namespace test
 	{
-		namespace listing
-		{
-
-		}
-
-		int Test_wcDeclarationParser_simple_declaration()
+		inline int Test_wcDeclarationParser_simple_declaration()
 		{
 			using namespace std;
 			using namespace weec::lex;
@@ -26,7 +21,7 @@ namespace weec
 			return 0;
 		}
 
-		int Test_wcDeclarationParser_simple_declaration_and_assignment()
+		inline int Test_wcDeclarationParser_simple_declaration_and_assignment()
 		{
 			using namespace std;
 			using namespace weec::lex;
@@ -40,7 +35,7 @@ namespace weec
 			return 0;
 		}
 
-		int Test_wcDeclarationParser_simple_function_declaration()
+		inline int Test_wcDeclarationParser_simple_function_declaration()
 		{
 			using namespace std;
 			using namespace weec::lex;
@@ -55,7 +50,7 @@ namespace weec
 			return 0;
 		}
 
-		int Test_wcDeclarationParser_simple_function_declaration_with_body()
+		inline int Test_wcDeclarationParser_simple_function_declaration_with_body()
 		{
 			using namespace std;
 			using namespace weec::lex;
@@ -70,7 +65,7 @@ namespace weec
 			return 0;
 		}
 
-		int Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body()
+		inline int Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body()
 		{
 			using namespace std;
 			using namespace weec::lex;
@@ -85,7 +80,7 @@ namespace weec
 			return 0;
 		}
 
-		int Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body2()
+		inline int Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body2()
 		{
 			using namespace std;
 			using namespace weec::lex;
@@ -102,7 +97,7 @@ namespace weec
 			return 0;
 		}
 
-		int Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body3()
+		inline int Test_wcDeclarationParser_simple_function_declaration_with_arguments_and_body3()
 		{
 			using namespace std;
 			using namespace weec::lex;

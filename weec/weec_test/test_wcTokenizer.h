@@ -1,46 +1,92 @@
 #ifndef WC_TEST_WCTOKENIZER_H
 #define WC_TEST_WCTOKENIZER_H
 #include <string>
+#include "test_listings.h"
 #include "lex.h"
 
 namespace weec
 {
 	namespace test
 	{
-		namespace listing
-		{
-			static std::string list_tokenizer1 = "3.14";
-			static std::string list_tokenizer2 = "\"Hello World\"";
-			static std::string list_tokenizer3 = "'Char literal'";
-			static std::string list_tokenizer4 = "const int TestIdent =99 *44";
-			static std::string list_tokenizer5 = "string Test_Ident = \"Hello World\"";
-			static std::string list_tokenizer6 = "- + += * / + ( ) { } [ ] # \\ / % & ^ ? |";
-			static std::string list_tokenizer7 = "int main(int argc, char* argv[])\n{\nreturn 0;\n}";
-			static std::string list_tokenizer8 = "// comment  \n /* multi \n  line \n comment */";
-			static std::string list_tokenizer9 = "// comment  \n /* multi \n  line \n comment */\n with extra line //then comment at the end";
-			static std::string list_tokenizer10 = "int IdentTest; char IdentTest::WithNamespace";
-			static std::string list_tokenizer11 = "x = 88 + (42 / 99)";
-			static std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember ns::method1() ns2::method2(a,b)";
-		}
-
-		int Test_Tokenizer1()
+		//not sure why but functions in this file must be inlined or we 
+		//get LNK1169 one or more multiply defined symbols found on VS22
+		inline int Test_Tokenizer_whitespace1()
 		{
 			using namespace weec::lex;
+			std::string input = listing::list_lexer_whitespace1;
 
-			std::string input = listing::list_tokenizer1;
 			wcTokenizer tokenizer(input);
-
-			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::FloatLiteral)
+			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
 				return 1;
 
 			return 0;
 		}
 
-		int Test_Tokenizer2()
+		inline int Test_Tokenizer_whitespace2()
+		{
+			using namespace weec::lex;
+			std::string input = listing::list_lexer_whitespace2;
+
+			wcTokenizer tokenizer(input);
+			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
+				return 1;
+
+			return 0;
+		}
+
+		inline int Test_Tokenizer_whitespace3()
+		{
+			using namespace weec::lex;
+			std::string input = listing::list_lexer_whitespace3;
+
+			wcTokenizer tokenizer(input);
+			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
+				return 1;
+
+			return 0;
+		}
+
+		inline int Test_Tokenizer_whitespace4()
+		{
+			using namespace weec::lex;
+			std::string input = listing::list_lexer_whitespace4;
+
+			wcTokenizer tokenizer(input);
+			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
+				return 1;
+
+			return 0;
+		}
+
+		inline int Test_Tokenizer_whitespace5()
+		{
+			using namespace weec::lex;
+			std::string input = listing::list_lexer_whitespace5;
+
+			wcTokenizer tokenizer(input);
+			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
+				return 1;
+
+			return 0;
+		}
+
+		inline int Test_Tokenizer_whitespace6()
+		{
+			using namespace weec::lex;
+			std::string input = listing::list_lexer_whitespace6;
+
+			wcTokenizer tokenizer(input);
+			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
+				return 1;
+
+			return 0;
+		}
+
+		inline int Test_Tokenizer_102()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer2;
+			std::string input = listing::list_tokenizer102;
 			wcTokenizer tokenizer(input);
 
 			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::StringLiteral)
@@ -49,11 +95,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer3()
+		inline int Test_Tokenizer_103()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer3;
+			std::string input = listing::list_tokenizer103;
 			wcTokenizer tokenizer(input);
 
 			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::CharLiteral)
@@ -62,11 +108,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer4()
+		inline int Test_Tokenizer_104()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer4;
+			std::string input = listing::list_tokenizer104;
 			wcTokenizer tokenizer(input);
 
 			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::ConstKeyword && tokenizer.GetToken().StringToken.Data == "const")
@@ -93,11 +139,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer5()
+		inline int Test_Tokenizer_105()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer5;
+			std::string input = listing::list_tokenizer105;
 			wcTokenizer tokenizer(input);
 
 			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::StringKeyword || tokenizer.GetToken().StringToken.Data != "string")
@@ -115,11 +161,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer6()
+		inline int Test_Tokenizer_106()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer6;
+			std::string input = listing::list_tokenizer106;
 			wcTokenizer tokenizer(input);
 
 			//- + += * / + ( ) { } [ ] # \\ / % & ^ ? |
@@ -166,11 +212,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer7()
+		inline int Test_Tokenizer_107()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer7;
+			std::string input = listing::list_tokenizer107;
 			wcTokenizer tokenizer(input);
 
 			//int main(int argc, char* argv[])
@@ -232,11 +278,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer8()
+		inline int Test_Tokenizer_108()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer8;
+			std::string input = listing::list_tokenizer108;
 			wcTokenizer tokenizer(input);
 
 			//  // comment  
@@ -251,11 +297,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer9()
+		inline int Test_Tokenizer_109()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer9;
+			std::string input = listing::list_tokenizer109;
 			wcTokenizer tokenizer(input);
 
 			//  // comment  
@@ -278,11 +324,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer10()
+		inline int Test_Tokenizer_110()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer10;
+			std::string input = listing::list_tokenizer110;
 			wcTokenizer tokenizer(input);
 
 			//  int IdentTest; char IdentTest::WithNamespace
@@ -301,11 +347,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer12()
+		inline int Test_Tokenizer_112()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer12;
+			std::string input = listing::list_tokenizer112;
 			wcTokenizer tokenizer(input);
 
 			// ident.withMember ident::withNamespace::withObject.withMember ns::method1() ns2::method2(a,b)
@@ -336,11 +382,11 @@ namespace weec
 			return 0;
 		}
 
-		int Test_Tokenizer11()
+		inline int Test_Tokenizer_111()
 		{
 			using namespace weec::lex;
 
-			std::string input = listing::list_tokenizer11;
+			std::string input = listing::list_tokenizer111;
 			wcTokenizer tokenizer(input);
 
 			//x = 88 + (42 / 99)

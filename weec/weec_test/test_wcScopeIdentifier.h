@@ -7,10 +7,6 @@ namespace weec
 {
 	namespace test
 	{
-		namespace listing
-		{
-		}
-
 		int Test_wcScopeIdentifier_default_constructor()
 		{
 			using namespace std;

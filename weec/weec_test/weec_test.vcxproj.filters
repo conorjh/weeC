@@ -56,6 +56,9 @@
     <ClInclude Include="test_wcBlockParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="test_listings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="test_wcIdentifier.h">

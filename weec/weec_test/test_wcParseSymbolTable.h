@@ -7,11 +7,6 @@ namespace weec
 {
 	namespace test
 	{
-		namespace listing
-		{
-		}
-
-
 		int Test_wcParseSymbolTable_default_constructor()
 		{
 			using namespace std;

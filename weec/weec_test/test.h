@@ -2,11 +2,11 @@
 #define WC_TEST_H
 #include <string>
 #include <vector>
+#include "test_wcTokenizer.h"
 #include "test_wcIdentalyzer.h"
 #include "test_wcIdentifier.h"
 #include "test_wcFullIdentifier.h"
 #include "test_wcFunctionIdentifier.h"
-//#include "test_wcTokenizer.h"
 //#include "test_wcStringTokenizer.h"
 #include "test_wcParseSymbolTable.h"
 #include "test_wcIfParser.h"

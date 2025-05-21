@@ -1,7 +1,6 @@
 #ifndef WC_TEST_WCTOKENIZER_H
 #define WC_TEST_WCTOKENIZER_H
 #include <string>
-#include <vector>
 #include "lex.h"
 
 namespace weec
@@ -10,18 +9,18 @@ namespace weec
 	{
 		namespace listing
 		{
-			std::string list_tokenizer1 = "3.14";
-			std::string list_tokenizer2 = "\"Hello World\"";
-			std::string list_tokenizer3 = "'Char literal'";
-			std::string list_tokenizer4 = "const int TestIdent =99 *44";
-			std::string list_tokenizer5 = "string Test_Ident = \"Hello World\"";
-			std::string list_tokenizer6 = "- + += * / + ( ) { } [ ] # \\ / % & ^ ? |";
-			std::string list_tokenizer7 = "int main(int argc, char* argv[])\n{\nreturn 0;\n}";
-			std::string list_tokenizer8 = "// comment  \n /* multi \n  line \n comment */";
-			std::string list_tokenizer9 = "// comment  \n /* multi \n  line \n comment */\n with extra line //then comment at the end";
-			std::string list_tokenizer10 = "int IdentTest; char IdentTest::WithNamespace";
-			std::string list_tokenizer11 = "x = 88 + (42 / 99)";
-			std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember ns::method1() ns2::method2(a,b)";
+			static std::string list_tokenizer1 = "3.14";
+			static std::string list_tokenizer2 = "\"Hello World\"";
+			static std::string list_tokenizer3 = "'Char literal'";
+			static std::string list_tokenizer4 = "const int TestIdent =99 *44";
+			static std::string list_tokenizer5 = "string Test_Ident = \"Hello World\"";
+			static std::string list_tokenizer6 = "- + += * / + ( ) { } [ ] # \\ / % & ^ ? |";
+			static std::string list_tokenizer7 = "int main(int argc, char* argv[])\n{\nreturn 0;\n}";
+			static std::string list_tokenizer8 = "// comment  \n /* multi \n  line \n comment */";
+			static std::string list_tokenizer9 = "// comment  \n /* multi \n  line \n comment */\n with extra line //then comment at the end";
+			static std::string list_tokenizer10 = "int IdentTest; char IdentTest::WithNamespace";
+			static std::string list_tokenizer11 = "x = 88 + (42 / 99)";
+			static std::string list_tokenizer12 = "ident.withMember ident::withNamespace::withObject.withMember ns::method1() ns2::method2(a,b)";
 		}
 
 		int Test_Tokenizer1()

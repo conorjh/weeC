@@ -1,7 +1,6 @@
 #ifndef WC_TEST_WCIDENTIFIER_H
 #define WC_TEST_WCIDENTIFIER_H
 #include <string>
-#include <vector>
 #include "parse.h"
 
 namespace weec

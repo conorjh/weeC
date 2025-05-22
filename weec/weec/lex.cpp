@@ -725,6 +725,7 @@ bool weec::lex::wcTokenizer::NextToken_Ident()
 					goto _wcTokenizer_NextToken_Ident_End_Of_Ident;
 
 		case wcTokenType::DoubleColon:
+			[[fallthrough]];
 		case wcTokenType::Period:
 			if (LastPartWasASeperator)
 			{

@@ -143,12 +143,13 @@ namespace weec
 		{
 			friend class wcStringTokenizer;
 
-			const std::string& Source;
+			std::string& Source;
 			std::string Buffer;
 			int Index, Line;
 		public:
-			wcLineFeeder(const std::string& _source);
+			wcLineFeeder(std::string&  _source);
 			wcLineFeeder(const wcLineFeeder& _otherCopy);
+			wcLineFeeder& operator=(wcLineFeeder&);
 
 			int GetLineNum() { return Line; }
 			std::string GetLine();
@@ -161,15 +162,14 @@ namespace weec
 			wcStringToken TokenBuffer;
 			wcLineFeeder Feeder;
 			unsigned int Index;
-			std::string deliminators[WC_VAR_DEFINITIONCOUNT];
 			bool Finished;
 
-			bool IsDelimiter(std::string);
 			bool IncIndex();
 			bool Match(wcStringTokenType), Match(char), Match(std::string);
 
 		public:
-			wcStringTokenizer(const std::string& _source);
+			wcStringTokenizer(std::string& const Source);
+			wcStringTokenizer(const wcStringTokenizer& Source);
 			wcStringTokenizer& operator=(wcStringTokenizer&);
 
 			wcStringToken GetStringToken() const;
@@ -221,7 +221,7 @@ namespace weec
 
 		public:
 			wcTokenizerError Error;
-			wcTokenizer(const std::string& _source, bool _NextToken = false);
+			wcTokenizer(std::string& Source, bool _NextToken = false);
 			wcTokenizer& operator=(wcTokenizer&);
 
 			wcToken GetToken() const;

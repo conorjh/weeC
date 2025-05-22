@@ -497,29 +497,16 @@ void weec::interpreter::DefaultPrintFunc(std::string In)
 	std::cout << In << std::endl;
 }
 
-weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& _Input)
-	: ExpressionInterp(SymbolTable, FunctionTable, _Input, PC, EAX), Input(_Input), FunctionTable(_Input)
+weec::interpreter::wcInterpreter::wcInterpreter(wcParseOutput& Input)
+	: PC(Input.AST.begin()), Input(Input), FunctionTable(Input), PrintFunc(DefaultPrintFunc), Halt(false), Paused(false), Return(), EAX(),
+	ExpressionInterp(SymbolTable, FunctionTable, Input, PC, EAX)
 {
-	Input = _Input;
-	PC = Input.AST.begin();
-	PrintFunc = DefaultPrintFunc;
-	Halt = false;
-	Paused = false;
-
-	//wcInterpreterFunctionSignature GlobalFuncSig(Input, this, vector<wcInterpreterArgument>(), "$g::int", PC);
-
 }
-weec::interpreter::wcInterpreter::wcInterpreter(void (*p_func)(std::string), wcParseOutput& _Input)
-	: ExpressionInterp(SymbolTable, FunctionTable, _Input, PC, EAX), Input(_Input), FunctionTable(_Input)
+
+weec::interpreter::wcInterpreter::wcInterpreter(void (*p_func)(std::string), wcParseOutput& Input)
+	: PC(Input.AST.begin()), Input(Input), FunctionTable(Input), PrintFunc(p_func), Halt(false), Paused(false), Return(), EAX(),
+	ExpressionInterp(SymbolTable, FunctionTable, Input, PC, EAX)
 {
-	Input = _Input;
-	PC = Input.AST.begin();
-	PrintFunc = p_func;
-	Halt = false;
-	Paused = false;
-
-	//wcInterpreterFunctionSignature GlobalFuncSig(Input, this, vector<wcInterpreterArgument>(), "$g::int", PC);
-
 }
 
 void weec::interpreter::wcInterpreter::Reset()

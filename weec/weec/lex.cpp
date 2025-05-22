@@ -14,26 +14,18 @@ using weec::lex::wcToken;
 wcStringToken weec::lex::misc::NullToken;
 
 weec::lex::wcStringToken::wcStringToken()
+	: Column(0), Line(0), Data(), Type(wcStringTokenType::Null)
 {
-	Column = Line = 0;
-	Data = "";
-	Type = wcStringTokenType::Null;
 }
 
-weec::lex::wcStringToken::wcStringToken(std::string& _data, wcStringTokenType _type, int _line, int _column)
+weec::lex::wcStringToken::wcStringToken(std::string& Data, wcStringTokenType Type, int Line, int Column)
+	: Column(Column), Line(Line), Data(Data), Type(Type)
 {
-	Data = _data;
-	Type = _type;
-	Line = _line;
-	Column = _column;
 }
 
-weec::lex::wcStringToken::wcStringToken(std::string _data, wcStringTokenType _type, int _line, int _column)
+weec::lex::wcStringToken::wcStringToken(std::string Data, wcStringTokenType Type, int Line, int Column)
+	: Column(Column), Line(Line), Data(Data), Type(Type)
 {
-	Data = _data;
-	Type = _type;
-	Line = _line;
-	Column = _column;
 }
 
 wcStringToken& weec::lex::wcStringToken::operator=(wcStringToken input)
@@ -119,9 +111,15 @@ bool weec::lex::wcToken::IsBuiltinType() const
 }
 
 
-weec::lex::wcStringTokenizer::wcStringTokenizer(const std::string& _source) 
-	: Feeder(_source), Index(0), Finished(false)
-{ }
+weec::lex::wcStringTokenizer::wcStringTokenizer(std::string& const Source)
+	: Feeder(Source), Index(0), Finished(false), TokenBuffer(), Line()
+{
+}
+
+weec::lex::wcStringTokenizer::wcStringTokenizer(const wcStringTokenizer& otherCopy)
+	: Feeder(otherCopy.Feeder), Index(0), Finished(false), TokenBuffer(otherCopy.TokenBuffer), Line(otherCopy.Line)
+{
+}
 
 wcStringTokenizer& weec::lex::wcStringTokenizer::operator=(wcStringTokenizer& input)
 {
@@ -131,14 +129,6 @@ wcStringTokenizer& weec::lex::wcStringTokenizer::operator=(wcStringTokenizer& in
 	this->TokenBuffer = input.TokenBuffer;
 	this->Finished = input.Finished;
 	return *this;
-}
-
-bool weec::lex::wcStringTokenizer::IsDelimiter(std::string _testString)
-{
-	for (auto var : deliminators)
-		if (var == _testString)
-			return true;
-	return false;
 }
 
 wcStringToken weec::lex::wcStringTokenizer::GetStringToken() const
@@ -436,8 +426,8 @@ bool weec::lex::operator==(wcToken& lhs, const wcToken& rhs)
 		: false;
 }
 
-wcLineFeeder::wcLineFeeder(const std::string& _source)
-	: Source(_source), Index(0), Line(0), Buffer()
+wcLineFeeder::wcLineFeeder(std::string&  Source)
+	: Source(Source), Index(0), Line(0), Buffer()
 {
 }
 
@@ -446,7 +436,15 @@ wcLineFeeder::wcLineFeeder(const wcLineFeeder& _otherCopy)
 {
 }
 
+wcLineFeeder& weec::lex::wcLineFeeder::operator=(wcLineFeeder& Other)
+{
+	this->Source = Other.Source;
+	this->Buffer = Other.Buffer;
+	this->Line = Other.Line;
+	this->Index = Other.Index;
 
+	return *this;
+}
 
 std::string weec::lex::wcLineFeeder::GetLine()
 {
@@ -492,8 +490,8 @@ weec::lex::wcTokenizerError::wcTokenizerError(wcTokenizerErrorCode _Code, wcStri
 	Msg = _Msg;
 }
 
-weec::lex::wcTokenizer::wcTokenizer(const std::string& _source, bool _NextToken) 
-	: stringTokenizer(_source)
+weec::lex::wcTokenizer::wcTokenizer(std::string& Source, bool _NextToken) 
+	: stringTokenizer(Source)
 {
 	if (_NextToken)
 		NextToken();
@@ -718,7 +716,7 @@ bool weec::lex::wcTokenizer::NextToken_Ident()
 				}
 				else
 					goto _wcTokenizer_NextToken_Ident_End_Of_Ident;
-
+			[[fallthrough]];
 		case wcTokenType::DoubleColon:
 			[[fallthrough]];
 		case wcTokenType::Period:

@@ -19,8 +19,6 @@ namespace weec
 {
 	namespace interpreter
 	{
-		std::string to_string(std::any Value);
-
 		class ImplementationType
 		{
 		public:
@@ -116,7 +114,7 @@ namespace weec
 			std::unordered_map<std::string, std::any> Container;
 		};
 
-		class wcInterpreterSymbolTable 
+		class wcInterpreterSymbolTable
 		{
 			std::unordered_map<std::string, std::any> Container;
 		public:
@@ -162,7 +160,7 @@ namespace weec
 
 
 		public:
-			wcExpressionInterpreter(wcInterpreterSymbolTable& SymTab, wcInterpreterFunctionTable& FuncTab,parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX);
+			wcExpressionInterpreter(wcInterpreterSymbolTable& SymTab, wcInterpreterFunctionTable& FuncTab, parse::wcParseOutput Input, tree<parse::wcParseNode>::iterator& PC, std::any& EAX);
 
 			std::any ExecSubExpression(),
 				ExecEquality(), ExecAssignment(), ExecTernary(), ExecLogicOr(),
@@ -220,10 +218,10 @@ namespace weec
 			wcInterpreter(void (*)(std::string), parse::wcParseOutput& Input);
 
 			void Reset(), Pause();
-			virtual std::any Exec(), 
-				Exec(tree<parse::wcParseNode>::iterator NewPC), 
+			virtual std::any Exec(),
+				Exec(tree<parse::wcParseNode>::iterator NewPC),
 				Exec(tree<parse::wcParseNode>::iterator NewPC, std::vector<wcInterpreterIdentPlusValue> Arguments),
-				
+
 				ExecBlock(tree<parse::wcParseNode>::iterator NewPC = nullptr), SkipBlock(), ExecStatement(), ExecIf(), ExecWhile(), ExecReturn(), ExecPrint(), ExecDeclaration();
 
 			wcInterpreterError Error;
@@ -432,7 +430,7 @@ namespace weec
 						else return wcInterpreterError(wcInterpreterErrorCode::DivByZero);
 				}
 			}
-			
+
 			switch (Op)
 			{
 			case lex::wcTokenType::MultiplyOperator:		return std::any_cast<T1>(a) * std::any_cast<T2>(b);
@@ -467,6 +465,8 @@ namespace weec
 
 			return  wcInterpreterError(wcInterpreterErrorCode::BadOperation);	//err
 		}
+
+
 
 	}
 

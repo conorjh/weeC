@@ -4,80 +4,47 @@
 #include "test_listings.h"
 #include "lex.h"
 
+//not sure why but functions in this file must be inlined or we 
+//get LNK1169 one or more multiply defined symbols found on VS22
+
 namespace weec
 {
 	namespace test
 	{
-		//not sure why but functions in this file must be inlined or we 
-		//get LNK1169 one or more multiply defined symbols found on VS22
 		inline int Test_Tokenizer_whitespace1()
 		{
 			using namespace weec::lex;
-			std::string input = listing::list_lexer_whitespace1;
+			using namespace weec::test::listing;
 
-			wcTokenizer tokenizer(input);
-			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
+			std::string input1(list_lexer_whitespace1);
+			wcTokenizer tokenizer1(input1);
+			if (tokenizer1.NextToken() || tokenizer1.GetToken().Type != wcTokenType::Whitespace)
 				return 1;
 
-			return 0;
-		}
+			std::string input2(list_lexer_whitespace2);
+			wcTokenizer tokenizer2(input2);
+			if (tokenizer2.NextToken() || tokenizer2.GetToken().Type != wcTokenType::Whitespace)
+				return 2;
 
-		inline int Test_Tokenizer_whitespace2()
-		{
-			using namespace weec::lex;
-			std::string input = listing::list_lexer_whitespace2;
+			std::string input3(list_lexer_whitespace3);
+			wcTokenizer tokenizer3(input3);
+			if (!tokenizer3.NextToken() || tokenizer3.GetToken().Type != wcTokenType::Whitespace)
+				return 3;
 
-			wcTokenizer tokenizer(input);
-			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
-				return 1;
+			std::string input4(list_lexer_whitespace4);
+			wcTokenizer tokenizer4(input4);
+			if (tokenizer4.NextToken() || tokenizer4.GetToken().Type != wcTokenType::Whitespace)
+				return 4;
 
-			return 0;
-		}
+			std::string input5(list_lexer_whitespace5);
+			wcTokenizer tokenizer5(input5);
+			if (tokenizer5.NextToken() || tokenizer5.GetToken().Type != wcTokenType::Whitespace)
+				return 5;
 
-		inline int Test_Tokenizer_whitespace3()
-		{
-			using namespace weec::lex;
-			std::string input = listing::list_lexer_whitespace3;
-
-			wcTokenizer tokenizer(input);
-			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
-				return 1;
-
-			return 0;
-		}
-
-		inline int Test_Tokenizer_whitespace4()
-		{
-			using namespace weec::lex;
-			std::string input = listing::list_lexer_whitespace4;
-
-			wcTokenizer tokenizer(input);
-			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
-				return 1;
-
-			return 0;
-		}
-
-		inline int Test_Tokenizer_whitespace5()
-		{
-			using namespace weec::lex;
-			std::string input = listing::list_lexer_whitespace5;
-
-			wcTokenizer tokenizer(input);
-			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
-				return 1;
-
-			return 0;
-		}
-
-		inline int Test_Tokenizer_whitespace6()
-		{
-			using namespace weec::lex;
-			std::string input = listing::list_lexer_whitespace6;
-
-			wcTokenizer tokenizer(input);
-			if (!tokenizer.NextToken() || tokenizer.GetToken().Type != wcTokenType::Whitespace)
-				return 1;
+			std::string input6(list_lexer_whitespace6);
+			wcTokenizer tokenizer6(input6);
+			if (tokenizer6.NextToken() || tokenizer6.GetToken().Type != wcTokenType::Whitespace)
+				return 6;
 
 			return 0;
 		}

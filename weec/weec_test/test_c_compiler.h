@@ -36,7 +36,7 @@ namespace weec
 			std::string c_compiler_invalid_parse_missing_first_op = "int main( {\n\treturn /3;\n}";
 			std::string c_compiler_invalid_parse_missing_open_paren = "int main( {\n\treturn 1 + 2);\n}";
 			std::string c_compiler_invalid_parse_missing_second_op = "int main( {\n\treturn 1 + ;\n}";
-			std::string c_compiler_invalid_parse_no_semicolon = "int main( {\n\treturn 2*2\n}";
+			std::string c_compiler_invalid_parse_no_semicolon2 = "int main( {\n\treturn 2*2\n}";
 
 
 			std::string c_compiler_valid_multi_digit = "int main(void) {\n\t// test case w/ multi-digit constant\n\treturn 100;\n}";

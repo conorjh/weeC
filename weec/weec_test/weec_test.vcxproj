@@ -157,18 +157,21 @@
   <ItemGroup>
     <ClCompile Include="test.cpp" />
     <ClCompile Include="test_wcDeclarationParser.h" />
+    <ClCompile Include="test_wcExpressionParser.h" />
     <ClCompile Include="test_wcStringTokenizer.h" />
     <ClCompile Include="test_wcTokenizer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h" />
     <ClInclude Include="test_listings.h" />
+    <ClInclude Include="test_utils.h" />
     <ClInclude Include="test_wcBlockParser.h" />
     <ClInclude Include="test_c_compiler.h" />
     <ClInclude Include="test_wcFullIdentifier.h" />
     <ClInclude Include="test_wcFunctionIdentifier.h" />
     <ClInclude Include="test_wcIdentalyzer.h" />
     <ClInclude Include="test_wcIfParser.h" />
+    <ClInclude Include="test_wcParser.h" />
     <ClInclude Include="test_wcScopeIdentifier.h" />
     <ClInclude Include="test_wcParseSymbolTable.h" />
   </ItemGroup>

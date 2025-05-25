@@ -1,6 +1,7 @@
 #include "lex.h"
 #include <ctype.h>
 #include <sstream>
+#include <iostream>
 
 using std::vector;
 using std::string;
@@ -110,14 +111,26 @@ bool weec::lex::wcToken::IsBuiltinType() const
 	}
 }
 
+bool weec::lex::wcToken::IsWhitespace() const
+{
+	switch (Type)
+	{
+	case wcTokenType::Whitespace:
+	case wcTokenType::NewLine:
+		return true;
+	default:
+		return false;
+	}
+}
+
 
 weec::lex::wcStringTokenizer::wcStringTokenizer(std::string& const Source)
-	: Feeder(Source), Index(0), Finished(false), TokenBuffer(), Line()
+	: Feeder(Source), Index(0), Finished(false), StringTokenBuffer(), Line()
 {
 }
 
 weec::lex::wcStringTokenizer::wcStringTokenizer(const wcStringTokenizer& otherCopy)
-	: Feeder(otherCopy.Feeder), Index(0), Finished(false), TokenBuffer(otherCopy.TokenBuffer), Line(otherCopy.Line)
+	: Feeder(otherCopy.Feeder), Index(otherCopy.Index), Finished(otherCopy.Finished), StringTokenBuffer(otherCopy.StringTokenBuffer), Line(otherCopy.Line)
 {
 }
 
@@ -126,14 +139,14 @@ wcStringTokenizer& weec::lex::wcStringTokenizer::operator=(wcStringTokenizer& in
 	this->Feeder = input.Feeder;
 	this->Index = input.Index;
 	this->Line = input.Line;
-	this->TokenBuffer = input.TokenBuffer;
+	this->StringTokenBuffer = input.StringTokenBuffer;
 	this->Finished = input.Finished;
 	return *this;
 }
 
 wcStringToken weec::lex::wcStringTokenizer::GetStringToken() const
 {
-	return TokenBuffer;
+	return StringTokenBuffer;
 }
 
 bool weec::lex::wcStringTokenizer::Lookahead(wcStringToken& output)
@@ -153,7 +166,7 @@ bool weec::lex::wcStringTokenizer::Lookahead(wcStringToken& output, int lookahea
 			return false;
 		}
 
-	output = this->TokenBuffer;
+	output = this->StringTokenBuffer;
 
 	//restore state
 	*this = state;
@@ -193,26 +206,27 @@ bool weec::lex::wcStringTokenizer::IsFinished() const
 
 bool weec::lex::wcStringTokenizer::Match(wcStringTokenType _expectedType)
 {
-	if (_expectedType != wcStringTokenType::Null && TokenBuffer.Type != _expectedType)
+	if (_expectedType != wcStringTokenType::Null && StringTokenBuffer.Type != _expectedType)
 		return false;
 	return true;
 }
 
 bool weec::lex::wcStringTokenizer::Match(char _expectedChar)
 {
-	if (TokenBuffer.Data.size() && _expectedChar != '\0' 
-		&& TokenBuffer.Data.at(TokenBuffer.Data.size() - 1) != _expectedChar)
+	if (StringTokenBuffer.Data.size() && _expectedChar != '\0'
+		&& StringTokenBuffer.Data.at(StringTokenBuffer.Data.size() - 1) != _expectedChar)
 		return false;
 	return true;
 }
 
 bool weec::lex::wcStringTokenizer::Match(string _expectedString)
 {
-	if (!_expectedString.empty() && TokenBuffer.Data != _expectedString)
+	if (!_expectedString.empty() && StringTokenBuffer.Data != _expectedString)
 		return false;
 	return true;
 }
 
+//false if end of file, true otherwise
 bool weec::lex::wcStringTokenizer::IncIndex()
 {
 	//feed in the next line if needed
@@ -228,22 +242,22 @@ bool weec::lex::wcStringTokenizer::IncIndex()
 		Line = Feeder.GetLine();
 	}
 
-	TokenBuffer.Column = Index;
-	TokenBuffer.Line = Feeder.GetLineNum();
-	TokenBuffer.Data = "";
+	StringTokenBuffer.Column = Index;
+	StringTokenBuffer.Line = Feeder.GetLineNum();
+	StringTokenBuffer.Data = "";
 
 	wcStringTokenType thisType = wcStringTokenType::Null, lastType = wcStringTokenType::Null;
 	while (Index < Line.size())
 	{
 		thisType = wcStringTokenTypeAlizer().Get(Line.at(Index));
 
-		if (((lastType != wcStringTokenType::Null && lastType != thisType) 
+		if (((lastType != wcStringTokenType::Null && lastType != thisType)
 			|| lastType == wcStringTokenType::Punctuation || lastType == wcStringTokenType::Special)
-			&& !(lastType == wcStringTokenType::Alpha && Line.at(Index) == '_') )
+			&& !(lastType == wcStringTokenType::Alpha && Line.at(Index) == '_'))
 			break;
 
-		TokenBuffer.Data += Line.at(Index);
-		TokenBuffer.Type = thisType;
+		StringTokenBuffer.Data += Line.at(Index);
+		StringTokenBuffer.Type = thisType;
 		Index++;
 		lastType = thisType;
 	}
@@ -287,10 +301,12 @@ bool weec::lex::wcStringTokenizer::NextStringToken(string _expectedString)
 	return Match(_expectedString);
 }
 
-wcStringTokenType weec::lex::wcStringTokenTypeAlizer::Get(char test) const
+wcStringTokenType weec::lex::wcStringTokenTypeAlizer::Get(char& test) const
 {
 	if (test == '\n')
 		return wcStringTokenType::NewLine;
+	else if (test == '\t')
+		return wcStringTokenType::Whitespace;
 	else if (isspace(test))
 		return wcStringTokenType::Whitespace;
 	else if (isdigit(test))
@@ -303,12 +319,20 @@ wcStringTokenType weec::lex::wcStringTokenTypeAlizer::Get(char test) const
 		return wcStringTokenType::Special;
 }
 
-wcStringTokenType weec::lex::wcStringTokenTypeAlizer::Get(string test) const
+wcStringTokenType weec::lex::wcStringTokenTypeAlizer::Get(string& test) const
 {
-	if (test == "\n")
-		return wcStringTokenType::NewLine;
-	else if (isspace(test[0]))
+	//whitespace check
+	bool IsWhitespace = true;
+	for (unsigned int i = 0; i < test.size(); ++i)
+		if (!isspace(test[i]) && !test[i] == '\t')
+		{
+			IsWhitespace = false;
+			break;
+		}
+	if (IsWhitespace)
 		return wcStringTokenType::Whitespace;
+	else if (test == "\n")
+		return wcStringTokenType::NewLine;
 	else if (isdigit(test[0]))
 		return wcStringTokenType::Number;
 	else if (isalpha(test[0]))
@@ -382,12 +406,96 @@ bool  weec::lex::wcTokenTypeAlizer::IsPartValidIdent(std::string Ident)
 
 wcTokenType weec::lex::wcTokenTypeAlizer::Get(std::string _testString)
 {
-	if (definitionsBank.exists(_testString))
-		return definitionsBank.find(_testString).Type;
-	
+	//check for whitespace
+	int WhiteSpaceCount = 0;
+	for (unsigned int i = 0; i < _testString.size(); ++i)
+		if (!isspace(_testString[i]) && _testString[i] != '\t')
+			break;
+		else
+			WhiteSpaceCount++;
+	if (WhiteSpaceCount == _testString.size())
+		return wcTokenType::Whitespace;
+
+	//single char tokens
+	if(_testString.size() == 1)
+		switch (_testString[0])
+		{
+			case '\n':	return wcTokenType::NewLine;
+			case '.':	return wcTokenType::Period;
+			case ',':	return wcTokenType::Comma;
+			case ';':	return wcTokenType::SemiColon;
+			case ':':	return wcTokenType::Colon;
+			case '::':	return wcTokenType::DoubleColon;
+			case '`':	return wcTokenType::Tilde;
+			case '_':	return wcTokenType::Underscore;
+			case '&':	return wcTokenType::Amper;
+			case '\'':	return wcTokenType::SingleQuote;
+			case '\"':	return wcTokenType::DoubleQuote;
+			case '(':	return wcTokenType::OpenParenthesis;
+			case ')':	return wcTokenType::CloseParenthesis;
+			case '{':	return wcTokenType::OpenBrace;
+			case '}':	return wcTokenType::CloseBrace;
+			case '[':	return wcTokenType::OpenBracket;
+			case ']':	return wcTokenType::CloseBracket;
+			case '#':	return wcTokenType::Hash;
+			case '=':	return wcTokenType::AssignOperator;
+			case '+':	return wcTokenType::PlusOperator;
+			case '-':	return wcTokenType::MinusOperator;
+			case '/':	return wcTokenType::DivideOperator;
+			case '*':	return wcTokenType::MultiplyOperator;
+			case '>':	return wcTokenType::GreaterOperator;
+			case '<':	return wcTokenType::LessOperator;
+			case '%':	return wcTokenType::ModulusOperator;
+			case '^':	return wcTokenType::ExponentOperator;
+			case '!':	return wcTokenType::LogNotOperator;
+			case '?':	return wcTokenType::TernaryOperator;
+		}
+
+	//multi char tokens
+	if (_testString == "+=")		return wcTokenType::PlusAssignOperator;
+	if (_testString == "-=")		return wcTokenType::MinusAssignOperator;
+	if (_testString == "/=")		return wcTokenType::DivAssignOperator;
+	if (_testString == "*=")		return wcTokenType::MultAssignOperator;
+	if (_testString == "++")		return wcTokenType::IncrementOperator;
+	if (_testString == "--")		return wcTokenType::DecrementOperator;
+	if (_testString == "||")		return wcTokenType::LogOrOperator;
+	if (_testString == "&&")		return wcTokenType::LogAndOperator;
+	if (_testString == ">=")		return wcTokenType::GreaterEqualOperator;
+	if (_testString == "<=")		return wcTokenType::LessEqualOperator;
+	if (_testString == "==")		return wcTokenType::EqualOperator;
+	if (_testString == "!")			return wcTokenType::NotEqualOperator;
+	if (_testString == "//")		return wcTokenType::Comment;
+	if (_testString == "/*")		return wcTokenType::MultiLineCommentStart;
+	if (_testString == "*/")		return wcTokenType::MultiLineCommentEnd;
+	if (_testString == "int")		return wcTokenType::IntKeyword;
+	if (_testString == "uint")		return wcTokenType::UIntKeyword;
+	if (_testString == "char")		return wcTokenType::CharKeyword;
+	if (_testString == "string")	return wcTokenType::StringKeyword;
+	if (_testString == "double")	return wcTokenType::DoubleKeyword;
+	if (_testString == "float")		return wcTokenType::FloatKeyword;
+	if (_testString == "void")		return wcTokenType::VoidKeyword;
+	if (_testString == "object")	return wcTokenType::ObjectKeyword;
+	if (_testString == "var")		return wcTokenType::VarKeyword;
+	if (_testString == "const")		return wcTokenType::ConstKeyword;
+	if (_testString == "bool")		return wcTokenType::BoolKeyword;
+	if (_testString == "true")		return wcTokenType::TrueKeyword;
+	if (_testString == "false")		return wcTokenType::FalseKeyword;
+	if (_testString == "if")		return wcTokenType::IfKeyword;
+	if (_testString == "else")		return wcTokenType::ElseKeyword;
+	if (_testString == "return")	return wcTokenType::ReturnKeyword;
+	if (_testString == "struct")	return wcTokenType::StructKeyword;
+	if (_testString == "print")		return wcTokenType::PrintKeyword;
+	if (_testString == "while")		return wcTokenType::WhileKeyword;
+	if (_testString == "break")		return wcTokenType::BreakKeyword;
+	if (_testString == "continue")	return wcTokenType::ContinueKeyword;
+	if (_testString == "namespace")	return wcTokenType::NamespaceKeyword;
+	if (_testString == "func")		return wcTokenType::FunctionKeyword;
+	if (_testString == "inline")	return wcTokenType::InlineKeyword;
+
+	//finally, check for ident
 	return IsValidIdent(_testString)
-		? wcTokenType::Identifier
-		: wcTokenType::NullToken;
+	? wcTokenType::Identifier
+	: wcTokenType::NullToken;
 }
 
 wcToken& weec::lex::wcToken::operator=(const wcToken& _rvalue)
@@ -406,7 +514,7 @@ bool weec::lex::wcToken::operator==(const wcToken& Other)
 
 bool weec::lex::wcToken::operator==(wcToken& Other)
 {
-	if (Other.StringToken == StringToken 
+	if (Other.StringToken == StringToken
 		&& Other.Type == Type)
 		return true;
 	return false;
@@ -426,8 +534,8 @@ bool weec::lex::operator==(wcToken& lhs, const wcToken& rhs)
 		: false;
 }
 
-wcLineFeeder::wcLineFeeder(std::string&  Source)
-	: Source(Source), Index(0), Line(0), Buffer()
+wcLineFeeder::wcLineFeeder(std::string& Source)
+	: Source(Source), Index(0), Line(), Buffer()
 {
 }
 
@@ -451,6 +559,7 @@ std::string weec::lex::wcLineFeeder::GetLine()
 	return Buffer;
 }
 
+//returns false if we reach eof, true otherwise
 bool weec::lex::wcLineFeeder::NextLine()
 {
 	if (!Source.size() || Index >= Source.size())
@@ -490,7 +599,7 @@ weec::lex::wcTokenizerError::wcTokenizerError(wcTokenizerErrorCode _Code, wcStri
 	Msg = _Msg;
 }
 
-weec::lex::wcTokenizer::wcTokenizer(std::string& Source, bool _NextToken) 
+weec::lex::wcTokenizer::wcTokenizer(std::string& Source, bool _NextToken)
 	: stringTokenizer(Source)
 {
 	if (_NextToken)
@@ -571,7 +680,7 @@ bool weec::lex::wcTokenizer::NextToken()
 		else
 			return NextToken_Punctuation();
 
-		//skip over whitespace
+	//skip over whitespace
 	case wcStringTokenType::Whitespace:
 	case wcStringTokenType::NewLine:
 		return NextToken();
@@ -596,7 +705,7 @@ bool weec::lex::wcTokenizer::NextToken_StringLiteral()
 		else if (wcTokenTypeAlizer().Get(stringTokenizer.GetStringToken().Data) == wcTokenType::NewLine)
 		{
 			//error, newline in string literal, can only be on one line
-			auto ErrorStringToken = TokenBuffer.StringToken;	
+			auto ErrorStringToken = TokenBuffer.StringToken;
 			ErrorStringToken.Data = Buffer;
 			Error = wcTokenizerError(wcTokenizerErrorCode::NewLineInStringLiteral, ErrorStringToken);
 			return false;
@@ -734,7 +843,7 @@ bool weec::lex::wcTokenizer::NextToken_Ident()
 			continue;
 
 		case wcTokenType::IntLiteral:
-		WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
+			WC_SWITCHCASE_TOKENS_BUILTIN_TYPES
 		case wcTokenType::Identifier:
 			//if (!LastPartWasASeperator)
 			//	return true;	//two idents in a row somehow, possible error?
@@ -773,167 +882,25 @@ bool weec::lex::wcTokenizer::NextToken_SingleLineComment()
 
 bool weec::lex::wcTokenizer::NextToken_MultiLineComment()
 {
+	//skip over opening /
 	stringTokenizer.NextStringToken();
 
+	//skip over *, then loop until closing comment
 	while (stringTokenizer.NextStringToken())
+	{
 		if (tokenTypeAlizer.Get(stringTokenizer.GetStringToken().Data) == wcTokenType::MultiplyOperator)
 			if (stringTokenizer.Lookahead(lookaheadBuffer) && tokenTypeAlizer.Get(lookaheadBuffer.Data) == wcTokenType::DivideOperator)
 			{
 				stringTokenizer.NextStringToken();
-				return NextToken();		//skip over comments
+				return NextToken();		//skip over comments, 
 			}
+	}
 
 	//error, never found a closing comment token
 	return false;
 }
 
-
-weec::lex::wcTokenDefinition::wcTokenDefinition() 
-	: Type(wcTokenType::NullToken), identifiers({}), delimiter(false), punctuation(false), precedence(0)
-{
-}
-
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier) 
-	: Type(_type), identifiers({ identifier }), delimiter(false), punctuation(false), precedence(0)
-{
-}
-
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim) 
-	: Type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(false), precedence(0)
-{
-}
-
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, string identifier, bool _isDelim, bool _isPunc) 
-	: Type(_type), identifiers({ identifier }), delimiter(_isDelim), punctuation(_isPunc), precedence(0)
-{
-}
-
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers) 
-	: Type(_type), identifiers(_identifiers), delimiter(false), punctuation(false), precedence(0)
-{
-}
-
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, vector<string> _identifiers, bool _isDelimiter) 
-	: Type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(false), precedence(0)
-{
-}
-
-weec::lex::wcTokenDefinition::wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation) 
-	: Type(_type), identifiers(_identifiers), delimiter(_isDelimiter), punctuation(_isPunctuation), precedence(0)
-{
-}
-
-weec::lex::wcTokenDefinition::wcTokenDefinition(const wcTokenDefinition& input) 
-	: Type(input.Type), identifiers(input.identifiers), delimiter(input.delimiter), punctuation(input.punctuation), precedence(input.precedence)
-{
-}
-
-
-bool weec::lex::wcTokenDefinition::isNull() const
-{
-	return (Type == wcTokenType::NullToken && !delimiter && !identifiers.size())
-		? true
-		: false;
-}
-
-bool weec::lex::wcTokenDefinition::isSingleCharacterToken() const
-{
-	if (identifiers.size() == 0)
-		return false;
-
-	for (unsigned int t = 0; t < identifiers.size(); ++t)
-		if (identifiers[t].size() > 1)
-			return false;
-
-	return true;
-}
-
-
-weec::lex::wcTokenDefinitionsBank::wcTokenDefinitionsBank()
-{
-	cache = nullptr;
-	populateDelimiterTypes();
-}
-
-weec::lex::wcTokenDefinitionsBank::wcTokenDefinitionsBank(const std::vector<wcTokenDefinition>&)
-{
-	cache = nullptr;
-	populateDelimiterTypes();
-}
-
-bool weec::lex::wcTokenDefinitionsBank::exists(const string& identToCheck) 
-{
-	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
-		for (int y = 0; y < definitions[t].identifiers.size(); ++y)
-			if (definitions[t].identifiers[y] == string(identToCheck))
-			{
-				cache = &definitions[t];
-				return true;
-			}
-	return false;
-}
-
-bool weec::lex::wcTokenDefinitionsBank::exists(const char& identToCheck) 
-{
-	stringstream ss;
-	ss << identToCheck;
-	return exists(ss.str());
-}
-
-bool weec::lex::wcTokenDefinitionsBank::exists(const wcTokenType& typeToCheck) 
-{
-	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
-		if (definitions[t].Type == typeToCheck)
-		{
-			cache = &definitions[t];
-			return true;
-		}
-	return false;
-}
-                                                     
-const wcTokenDefinition weec::lex::wcTokenDefinitionsBank::find(const string& identToCheck) const
-{
-	//check cache
-	if (cache != nullptr)
-		for (int y = 0; y < cache->identifiers.size(); ++y)
-			if (cache->identifiers[y] == identToCheck)
-				return *cache;
-
-	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
-		for (unsigned int y = 0; y < definitions[t].identifiers.size(); ++y)
-			if (definitions[t].identifiers[y] == identToCheck)
-				return definitions[t];
-	return wcTokenDefinition();
-}
-
-const wcTokenDefinition weec::lex::wcTokenDefinitionsBank::find(const wcTokenType& typeToCheck) const
-{
-	//check cache
-	if (cache != nullptr)
-		if (cache->Type == typeToCheck)
-			return *cache;
-
-	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
-		if (definitions[t].Type == typeToCheck)
-			return definitions[t];
-	return wcTokenDefinition();
-}
-
-const wcTokenDefinition weec::lex::wcTokenDefinitionsBank::find(const char& identToCheck) const
-{
-	stringstream ss;
-	ss << identToCheck;
-	return find(ss.str());
-}
-
-void weec::lex::wcTokenDefinitionsBank::populateDelimiterTypes()
-{
-	for (unsigned int t = 0; t < WC_VAR_DEFINITIONCOUNT; ++t)
-		if (definitions[t].delimiter)
-			delimiterTypes.push_back(definitions[t].Type);
-}
-
-std::string weec::lex::wcTokenTypeToString(wcTokenType Type)
+std::string weec::lex::to_string(wcTokenType Type)
 {
 	switch (Type)
 	{

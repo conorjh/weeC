@@ -59,59 +59,18 @@ namespace weec
 			TrueKeyword, FalseKeyword,
 			StringKeyword, DoubleKeyword, IntKeyword, UIntKeyword, FloatKeyword, BoolKeyword, CharKeyword, VoidKeyword, ObjectKeyword, VarKeyword,
 			NamespaceKeyword, FunctionKeyword, IfKeyword, ElseKeyword, 
-			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, ConstKeyword, PrintKeyword, StructKeyword,
+			WhileKeyword, BreakKeyword, ContinueKeyword, ReturnKeyword, InlineKeyword, ConstKeyword, PrintKeyword, StructKeyword,
 
 			//misc
 			Comment, MultiLineCommentStart, MultiLineCommentEnd, Identifier,
 			OpenParenthesis, CloseParenthesis, OpenBracket, CloseBracket, OpenBrace, CloseBrace,
 			SemiColon, Colon, DoubleColon, Comma, Period, SingleQuote, DoubleQuote,
 			Dollar, Amper, BackSlash, TernaryOperator, Pipe, Underscore, Tilde, Hash,
-			Tab, Whitespace, NewLine, Eos, Eof
+			Whitespace, NewLine, Eos, Eof
 		};
 
-		std::string wcTokenTypeToString(wcTokenType);
+		std::string to_string(wcTokenType);
 		
-		//matches string literals to wcTokenTypes
-		struct wcTokenDefinition
-		{
-			wcTokenDefinition();	//tt_null
-			wcTokenDefinition(wcTokenType _type, std::string);
-			wcTokenDefinition(wcTokenType _type, std::string, bool);
-			wcTokenDefinition(wcTokenType _type, std::string, bool, bool);
-			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers);
-			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter);
-			wcTokenDefinition(wcTokenType _type, std::vector<std::string> _identifiers, bool _isDelimiter, bool _isPunctuation);
-			wcTokenDefinition(const wcTokenDefinition&);
-
-			bool isSingleCharacterToken() const;
-			bool isNull() const;
-
-			const wcTokenType Type;
-			const bool delimiter, punctuation;
-			const unsigned int precedence;
-			const std::vector<std::string> identifiers;
-		};
-
-		const unsigned int WC_VAR_DEFINITIONCOUNT = 69;
-
-		//definitions used for creating wcToken
-		struct wcTokenDefinitionsBank
-		{
-			wcTokenDefinitionsBank();
-			wcTokenDefinitionsBank(const std::vector<wcTokenDefinition>&);
-
-			bool exists(const std::string&) ,
-				exists(const char&), exists(const wcTokenType&);
-
-			const wcTokenDefinition find(const std::string&) const,
-				find(const char&) const, find(const wcTokenType&) const;
-
-		private:
-			const wcTokenDefinition* cache;
-			void populateDelimiterTypes();
-			std::vector<wcTokenType> delimiterTypes;
-		};
-
 		struct wcToken
 		{
 			wcToken();
@@ -120,7 +79,7 @@ namespace weec
 			wcToken& operator=(const wcToken&);
 			bool operator==(const wcToken&), operator==(wcToken&);
 
-			bool IsOperator() const, IsBuiltinType() const;
+			bool IsOperator() const, IsBuiltinType() const, IsWhitespace() const;
 
 			std::string to_string() const
 			{
@@ -135,8 +94,8 @@ namespace weec
 
 		struct wcStringTokenTypeAlizer
 		{
-			wcStringTokenType Get(char) const;
-			wcStringTokenType Get(std::string) const;
+			wcStringTokenType Get(char&) const;
+			wcStringTokenType Get(std::string&) const;
 		};
 
 		class wcLineFeeder
@@ -159,7 +118,7 @@ namespace weec
 		class wcStringTokenizer
 		{
 			std::string Line;
-			wcStringToken TokenBuffer;
+			wcStringToken StringTokenBuffer;
 			wcLineFeeder Feeder;
 			unsigned int Index;
 			bool Finished;
@@ -184,7 +143,6 @@ namespace weec
 
 		class wcTokenTypeAlizer
 		{
-			wcTokenDefinitionsBank definitionsBank;
 			bool IsPartValidIdent(std::string);
 
 		public:
@@ -226,86 +184,6 @@ namespace weec
 
 			wcToken GetToken() const;
 			bool NextToken(), NextToken(wcTokenType Type), IsErrored() const, IsFinished() const;
-		};
-
-		static const wcTokenDefinition definitions[WC_VAR_DEFINITIONCOUNT] =
-		{
-			wcTokenDefinition(wcTokenType::NullToken, ""),
-			wcTokenDefinition(wcTokenType::Whitespace, " ", true, true),
-			wcTokenDefinition(wcTokenType::NewLine, "\n", true),
-			wcTokenDefinition(wcTokenType::Tab, "\t", true),
-			wcTokenDefinition(wcTokenType::Period, ".", true, true),
-			wcTokenDefinition(wcTokenType::Comma, ",", true),
-			wcTokenDefinition(wcTokenType::SemiColon, ";", true),
-			wcTokenDefinition(wcTokenType::Colon, ":", true),
-			wcTokenDefinition(wcTokenType::DoubleColon, "::", true),
-			wcTokenDefinition(wcTokenType::Tilde, "`", true),
-			wcTokenDefinition(wcTokenType::Underscore, "_", true),
-			wcTokenDefinition(wcTokenType::Amper, "&", true),
-			wcTokenDefinition(wcTokenType::SingleQuote, "'", true),
-			wcTokenDefinition(wcTokenType::DoubleQuote, "\"", true),
-			wcTokenDefinition(wcTokenType::OpenParenthesis, "(", true),
-			wcTokenDefinition(wcTokenType::CloseParenthesis, ")", true),
-			wcTokenDefinition(wcTokenType::OpenBrace, "{", true),
-			wcTokenDefinition(wcTokenType::CloseBrace, "}", true),
-			wcTokenDefinition(wcTokenType::OpenBracket, "[", true),
-			wcTokenDefinition(wcTokenType::CloseBracket, "]", true),
-			wcTokenDefinition(wcTokenType::Hash, "#", true),
-
-			//arithmetic
-			wcTokenDefinition(wcTokenType::AssignOperator, "=", true),
-			wcTokenDefinition(wcTokenType::PlusOperator, "+", true),
-			wcTokenDefinition(wcTokenType::MinusOperator, "-", true),
-			wcTokenDefinition(wcTokenType::DivideOperator, "/", true),
-			wcTokenDefinition(wcTokenType::MultiplyOperator, "*", true),
-			wcTokenDefinition(wcTokenType::PlusAssignOperator, "+=", true),
-			wcTokenDefinition(wcTokenType::MinusAssignOperator, "-=", true),
-			wcTokenDefinition(wcTokenType::DivAssignOperator, "/=", true),
-			wcTokenDefinition(wcTokenType::MultAssignOperator, "*=", true),
-			wcTokenDefinition(wcTokenType::ModulusOperator, "%", true),
-			wcTokenDefinition(wcTokenType::ExponentOperator, "^", true),
-			wcTokenDefinition(wcTokenType::IncrementOperator, "++", true),
-			wcTokenDefinition(wcTokenType::DecrementOperator, "--", true),
-
-			//logical/bool
-			wcTokenDefinition(wcTokenType::LogNotOperator, "!", true),
-			wcTokenDefinition(wcTokenType::LogOrOperator, "||", true),
-			wcTokenDefinition(wcTokenType::LogAndOperator, "&&", true),
-			wcTokenDefinition(wcTokenType::GreaterOperator, ">", true),
-			wcTokenDefinition(wcTokenType::GreaterEqualOperator, ">=", true),
-			wcTokenDefinition(wcTokenType::LessOperator , "<", true),
-			wcTokenDefinition(wcTokenType::LessEqualOperator, "<=", true),
-			wcTokenDefinition(wcTokenType::EqualOperator, "==", true),
-			wcTokenDefinition(wcTokenType::NotEqualOperator, "!=", true),
-			wcTokenDefinition(wcTokenType::TernaryOperator, "?", true),
-			wcTokenDefinition(wcTokenType::Comment, "//"),
-			wcTokenDefinition(wcTokenType::MultiLineCommentStart, "/*"),
-			wcTokenDefinition(wcTokenType::MultiLineCommentEnd,  "*/"),
-
-			//keywords
-			wcTokenDefinition(wcTokenType::IntKeyword, "int"),
-			wcTokenDefinition(wcTokenType::UIntKeyword, "uint"),
-			wcTokenDefinition(wcTokenType::CharKeyword, "char"),
-			wcTokenDefinition(wcTokenType::StringKeyword, "string"),
-			wcTokenDefinition(wcTokenType::DoubleKeyword, "double"),
-			wcTokenDefinition(wcTokenType::FloatKeyword, "float"),
-			wcTokenDefinition(wcTokenType::VoidKeyword, "void"),
-			wcTokenDefinition(wcTokenType::ConstKeyword, "const"),
-			wcTokenDefinition(wcTokenType::BoolKeyword, "bool"),
-			wcTokenDefinition(wcTokenType::TrueKeyword, "true"),
-			wcTokenDefinition(wcTokenType::FalseKeyword, "false"),
-			wcTokenDefinition(wcTokenType::IfKeyword, "if"),
-			wcTokenDefinition(wcTokenType::ElseKeyword, "else"),
-			wcTokenDefinition(wcTokenType::ReturnKeyword, "return"),
-			wcTokenDefinition(wcTokenType::StructKeyword, "struct"),
-			wcTokenDefinition(wcTokenType::PrintKeyword, "print"),
-			wcTokenDefinition(wcTokenType::WhileKeyword, "while"),
-			wcTokenDefinition(wcTokenType::BreakKeyword, "break"),
-			wcTokenDefinition(wcTokenType::ContinueKeyword, "continue"),
-			wcTokenDefinition(wcTokenType::NamespaceKeyword, "namespace"),
-			wcTokenDefinition(wcTokenType::FunctionKeyword, "func"),
-
-			wcTokenDefinition(wcTokenType::IntLiteral, { "0","1","2","3","4","5","6","7","8","9" })
 		};
 
 		namespace misc

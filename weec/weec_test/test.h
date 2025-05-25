@@ -26,14 +26,14 @@ namespace weec
 
 			std::vector<int(*)()> allLexTests =
 			{
-				//wcTokenizer
-				Test_Tokenizer_whitespace1,
-				Test_Tokenizer_102, Test_Tokenizer_103, Test_Tokenizer_104, Test_Tokenizer_105,
-				Test_Tokenizer_106, Test_Tokenizer_107, Test_Tokenizer_108, Test_Tokenizer_109,
-				Test_Tokenizer_110, Test_Tokenizer_111, Test_Tokenizer_112,
-
 				//wcStringTokenizer
-				Test_StringTokenizer1, Test_StringTokenizer_Alphanumeric				
+				Test_StringTokenizer_whitespace, Test_StringTokenizer_comments, Test_StringTokenizer_multiline_comments, 
+				Test_StringTokenizer_keywords, 
+
+				//wcTokenizer
+				Test_Tokenizer_whitespace1, Test_Tokenizer_comments,Test_Tokenizer_multiline_comments,
+				Test_Tokenizer_keywords,
+
 
 			};
 			int Test_AllLex();

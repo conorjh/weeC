@@ -20,23 +20,20 @@ namespace weec
 			inline const std::string list_lexer_whitespace3 = "\n";				//newline
 			inline const std::string list_lexer_whitespace4 = "\t\n";				//tab newline
 			inline const std::string list_lexer_whitespace5 = "\t\n \n";			//tab newline space newline
-			inline const std::string list_lexer_whitespace6 = "    /t  /t /t ";	//3 space, tab, 2 space, tab, 1 space, tab, space
+			inline const std::string list_lexer_whitespace6 = "    ";			//space space space space
+			inline const std::string list_lexer_whitespace7 = "\t\t\t\t";			//space space
+			inline const std::string list_lexer_whitespace8 = "\n\n\n\n";			//space space
+			inline const std::string list_lexer_whitespace9 = "    \t  \t \t ";	//3 space, tab, 2 space, tab, 1 space, tab, space
 
-			inline const std::string list_lexer_comments1 = "//comment\n/* multi \n  line \n comment */";
-			inline const std::string list_lexer_comments2 = "//comment\n/* multi \n  line \n comment */\n with extra line //then comment at the end";
+			inline const std::string list_lexer_comments1 = "//";										//
+			inline const std::string list_lexer_comments2 = "//comment";								//
+			inline const std::string list_lexer_comments3 = "//comment\n";								//
+			inline const std::string list_lexer_comments4 = "// comment\n//second comment\nident";		//identifier
+			inline const std::string list_lexer_comments5 = " // comment \n ident";	//whitespace comment space ident newline comment identifier whitespace identifier whitespace newline whitespace identifer whitespace identifier
 
-			inline const std::string list_tokenizer101 = "3.14";
-			inline const std::string list_tokenizer102 = "\"Hello World\"";
-			inline const std::string list_tokenizer103 = "'Char literal'";
-			inline const std::string list_tokenizer104 = "inline const int TestIdent =99 *44";
-			inline const std::string list_tokenizer105 = "string Test_Ident = \"Hello World\"";
-			inline const std::string list_tokenizer106 = "- + += * / + ( ) { } [ ] # \\ / % & ^ ? |";
-			inline const std::string list_tokenizer107 = "int main(int argc, char* argv[])\n{\nreturn 0;\n}";
-			inline const std::string list_tokenizer108 = "// comment  \n /* multi \n  line \n comment */";
-			inline const std::string list_tokenizer109 = "// comment  \n /* multi \n  line \n comment */\n with extra line //then comment at the end";
-			inline const std::string list_tokenizer110 = "int IdentTest; char IdentTest::WithNamespace";
-			inline const std::string list_tokenizer111 = "x = 88 + (42 / 99)";
-			inline const std::string list_tokenizer112 = "ident.withMember ident::withNamespace::withObject.withMember ns::method1() ns2::method2(a,b)";
+			inline const std::string list_lexer_multiline_comment1 = "/*multiline\ncomment*/";						//
+			inline const std::string list_lexer_multiline_comment2 = "/*multi\nline\ncomment*/";					//
+			inline const std::string list_lexer_multiline_comment3 = "/*\n\tmulti  \n\t\tline\n\t\t\tcomment\n*/";	//
 
 			//declarations
 			inline const std::string list_parser1 = "int a;";

@@ -74,7 +74,6 @@ namespace weec
 
 				//wcFullIdentifier
 				Test_wcFullIdentifier_default_constructor,
-				Test_wcFullIdentifier_default_constructor,
 				Test_wcFullIdentifier_string_constructor,
 				Test_wcFullIdentifier_string_constructor_with_namespace,
 				Test_wcFullIdentifier_string_constructor_with_function_and_namespace,
@@ -86,7 +85,6 @@ namespace weec
 				Test_wcFullIdentifier_part_constructor_with_function_local,
 
 				//wcFunctionIdentifier
-				Test_wcFunctionIdentifier_default_constructor,
 				Test_wcFunctionIdentifier_default_constructor,
 				Test_wcFunctionIdentifier_string_constructor_no_parenthesis_in_identifier,
 				Test_wcFunctionIdentifier_string_constructor_with_parameters,

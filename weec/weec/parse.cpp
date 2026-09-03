@@ -19,7 +19,7 @@ const std::unordered_multimap<wcParseNodeType, const char *> wc::parse::pnTypeSt
 	{ pn_mod, "pn_mod"},				{ pn_expo ,"pn_expo" },			{ pn_assign ,"pn_assign" },
 	{ pn_underscore ,"pn_underscore" },	{ pn_tilde ,"pn_tilde"  },			{ pn_oparen,"pn_oparen" },
 	{ pn_cparen,"pn_cparen" },			{ pn_obracket, "pn_obracket" },			{pn_cbracket,"pn_cbracket"},
-	{ pn_obrace, "pn_cbracket"},		{ pn_cbrace, "pn_cbrace"}, 			{ pn_bslash,"pn_bslash" },
+	{ pn_obrace, "pn_obrace"},		{ pn_cbrace, "pn_cbrace"}, 			{ pn_bslash,"pn_bslash" },
 	{ pn_percent,"pn_percent" },		{ pn_newline,"pn_newline" },			{ pn_dollar ,"pn_dollar" },
 	{ pn_amper ,"pn_amper" },			{ pn_greater ,"pn_greater" },			{ pn_less ,"pn_less" },
 	{ pn_greaterequal ,"pn_greaterequal" },	{ pn_lessequal ,"pn_lessequal" },			{ pn_equal ,"pn_equal" },

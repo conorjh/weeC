@@ -75,8 +75,6 @@ wcBaseCompiler wcc::getTargetCompiler(CompileTarget p_target)
 	{
 	case wcct_bytecode:
 		return wcClassicCompiler();
-	case wcct_simple_bytecode:
-		return wcSimpleCompiler();
 	case wcct_x86:
 		return wcHostedEXECompiler();
 	default:
@@ -227,18 +225,14 @@ CompilerOutput wcc::compile()
 	displayPreCompileInfo();
 
 	//compile with the appropriate compiler
-	CompilerOutput output;	wcClassicCompiler* classicComp;	wcSimpleCompiler* simpleComp;
+	CompilerOutput output;	wcClassicCompiler* classicComp;
 	switch (data.compileTarget)
 	{
 	case wcct_bytecode:
 		output.compiler = classicComp = static_cast<wcClassicCompiler*>(&getTargetCompiler(data.compileTarget));
 		output.script = classicComp->wcClassicCompiler::compile(importSource(data.filenameSource), &output.ast);
 		break;
-	case wcct_simple_bytecode:
-		output.compiler = simpleComp = static_cast<wcSimpleCompiler*>(&getTargetCompiler(data.compileTarget));
-		output.script = simpleComp->wcSimpleCompiler::compile(importSource(data.filenameSource), &output.ast);
-		break;
-	default:	case wcct_x86:	case wcct_ansi_c:
+	default:	case wcct_simple_bytecode:	case wcct_x86:	case wcct_ansi_c:
 		print("Currently unsupported Target Platform (" + targetStrings.find(data.compileTarget)->second + ")");
 		return output;
 	}
@@ -410,4 +404,3 @@ void wcc::displayCompileResult(CompilerOutput input)
 		print("Compilation complete");
 	}
 }
-

@@ -53,26 +53,20 @@ void wcvm::splash()
 
 void wcvm::exec()
 {
-	wcExecContext con;	wcSimpleExecContext scon;
-	wcClassicVM cvm;	wcSimpleVM svm;
+	wcExecContext con;	wcClassicVM cvm;
 	int handle;
-	//import source
-	if (data.sourceType == wcvmst_bytecode)
+	if (data.sourceType == wcvmst_simple_bytecode)
 	{
-		importBytecode(con, data.filenameSource);
-		handle = cvm.load(con);
-	}
-	else
-	{
-		importBytecode(scon, data.filenameSource);
-		handle = svm.load(scon);
+		print("Currently unsupported Source Type (simple bytecode)");
+		return;
 	}
 
+	//import source
+	importBytecode(con, data.filenameSource);
+	handle = cvm.load(con);
+
 	//execute
-	if (data.sourceType == wcvmst_bytecode)
-		cvm.exec(handle);
-	else
-		svm.exec(handle);
+	cvm.exec(handle);
 
 }
 

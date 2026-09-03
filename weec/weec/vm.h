@@ -25,6 +25,14 @@ namespace wc
 			std::unordered_map<int, bytecode::wcExecContext> conPool;
 		};
 
+		class wcClassicVM : public wcBaseVM
+		{
+		public:
+			wcClassicVM();
+
+			virtual int execInstruction(bytecode::wcExecContext& context, bytecode::wcInstruction instr);
+		};
+
 	}
 }
 #endif

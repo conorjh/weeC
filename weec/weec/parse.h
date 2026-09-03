@@ -1,5 +1,6 @@
 #ifndef WC_PARSE_H
 #define WC_PARSE_H
+#include <unordered_map>
 #include <vector>
 #include "tree.hh"
 #include "error.h"
@@ -36,38 +37,7 @@ namespace wc
 			pn_return, pn_continue, pn_negate
 		};
 
-		const std::unordered_multimap<wcParseNodeType, const char *> pnTypeStrings =
-		{
-			{	pn_null, "pn_null"	},			{ pn_head, "pn_head"	},		{	pn_exp,	"pn_exp" },
-			{ pn_type, "pn_type" },				{ pn_statement,	"pn_statement" },{ pn_str,"pn_str" },
-			{ pn_int,"pn_int" },				{ pn_flt,"pn_flt"},			{ pn_obj,"pn_obj"},
-			{ pn_var,"pn_var"},					{ pn_bool, "pn_bool"},			{ pn_scolon,"pn_scolon"},
-			{ pn_colon,"pn_colon"},				{ pn_comma,"pn_comma"},			{ pn_period,"pn_period"},
-			{ pn_squote, "pn_squote"},			{ pn_dquote,"pn_dquote"},			{ pn_qmark,"pn_qmark"},
-			{ pn_exclam, "pn_exclam"},			{ pn_minus, "pn_minus"},			{ pn_plus,"pn_plus"},
-			{ pn_pipe,"pn_pipe"},				{ pn_div,"pn_div"},			{ pn_mult,"pn_mult"},
-			{ pn_mod, "pn_mod"},				{ pn_expo ,"pn_expo" },			{ pn_assign ,"pn_assign" },
-			{ pn_underscore ,"pn_underscore" },	{ pn_tilde ,"pn_tilde"  },			{ pn_oparen,"pn_oparen" },
-			{ pn_cparen,"pn_cparen" },			{ pn_obracket, "pn_obracket" },			{pn_cbracket,"pn_cbracket"},
-			{ pn_obrace, "pn_cbracket"},		{ pn_cbrace, "pn_cbrace"}, 			{ pn_bslash,"pn_bslash" },
-			{ pn_percent,"pn_percent" },		{ pn_newline,"pn_newline" },			{ pn_dollar ,"pn_dollar" },
-			{ pn_amper ,"pn_amper" },			{ pn_greater ,"pn_greater" },			{ pn_less ,"pn_less" },
-			{ pn_greaterequal ,"pn_greaterequal" },	{ pn_lessequal ,"pn_lessequal" },			{ pn_equal ,"pn_equal" },
-			{ pn_notequal ,"pn_notequal" },		{ pn_logand, "pn_logand"},			{ pn_logor ,"pn_logor" },
-			{ pn_lognot ,"pn_lognot" },			{ pn_intlit ,"pn_intlit" },			{ pn_strlit ,"pn_strlit" },
-			{ pn_fltlit ,"pn_fltlit" },			{ pn_ident ,"pn_ident" },			{ pn_comment ,"pn_comment" },
-			{ pn_arrayindex ,"pn_arrayindex" },	{ pn_varident ,"pn_varident" },			{ pn_funcident ,"pn_funcident" },
-			{ pn_namespaceident ,"pn_namespaceident" },			{ pn_dec ,"pn_dec" },			{ pn_true ,"pn_true" },
-			{ pn_false ,"pn_false" },			{ pn_function ,"pn_function" },			{ pn_incr ,"pn_incr" },
-			{ pn_decr ,"pn_decr" },				{ pn_plusassign ,"pn_plusassign" },			{ pn_minusassign ,"pn_minusassign" },
-			{ pn_multassign ,"pn_multassign" },	{ pn_divassign ,"pn_divassign" },			{ pn_assignment ,"pn_assignment" },
-			{ pn_body ,"pn_body" },			{ pn_decvar ,"pn_decvar" },			{ pn_paramdec ,"pn_paramdec" },
-			{ pn_funcdec ,"pn_funcdec" },		{ pn_namespacedec ,"pn_namespacedec" },			{ pn_paramlist ,"pn_paramlist" },
-			{ pn_decparamlist ,"pn_decparamlist" },			{ pn_funccall ,"pn_funccall" },			{ pn_if ,"pn_if" },
-			{ pn_else ,"pn_else" },				{ pn_if_trueblock ,"pn_if_trueblock" },			{ pn_if_elseblock ,"pn_if_elseblock" },
-			{ pn_while ,"pn_while" },			{ pn_break ,"pn_break" },			{ pn_return ,"pn_return" },
-			{ pn_continue ,"pn_continue" },		{ pn_negate ,"pn_negate" }
-		};
+		extern const std::unordered_multimap<wcParseNodeType, const char *> pnTypeStrings;
 
 		
 

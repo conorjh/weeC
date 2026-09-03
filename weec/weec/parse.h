@@ -267,7 +267,7 @@ namespace wc
 			lex::wcToken currentToken(wcParseData&);
 		};
 
-		class wcExpressionParser : wcSubParser
+		class wcExpressionParser : public wcSubParser
 		{
 		public:
 			wcExpressionParser();
@@ -281,28 +281,28 @@ namespace wc
 			wcParserOutput parseFactor_identifer(wcParseData&);
 		};
 
-		class wcNamespaceParser : wcSubParser
+		class wcNamespaceParser : public wcSubParser
 		{
 		public:
 			wcNamespaceParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcIfParser : wcSubParser
+		class wcIfParser : public wcSubParser
 		{
 		public:
 			wcIfParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcWhileParser : wcSubParser
+		class wcWhileParser : public wcSubParser
 		{
 		public:
 			wcWhileParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcIdentParser : wcSubParser
+		class wcIdentParser : public wcSubParser
 		{
 		public:
 			wcIdentParser();
@@ -310,14 +310,14 @@ namespace wc
 				parse(wcParseData&, wcIdent&);
 		};
 
-		class wcStatementParser : wcSubParser
+		class wcStatementParser : public wcSubParser
 		{
 		public:
 			wcStatementParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcDeclarationParser : wcSubParser
+		class wcDeclarationParser : public wcSubParser
 		{
 		public:
 			wcDeclarationParser();
@@ -325,14 +325,14 @@ namespace wc
 				parse(wcParseData&, wcParseDeclaration&);
 		};
 
-		class wcCodeBlockParser : wcSubParser
+		class wcCodeBlockParser : public wcSubParser
 		{
 		public:
 			wcCodeBlockParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcTypeParser : wcSubParser
+		class wcTypeParser : public wcSubParser
 		{
 		public:
 			wcTypeParser();
@@ -340,14 +340,14 @@ namespace wc
 				parse(wcParseData&, wcIdent&);
 		};
 
-		class wcReturnParser : wcSubParser
+		class wcReturnParser : public wcSubParser
 		{
 		public:
 			wcReturnParser();
 			wcParserOutput parse(wcParseData&);
 		};
 
-		class wcSemiColonParser : wcSubParser
+		class wcSemiColonParser : public wcSubParser
 		{
 		public:
 			wcSemiColonParser();

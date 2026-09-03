@@ -248,7 +248,7 @@ namespace wc
 			wcParserOutput parseTerm(wcParseData&, lex::wcToken& outputToken);
 			wcParserOutput parseFactor(wcParseData&, lex::wcToken& outputToken);
 			wcParserOutput parseFactor_oparen(wcParseData&);
-			wcParserOutput parseFactor_identifer(wcParseData&);
+			wcParserOutput parseFactor_identifier(wcParseData&);
 		};
 
 		class wcNamespaceParser : public wcSubParser

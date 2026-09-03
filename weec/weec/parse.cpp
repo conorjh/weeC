@@ -861,7 +861,7 @@ wcParserOutput wc::parse::wcExpressionParser::parseFactor_oparen(wcParseData &da
 	return output;
 }
 
-wcParserOutput wc::parse::wcExpressionParser::parseFactor_identifer(wcParseData &data)
+wcParserOutput wc::parse::wcExpressionParser::parseFactor_identifier(wcParseData &data)
 {
 	wcParserOutput output;
 	wcASTIndex outputIndex(output.ast);

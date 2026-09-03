@@ -64,7 +64,7 @@ namespace weec
 			inline const std::string list_parser20 = "int a = 123; return a;";
 			inline const std::string list_parser21 = "int a = 123; \nif(a < 100)\n\treturn a;\nelse\nreturn a * 2;";
 			inline const std::string list_parser22 = "int t = 0;\nwhile(t<100)\n{\n\tt = t+1;\n}\nreturn t;";
-			inline const std::string list_parser23 = "int a = 2;\n int b = 3;\n if (a < b)\n return 213123;	\n return 323444; ";
+			inline const std::string list_parser23 = "int a = 2;\n int b = 3;\n if (a < b)\n return 213123;\t\n return 323444; ";
 			inline const std::string list_parser24 = "int a = 1;\n\n//single line while loop \nwhile(a<100)\n\ta = a + 1;\nreturn a;";
 
 			//function declarations
@@ -78,11 +78,11 @@ namespace weec
 			inline const std::string list_parser32 =
 				"int f1(int a, int b)\n"
 				"{\n"
-				"	return a + b;\n"
+				"\treturn a + b;\n"
 				"}\n"
 				"int f1(int a)\n"
 				"{\n"
-				"	return a;\n"
+				"\treturn a;\n"
 				"}\n"
 				"\n"
 				"//overloads\n"
@@ -113,14 +113,14 @@ namespace weec
 			inline const std::string list_fibonacci =
 				"int fibonacci(int num)\n"
 				"{\n"
-				"	if (num == 0)\n"
-				"		return 0;\n"
+				"\tif (num == 0)\n"
+				"\t\treturn 0;\n"
 				"\n"
-				"	else if (num == 1)\n"
-				"		return 1; \n"
+				"\telse if (num == 1)\n"
+				"\t\treturn 1; \n"
 				"\n"
-				"	else\n"
-				"		return fibonacci(num - 1) + fibonacci(num - 2);\n"
+				"\telse\n"
+				"\t\treturn fibonacci(num - 1) + fibonacci(num - 2);\n"
 				"}\n"
 				"\n"
 				"int num = 20; // variable to store how many elements to be displayed in the series\n"
@@ -128,8 +128,8 @@ namespace weec
 				"int ret = 0;\n"
 				"while (i <= num)\n"
 				"{\n"
-				"	ret = fibonacci(i);\n"
-				"	print i = i + 1;\n"
+				"\tret = fibonacci(i);\n"
+				"\tprint i = i + 1;\n"
 				"}\n"
 				"return ret;";
 
@@ -185,6 +185,15 @@ namespace weec
 			inline const std::string list_expression49 = "!!!2;";
 			inline const std::string list_expression50 = "!!!!(123);";
 			inline const std::string list_expression51 = "return 10 < 10 \n\t? 123 < 123 \n\t\t? 123 \n\t\t: 124 \n\t: 456 == 456 \n\t\t? 456 \n\t\t: 457;";
+			inline const std::string list_expression52 = ";";
+			inline const std::string list_expression53 = "x = 1 + 2 * 3;";
+			inline const std::string list_expression54 = "(1 + 2) * 3;";
+			inline const std::string list_expression55 = "foo(1, 2, 3);";
+			inline const std::string list_expression56 = "foo(1, 2";
+			inline const std::string list_expression57 = "1 = 2;";
+			inline const std::string list_expression58 = "return;";
+			inline const std::string list_expression59 = "print(1);";
+			inline const std::string list_expression60 = "while(true){}";
 		}
 	}
 }

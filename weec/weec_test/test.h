@@ -1,4 +1,4 @@
-#ifndef WC_TEST_H
+﻿#ifndef WC_TEST_H
 #define WC_TEST_H
 #include <string>
 #include <vector>
@@ -111,7 +111,7 @@ namespace weec
 				Test_wcExpressionParser_36, Test_wcExpressionParser_37, Test_wcExpressionParser_38, Test_wcExpressionParser_39, Test_wcExpressionParser_40,
 				Test_wcExpressionParser_41, Test_wcExpressionParser_42, Test_wcExpressionParser_43, Test_wcExpressionParser_44, Test_wcExpressionParser_45,
 				Test_wcExpressionParser_46, Test_wcExpressionParser_47, Test_wcExpressionParser_48, Test_wcExpressionParser_49, Test_wcExpressionParser_50,
-				Test_wcExpressionParser_51,
+				Test_wcExpressionParser_51, Test_wcExpressionParser_52, Test_wcExpressionParser_53, Test_wcExpressionParser_54, Test_wcExpressionParser_55, Test_wcExpressionParser_56, Test_wcExpressionParser_57, Test_wcExpressionParser_58, Test_wcExpressionParser_59, Test_wcExpressionParser_60,
 
 				//wcDeclarationParser
 				Test_wcDeclarationParser_simple_declaration,

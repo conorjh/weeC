@@ -1,0 +1,21 @@
+﻿# weeC feature status
+
+| Feature | Implemented how | What still needs doing |
+|---|---|---|
+| **Lexing** | The lexer recognizes literals, identifiers, keywords, operators, punctuation, comments, whitespace, and newline tokens. | Add fuller tests for ambiguous and edge tokenization, and decide whether tokenized-but-unused forms should stay reserved or be activated. |
+| **Keywords** | `if`, `else`, `while`, `return`, `print`, and `struct` are actively used by the parser; `namespace`, `func`, `break`, `continue`, `inline`, `const`, `object`, and `var` are tokenized but not meaningfully parsed. | Either implement the reserved constructs or remove them from the language surface if they are not intended. |
+| **Identifiers** | Qualified identifiers, global-prefix identifiers, and function identifiers are supported through the identifier helpers and scope resolver. | Member access (`.`) is only tokenized today; real member resolution and access semantics are missing. |
+| **Namespacing / scopes** | The parser uses `$g::` as the global prefix and `::` as the scope delimiter, with a scope stack during parsing. Built-ins live under global scope. | Namespace declaration syntax is not implemented, and scope semantics are still parser-driven rather than a full symbol/semantic layer. |
+| **Types** | Built-ins are `void`, `int`, `uint`, `double`, `float`, `bool`, and `string`. Structs register as user-defined types. | No conversion rules, no promotion, and no type checking beyond parser-side resolution. |
+| **Variable declarations** | Supports `type name;` and `type name = expr;`. | Cover more invalid forms, redeclarations, and initializer edge cases. |
+| **Function declarations/definitions** | Supports typed return values, parameter lists, optional bodies, and function-name normalization by parameter types. | No real arity checking at call sites, and overload handling is mostly bookkeeping rather than full semantic resolution. |
+| **Blocks** | Braced blocks are parsed and can contain statements, including nested blocks. | Add more explicit tests for empty blocks and malformed nesting. |
+| **`if` statements** | Supports `if (expr) statement`, `if (expr) { block }`, optional `else`, and the same single-statement/block forms for `else`. | Add negative tests for malformed conditions and missing delimiters. |
+| **`while` statements** | Supports `while (expr) statement` and `while (expr) { block }`. | Add targeted tests for invalid parenthesis and body forms. |
+| **`return`** | Supports `return;` and `return expr;`. | Clarify whether top-level `return` is intentionally allowed and test the boundary explicitly. |
+| **`print`** | Parsed as a statement with a single expression and trailing semicolon. | Add tests for invalid and empty print forms. |
+| **`struct`** | Struct declarations are parsed and register a type symbol. | Struct member semantics, constructors, and access behavior are not implemented. |
+| **Expressions** | Implemented precedence includes assignment, ternary, logical OR/AND, equality, comparison, term, factor, unary, call, and primary expressions. | Add exhaustive precedence and associativity tests plus semantic tests for invalid lvalues, invalid calls, and empty expressions. |
+| **Function calls** | Calls are parsed off a callee expression with argument lists and nested call support. | No argument-count validation against signatures yet; the current max-argument cap is a parser limit, not a language rule. |
+| **Error handling** | The parser returns structured error codes such as `UnexpectedToken`, `UnexpectedEOF`, `InvalidType`, `IdentRedeclaration`, `DeclarationsProhibited`, and expression-specific errors. | Add targeted tests for each important error path so the failure modes stay stable. |
+| **Current test coverage** | Core identifier, scope, symbol-table, expression, declaration, `if`, block, and parser edge-case tests exist. | The suite still needs broader negative coverage, especially around malformed syntax and operator precedence edges. |

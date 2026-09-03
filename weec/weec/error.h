@@ -1,6 +1,7 @@
 #ifndef WC_ERROR_H
 #define WC_ERROR_H
 #include <unordered_map>
+#include <string>
 namespace wc
 {
 	namespace lex

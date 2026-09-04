@@ -446,6 +446,50 @@ any weec::interpreter::wcExpressionInterpreter::ExecAssignment()
 	if (!strcmp(Rh.type().name(), "struct weec::interpreter::wcInterpreterError"))
 		return Rh;
 
+	// handle compound assignments: +=, -=, *=, /= by evaluating LHS value, applying binary op, then assigning back
+	switch (OpType)
+	{
+	case wcTokenType::PlusAssignOperator:
+		{
+			// Lh is identifier string when isLValue=true
+			std::string Ident = std::any_cast<std::string>(Lh);
+			auto LVal = SymTab.Get(Ident);
+			auto Result = DoOp(wcTokenType::PlusOperator, LVal, Rh);
+			if (!strcmp(Result.type().name(), "struct weec::interpreter::wcInterpreterError"))
+				return Result;
+			return DoOp(wcTokenType::AssignOperator, Ident, Result);
+		}
+	case wcTokenType::MinusAssignOperator:
+		{
+			std::string Ident = std::any_cast<std::string>(Lh);
+			auto LVal = SymTab.Get(Ident);
+			auto Result = DoOp(wcTokenType::MinusOperator, LVal, Rh);
+			if (!strcmp(Result.type().name(), "struct weec::interpreter::wcInterpreterError"))
+				return Result;
+			return DoOp(wcTokenType::AssignOperator, Ident, Result);
+		}
+	case wcTokenType::MultAssignOperator:
+		{
+			std::string Ident = std::any_cast<std::string>(Lh);
+			auto LVal = SymTab.Get(Ident);
+			auto Result = DoOp(wcTokenType::MultiplyOperator, LVal, Rh);
+			if (!strcmp(Result.type().name(), "struct weec::interpreter::wcInterpreterError"))
+				return Result;
+			return DoOp(wcTokenType::AssignOperator, Ident, Result);
+		}
+	case wcTokenType::DivAssignOperator:
+		{
+			std::string Ident = std::any_cast<std::string>(Lh);
+			auto LVal = SymTab.Get(Ident);
+			auto Result = DoOp(wcTokenType::DivideOperator, LVal, Rh);
+			if (!strcmp(Result.type().name(), "struct weec::interpreter::wcInterpreterError"))
+				return Result;
+			return DoOp(wcTokenType::AssignOperator, Ident, Result);
+		}
+	default:
+		break;
+	}
+
 	return DoOp(OpType, Lh, Rh);
 }
 

@@ -781,7 +781,7 @@ wcParseExpression weec::parse::wcExpressionParser::ParseExpression_Assignment()
 		return LeftHandSide;
 
 	auto Operator = GetToken();
-	while (Operator.Type == AssignOperator)
+		while (Operator.Type == AssignOperator || Operator.Type == PlusAssignOperator || Operator.Type == MinusAssignOperator || Operator.Type == MultAssignOperator || Operator.Type == DivAssignOperator)
 	{
 		NextToken();
 
